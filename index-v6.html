@@ -1,0 +1,2918 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Bar Clash — PvP Bartender Battle</title>
+<style>
+/* ===== RESET & BASE ===== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  width: 100%; height: 100%;
+  overflow: hidden;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
+  color: #FFFFFF;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+  display: flex;
+  justify-content: center;
+}
+
+/* ===== GAME CONTAINER ===== */
+#game {
+  position: relative;
+  width: 420px;
+  max-width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  margin: 0 auto;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ===== SCREENS ===== */
+.screen {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  transition: opacity 0.3s ease;
+}
+.screen.hidden {
+  display: none !important;
+}
+
+/* ===== HOME SCREEN ===== */
+#screen-home {
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  padding: 40px 20px;
+}
+.home-title {
+  font-size: 42px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  color: #FFD700;
+  text-shadow: 0 0 20px rgba(255,215,0,0.4), 0 2px 4px rgba(0,0,0,0.5);
+}
+.home-subtitle {
+  font-size: 14px;
+  color: rgba(255,255,255,0.5);
+  margin-top: -16px;
+}
+.stats-box {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 12px;
+  padding: 16px 24px;
+  width: 280px;
+  text-align: center;
+}
+.stats-box h3 {
+  font-size: 13px;
+  color: rgba(255,255,255,0.5);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 12px;
+}
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.stat-value {
+  font-size: 22px;
+  font-weight: 700;
+  color: #FFD700;
+}
+.stat-label {
+  font-size: 11px;
+  color: rgba(255,255,255,0.45);
+  text-transform: uppercase;
+}
+.difficulty-selector {
+  display: flex;
+  gap: 8px;
+}
+.diff-btn {
+  padding: 8px 20px;
+  border: 2px solid rgba(255,255,255,0.2);
+  border-radius: 8px;
+  background: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.6);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.diff-btn:hover {
+  border-color: rgba(255,215,0,0.4);
+  color: #fff;
+}
+.diff-btn.active {
+  border-color: #FFD700;
+  background: rgba(255,215,0,0.15);
+  color: #FFD700;
+}
+.play-btn {
+  width: 220px;
+  padding: 16px;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  color: #1a1a2e;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+  box-shadow: 0 4px 20px rgba(255,215,0,0.3);
+}
+.play-btn:hover {
+  transform: scale(1.04);
+  box-shadow: 0 6px 30px rgba(255,215,0,0.45);
+}
+.play-btn:active {
+  transform: scale(0.97);
+}
+
+/* ===== PREMATCH SCREEN ===== */
+#screen-prematch {
+  align-items: center;
+  justify-content: center;
+  gap: 32px;
+}
+.prematch-title {
+  font-size: 48px;
+  font-weight: 900;
+  color: #FFD700;
+  text-shadow: 0 0 30px rgba(255,215,0,0.5);
+  letter-spacing: 4px;
+}
+.vs-display {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+.vs-player {
+  text-align: center;
+}
+.vs-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.1);
+  border: 3px solid rgba(255,255,255,0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  margin-bottom: 8px;
+}
+.vs-name {
+  font-size: 14px;
+  font-weight: 600;
+}
+.vs-text {
+  font-size: 36px;
+  font-weight: 900;
+  color: #FF4444;
+  text-shadow: 0 0 10px rgba(255,68,68,0.5);
+}
+.start-btn {
+  width: 200px;
+  padding: 14px;
+  border: 2px solid #FFD700;
+  border-radius: 12px;
+  background: transparent;
+  color: #FFD700;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.start-btn:hover {
+  background: rgba(255,215,0,0.15);
+  box-shadow: 0 0 20px rgba(255,215,0,0.3);
+}
+.start-btn.hidden { display: none; }
+.matchmaking-status {
+  font-size: 14px;
+  color: rgba(255,255,255,0.5);
+  letter-spacing: 1px;
+  min-height: 20px;
+}
+.matchmaking-status.found {
+  color: #44CC44;
+  font-weight: 700;
+}
+.vs-avatar.cycling {
+  animation: avatarCycle 0.15s ease-in-out infinite alternate;
+  border-color: #FFD700;
+}
+@keyframes avatarCycle {
+  0% { transform: translateY(-2px); }
+  100% { transform: translateY(2px); }
+}
+.vs-avatar.found {
+  animation: avatarFound 0.5s ease-out;
+  border-color: #FF4444;
+  box-shadow: 0 0 20px rgba(255,68,68,0.4);
+}
+@keyframes avatarFound {
+  0% { transform: scale(1.3); }
+  50% { transform: scale(0.9); }
+  100% { transform: scale(1); }
+}
+.vs-name.found { color: #FF4444; font-weight: 800; }
+
+/* ===== MATCH SCREEN ===== */
+#screen-match {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* Score Bar */
+.score-bar {
+  height: 50px;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  flex-shrink: 0;
+  z-index: 10;
+}
+.score-player, .score-opponent {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.score-label {
+  font-size: 11px;
+  color: rgba(255,255,255,0.5);
+  text-transform: uppercase;
+}
+.score-value {
+  font-size: 22px;
+  font-weight: 800;
+  min-width: 40px;
+}
+.score-player .score-value { color: #FFD700; }
+.score-opponent .score-value { color: #FF4444; }
+.timer-display {
+  font-size: 28px;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  color: #FFFFFF;
+}
+.timer-display.timer-warning {
+  color: #FF4444;
+  animation: timerPulse 0.5s ease-in-out infinite;
+}
+
+/* Opponent Board */
+.opponent-board {
+  height: 130px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 16px;
+  opacity: 0.8;
+  flex-shrink: 0;
+  background: rgba(0,0,0,0.15);
+}
+
+/* Customer Zone */
+.customer-zone {
+  height: 110px;
+  background: rgba(255,255,255,0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 8px 16px;
+  flex-shrink: 0;
+  position: relative;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.customer-slot {
+  width: 110px;
+  height: 92px;
+  background: rgba(255,255,255,0.12);
+  border: 2px solid rgba(255,255,255,0.25);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  position: relative;
+  flex-shrink: 0;
+}
+.customer-slot.empty-slot {
+  opacity: 0.3;
+}
+.customer-emoji {
+  font-size: 28px;
+}
+.customer-drink-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.patience-bar {
+  position: absolute;
+  bottom: 4px;
+  left: 8px;
+  right: 8px;
+  height: 4px;
+  background: rgba(0,0,0,0.3);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.patience-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.3s linear, background-color 0.3s;
+}
+
+/* Power-up Inventory */
+.powerup-inventory {
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-shrink: 0;
+  background: rgba(0,0,0,0.2);
+}
+.powerup-slot {
+  width: 34px;
+  height: 34px;
+  border: 2px dashed rgba(255,255,255,0.15);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.powerup-slot.filled {
+  border-style: solid;
+  border-color: rgba(255,215,0,0.4);
+  background: rgba(255,215,0,0.1);
+}
+.powerup-slot.filled:hover {
+  border-color: #FFD700;
+  transform: scale(1.1);
+}
+
+/* Player Board */
+.player-board-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 16px;
+  position: relative;
+  min-height: 200px;
+}
+.player-board {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+}
+.undo-btn {
+  position: absolute;
+  bottom: 12px;
+  right: 16px;
+  width: 44px;
+  height: 44px;
+  border: 2px solid rgba(255,255,255,0.2);
+  border-radius: 50%;
+  background: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.5);
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.undo-btn:hover {
+  border-color: rgba(255,255,255,0.4);
+  color: #fff;
+  background: rgba(255,255,255,0.1);
+}
+.spawn-btn {
+  position: absolute;
+  bottom: 12px;
+  left: 16px;
+  width: 52px;
+  height: 52px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255,215,0,0.1);
+  cursor: pointer;
+  transition: all 0.2s;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.spawn-btn:hover { background: rgba(255,215,0,0.2); }
+.spawn-btn.disabled { opacity: 0.3; cursor: default; }
+.spawn-ring {
+  position: absolute;
+  width: 52px;
+  height: 52px;
+  transform: rotate(-90deg);
+}
+.spawn-ring-bg {
+  fill: none;
+  stroke: rgba(255,255,255,0.1);
+  stroke-width: 3;
+}
+.spawn-ring-fill {
+  fill: none;
+  stroke: #FFD700;
+  stroke-width: 3;
+  stroke-dasharray: 100.5;
+  stroke-dashoffset: 100.5;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.1s linear;
+}
+.spawn-label {
+  position: relative;
+  z-index: 1;
+  font-size: 16px;
+  font-weight: 700;
+  color: #FFD700;
+  pointer-events: none;
+}
+
+/* ===== GLASS STYLES ===== */
+.glass {
+  display: flex;
+  flex-direction: column-reverse;
+  border: 2px solid rgba(255,255,255,0.25);
+  border-radius: 0 0 6px 6px;
+  border-top: none;
+  background: rgba(255,255,255,0.12);
+  position: relative;
+  cursor: pointer;
+  transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+  overflow: hidden;
+}
+.glass.player-glass {
+  width: 60px;
+}
+.glass.opponent-glass {
+  width: 35px;
+}
+.glass.empty-glass {
+  background: rgba(255,255,255,0.04);
+  border-color: rgba(255,255,255,0.12);
+}
+.glass.selected {
+  border-color: #FFD700;
+  transform: translateY(-8px);
+  box-shadow: 0 8px 20px rgba(255,215,0,0.3);
+}
+.glass.spawn-target {
+  border-color: rgba(255,215,0,0.5);
+  box-shadow: 0 0 8px rgba(255,215,0,0.2);
+}
+.glass.clear-target {
+  border-color: rgba(255,100,100,0.5);
+  box-shadow: 0 0 8px rgba(255,100,100,0.2);
+  cursor: crosshair;
+}
+
+/* Glass rim (top edge) */
+.glass::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -2px;
+  right: -2px;
+  height: 3px;
+  background: inherit;
+  border: 2px solid inherit;
+  border-radius: 2px 2px 0 0;
+}
+
+/* Glass layer (liquid) */
+.glass-layer {
+  width: 100%;
+  transition: height 0.4s ease, opacity 0.4s ease;
+}
+
+/* Serveable pulse */
+.glass.serveable {
+  animation: serveablePulse 1.2s ease-in-out infinite;
+}
+
+/* ===== COUNTDOWN OVERLAY ===== */
+#countdown-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  backdrop-filter: blur(4px);
+}
+#countdown-overlay.hidden {
+  display: none !important;
+}
+.countdown-number {
+  font-size: 120px;
+  font-weight: 900;
+  color: #FFD700;
+  text-shadow: 0 0 40px rgba(255,215,0,0.6);
+  animation: countdownPop 1s ease-out;
+}
+
+/* ===== RESULT SCREEN ===== */
+#screen-result {
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding: 40px 20px;
+  background: rgba(0,0,0,0.85);
+  backdrop-filter: blur(8px);
+}
+.result-title {
+  font-size: 48px;
+  font-weight: 900;
+  text-shadow: 0 0 30px currentColor;
+}
+.result-title.win { color: #FFD700; }
+.result-title.lose { color: #FF4444; }
+.result-title.draw { color: #FFFFFF; }
+.result-scores {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  font-size: 32px;
+  font-weight: 700;
+}
+.result-scores .player-score { color: #FFD700; }
+.result-scores .separator { color: rgba(255,255,255,0.3); }
+.result-scores .opponent-score { color: #FF4444; }
+.result-stats {
+  background: rgba(255,255,255,0.06);
+  border-radius: 12px;
+  padding: 16px 24px;
+  width: 280px;
+}
+.result-stat-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+  font-size: 14px;
+}
+.result-stat-row .label { color: rgba(255,255,255,0.5); }
+.result-stat-row .value { font-weight: 700; }
+.result-buttons {
+  display: flex;
+  gap: 12px;
+}
+.result-btn {
+  padding: 12px 28px;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  letter-spacing: 1px;
+}
+.result-btn.primary {
+  border: none;
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  color: #1a1a2e;
+}
+.result-btn.secondary {
+  border: 2px solid rgba(255,255,255,0.25);
+  background: transparent;
+  color: #fff;
+}
+.result-btn:hover {
+  transform: scale(1.04);
+}
+
+/* ===== TROPHY SECTION (Result Screen) ===== */
+.trophy-section {
+  text-align: center;
+  width: 280px;
+}
+.trophy-change {
+  font-size: 22px;
+  font-weight: 800;
+  margin-bottom: 4px;
+}
+.trophy-change.positive { color: #44CC44; }
+.trophy-change.negative { color: #FF4444; }
+.trophy-change.neutral { color: #FFFFFF; }
+.trophy-transition {
+  font-size: 14px;
+  color: rgba(255,255,255,0.6);
+  margin-bottom: 8px;
+}
+.trophy-arena-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.7);
+  margin-bottom: 6px;
+}
+.trophy-progress-bar {
+  width: 100%;
+  height: 8px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.trophy-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #FFD700, #FFA500);
+  border-radius: 4px;
+  transition: width 0.5s ease;
+}
+
+/* ===== ARENA BADGE (Home Screen) ===== */
+.arena-badge-box {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 12px;
+  padding: 14px 24px;
+  width: 280px;
+  text-align: center;
+}
+.arena-badge-name {
+  font-size: 20px;
+  font-weight: 800;
+  margin-bottom: 4px;
+}
+.arena-trophy-count {
+  font-size: 16px;
+  font-weight: 700;
+  color: #FFD700;
+  margin-bottom: 8px;
+}
+.arena-progress-bar {
+  width: 100%;
+  height: 8px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 4px;
+}
+.arena-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #FFD700, #FFA500);
+  border-radius: 4px;
+}
+.arena-progress-label {
+  font-size: 11px;
+  color: rgba(255,255,255,0.4);
+}
+
+/* ===== ARENA UNLOCKED OVERLAY ===== */
+#arena-unlock-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.9);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  z-index: 200;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+}
+#arena-unlock-overlay.hidden { display: none !important; }
+.unlock-title {
+  font-size: 28px;
+  font-weight: 900;
+  color: #FFD700;
+  text-shadow: 0 0 30px rgba(255,215,0,0.6);
+  letter-spacing: 3px;
+}
+.unlock-emoji {
+  font-size: 80px;
+  animation: countdownPop 0.8s ease-out;
+}
+.unlock-name {
+  font-size: 22px;
+  font-weight: 700;
+  color: #FFFFFF;
+}
+.unlock-details {
+  font-size: 14px;
+  color: rgba(255,255,255,0.6);
+  text-align: center;
+  line-height: 1.6;
+  white-space: pre-line;
+}
+.unlock-dismiss {
+  font-size: 12px;
+  color: rgba(255,255,255,0.3);
+  margin-top: 16px;
+}
+
+/* ===== PREMATCH OPPONENT TROPHIES ===== */
+.vs-trophies {
+  font-size: 12px;
+  color: rgba(255,255,255,0.5);
+  margin-top: 2px;
+}
+
+/* ===== SCORE POP ANIMATION ===== */
+.score-pop {
+  position: absolute;
+  font-size: 18px;
+  font-weight: 800;
+  color: #FFD700;
+  pointer-events: none;
+  animation: scorePop 0.6s ease-out forwards;
+  z-index: 50;
+}
+
+/* ===== ANIMATIONS ===== */
+@keyframes timerPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.7; transform: scale(1.08); }
+}
+@keyframes serveablePulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255,215,0,0); }
+  50% { box-shadow: 0 0 16px 4px rgba(255,215,0,0.35); }
+}
+@keyframes scorePop {
+  0% { opacity: 1; transform: translateY(0) scale(1); }
+  100% { opacity: 0; transform: translateY(-40px) scale(1.3); }
+}
+@keyframes countdownPop {
+  0% { opacity: 0; transform: scale(2); }
+  30% { opacity: 1; transform: scale(0.9); }
+  50% { transform: scale(1.05); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@keyframes illegalShake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-6px); }
+  40% { transform: translateX(6px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(4px); }
+}
+.shake {
+  animation: illegalShake 0.3s ease-in-out;
+}
+/* Serve fly animation — glass flies up to customer zone */
+.serve-fly {
+  position: fixed;
+  width: 60px;
+  border: 2px solid rgba(255,255,255,0.4);
+  border-radius: 0 0 6px 6px;
+  border-top: none;
+  display: flex;
+  flex-direction: column-reverse;
+  overflow: hidden;
+  z-index: 200;
+  pointer-events: none;
+  transition: none;
+  animation: serveFly 0.45s cubic-bezier(0.2, 0.8, 0.3, 1) forwards;
+}
+@keyframes serveFly {
+  0% { opacity: 1; transform: scale(1); }
+  60% { opacity: 1; transform: scale(0.7); }
+  100% { opacity: 0; transform: scale(0.4); }
+}
+/* Customer served pulse before disappearing */
+.customer-slot.served-anim {
+  animation: customerServed 0.4s ease-out;
+}
+@keyframes customerServed {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.12); box-shadow: 0 0 20px rgba(68,204,68,0.5); }
+  100% { transform: scale(1); }
+}
+@keyframes customerEnter {
+  0% { opacity: 0; transform: translateY(20px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+@keyframes customerExit {
+  0% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-20px); }
+}
+.customer-enter {
+  animation: customerEnter 0.3s ease-out;
+}
+.customer-exit {
+  animation: customerExit 0.3s ease-in forwards;
+}
+@keyframes powerupBob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+.powerup-bob {
+  animation: powerupBob 1.5s ease-in-out infinite;
+}
+/* Floating power-up bubble in customer zone */
+.floating-powerup {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, rgba(255,215,0,0.4), rgba(255,165,0,0.25));
+  border: 2px solid rgba(255,215,0,0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  cursor: pointer;
+  z-index: 10;
+  box-shadow: 0 0 16px rgba(255,215,0,0.35);
+  transition: transform 0.15s;
+}
+.floating-powerup:hover {
+  transform: translateY(-50%) scale(1.15);
+}
+/* Opponent inventory */
+.opponent-inventory {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.opp-powerup-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  border: 1px solid rgba(255,255,255,0.15);
+  background: transparent;
+}
+.opp-powerup-dot.filled {
+  background: rgba(255,165,0,0.5);
+  border-color: rgba(255,165,0,0.6);
+}
+/* Mode indicators */
+.mode-banner {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: rgba(255,215,0,0.15);
+  color: #FFD700;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 3px 0;
+  z-index: 20;
+  pointer-events: none;
+}
+/* Flash pour glow on player board */
+.flash-pour-active {
+  box-shadow: inset 0 0 30px rgba(255,255,0,0.08);
+}
+.glass.swap-highlight {
+  border-color: #FFD700 !important;
+  box-shadow: 0 0 12px rgba(255,215,0,0.3);
+}
+@keyframes pourLiquid {
+  0% { max-height: 0; opacity: 0.5; }
+  100% { max-height: 100%; opacity: 1; }
+}
+.pour-anim .glass-layer:last-child {
+  animation: pourLiquid 0.4s ease-out;
+}
+</style>
+</head>
+<body>
+
+<div id="game">
+
+  <!-- ===== HOME SCREEN ===== -->
+  <div id="screen-home" class="screen">
+    <div class="home-title">BAR CLASH</div>
+    <div class="home-subtitle">PvP Bartender Battle</div>
+
+    <div class="arena-badge-box" id="arena-badge-box">
+      <div class="arena-badge-name" id="arena-badge-name">Juice Stand</div>
+      <div class="arena-trophy-count" id="arena-trophy-count">0</div>
+      <div class="arena-progress-bar"><div class="arena-progress-fill" id="arena-progress-fill" style="width:0%"></div></div>
+      <div class="arena-progress-label" id="arena-progress-label">0 / 200</div>
+    </div>
+
+    <div class="stats-box">
+      <h3>Your Stats</h3>
+      <div class="stats-grid">
+        <div class="stat-item">
+          <div class="stat-value" id="stat-matches">0</div>
+          <div class="stat-label">Matches</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value" id="stat-wins">0</div>
+          <div class="stat-label">Win Rate</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value" id="stat-best">0</div>
+          <div class="stat-label">Best Score</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value" id="stat-served">0</div>
+          <div class="stat-label">Drinks Served</div>
+        </div>
+      </div>
+    </div>
+
+    <button class="play-btn" id="btn-play">PLAY</button>
+  </div>
+
+  <!-- ===== PREMATCH SCREEN ===== -->
+  <div id="screen-prematch" class="screen hidden">
+    <div class="prematch-title">BAR CLASH</div>
+    <div id="matchmaking-status" class="matchmaking-status">Finding opponent...</div>
+    <div class="vs-display">
+      <div class="vs-player">
+        <div class="vs-avatar">&#x1F9D1;&#x200D;&#x1F373;</div>
+        <div class="vs-name">You</div>
+      </div>
+      <div class="vs-text" id="vs-text">VS</div>
+      <div class="vs-player">
+        <div class="vs-avatar" id="opponent-avatar">❓</div>
+        <div class="vs-name" id="opponent-name">Searching...</div>
+        <div class="vs-trophies" id="opponent-trophies"></div>
+      </div>
+    </div>
+    <button class="start-btn hidden" id="btn-start">START</button>
+  </div>
+
+  <!-- ===== MATCH SCREEN ===== -->
+  <div id="screen-match" class="screen hidden">
+    <div id="debug-error" style="position:fixed;top:0;left:0;right:0;background:red;color:white;font-size:10px;padding:2px 6px;z-index:9999;display:none;"></div>
+
+    <!-- Score Bar -->
+    <div class="score-bar">
+      <div class="score-player">
+        <span class="score-label">YOU</span>
+        <span class="score-value" id="player-score">0</span>
+      </div>
+      <div class="timer-display" id="timer-display">1:30</div>
+      <div class="score-opponent">
+        <span class="score-value" id="opponent-score">0</span>
+        <span class="score-label">OPP</span>
+      </div>
+    </div>
+
+    <!-- Opponent Board -->
+    <div class="opponent-board" id="opponent-board" style="position:relative;">
+      <div class="opponent-inventory" id="opponent-inventory">
+        <div class="opp-powerup-dot" id="opp-pu-dot-0"></div>
+        <div class="opp-powerup-dot" id="opp-pu-dot-1"></div>
+      </div>
+    </div>
+
+    <!-- Customer Zone -->
+    <div class="customer-zone" id="customer-zone">
+      <div class="customer-slot empty-slot"><span style="color:rgba(255,255,255,0.2)">?</span></div>
+      <div class="customer-slot empty-slot"><span style="color:rgba(255,255,255,0.2)">?</span></div>
+      <div class="customer-slot empty-slot"><span style="color:rgba(255,255,255,0.2)">?</span></div>
+    </div>
+
+    <!-- Power-up Inventory -->
+    <div class="powerup-inventory">
+      <div class="powerup-slot" id="powerup-slot-0"></div>
+      <div class="powerup-slot" id="powerup-slot-1"></div>
+    </div>
+
+    <!-- Player Board -->
+    <div class="player-board-wrapper">
+      <div class="player-board" id="player-board"></div>
+      <button class="spawn-btn" id="btn-spawn" title="Spawn color layer (G)">
+        <svg class="spawn-ring" viewBox="0 0 36 36"><circle class="spawn-ring-bg" cx="18" cy="18" r="16"/><circle class="spawn-ring-fill" id="spawn-ring-fill" cx="18" cy="18" r="16"/></svg>
+        <span class="spawn-label">🍹 <span id="spawn-count">1</span></span>
+      </button>
+      <button class="undo-btn" id="btn-undo" title="Undo (U)">&#x21A9;</button>
+    </div>
+
+    <!-- Countdown Overlay -->
+    <div id="countdown-overlay" class="hidden">
+      <div class="countdown-number" id="countdown-text">3</div>
+    </div>
+
+  </div>
+
+  <!-- ===== RESULT SCREEN ===== -->
+  <div id="screen-result" class="screen hidden">
+    <div class="result-title" id="result-title">YOU WIN!</div>
+    <div class="result-scores">
+      <span class="player-score" id="result-player-score">0</span>
+      <span class="separator">-</span>
+      <span class="opponent-score" id="result-opponent-score">0</span>
+    </div>
+    <div class="trophy-section" id="trophy-section">
+      <div class="trophy-change" id="trophy-change"></div>
+      <div class="trophy-transition" id="trophy-transition"></div>
+      <div class="trophy-arena-badge" id="trophy-arena-badge"></div>
+      <div class="trophy-progress-bar"><div class="trophy-progress-fill" id="trophy-progress-fill" style="width:0%"></div></div>
+    </div>
+    <div class="result-stats">
+      <div class="result-stat-row">
+        <span class="label">Drinks Served</span>
+        <span class="value" id="result-drinks">0</span>
+      </div>
+      <div class="result-stat-row">
+        <span class="label">Best Combo</span>
+        <span class="value" id="result-combo">0x</span>
+      </div>
+      <div class="result-stat-row">
+        <span class="label">Arena</span>
+        <span class="value" id="result-arena">Juice Stand</span>
+      </div>
+    </div>
+    <div class="result-buttons">
+      <button class="result-btn primary" id="btn-play-again">PLAY AGAIN</button>
+      <button class="result-btn secondary" id="btn-home">HOME</button>
+    </div>
+  </div>
+
+  <!-- ===== ARENA UNLOCK OVERLAY ===== -->
+  <div id="arena-unlock-overlay" class="hidden">
+    <div class="unlock-title">ARENA UNLOCKED!</div>
+    <div class="unlock-emoji" id="unlock-emoji"></div>
+    <div class="unlock-name" id="unlock-name"></div>
+    <div class="unlock-details" id="unlock-details"></div>
+    <div class="unlock-dismiss">Tap to continue</div>
+  </div>
+
+</div>
+
+<script>
+// ============================================================
+// BAR CLASH v6.1 — Patched: 2 empty bottles, player-targeted spawn, Clear Bottle, no Freeze
+// ============================================================
+
+// ===== CONFIG =====
+const CFG = {
+  MATCH_DURATION: 90,
+  COUNTDOWN_DURATION: 3,
+  GLASS_CAPACITY: 4,
+  VISIBLE_CUSTOMERS: 3,
+  CUSTOMER_PATIENCE: 20,
+  SERVE_GRACE_WINDOW: 2,
+  CUSTOMER_LEAVE_PENALTY: -25,
+  POINTS_PER_LAYER: 50,
+  SPEED_BONUS: 50,
+  COMBO_BONUS: 50,
+  COMBO_WINDOW: 10,
+  FIRST_POWERUP_SPAWN: 8,
+  POWERUP_SPAWN_MIN: 12,
+  POWERUP_SPAWN_MAX: 18,
+  POWERUP_LINGER: 6,
+  MAX_HELD_POWERUPS: 2,
+  EXTRA_BOTTLE_PERMANENT: true,
+  FLASH_POUR_DURATION: 8,
+  POWERUP_WEIGHTS: { extraBottle: 30, flashPour: 30, swap: 20, clearBottle: 20 },
+  AI_POWERUP_GRAB_DELAY_MIN: 2,
+  AI_POWERUP_GRAB_DELAY_MAX: 4,
+  AI_POWERUP_USE_DELAY_MIN: 3,
+  AI_POWERUP_USE_DELAY_MAX: 5,
+  GAME_WIDTH: 420,
+  SPAWN_RECHARGE_TIME: 2,
+  SPAWN_MAX_CHARGES: Infinity,
+  SPAWN_START_CHARGES: 1,
+  SPAWN_CUSTOMER_WEIGHT: 0.6,
+  // Arena system
+  ARENAS: [
+    { id: 0, name: 'Juice Stand',     emoji: '\u{1F9C3}', min: 0,    max: 199,   colors: 3, sourceGlasses: 3, emptyGlasses: 2, powerUps: ['extraBottle','flashPour'],                          bg: ['#FF8C42','#FFA07A'] },
+    { id: 1, name: 'Beach Bar',       emoji: '\u{1F3D6}\uFE0F', min: 200,  max: 499,   colors: 3, sourceGlasses: 3, emptyGlasses: 2, powerUps: ['extraBottle','flashPour','swap'],               bg: ['#0077B6','#00B4D8'] },
+    { id: 2, name: 'Cocktail Lounge', emoji: '\u{1F378}', min: 500,  max: 999,   colors: 4, sourceGlasses: 4, emptyGlasses: 2, powerUps: ['extraBottle','flashPour','swap','clearBottle'],  bg: ['#2D1B69','#1a1a2e'] },
+    { id: 3, name: 'Speakeasy',       emoji: '\u{1F943}', min: 1000, max: 1499,  colors: 4, sourceGlasses: 4, emptyGlasses: 2, powerUps: ['extraBottle','flashPour','swap','clearBottle'],  bg: ['#1B4D2E','#0D2818'] },
+    { id: 4, name: 'Rooftop Terrace', emoji: '\u{1F306}', min: 1500, max: 2499,  colors: 5, sourceGlasses: 5, emptyGlasses: 2, powerUps: ['extraBottle','flashPour','swap','clearBottle'],  bg: ['#FF6B6B','#FFD93D'] },
+    { id: 5, name: 'Grand Hotel',     emoji: '\u{1F3E8}', min: 2500, max: 99999, colors: 5, sourceGlasses: 5, emptyGlasses: 2, powerUps: ['extraBottle','flashPour','swap','clearBottle'],  bg: ['#1a1a1a','#2D2D00'] },
+  ],
+  ALL_COLORS: ['#FF4444', '#4488FF', '#FFCC00', '#44CC44', '#AA44FF'],
+  ALL_COLOR_NAMES: ['Red', 'Blue', 'Yellow', 'Green', 'Purple'],
+  AI_PER_ARENA: [
+    { pourMin: 1.5, pourMax: 2.5, mistakeRate: 0.12, powerUpGrab: 0.50, serveDelay: 0.6 },
+    { pourMin: 1.2, pourMax: 2.0, mistakeRate: 0.08, powerUpGrab: 0.60, serveDelay: 0.5 },
+    { pourMin: 1.0, pourMax: 1.8, mistakeRate: 0.05, powerUpGrab: 0.70, serveDelay: 0.4 },
+    { pourMin: 0.8, pourMax: 1.5, mistakeRate: 0.03, powerUpGrab: 0.75, serveDelay: 0.3 },
+    { pourMin: 0.6, pourMax: 1.2, mistakeRate: 0.02, powerUpGrab: 0.85, serveDelay: 0.2 },
+    { pourMin: 0.4, pourMax: 0.9, mistakeRate: 0.01, powerUpGrab: 0.90, serveDelay: 0.15 },
+  ],
+  TROPHY_WIN_BASE: 25, TROPHY_WIN_PER_100: 5, TROPHY_WIN_CAP: 40,
+  TROPHY_LOSE_BASE: 15, TROPHY_LOSE_PER_150: 3, TROPHY_LOSE_CAP: 25,
+  TROPHY_DRAW: 5,
+  MATCHMAKING_SEARCH_MIN: 2, MATCHMAKING_SEARCH_MAX: 4, MATCHMAKING_SHOW_OPPONENT: 2,
+};
+
+// ===== ARENA HELPERS =====
+function getArena(trophies) {
+  for (let i = CFG.ARENAS.length - 1; i >= 0; i--) {
+    if (trophies >= CFG.ARENAS[i].min) return CFG.ARENAS[i];
+  }
+  return CFG.ARENAS[0];
+}
+
+function getArenaColors(arena) {
+  return {
+    names: CFG.ALL_COLOR_NAMES.slice(0, arena.colors).map(c => c.toLowerCase()),
+    hexes: CFG.ALL_COLORS.slice(0, arena.colors),
+  };
+}
+
+function getAIDifficulty() {
+  const arenaIdx = getArena(state.stats.trophies).id;
+  const ai = CFG.AI_PER_ARENA[arenaIdx];
+  return {
+    pourIntervalMin: ai.pourMin,
+    pourIntervalMax: ai.pourMax,
+    mistakeRate: ai.mistakeRate,
+    serveDelay: ai.serveDelay,
+    grabChance: ai.powerUpGrab,
+  };
+}
+
+function calculateTrophyChange(playerScore, opponentScore) {
+  const diff = Math.abs(playerScore - opponentScore);
+  if (playerScore > opponentScore) {
+    return Math.min(CFG.TROPHY_WIN_BASE + Math.floor(diff / 100) * CFG.TROPHY_WIN_PER_100, CFG.TROPHY_WIN_CAP);
+  } else if (playerScore < opponentScore) {
+    return -Math.min(CFG.TROPHY_LOSE_BASE + Math.floor(diff / 150) * CFG.TROPHY_LOSE_PER_150, CFG.TROPHY_LOSE_CAP);
+  }
+  return CFG.TROPHY_DRAW;
+}
+
+// Color name -> hex mapping (rebuilt per match based on arena)
+let COLOR_HEX = {};
+function rebuildColorHex(arena) {
+  COLOR_HEX = {};
+  const ac = getArenaColors(arena);
+  ac.names.forEach((name, i) => {
+    COLOR_HEX[name] = ac.hexes[i];
+  });
+}
+// Initialize with default arena
+rebuildColorHex(CFG.ARENAS[0]);
+
+// ===== STATE =====
+let state = {
+  phase: 'home',
+  timer: CFG.MATCH_DURATION,
+  playerScore: 0,
+  opponentScore: 0,
+  lastServeTime: 0,
+  comboCount: 0,
+  playerGlasses: [],
+  selectedGlass: null,
+  opponentGlasses: [],
+  customers: [],
+  customerQueue: [],
+  activePowerUp: null,
+  playerPowerUps: [null, null],
+  opponentPowerUps: [null, null],
+  activeEffects: {
+    playerFlashPour: 0,
+    opponentFlashPour: 0,
+  },
+  clearBottleMode: false,
+  ai: { nextPourTime: 0, nextServeCheck: 0, thinkingTarget: null },
+  countdownTimer: CFG.COUNTDOWN_DURATION,
+  matchSeed: 0,
+  difficulty: 'medium',
+  stats: { matchesPlayed: 0, wins: 0, losses: 0, draws: 0, bestScore: 0, totalDrinksServed: 0, trophies: 0, arenaFloor: 0 },
+  currentArena: null,
+  currentOpponent: null,
+};
+
+// Undo history
+let undoHistory = [];
+let matchDrinksServed = 0;
+let matchBestCombo = 0;
+
+// ===== SEEDED RNG =====
+function createRNG(seed) {
+  return function() {
+    seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+    let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+
+// ===== POUR LOGIC (RAW - used by board generation AND gameplay) =====
+function canPourRaw(glasses, fromIdx, toIdx) {
+  const from = glasses[fromIdx];
+  const to = glasses[toIdx];
+  if (!from || !to) return false;
+  if (from.layers.length === 0) return false;
+  if (to.layers.length >= CFG.GLASS_CAPACITY) return false;
+  if (to.layers.length === 0) return true;
+  // Top color of source must match top color of dest
+  const fromTop = from.layers[from.layers.length - 1];
+  const toTop = to.layers[to.layers.length - 1];
+  if (fromTop !== toTop) return false;
+  // Count how many contiguous same-color layers on top of source
+  let count = 0;
+  for (let i = from.layers.length - 1; i >= 0; i--) {
+    if (from.layers[i] === fromTop) count++;
+    else break;
+  }
+  // Must have space for at least 1
+  const space = CFG.GLASS_CAPACITY - to.layers.length;
+  return space > 0;
+}
+
+function doPourRaw(glasses, fromIdx, toIdx) {
+  const from = glasses[fromIdx];
+  const to = glasses[toIdx];
+  const topColor = from.layers[from.layers.length - 1];
+  const space = CFG.GLASS_CAPACITY - to.layers.length;
+  let moved = 0;
+  while (from.layers.length > 0 && from.layers[from.layers.length - 1] === topColor && moved < space) {
+    from.layers.pop();
+    to.layers.push(topColor);
+    moved++;
+  }
+  return moved;
+}
+
+// ===== POUR LOGIC (PLAYER - manages undo) =====
+function canPour(fromIdx, toIdx) {
+  if (state.phase !== 'playing') return false;
+  const from = state.playerGlasses[fromIdx];
+  const to = state.playerGlasses[toIdx];
+  if (!from || !to) return false;
+  return canPourRaw(state.playerGlasses, fromIdx, toIdx);
+}
+
+function doPour(fromIdx, toIdx) {
+  if (!canPour(fromIdx, toIdx)) return false;
+  // Snapshot for undo
+  undoHistory.push(deepCloneGlasses(state.playerGlasses));
+  doPourRaw(state.playerGlasses, fromIdx, toIdx);
+  // Check if destination is now serveable (placeholder - full check in Module 4+)
+  checkServeable();
+  return true;
+}
+
+function doUndo() {
+  if (undoHistory.length === 0) return;
+  state.playerGlasses = undoHistory.pop();
+  state.selectedGlass = null;
+  renderPlayerBoard();
+}
+
+function deepCloneGlasses(glasses) {
+  return glasses.map(g => ({ layers: [...g.layers] }));
+}
+
+// ===== BOARD GENERATION =====
+// Shuffle-deal: evenly distribute colors across sourceGlasses, add emptyGlasses.
+// 2 empty glasses give enough workspace for solvability.
+// Seeded RNG so both players get the same board.
+function generateBoard(seed) {
+  const arena = state.currentArena || getArena(state.stats.trophies);
+  const nColors = arena.colors;
+  const nSource = arena.sourceGlasses;
+  const nEmpty = arena.emptyGlasses;
+  const colorNames = CFG.ALL_COLOR_NAMES.slice(0, nColors).map(c => c.toLowerCase());
+  const mkGlass = (layers) => ({ layers: [...layers] });
+
+  for (let attempt = 0; attempt < 50; attempt++) {
+    const rng = createRNG(seed + attempt);
+
+    // Pool: GLASS_CAPACITY layers per source glass, evenly distributed among colors
+    const totalLayers = nSource * CFG.GLASS_CAPACITY;
+    const layersPerColor = Math.floor(totalLayers / nColors);
+    const remainder = totalLayers - layersPerColor * nColors;
+    const pool = [];
+    for (let i = 0; i < nColors; i++) {
+      const count = layersPerColor + (i < remainder ? 1 : 0);
+      for (let j = 0; j < count; j++) pool.push(colorNames[i]);
+    }
+
+    // Fisher-Yates shuffle
+    for (let i = pool.length - 1; i > 0; i--) {
+      const j = Math.floor(rng() * (i + 1));
+      [pool[i], pool[j]] = [pool[j], pool[i]];
+    }
+
+    // Deal into sourceGlasses glasses of GLASS_CAPACITY each
+    const glasses = [];
+    for (let i = 0; i < nSource; i++) {
+      glasses.push(mkGlass(pool.slice(i * CFG.GLASS_CAPACITY, (i + 1) * CFG.GLASS_CAPACITY)));
+    }
+    // Add empty glasses (workspace)
+    for (let i = 0; i < nEmpty; i++) {
+      glasses.push(mkGlass([]));
+    }
+
+    // Reject if any glass is pure (all same color) — too easy to serve immediately
+    const hasPure = glasses.some(g =>
+      g.layers.length === CFG.GLASS_CAPACITY && g.layers.every(l => l === g.layers[0])
+    );
+    if (!hasPure) return glasses;
+  }
+  // Fallback: accept last attempt regardless
+  const rng = createRNG(seed + 999);
+  const totalLayers = nSource * CFG.GLASS_CAPACITY;
+  const pool = [];
+  for (let i = 0; i < nColors; i++) {
+    const count = Math.floor(totalLayers / nColors) + (i < totalLayers % nColors ? 1 : 0);
+    for (let j = 0; j < count; j++) pool.push(colorNames[i]);
+  }
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+  const glasses = [];
+  for (let i = 0; i < nSource; i++) {
+    glasses.push(mkGlass(pool.slice(i * CFG.GLASS_CAPACITY, (i + 1) * CFG.GLASS_CAPACITY)));
+  }
+  for (let i = 0; i < nEmpty; i++) glasses.push(mkGlass([]));
+  return glasses;
+}
+
+// ===== SERVEABLE CHECK =====
+function checkServeable() {
+  // Re-render boards to update serveable glow on glasses
+  renderPlayerBoard();
+  renderOpponentBoard();
+}
+
+function isGlassPure(glass) {
+  // A glass is pure if it has 1+ layers and all layers are the same color
+  return glass.layers.length > 0 &&
+         glass.layers.every(l => l === glass.layers[0]);
+}
+
+function isGlassServeable(glass) {
+  // A glass is serveable if:
+  // 1. Full (exactly 4 layers / GLASS_CAPACITY)
+  // 2. All layers are the same color (pure)
+  // 3. That color matches at least one visible customer's requested color
+  if (glass.layers.length !== CFG.GLASS_CAPACITY) return false;
+  if (!isGlassPure(glass)) return false;
+  const glassColor = glass.layers[0];
+  return state.customers.some(c =>
+    !c.servedByPlayer && c.color === glassColor
+  );
+}
+
+// ===== RENDERING =====
+function renderGlass(glass, index, isPlayer) {
+  const el = document.createElement('div');
+  const layerHeight = isPlayer ? 30 : 17;
+  const totalHeight = CFG.GLASS_CAPACITY * layerHeight + 4;
+  el.className = 'glass ' + (isPlayer ? 'player-glass' : 'opponent-glass');
+
+  el.style.height = totalHeight + 'px';
+
+  if (glass.layers.length === 0) el.classList.add('empty-glass');
+  if (isPlayer && state.selectedGlass === index) el.classList.add('selected');
+  if (isPlayer && isGlassServeable(glass)) el.classList.add('serveable');
+  // Highlight clear bottle targets
+  if (isPlayer && state.clearBottleMode && glass.layers.length > 0) {
+    el.classList.add('clear-target');
+  }
+
+  // Render layers bottom to top
+  for (let i = 0; i < glass.layers.length; i++) {
+    const layer = document.createElement('div');
+    layer.className = 'glass-layer';
+    layer.style.height = layerHeight + 'px';
+    layer.style.backgroundColor = COLOR_HEX[glass.layers[i]] || '#888';
+    if (i === 0) {
+      layer.style.borderRadius = '0 0 4px 4px';
+    }
+    el.appendChild(layer);
+  }
+
+  // Store index as data attribute for event delegation
+  el.dataset.index = index;
+
+  return el;
+}
+
+function renderPlayerBoard() {
+  const container = document.getElementById('player-board');
+  if (!container) return;
+  container.innerHTML = '';
+  state.playerGlasses.forEach((glass, i) => {
+    container.appendChild(renderGlass(glass, i, true));
+  });
+}
+
+function renderOpponentBoard() {
+  const container = document.getElementById('opponent-board');
+  if (!container) return;
+  container.innerHTML = '';
+  state.opponentGlasses.forEach((glass, i) => {
+    container.appendChild(renderGlass(glass, i, false));
+  });
+}
+
+// ===== TAP HANDLING =====
+function handleGlassTap(index) {
+  if (state.phase !== 'playing') return;
+  const glass = state.playerGlasses[index];
+
+  // Clear Bottle mode: tap a glass to clear it
+  if (state.clearBottleMode) {
+    if (glass.layers.length > 0) {
+      glass.layers = [];
+      state.clearBottleMode = false;
+      state.selectedGlass = null;
+      renderPlayerBoard();
+      checkServeable();
+    }
+    return;
+  }
+
+  // Swap mode: select two player glasses to swap contents
+  if (state.swapMode) {
+    if (state.swapFirst === null) {
+      state.swapFirst = index;
+      state.selectedGlass = index;
+      renderPlayerBoard();
+    } else if (state.swapFirst === index) {
+      // Tapped same glass — cancel selection, pick again
+      state.swapFirst = null;
+      state.selectedGlass = null;
+      renderPlayerBoard();
+    } else {
+      executeSwap(state.swapFirst, index);
+      state.selectedGlass = null;
+      renderPlayerBoard();
+      renderOpponentBoard();
+    }
+    return;
+  }
+
+  if (state.selectedGlass === null) {
+    // No glass selected — check if this glass is serveable for a quick serve
+    if (isGlassServeable(glass)) {
+      serveGlass(index);
+      return;
+    }
+    // Otherwise select this glass if it has layers
+    if (glass.layers.length > 0) {
+      state.selectedGlass = index;
+      renderPlayerBoard();
+    }
+  } else if (state.selectedGlass === index) {
+    // Tapped same glass — if serveable, serve it; otherwise deselect
+    if (isGlassServeable(glass)) {
+      state.selectedGlass = null;
+      serveGlass(index);
+    } else {
+      state.selectedGlass = null;
+      renderPlayerBoard();
+    }
+  } else {
+    // Tapped a different glass while one is selected
+    const from = state.selectedGlass;
+    const to = index;
+
+    // Priority: if tapped glass is serveable, serve it (deselect source first)
+    if (isGlassServeable(glass)) {
+      state.selectedGlass = null;
+      serveGlass(index);
+      return;
+    }
+
+    // Otherwise attempt pour
+    if (canPour(from, to)) {
+      state.selectedGlass = null;
+      doPour(from, to);
+    } else {
+      // Illegal pour — shake destination, select the tapped glass if it has layers
+      state.selectedGlass = null;
+      if (glass.layers.length > 0) {
+        state.selectedGlass = index;
+      }
+      renderPlayerBoard();
+    }
+  }
+}
+
+// Tap empty space to deselect
+document.addEventListener('click', (e) => {
+  if (state.selectedGlass !== null && !e.target.closest('.glass')) {
+    state.selectedGlass = null;
+    renderPlayerBoard();
+  }
+});
+
+// ===== SCREEN MANAGEMENT =====
+function showScreen(screenId) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
+  const screen = document.getElementById('screen-' + screenId);
+  if (screen) screen.classList.remove('hidden');
+}
+
+// ===== TIMER DISPLAY =====
+function formatTime(seconds) {
+  const m = Math.floor(seconds / 60);
+  const s = Math.floor(seconds % 60);
+  return m + ':' + String(s).padStart(2, '0');
+}
+
+function updateTimerDisplay() {
+  const el = document.getElementById('timer-display');
+  if (!el) return;
+  el.textContent = formatTime(state.timer);
+  if (state.timer <= 15) {
+    el.classList.add('timer-warning');
+  } else {
+    el.classList.remove('timer-warning');
+  }
+}
+
+function updateScoreDisplay() {
+  const ps = document.getElementById('player-score');
+  const os = document.getElementById('opponent-score');
+  if (ps) ps.textContent = state.playerScore;
+  if (os) os.textContent = state.opponentScore;
+}
+
+// ===== STATS (localStorage) =====
+function loadStats() {
+  try {
+    const saved = localStorage.getItem('barclash_stats');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      state.stats = Object.assign(state.stats, parsed);
+      // Ensure new fields exist for older saves
+      if (state.stats.trophies === undefined) state.stats.trophies = 0;
+      if (state.stats.arenaFloor === undefined) state.stats.arenaFloor = 0;
+    }
+  } catch (e) { /* ignore */ }
+}
+
+function saveStats() {
+  try {
+    localStorage.setItem('barclash_stats', JSON.stringify(state.stats));
+  } catch (e) { /* ignore */ }
+}
+
+function renderHomeStats() {
+  document.getElementById('stat-matches').textContent = state.stats.matchesPlayed;
+  // Show win rate instead of raw wins
+  const winRate = state.stats.matchesPlayed > 0
+    ? Math.round((state.stats.wins / state.stats.matchesPlayed) * 100) + '%'
+    : '0%';
+  document.getElementById('stat-wins').textContent = winRate;
+  document.getElementById('stat-best').textContent = state.stats.bestScore;
+  document.getElementById('stat-served').textContent = state.stats.totalDrinksServed;
+
+  // Arena badge
+  const arena = getArena(state.stats.trophies);
+  const nextArena = CFG.ARENAS[arena.id + 1];
+  document.getElementById('arena-badge-name').textContent = arena.emoji + ' ' + arena.name;
+  document.getElementById('arena-trophy-count').textContent = '\u{1F3C6} ' + state.stats.trophies;
+  if (nextArena) {
+    const progress = Math.min(100, ((state.stats.trophies - arena.min) / (nextArena.min - arena.min)) * 100);
+    document.getElementById('arena-progress-fill').style.width = progress + '%';
+    document.getElementById('arena-progress-label').textContent = state.stats.trophies + ' / ' + nextArena.min;
+  } else {
+    document.getElementById('arena-progress-fill').style.width = '100%';
+    document.getElementById('arena-progress-label').textContent = 'MAX ARENA';
+  }
+}
+
+// ===== DIFFICULTY SELECTOR =====
+// ===== COUNTDOWN =====
+let countdownInterval = null;
+
+function startCountdown() {
+  state.phase = 'countdown';
+  state.countdownTimer = CFG.COUNTDOWN_DURATION;
+  const overlay = document.getElementById('countdown-overlay');
+  const text = document.getElementById('countdown-text');
+  overlay.classList.remove('hidden');
+  text.textContent = state.countdownTimer;
+
+  countdownInterval = setInterval(() => {
+    state.countdownTimer--;
+    if (state.countdownTimer > 0) {
+      text.textContent = state.countdownTimer;
+      // Re-trigger animation
+      text.style.animation = 'none';
+      void text.offsetWidth;
+      text.style.animation = 'countdownPop 1s ease-out';
+    } else if (state.countdownTimer === 0) {
+      text.textContent = 'MIX!';
+      text.style.animation = 'none';
+      void text.offsetWidth;
+      text.style.animation = 'countdownPop 1s ease-out';
+    } else {
+      // Done
+      clearInterval(countdownInterval);
+      countdownInterval = null;
+      overlay.classList.add('hidden');
+      state.phase = 'playing';
+      startGameLoop();
+    }
+  }, 1000);
+}
+
+// ===== GAME LOOP (rAF-based, replaces setInterval timer) =====
+let lastFrameTime = 0;
+let gameLoopRunning = false;
+
+function gameLoop(timestamp) {
+  if (!lastFrameTime) lastFrameTime = timestamp;
+  const dt = Math.min((timestamp - lastFrameTime) / 1000, 0.1);
+  lastFrameTime = timestamp;
+
+  if (state.phase === 'playing') {
+    try {
+      state.timer -= dt;
+      if (state.timer <= 0) { state.timer = 0; endMatch(); return; }
+      updateCustomers(dt);
+      updateAI(dt);
+      updatePowerUps(dt);
+      updateEffects(dt);
+      updateSpawns(dt);
+      updateTimerDisplay();
+      updateScoreDisplay();
+      renderCustomers();
+      // NOTE: boards are NOT re-rendered every frame.
+      // renderPlayerBoard() and renderOpponentBoard() are called only on state changes
+      // (pour, undo, serve, power-up effects).
+      renderPowerUps();
+    } catch (e) {
+      console.error('Game loop error:', e);
+      // Show error visually for debugging
+      const errEl = document.getElementById('debug-error');
+      if (errEl) { errEl.style.display = 'block'; errEl.textContent = 'ERR: ' + e.message + ' | ' + e.stack?.split('\n')[1]; }
+    }
+  }
+
+  // Always keep loop alive during playing or countdown
+  if (state.phase === 'playing' || state.phase === 'countdown') {
+    requestAnimationFrame(gameLoop);
+  } else {
+    gameLoopRunning = false;
+  }
+}
+
+function startGameLoop() {
+  if (gameLoopRunning) return;
+  gameLoopRunning = true;
+  lastFrameTime = 0;
+  requestAnimationFrame(gameLoop);
+}
+
+function endMatch() {
+  state.phase = 'result';
+  gameLoopRunning = false; // rAF loop will stop on next frame check
+
+  // Calculate trophy change
+  const trophyChange = calculateTrophyChange(state.playerScore, state.opponentScore);
+  const oldTrophies = state.stats.trophies;
+  const oldArena = getArena(oldTrophies);
+
+  // Apply trophy change with floor enforcement
+  state.stats.trophies = Math.max(state.stats.arenaFloor, state.stats.trophies + trophyChange);
+
+  // Update arena floor if we reached a new arena
+  const newArena = getArena(state.stats.trophies);
+  if (newArena.min > state.stats.arenaFloor) {
+    state.stats.arenaFloor = newArena.min;
+  }
+
+  // Update stats
+  state.stats.matchesPlayed++;
+  if (state.playerScore > state.opponentScore) state.stats.wins++;
+  else if (state.playerScore < state.opponentScore) state.stats.losses++;
+  else state.stats.draws++;
+  if (state.playerScore > state.stats.bestScore) state.stats.bestScore = state.playerScore;
+  state.stats.totalDrinksServed += matchDrinksServed;
+  saveStats();
+
+  // Check for arena promotion
+  const promoted = newArena.id > oldArena.id;
+  if (promoted) {
+    showArenaUnlockOverlay(newArena, oldArena, function() {
+      showResultScreen(trophyChange, oldTrophies);
+    });
+  } else {
+    showResultScreen(trophyChange, oldTrophies);
+  }
+}
+
+function showArenaUnlockOverlay(newArena, oldArena, callback) {
+  const overlay = document.getElementById('arena-unlock-overlay');
+  document.getElementById('unlock-emoji').textContent = newArena.emoji;
+  document.getElementById('unlock-name').textContent = newArena.name;
+
+  // Determine what's new
+  const newFeatures = [];
+  if (newArena.colors > oldArena.colors) {
+    const newColorIdx = newArena.colors - 1;
+    newFeatures.push('New: ' + CFG.ALL_COLOR_NAMES[newColorIdx] + ' color!');
+  }
+  const newTotal = newArena.sourceGlasses + newArena.emptyGlasses;
+  const oldTotal = oldArena.sourceGlasses + oldArena.emptyGlasses;
+  if (newTotal > oldTotal) {
+    newFeatures.push('New: ' + newTotal + ' glasses!');
+  }
+  const newPowerUps = newArena.powerUps.filter(p => !oldArena.powerUps.includes(p));
+  newPowerUps.forEach(p => {
+    const names = { extraBottle: 'Extra Bottle', flashPour: 'Flash Pour', swap: 'Swap', clearBottle: 'Clear Bottle' };
+    newFeatures.push('New: ' + (names[p] || p) + ' power-up!');
+  });
+  document.getElementById('unlock-details').textContent = newFeatures.join('\n');
+
+  overlay.classList.remove('hidden');
+  showScreen('result'); // show result screen behind it
+
+  function dismiss() {
+    overlay.classList.add('hidden');
+    overlay.removeEventListener('click', dismiss);
+    if (callback) callback();
+  }
+  overlay.addEventListener('click', dismiss);
+}
+
+function showResultScreen(trophyChange, oldTrophies) {
+  const title = document.getElementById('result-title');
+  if (state.playerScore > state.opponentScore) {
+    title.textContent = 'YOU WIN!';
+    title.className = 'result-title win';
+  } else if (state.playerScore < state.opponentScore) {
+    title.textContent = 'YOU LOSE';
+    title.className = 'result-title lose';
+  } else {
+    title.textContent = 'DRAW';
+    title.className = 'result-title draw';
+  }
+  document.getElementById('result-player-score').textContent = state.playerScore;
+  document.getElementById('result-opponent-score').textContent = state.opponentScore;
+  document.getElementById('result-drinks').textContent = matchDrinksServed;
+  document.getElementById('result-combo').textContent = matchBestCombo + 'x';
+
+  // Arena name in stats
+  const arena = getArena(state.stats.trophies);
+  document.getElementById('result-arena').textContent = arena.emoji + ' ' + arena.name;
+
+  // Trophy section
+  if (trophyChange !== undefined) {
+    const changeEl = document.getElementById('trophy-change');
+    const sign = trophyChange > 0 ? '+' : '';
+    changeEl.textContent = '\u{1F3C6} ' + sign + trophyChange + ' trophies';
+    changeEl.className = 'trophy-change ' + (trophyChange > 0 ? 'positive' : trophyChange < 0 ? 'negative' : 'neutral');
+
+    document.getElementById('trophy-transition').textContent =
+      '\u{1F3C6} ' + oldTrophies + ' \u2192 ' + state.stats.trophies;
+
+    const nextArena = CFG.ARENAS[arena.id + 1];
+    document.getElementById('trophy-arena-badge').textContent = arena.emoji + ' ' + arena.name;
+    if (nextArena) {
+      const progress = Math.min(100, ((state.stats.trophies - arena.min) / (nextArena.min - arena.min)) * 100);
+      document.getElementById('trophy-progress-fill').style.width = progress + '%';
+    } else {
+      document.getElementById('trophy-progress-fill').style.width = '100%';
+    }
+  }
+
+  showScreen('result');
+}
+
+// ===== MATCH INITIALIZATION =====
+function startMatch() {
+  // Determine arena from trophies
+  const arena = getArena(state.stats.trophies);
+  state.currentArena = arena;
+
+  // Rebuild COLOR_HEX for this arena
+  rebuildColorHex(arena);
+
+  // Reset match state
+  state.timer = CFG.MATCH_DURATION;
+  state.playerScore = 0;
+  state.opponentScore = 0;
+  state.lastServeTime = 0;
+  state.comboCount = 0;
+  state.selectedGlass = null;
+  state.customers = [];
+  state.customerQueue = [];
+  state.activePowerUp = null;
+  state.playerPowerUps = [null, null];
+  state.opponentPowerUps = [null, null];
+  state.activeEffects = {
+    playerFlashPour: 0,
+    opponentFlashPour: 0,
+  };
+  state.ai = { nextPourTime: 0, nextServeCheck: 0, thinkingTarget: null };
+  state.swapMode = false;
+  state.swapFirst = null;
+  state.clearBottleMode = false;
+  state.spawnCharges = CFG.SPAWN_START_CHARGES;
+  state.spawnRechargeTimer = CFG.SPAWN_RECHARGE_TIME;
+  state.aiSpawnCharges = CFG.SPAWN_START_CHARGES;
+  state.aiSpawnRechargeTimer = CFG.SPAWN_RECHARGE_TIME;
+  nextPowerUpSpawn = CFG.FIRST_POWERUP_SPAWN;
+  undoHistory = [];
+  matchDrinksServed = 0;
+  matchBestCombo = 0;
+
+  // Generate board with arena-specific sourceGlasses + emptyGlasses
+  state.matchSeed = Date.now();
+  state.playerGlasses = generateBoard(state.matchSeed);
+  state.opponentGlasses = deepCloneGlasses(state.playerGlasses);
+
+  // Generate customer queue and spawn initial customers
+  state.customerQueue = generateCustomerQueue(state.matchSeed);
+  spawnInitialCustomers();
+
+  // Apply arena background gradient
+  const gameEl = document.getElementById('game');
+  if (gameEl) {
+    gameEl.style.background = 'linear-gradient(180deg, ' + arena.bg[0] + ' 0%, ' + arena.bg[1] + ' 100%)';
+  }
+
+  // Render
+  updateTimerDisplay();
+  updateScoreDisplay();
+  renderPlayerBoard();
+  renderOpponentBoard();
+  renderCustomers();
+  updateSpawnButton();
+
+  showScreen('match');
+  startCountdown();
+}
+
+// ===== COLOR SPAWN =====
+function pickSpawnColor() {
+  const arena = state.currentArena || getArena(state.stats.trophies);
+  const colorNames = getArenaColors(arena).names;
+  if (Math.random() < CFG.SPAWN_CUSTOMER_WEIGHT && state.customers.length > 0) {
+    const customerColors = state.customers.filter(c => !c.servedByPlayer && !c.servedByOpponent).map(c => c.color);
+    if (customerColors.length > 0) return customerColors[Math.floor(Math.random() * customerColors.length)];
+  }
+  return colorNames[Math.floor(Math.random() * colorNames.length)];
+}
+
+function findSpawnTarget(glasses) {
+  const candidates = [];
+  for (let i = 0; i < glasses.length; i++) {
+    if (glasses[i].layers.length < CFG.GLASS_CAPACITY) candidates.push(i);
+  }
+  if (candidates.length === 0) return -1;
+  return candidates[Math.floor(Math.random() * candidates.length)];
+}
+
+function useSpawn() {
+  if (state.phase !== 'playing') return;
+  if (state.spawnCharges <= 0) return;
+  const idx = findSpawnTarget(state.playerGlasses);
+  if (idx < 0) {
+    const btn = document.getElementById('btn-spawn');
+    if (btn) { btn.classList.add('shake'); setTimeout(() => btn.classList.remove('shake'), 300); }
+    return;
+  }
+  state.spawnCharges--;
+  state.playerGlasses[idx].layers.push(pickSpawnColor());
+  renderPlayerBoard();
+  updateSpawnButton();
+}
+
+function aiUseSpawn() {
+  if (state.aiSpawnCharges <= 0) return;
+  const idx = findSpawnTarget(state.opponentGlasses);
+  if (idx < 0) return;
+  state.aiSpawnCharges--;
+  const arena = state.currentArena || getArena(state.stats.trophies);
+  const colorNames = getArenaColors(arena).names;
+  // AI uses same color weighting
+  let color;
+  if (Math.random() < CFG.SPAWN_CUSTOMER_WEIGHT && state.customers.length > 0) {
+    const cc = state.customers.filter(c => !c.servedByOpponent).map(c => c.color);
+    color = cc.length > 0 ? cc[Math.floor(Math.random() * cc.length)] : colorNames[Math.floor(Math.random() * colorNames.length)];
+  } else {
+    color = colorNames[Math.floor(Math.random() * colorNames.length)];
+  }
+  state.opponentGlasses[idx].layers.push(color);
+  renderOpponentBoard();
+}
+
+function updateSpawns(dt) {
+  // Player recharge
+  if (state.spawnCharges < CFG.SPAWN_MAX_CHARGES) {
+    state.spawnRechargeTimer -= dt;
+    if (state.spawnRechargeTimer <= 0) {
+      state.spawnCharges = Math.min(state.spawnCharges + 1, CFG.SPAWN_MAX_CHARGES);
+      state.spawnRechargeTimer = CFG.SPAWN_RECHARGE_TIME;
+    }
+  }
+  // AI recharge
+  if (state.aiSpawnCharges < CFG.SPAWN_MAX_CHARGES) {
+    state.aiSpawnRechargeTimer -= dt;
+    if (state.aiSpawnRechargeTimer <= 0) {
+      state.aiSpawnCharges = Math.min(state.aiSpawnCharges + 1, CFG.SPAWN_MAX_CHARGES);
+      state.aiSpawnRechargeTimer = CFG.SPAWN_RECHARGE_TIME;
+    }
+  }
+  // AI decides when to spawn (strategic — not instant)
+  if (state.aiSpawnCharges > 0) {
+    const totalLayers = state.opponentGlasses.reduce((sum, g) => sum + g.layers.length, 0);
+    const hasEmptySpace = state.opponentGlasses.some(g => g.layers.length < CFG.GLASS_CAPACITY);
+    const chargesFull = state.aiSpawnCharges >= CFG.SPAWN_MAX_CHARGES;
+    if (hasEmptySpace && (chargesFull || totalLayers < 12 || Math.random() < 0.3)) {
+      aiUseSpawn();
+    }
+  }
+  updateSpawnButton();
+}
+
+function updateSpawnButton() {
+  const btn = document.getElementById('btn-spawn');
+  const count = document.getElementById('spawn-count');
+  const ring = document.getElementById('spawn-ring-fill');
+  if (!btn || !count) return;
+  count.textContent = state.spawnCharges || 0;
+  btn.classList.toggle('disabled', state.spawnCharges <= 0);
+  // Progress ring: circumference = 2 * PI * 16 ≈ 100.5
+  if (ring && state.spawnCharges < CFG.SPAWN_MAX_CHARGES) {
+    const progress = 1 - (state.spawnRechargeTimer / CFG.SPAWN_RECHARGE_TIME);
+    ring.style.strokeDashoffset = 100.5 * (1 - progress);
+  } else if (ring) {
+    ring.style.strokeDashoffset = 0; // full
+  }
+}
+
+// ===== DELEGATED CLICK HANDLERS (survive DOM rebuilds) =====
+document.getElementById('player-board').addEventListener('click', (e) => {
+  const glass = e.target.closest('.glass');
+  if (!glass || glass.dataset.index === undefined) return;
+  handleGlassTap(parseInt(glass.dataset.index));
+});
+document.getElementById('opponent-board').addEventListener('click', (e) => {
+  const glass = e.target.closest('.glass');
+  if (!glass || glass.dataset.index === undefined) return;
+  if (typeof handleOpponentGlassTap === 'function') handleOpponentGlassTap(parseInt(glass.dataset.index));
+});
+// Floating power-up bubble (recreated each frame, use delegation on customer-zone)
+document.getElementById('customer-zone').addEventListener('click', (e) => {
+  const bubble = e.target.closest('.floating-powerup');
+  if (bubble) { e.stopPropagation(); playerCollectPowerUp(); }
+});
+// Power-up inventory slots (persistent elements, use delegation on parent)
+document.querySelector('.powerup-inventory').addEventListener('click', (e) => {
+  const slot = e.target.closest('.powerup-slot');
+  if (!slot) return;
+  const idx = slot.id === 'powerup-slot-0' ? 0 : slot.id === 'powerup-slot-1' ? 1 : -1;
+  if (idx >= 0) playerUsePowerUp(idx);
+});
+
+// ===== MATCHMAKING ANIMATION =====
+const OPPONENT_NAMES = [
+  "MixMaster","ShakerQueen","DrCocktail","IceColdSteve","BarBoss",
+  "SippinSally","PourKing","CocktailNinja","TikiTom","MartiniMax",
+  "JuiceGoose","BuzzBender","LemonDrop","OnTheRocks","NeatFreak",
+  "LastCall","HappyHour","MuddlerPro","TopShelf","DoubleShot",
+  "SourMix","HighBall","Garnisher","StirCrazy","ShotCaller",
+  "BarFlyer","ShakeItUp","FreezeFrame","DirtyMartini","BlueLagoon"
+];
+const OPPONENT_AVATARS = ["\u{1F378}","\u{1F379}","\u{1F943}","\u{1F37A}","\u{1F9C9}","\u{1F942}","\u{1F377}","\u{1FAD7}","\u{1F9CA}","\u{1F525}"];
+
+function generateOpponent() {
+  const arena = getArena(state.stats.trophies);
+  const name = OPPONENT_NAMES[Math.floor(Math.random() * OPPONENT_NAMES.length)];
+  const avatar = OPPONENT_AVATARS[Math.floor(Math.random() * OPPONENT_AVATARS.length)];
+  // Trophies within +/-100 of player, clamped to arena range
+  const offset = Math.floor(Math.random() * 201) - 100; // -100 to +100
+  const oppTrophies = Math.max(arena.min, Math.min(arena.max, state.stats.trophies + offset));
+  return { name, avatar, trophies: oppTrophies };
+}
+
+function startMatchmaking() {
+  showScreen('prematch');
+  state.phase = 'prematch';
+
+  const avatarEl = document.getElementById('opponent-avatar');
+  const nameEl = document.getElementById('opponent-name');
+  const trophiesEl = document.getElementById('opponent-trophies');
+  const statusEl = document.getElementById('matchmaking-status');
+  const startBtn = document.getElementById('btn-start');
+  const vsText = document.getElementById('vs-text');
+
+  // Reset state
+  startBtn.classList.add('hidden');
+  statusEl.textContent = 'Finding opponent...';
+  statusEl.className = 'matchmaking-status';
+  avatarEl.className = 'vs-avatar cycling';
+  nameEl.className = 'vs-name';
+  nameEl.textContent = 'Searching...';
+  trophiesEl.textContent = '';
+  vsText.style.opacity = '0.3';
+
+  // Generate the final opponent
+  const finalOpponent = generateOpponent();
+  state.currentOpponent = finalOpponent;
+
+  // Cycle through random opponents — start fast, slow down, stop
+  let cycleCount = 0;
+  const totalCycles = 15 + Math.floor(Math.random() * 8); // 15-22 cycles
+
+  function cycle() {
+    cycleCount++;
+    if (cycleCount >= totalCycles) {
+      // Final — show chosen opponent
+      avatarEl.textContent = finalOpponent.avatar;
+      nameEl.textContent = finalOpponent.name;
+      trophiesEl.textContent = '\u{1F3C6} ' + finalOpponent.trophies;
+      avatarEl.className = 'vs-avatar found';
+      nameEl.className = 'vs-name found';
+      statusEl.textContent = 'Opponent found!';
+      statusEl.className = 'matchmaking-status found';
+      vsText.style.opacity = '1';
+
+      // Show START button after a beat
+      setTimeout(() => {
+        startBtn.classList.remove('hidden');
+        startBtn.style.animation = 'none';
+        void startBtn.offsetWidth;
+        startBtn.style.animation = 'avatarFound 0.4s ease-out';
+      }, 400);
+      return;
+    }
+
+    // Show random opponent
+    const rndName = OPPONENT_NAMES[Math.floor(Math.random() * OPPONENT_NAMES.length)];
+    const rndAvatar = OPPONENT_AVATARS[Math.floor(Math.random() * OPPONENT_AVATARS.length)];
+    avatarEl.textContent = rndAvatar;
+    nameEl.textContent = rndName;
+
+    // Slow down as we approach the end: 80ms -> 250ms
+    const progress = cycleCount / totalCycles;
+    const delay = 80 + progress * progress * 200;
+    setTimeout(cycle, delay);
+  }
+
+  // Start cycling after a short initial delay
+  setTimeout(cycle, 300);
+}
+
+// ===== BUTTON HANDLERS =====
+document.getElementById('btn-play').addEventListener('click', () => {
+  startMatchmaking();
+});
+
+document.getElementById('btn-start').addEventListener('click', () => {
+  try { startMatch(); } catch(e) { alert('startMatch error: ' + e.message); console.error(e); }
+});
+
+document.getElementById('btn-undo').addEventListener('click', () => {
+  doUndo();
+});
+
+document.getElementById('btn-spawn').addEventListener('click', () => {
+  useSpawn();
+});
+
+document.getElementById('btn-play-again').addEventListener('click', () => {
+  startMatchmaking();
+});
+
+document.getElementById('btn-home').addEventListener('click', () => {
+  state.phase = 'home';
+  // Reset background to default
+  const gameEl = document.getElementById('game');
+  if (gameEl) gameEl.style.background = '';
+  showScreen('home');
+  renderHomeStats();
+});
+
+// ===== KEYBOARD SUPPORT =====
+document.addEventListener('keydown', (e) => {
+  // Keys 1-6 tap glasses
+  if (e.key >= '1' && e.key <= '6') {
+    const idx = parseInt(e.key) - 1;
+    if (idx < state.playerGlasses.length) {
+      handleGlassTap(idx);
+    }
+    return;
+  }
+  // U for undo
+  if (e.key === 'u' || e.key === 'U') {
+    doUndo();
+    return;
+  }
+  if (e.key === 'g' || e.key === 'G') {
+    useSpawn();
+    return;
+  }
+  // P to start match (from home or prematch)
+  if (e.key === 'p' || e.key === 'P') {
+    if (state.phase === 'home') {
+      document.getElementById('btn-play').click();
+    } else if (state.phase === 'prematch') {
+      document.getElementById('btn-start').click();
+    }
+    return;
+  }
+  // Escape to deselect or cancel modes
+  if (e.key === 'Escape') {
+    if (state.clearBottleMode) {
+      state.clearBottleMode = false;
+      renderPlayerBoard();
+      return;
+    }
+    if (state.swapMode) {
+      state.swapMode = false;
+      state.swapFirst = null;
+      state.selectedGlass = null;
+      renderPlayerBoard();
+      return;
+    }
+    if (state.selectedGlass !== null) {
+      state.selectedGlass = null;
+      renderPlayerBoard();
+    }
+    return;
+  }
+});
+
+// ===== INIT =====
+loadStats();
+renderHomeStats();
+showScreen('home');
+
+// ============================================================
+// MODULE 4: CUSTOMER SYSTEM
+// ============================================================
+
+function generateCustomerQueue(seed) {
+  // Pre-generate 30 customers for the match
+  const rng = createRNG(seed + 42);
+  const queue = [];
+  const arena = state.currentArena || getArena(state.stats.trophies);
+  const colorNames = getArenaColors(arena).names;
+  const emojis = ['\u{1F604}','\u{1F929}','\u{1F60E}','\u{1F9D0}','\u{1F973}','\u{1F60B}','\u{1F913}','\u{1F47D}','\u{1F916}','\u{1F98A}'];
+  for (let i = 0; i < 30; i++) {
+    queue.push({
+      color: colorNames[Math.floor(rng() * colorNames.length)],
+      patience: CFG.CUSTOMER_PATIENCE,
+      maxPatience: CFG.CUSTOMER_PATIENCE,
+      servedByPlayer: false,
+      servedByOpponent: false,
+      graceTimer: 0,
+      leaving: false,
+      emoji: emojis[Math.floor(rng() * emojis.length)],
+    });
+  }
+  return queue;
+}
+
+function spawnInitialCustomers() {
+  state.customers = [];
+  for (let i = 0; i < CFG.VISIBLE_CUSTOMERS; i++) {
+    if (state.customerQueue.length > 0) {
+      state.customers.push(state.customerQueue.shift());
+    }
+  }
+}
+
+function updateCustomers(dt) {
+  // Called every frame with delta time in seconds
+  for (let i = state.customers.length - 1; i >= 0; i--) {
+    const c = state.customers[i];
+
+    // Grace timer (customer already served by someone, waiting for other player)
+    if (c.servedByPlayer || c.servedByOpponent) {
+      c.graceTimer -= dt;
+      if (c.graceTimer <= 0 || (c.servedByPlayer && c.servedByOpponent)) {
+        // Remove customer, spawn next
+        state.customers.splice(i, 1);
+        if (state.customerQueue.length > 0) {
+          state.customers.push(state.customerQueue.shift());
+        }
+        continue;
+      }
+    }
+
+    // Patience countdown
+    if (!c.servedByPlayer && !c.servedByOpponent) {
+      c.patience -= dt;
+      if (c.patience <= 0) {
+        // Customer leaves angry — penalty to BOTH players
+        state.playerScore += CFG.CUSTOMER_LEAVE_PENALTY;
+        state.opponentScore += CFG.CUSTOMER_LEAVE_PENALTY;
+        c.leaving = true;
+        state.customers.splice(i, 1);
+        if (state.customerQueue.length > 0) {
+          state.customers.push(state.customerQueue.shift());
+        }
+        showScorePop(CFG.CUSTOMER_LEAVE_PENALTY, 'player');
+        showScorePop(CFG.CUSTOMER_LEAVE_PENALTY, 'opponent');
+      }
+    }
+  }
+}
+
+function renderCustomers() {
+  const zone = document.getElementById('customer-zone');
+  if (!zone) { console.warn('NO ZONE'); return; }
+  // Preserve floating power-up bubble before clearing
+  const bubble = zone.querySelector('.floating-powerup');
+  const bubbleClone = bubble ? bubble.cloneNode(true) : null;
+  zone.innerHTML = '';
+
+  for (let i = 0; i < CFG.VISIBLE_CUSTOMERS; i++) {
+    const slot = document.createElement('div');
+    slot.className = 'customer-slot';
+
+    if (i >= state.customers.length) {
+      // Empty slot
+      slot.classList.add('empty-slot');
+      slot.innerHTML = '<span style="color:rgba(255,255,255,0.2)">?</span>';
+      zone.appendChild(slot);
+      continue;
+    }
+
+    const c = state.customers[i];
+    const colorHex = COLOR_HEX[c.color] || '#888';
+
+    // Emoji
+    const emojiEl = document.createElement('div');
+    emojiEl.className = 'customer-emoji';
+    emojiEl.textContent = c.emoji;
+    slot.appendChild(emojiEl);
+
+    // Drink label (colored circle + text)
+    const drinkLabel = document.createElement('div');
+    drinkLabel.className = 'customer-drink-label';
+    drinkLabel.style.color = colorHex;
+    drinkLabel.innerHTML = '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:' +
+      colorHex + ';margin-right:3px;vertical-align:middle;"></span>' +
+      c.color.charAt(0).toUpperCase() + c.color.slice(1);
+    slot.appendChild(drinkLabel);
+
+    // Served badge
+    if (c.servedByPlayer || c.servedByOpponent) {
+      const badge = document.createElement('div');
+      badge.style.cssText = 'position:absolute;top:4px;right:4px;background:#44CC44;color:#fff;font-size:8px;font-weight:800;padding:1px 4px;border-radius:4px;text-transform:uppercase;';
+      badge.textContent = 'SERVED!';
+      slot.appendChild(badge);
+      slot.style.opacity = '0.6';
+    }
+
+    // Patience bar
+    const patienceBar = document.createElement('div');
+    patienceBar.className = 'patience-bar';
+    const patienceFill = document.createElement('div');
+    patienceFill.className = 'patience-fill';
+    const pct = Math.max(0, c.patience / c.maxPatience) * 100;
+    patienceFill.style.width = pct + '%';
+    // Color: green > yellow (under 8s) > red (under 4s)
+    if (c.patience <= 4) {
+      patienceFill.style.backgroundColor = '#FF4444';
+    } else if (c.patience <= 8) {
+      patienceFill.style.backgroundColor = '#FFCC00';
+    } else {
+      patienceFill.style.backgroundColor = '#44CC44';
+    }
+    patienceBar.appendChild(patienceFill);
+    slot.appendChild(patienceBar);
+
+    zone.appendChild(slot);
+  }
+}
+
+
+// ============================================================
+// MODULE 5: SERVE SYSTEM
+// ============================================================
+
+function serveGlass(glassIndex) {
+  const glass = state.playerGlasses[glassIndex];
+  if (!isGlassServeable(glass)) return;
+
+  const glassColor = glass.layers[0];
+  const layers = glass.layers.length;
+  const colorHex = COLOR_HEX[glassColor] || '#888';
+
+  // Find the customer with lowest patience that matches this color
+  let targetCustomer = null;
+  let targetIdx = -1;
+  for (let i = 0; i < state.customers.length; i++) {
+    const c = state.customers[i];
+    if (!c.servedByPlayer && c.color === glassColor) {
+      if (!targetCustomer || c.patience < targetCustomer.patience) {
+        targetCustomer = c;
+        targetIdx = i;
+      }
+    }
+  }
+
+  if (!targetCustomer) return;
+
+  // === Fly animation: create a clone of the glass that flies to customer ===
+  const glassEl = document.querySelectorAll('#player-board .glass')[glassIndex];
+  const customerSlots = document.querySelectorAll('#customer-zone .customer-slot');
+  if (glassEl && customerSlots[targetIdx]) {
+    const glassRect = glassEl.getBoundingClientRect();
+    const custRect = customerSlots[targetIdx].getBoundingClientRect();
+
+    // Create flying glass clone
+    const fly = document.createElement('div');
+    fly.className = 'serve-fly';
+    fly.style.left = glassRect.left + 'px';
+    fly.style.top = glassRect.top + 'px';
+    fly.style.height = glassRect.height + 'px';
+    fly.style.background = 'rgba(255,255,255,0.12)';
+    // Fill with color layers
+    for (let i = 0; i < layers; i++) {
+      const layer = document.createElement('div');
+      layer.style.width = '100%';
+      layer.style.height = (glassRect.height - 4) / CFG.GLASS_CAPACITY + 'px';
+      layer.style.backgroundColor = colorHex;
+      if (i === 0) layer.style.borderRadius = '0 0 4px 4px';
+      fly.appendChild(layer);
+    }
+
+    // Animate position from glass to customer
+    const dx = custRect.left + custRect.width / 2 - glassRect.left - glassRect.width / 2;
+    const dy = custRect.top + custRect.height / 2 - glassRect.top - glassRect.height / 2;
+    fly.style.setProperty('--dx', dx + 'px');
+    fly.style.setProperty('--dy', dy + 'px');
+    fly.animate([
+      { transform: 'translate(0,0) scale(1)', opacity: 1 },
+      { transform: 'translate(' + dx + 'px,' + dy + 'px) scale(0.4)', opacity: 0.3 }
+    ], { duration: 450, easing: 'cubic-bezier(0.2,0.8,0.3,1)', fill: 'forwards' });
+
+    document.body.appendChild(fly);
+    setTimeout(() => { if (fly.parentNode) fly.remove(); }, 500);
+
+    // Pulse the customer slot
+    customerSlots[targetIdx].classList.add('served-anim');
+    setTimeout(() => customerSlots[targetIdx].classList.remove('served-anim'), 450);
+  }
+
+  // Calculate points
+  let points = layers * CFG.POINTS_PER_LAYER;
+
+  // Speed bonus: first to serve this customer
+  let isFirstToServe = !targetCustomer.servedByOpponent;
+  if (isFirstToServe) {
+    points += CFG.SPEED_BONUS;
+  }
+
+  // Combo tracking
+  const now = state.timer;
+  const elapsed = CFG.MATCH_DURATION - now;
+  if (state.lastServeTime > 0 && (elapsed - state.lastServeTime) <= CFG.COMBO_WINDOW) {
+    state.comboCount++;
+    points += CFG.COMBO_BONUS * state.comboCount;
+  } else {
+    state.comboCount = 1;
+  }
+  state.lastServeTime = elapsed;
+
+  // Track best combo
+  if (state.comboCount > matchBestCombo) {
+    matchBestCombo = state.comboCount;
+  }
+
+  // Award points
+  state.playerScore += points;
+
+  // Clear glass layers — stays empty
+  glass.layers = [];
+
+  // Mark customer as served by player, start grace timer
+  targetCustomer.servedByPlayer = true;
+  targetCustomer.graceTimer = CFG.SERVE_GRACE_WINDOW;
+
+  // Increment drinks served
+  matchDrinksServed++;
+
+  // Show score popup
+  showScorePop(points, 'player');
+
+  // Snapshot for undo should NOT undo a serve, so clear undo history
+  undoHistory = [];
+
+  // Re-render
+  state.selectedGlass = null;
+  checkServeable();
+}
+
+
+// ============================================================
+// MODULE 6: SCORE POPUP SYSTEM
+// ============================================================
+
+function showScorePop(points, side) {
+  const container = document.getElementById('screen-match');
+  if (!container) return;
+
+  const pop = document.createElement('div');
+  pop.className = 'score-pop';
+  pop.textContent = (points >= 0 ? '+' : '') + points;
+
+  // Color based on value
+  if (points < 0) {
+    pop.style.color = '#FF4444';
+  } else if (points >= 100) {
+    pop.style.color = '#FFD700'; // gold for big scores
+  } else {
+    pop.style.color = '#44CC44'; // green for positive
+  }
+
+  // Position near the relevant score display
+  if (side === 'player') {
+    pop.style.left = '60px';
+    pop.style.top = '14px';
+  } else {
+    pop.style.right = '60px';
+    pop.style.left = 'auto';
+    pop.style.top = '14px';
+  }
+
+  container.appendChild(pop);
+
+  // Remove after animation completes
+  setTimeout(() => {
+    if (pop.parentNode) pop.parentNode.removeChild(pop);
+  }, 650);
+}
+
+// ============================================================
+// MODULE 7: AI OPPONENT
+// ============================================================
+
+// getAIDifficulty is now defined in the arena helpers section above
+
+function updateAI(dt) {
+  if (state.phase !== 'playing') return;
+  const diff = getAIDifficulty();
+
+  // 1. Check if it's time to make a pour
+  state.ai.nextPourTime -= dt;
+  if (state.ai.nextPourTime <= 0) {
+    aiMakePour(diff);
+    state.ai.nextPourTime = diff.pourIntervalMin + Math.random() * (diff.pourIntervalMax - diff.pourIntervalMin);
+  }
+
+  // 2. Check if AI should serve
+  state.ai.nextServeCheck -= dt;
+  if (state.ai.nextServeCheck <= 0) {
+    aiCheckServe(diff);
+    state.ai.nextServeCheck = diff.serveDelay;
+  }
+}
+
+function aiMakePour(diff) {
+  const glasses = state.opponentGlasses;
+
+  // Mistake: X% chance of random legal move
+  if (Math.random() < diff.mistakeRate) {
+    const randomMoves = [];
+    for (let i = 0; i < glasses.length; i++)
+      for (let j = 0; j < glasses.length; j++)
+        if (i !== j && canPourRaw(glasses, i, j)) randomMoves.push([i, j]);
+    if (randomMoves.length) {
+      const [f, t] = randomMoves[Math.floor(Math.random() * randomMoves.length)];
+      doPourRaw(glasses, f, t);
+      renderOpponentBoard();
+    }
+    return;
+  }
+
+  // Smart move: evaluate all legal pours
+  const targetColors = state.customers
+    .filter(c => !c.servedByOpponent)
+    .map(c => c.color);
+
+  let bestMove = null, bestScore = -Infinity;
+
+  for (let i = 0; i < glasses.length; i++) {
+    for (let j = 0; j < glasses.length; j++) {
+      if (i !== j && canPourRaw(glasses, i, j)) {
+        const score = evaluateAIPour(glasses, i, j, targetColors);
+        if (score > bestScore) { bestScore = score; bestMove = [i, j]; }
+      }
+    }
+  }
+
+  if (bestMove) { doPourRaw(glasses, bestMove[0], bestMove[1]); renderOpponentBoard(); }
+}
+
+function evaluateAIPour(glasses, from, to, targetColors) {
+  const simGlasses = deepCloneGlasses(glasses);
+  doPourRaw(simGlasses, from, to);
+  const dest = simGlasses[to];
+  const src = simGlasses[from];
+  const srcColor = glasses[from].layers[glasses[from].layers.length - 1];
+
+  let score = 0;
+
+  // +5 if pour creates a FULL pure glass matching a customer (instant serve!)
+  if (dest.layers.length === CFG.GLASS_CAPACITY && isGlassPure(dest) && targetColors.includes(dest.layers[0])) score += 5;
+  // +3 if pour creates a pure glass matching a customer (any size)
+  else if (isGlassPure(dest) && dest.layers.length > 0 && targetColors.includes(dest.layers[0])) score += 3;
+
+  // +2 if pour increases same-color stack toward a target color
+  if (targetColors.includes(srcColor)) {
+    const oldStack = countTopStack(glasses[to]);
+    const newStack = countTopStack(dest);
+    if (newStack > oldStack) score += 2;
+  }
+
+  // +1 if pour consolidates (moves color to glass that already has it)
+  if (glasses[to].layers.length > 0 && glasses[to].layers.includes(srcColor)) score += 1;
+
+  // +1 if pour fully empties the source glass (creates workspace)
+  if (src.layers.length === 0) score += 1;
+
+  // -1 if pour breaks an existing same-color stack on source
+  if (src.layers.length > 0) {
+    const oldSrcStack = countTopStack(glasses[from]);
+    const newSrcStack = countTopStack(src);
+    if (newSrcStack < oldSrcStack && oldSrcStack > 1) score -= 1;
+  }
+
+  // -2 if pour fills the last empty glass (losing workspace)
+  const emptyCount = simGlasses.filter(g => g.layers.length === 0).length;
+  if (emptyCount === 0) score -= 2;
+
+  // -1 if pouring to a non-target color glass when targets are available
+  if (targetColors.length > 0 && !targetColors.includes(srcColor)) score -= 0.5;
+
+  return score;
+}
+
+function countTopStack(glass) {
+  if (!glass.layers.length) return 0;
+  const top = glass.layers[glass.layers.length - 1];
+  let count = 0;
+  for (let i = glass.layers.length - 1; i >= 0 && glass.layers[i] === top; i--) count++;
+  return count;
+}
+
+function aiCheckServe(diff) {
+  const glasses = state.opponentGlasses;
+  for (let i = 0; i < glasses.length; i++) {
+    const g = glasses[i];
+    if (g.layers.length !== CFG.GLASS_CAPACITY || !isGlassPure(g)) continue;
+    const color = g.layers[0];
+    // Find matching unserved customer (prefer lowest patience)
+    let bestCustomer = null;
+    for (const c of state.customers) {
+      if (c.color === color && !c.servedByOpponent && !c.leaving) {
+        if (!bestCustomer || c.patience < bestCustomer.patience) bestCustomer = c;
+      }
+    }
+    if (bestCustomer) {
+      const points = g.layers.length * CFG.POINTS_PER_LAYER;
+      let totalPoints = points;
+      // Speed bonus if first to serve
+      if (!bestCustomer.servedByPlayer) totalPoints += CFG.SPEED_BONUS;
+      state.opponentScore += totalPoints;
+      bestCustomer.servedByOpponent = true;
+      bestCustomer.graceTimer = CFG.SERVE_GRACE_WINDOW;
+      g.layers = [];
+      showScorePop(totalPoints, 'opponent');
+      renderOpponentBoard();
+      break; // only serve one per check
+    }
+  }
+}
+
+
+// ============================================================
+// MODULE 8: POWER-UP SYSTEM
+// ============================================================
+
+let nextPowerUpSpawn = CFG.FIRST_POWERUP_SPAWN;
+
+const POWERUP_ICONS = {
+  extraBottle: '\u2795',    // plus
+  flashPour:   '\u26A1',    // lightning
+  swap:        '\u{1F504}', // arrows cycle
+  clearBottle: '\u{1F9FD}', // sponge
+};
+
+function updatePowerUps(dt) {
+  // Spawn timer
+  nextPowerUpSpawn -= dt;
+  if (nextPowerUpSpawn <= 0 && !state.activePowerUp) {
+    spawnPowerUp();
+    nextPowerUpSpawn = CFG.POWERUP_SPAWN_MIN + Math.random() * (CFG.POWERUP_SPAWN_MAX - CFG.POWERUP_SPAWN_MIN);
+  }
+
+  // Linger timer for active floating power-up
+  if (state.activePowerUp) {
+    state.activePowerUp.lingerTimer -= dt;
+    // AI grab attempt
+    if (state.activePowerUp.aiGrabTimer !== undefined) {
+      state.activePowerUp.aiGrabTimer -= dt;
+      if (state.activePowerUp.aiGrabTimer <= 0) {
+        const diff = getAIDifficulty();
+        if (Math.random() < diff.grabChance) {
+          aiCollectPowerUp(); // may set activePowerUp to null
+        }
+        if (state.activePowerUp) state.activePowerUp.aiGrabTimer = 999; // don't try again
+      }
+    }
+    if (state.activePowerUp && state.activePowerUp.lingerTimer <= 0) {
+      state.activePowerUp = null; // expired
+    }
+  }
+
+  // AI use held power-ups
+  for (let i = 0; i < state.opponentPowerUps.length; i++) {
+    const pu = state.opponentPowerUps[i];
+    if (pu && pu.useTimer !== undefined) {
+      pu.useTimer -= dt;
+      if (pu.useTimer <= 0) {
+        aiUsePowerUp(i);
+      }
+    }
+  }
+}
+
+function updateEffects(dt) {
+  // Flash pour (player)
+  if (state.activeEffects.playerFlashPour > 0) state.activeEffects.playerFlashPour -= dt;
+  // Flash pour (opponent)
+  if (state.activeEffects.opponentFlashPour > 0) state.activeEffects.opponentFlashPour -= dt;
+}
+
+// --- Power-up Spawning ---
+
+function spawnPowerUp() {
+  const arena = state.currentArena || getArena(state.stats.trophies);
+  const availableTypes = arena.powerUps;
+
+  // Build filtered weights for only available types
+  const weights = {};
+  for (const t of availableTypes) {
+    if (CFG.POWERUP_WEIGHTS[t] !== undefined) {
+      weights[t] = CFG.POWERUP_WEIGHTS[t];
+    }
+  }
+  const total = Object.values(weights).reduce((a, b) => a + b, 0);
+  if (total <= 0) return; // no power-ups available
+
+  let r = Math.random() * total;
+  let type = availableTypes[0];
+  for (const [t, w] of Object.entries(weights)) {
+    r -= w;
+    if (r <= 0) { type = t; break; }
+  }
+
+  state.activePowerUp = {
+    type,
+    lingerTimer: CFG.POWERUP_LINGER,
+    aiGrabTimer: CFG.AI_POWERUP_GRAB_DELAY_MIN + Math.random() * (CFG.AI_POWERUP_GRAB_DELAY_MAX - CFG.AI_POWERUP_GRAB_DELAY_MIN),
+  };
+}
+
+// --- Player Collecting and Using Power-ups ---
+
+function playerCollectPowerUp() {
+  if (!state.activePowerUp) return;
+  const slot = state.playerPowerUps.indexOf(null);
+  if (slot < 0) return; // inventory full
+  state.playerPowerUps[slot] = { type: state.activePowerUp.type };
+  state.activePowerUp = null;
+}
+
+function playerUsePowerUp(slotIndex) {
+  const pu = state.playerPowerUps[slotIndex];
+  if (!pu) return;
+
+  switch (pu.type) {
+    case 'extraBottle':
+      // Permanent empty bottle for the rest of the match
+      state.playerGlasses.push({ layers: [] });
+      renderPlayerBoard();
+      break;
+    case 'flashPour':
+      state.activeEffects.playerFlashPour = CFG.FLASH_POUR_DURATION;
+      renderPlayerBoard();
+      break;
+    case 'swap':
+      state.swapMode = true;
+      state.swapFirst = null;
+      renderPlayerBoard();
+      break;
+    case 'clearBottle':
+      state.clearBottleMode = true;
+      renderPlayerBoard();
+      break;
+  }
+  state.playerPowerUps[slotIndex] = null;
+}
+
+function executeSwap(idx1, idx2) {
+  const temp = [...state.playerGlasses[idx1].layers];
+  state.playerGlasses[idx1].layers = [...state.playerGlasses[idx2].layers];
+  state.playerGlasses[idx2].layers = temp;
+  state.swapMode = false;
+  state.swapFirst = null;
+}
+
+// --- Opponent glass tap handler (no longer used for freeze) ---
+function handleOpponentGlassTap(index) {
+  // No interactive actions on opponent board in v6.1
+}
+
+// --- AI Collecting and Using Power-ups ---
+
+function aiCollectPowerUp() {
+  if (!state.activePowerUp) return;
+  const slot = state.opponentPowerUps.indexOf(null);
+  if (slot < 0) return;
+  state.opponentPowerUps[slot] = {
+    type: state.activePowerUp.type,
+    useTimer: CFG.AI_POWERUP_USE_DELAY_MIN + Math.random() * (CFG.AI_POWERUP_USE_DELAY_MAX - CFG.AI_POWERUP_USE_DELAY_MIN),
+  };
+  state.activePowerUp = null;
+}
+
+function aiUsePowerUp(slotIndex) {
+  const pu = state.opponentPowerUps[slotIndex];
+  if (!pu) return;
+
+  switch (pu.type) {
+    case 'extraBottle':
+      // Permanent empty bottle for AI
+      state.opponentGlasses.push({ layers: [] });
+      renderOpponentBoard();
+      break;
+    case 'flashPour':
+      state.activeEffects.opponentFlashPour = CFG.FLASH_POUR_DURATION;
+      break;
+    case 'swap':
+      aiExecuteSwap();
+      break;
+    case 'clearBottle':
+      aiExecuteClearBottle();
+      break;
+  }
+  state.opponentPowerUps[slotIndex] = null;
+}
+
+function aiExecuteSwap() {
+  const nonEmpty = state.opponentGlasses.map((g, i) => i).filter(i => state.opponentGlasses[i].layers.length > 0);
+  if (nonEmpty.length >= 2) {
+    const i1 = nonEmpty[Math.floor(Math.random() * nonEmpty.length)];
+    let i2 = i1;
+    let safety = 20;
+    while (i2 === i1 && safety-- > 0) i2 = nonEmpty[Math.floor(Math.random() * nonEmpty.length)];
+    if (i2 !== i1) {
+      const temp = [...state.opponentGlasses[i1].layers];
+      state.opponentGlasses[i1].layers = [...state.opponentGlasses[i2].layers];
+      state.opponentGlasses[i2].layers = temp;
+    }
+  }
+}
+
+function aiExecuteClearBottle() {
+  // AI clears the most clogged glass (most layers, least useful)
+  // Strategy: clear glass when no strong route exists and board is heavily clogged
+  const emptyCount = state.opponentGlasses.filter(g => g.layers.length === 0).length;
+  if (emptyCount > 1) return; // board isn't clogged, skip
+
+  let bestIdx = -1, bestScore = -1;
+  for (let i = 0; i < state.opponentGlasses.length; i++) {
+    const g = state.opponentGlasses[i];
+    if (g.layers.length === 0) continue;
+    // Prefer to clear glasses that are NOT pure (mixed colors = least useful)
+    const isPure = isGlassPure(g);
+    const score = isPure ? g.layers.length * 0.5 : g.layers.length;
+    if (score > bestScore) { bestScore = score; bestIdx = i; }
+  }
+  if (bestIdx >= 0) {
+    state.opponentGlasses[bestIdx].layers = [];
+    renderOpponentBoard();
+  }
+}
+
+// --- Power-up Rendering ---
+
+function renderPowerUps() {
+  // 1. Floating power-up bubble in customer zone
+  const zone = document.getElementById('customer-zone');
+  if (!zone) return;
+
+  // Remove old floating bubble if any
+  const oldBubble = zone.querySelector('.floating-powerup');
+  if (oldBubble) oldBubble.remove();
+
+  if (state.activePowerUp) {
+    const bubble = document.createElement('div');
+    bubble.className = 'floating-powerup powerup-bob';
+    bubble.textContent = POWERUP_ICONS[state.activePowerUp.type] || '?';
+    bubble.title = state.activePowerUp.type + ' (tap to collect)';
+    // Click handled by delegated handler on customer-zone
+    zone.appendChild(bubble);
+  }
+
+  // 2. Player inventory slots
+  for (let i = 0; i < 2; i++) {
+    const slotEl = document.getElementById('powerup-slot-' + i);
+    if (!slotEl) continue;
+    const pu = state.playerPowerUps[i];
+    if (pu) {
+      slotEl.textContent = POWERUP_ICONS[pu.type] || '?';
+      slotEl.className = 'powerup-slot filled';
+      slotEl.title = pu.type + ' (tap to use)';
+      // Click handled by delegated handler on powerup-inventory
+    } else {
+      slotEl.textContent = '';
+      slotEl.className = 'powerup-slot';
+      slotEl.title = 'Empty slot';
+    }
+  }
+
+  // 3. Opponent inventory dots
+  for (let i = 0; i < 2; i++) {
+    const dot = document.getElementById('opp-pu-dot-' + i);
+    if (!dot) continue;
+    if (state.opponentPowerUps[i]) {
+      dot.className = 'opp-powerup-dot filled';
+    } else {
+      dot.className = 'opp-powerup-dot';
+    }
+  }
+
+  // 4. Mode banners
+  const matchScreen = document.getElementById('screen-match');
+  if (!matchScreen) return;
+  const oldBanner = matchScreen.querySelector('.mode-banner');
+  if (oldBanner) oldBanner.remove();
+
+  if (state.clearBottleMode) {
+    const banner = document.createElement('div');
+    banner.className = 'mode-banner';
+    banner.textContent = '\u{1F9FD} Tap a glass to clear';
+    matchScreen.appendChild(banner);
+  } else if (state.swapMode) {
+    const banner = document.createElement('div');
+    banner.className = 'mode-banner';
+    banner.textContent = state.swapFirst !== null ? '\u{1F504} Tap second glass to swap' : '\u{1F504} Tap a glass to swap';
+    matchScreen.appendChild(banner);
+  }
+
+  // 5. Flash pour visual indicator on player board wrapper
+  const wrapper = document.querySelector('.player-board-wrapper');
+  if (wrapper) {
+    if (state.activeEffects.playerFlashPour > 0) {
+      wrapper.classList.add('flash-pour-active');
+    } else {
+      wrapper.classList.remove('flash-pour-active');
+    }
+  }
+}
+
+// Module 9 continues below
+</script>
+
+</body>
+</html>
