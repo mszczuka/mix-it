@@ -250,6 +250,180 @@ html, body {
 }
 .vs-name.found { color: #FF4444; font-weight: 800; }
 
+/* ===== LOADOUT SCREEN ===== */
+#screen-loadout {
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding: 40px 20px;
+}
+.loadout-title {
+  font-size: 18px;
+  font-weight: 800;
+  color: rgba(255,255,255,0.7);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+.loadout-timer {
+  font-size: 14px;
+  color: rgba(255,255,255,0.4);
+  min-height: 20px;
+}
+.loadout-slots {
+  display: flex;
+  gap: 16px;
+}
+.loadout-slot {
+  width: 72px;
+  height: 72px;
+  border: 2px dashed rgba(255,255,255,0.2);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: rgba(255,255,255,0.04);
+}
+.loadout-slot.filled {
+  border-style: solid;
+  border-color: rgba(255,215,0,0.5);
+  background: rgba(255,215,0,0.1);
+}
+.loadout-slot.filled:hover {
+  border-color: #FF4444;
+  background: rgba(255,68,68,0.1);
+}
+.loadout-inventory {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  width: 300px;
+}
+.loadout-pu-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 10px 14px;
+  border: 2px solid rgba(255,255,255,0.15);
+  border-radius: 10px;
+  background: rgba(255,255,255,0.06);
+  cursor: pointer;
+  transition: all 0.2s;
+  min-width: 70px;
+}
+.loadout-pu-btn:hover {
+  border-color: rgba(255,215,0,0.4);
+  background: rgba(255,215,0,0.08);
+}
+.loadout-pu-btn.disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+.loadout-pu-btn .pu-icon { font-size: 24px; }
+.loadout-pu-btn .pu-count {
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.5);
+}
+/* Power-up tooltip */
+.pu-tooltip {
+  position: fixed;
+  z-index: 300;
+  background: rgba(0,0,0,0.92);
+  border: 1px solid rgba(255,215,0,0.4);
+  border-radius: 10px;
+  padding: 12px 16px;
+  max-width: 220px;
+  text-align: center;
+  pointer-events: none;
+  animation: countdownPop 0.25s ease-out;
+}
+.pu-tooltip-icon { font-size: 28px; margin-bottom: 4px; }
+.pu-tooltip-name {
+  font-size: 14px;
+  font-weight: 800;
+  color: #FFD700;
+  margin-bottom: 4px;
+}
+.pu-tooltip-desc {
+  font-size: 12px;
+  color: rgba(255,255,255,0.7);
+  line-height: 1.4;
+}
+
+/* In-match: used power-up slot */
+.powerup-slot.used {
+  border-style: solid;
+  border-color: rgba(255,255,255,0.08);
+  background: rgba(0,0,0,0.15);
+  opacity: 0.35;
+  cursor: default;
+}
+/* Result rewards */
+.result-rewards {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: 280px;
+}
+.result-rewards-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.5);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.result-rewards-icons {
+  display: flex;
+  gap: 10px;
+  font-size: 28px;
+}
+.reward-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background: rgba(255,215,0,0.12);
+  border: 1px solid rgba(255,215,0,0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: countdownPop 0.5s ease-out;
+}
+/* Weekly stars */
+.weekly-section {
+  text-align: center;
+  width: 280px;
+}
+.weekly-stars-earned {
+  font-size: 16px;
+  font-weight: 700;
+  color: #FFD700;
+  margin-bottom: 4px;
+}
+.weekly-progress-text {
+  font-size: 12px;
+  color: rgba(255,255,255,0.5);
+  margin-bottom: 6px;
+}
+.weekly-progress-bar {
+  width: 100%;
+  height: 6px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.weekly-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #FFD700, #FFA500);
+  border-radius: 3px;
+  transition: width 0.5s ease;
+}
+
 /* ===== MATCH SCREEN ===== */
 #screen-match {
   display: flex;
@@ -1098,6 +1272,15 @@ html, body {
         <span class="value" id="result-arena">Juice Stand</span>
       </div>
     </div>
+    <div class="result-rewards" id="result-rewards">
+      <div class="result-rewards-title">REWARDS</div>
+      <div class="result-rewards-icons" id="result-rewards-icons"></div>
+    </div>
+    <div class="weekly-section" id="result-weekly">
+      <div class="weekly-stars-earned" id="weekly-stars-earned"></div>
+      <div class="weekly-progress-text" id="weekly-progress-text"></div>
+      <div class="weekly-progress-bar"><div class="weekly-progress-fill" id="weekly-progress-fill" style="width:0%"></div></div>
+    </div>
     <div class="result-buttons">
       <button class="result-btn primary" id="btn-play-again">PLAY AGAIN</button>
       <button class="result-btn secondary" id="btn-home">HOME</button>
@@ -1237,12 +1420,11 @@ let state = {
   opponentGlasses: [],
   customers: [],
   customerQueue: [],
-  activePowerUp: null,
   playerPowerUps: [null, null],
   opponentPowerUps: [null, null],
   activeEffects: {
-    playerFlashPour: 0,
-    opponentFlashPour: 0,
+    playerFlashPours: 0,
+    opponentFlashPours: 0,
   },
   clearBottleMode: false,
   ai: { nextPourTime: 0, nextServeCheck: 0, thinkingTarget: null },
@@ -1250,7 +1432,8 @@ let state = {
   matchSeed: 0,
   difficulty: 'medium',
   stats: { matchesPlayed: 0, wins: 0, losses: 0, draws: 0, bestScore: 0, totalDrinksServed: 0, trophies: 0, arenaFloor: 0,
-    powerUpInventory: { extraBottle: 5, flashPour: 5, swap: 3, clearBottle: 3 } },
+    powerUpInventory: { extraBottle: 5, flashPour: 5, swap: 3, clearBottle: 3 },
+    weeklyStars: 0, weeklyResetDate: null },
   loadout: [null, null],
   currentArena: null,
   currentOpponent: null,
@@ -1324,7 +1507,8 @@ function doPour(fromIdx, toIdx) {
   undoHistory.push(deepCloneGlasses(state.playerGlasses));
   const moved = doPourRaw(state.playerGlasses, fromIdx, toIdx);
   pourAnimTarget = { glassIndex: toIdx, layerCount: moved };
-  // Check if destination is now serveable (placeholder - full check in Module 4+)
+  consumeFlashPour('player');
+  // Check if destination is now serveable
   checkServeable();
   return true;
 }
@@ -1636,6 +1820,15 @@ function loadStats() {
       // Ensure new fields exist for older saves
       if (state.stats.trophies === undefined) state.stats.trophies = 0;
       if (state.stats.arenaFloor === undefined) state.stats.arenaFloor = 0;
+      if (!state.stats.powerUpInventory) state.stats.powerUpInventory = { extraBottle: 5, flashPour: 5, swap: 3, clearBottle: 3 };
+      if (state.stats.weeklyStars === undefined) state.stats.weeklyStars = 0;
+      // Weekly reset (simple: reset if resetDate is from a different week)
+      if (state.stats.weeklyResetDate) {
+        const now = new Date(), saved = new Date(state.stats.weeklyResetDate);
+        const weekNow = Math.floor(now.getTime() / (7*24*60*60*1000));
+        const weekSaved = Math.floor(saved.getTime() / (7*24*60*60*1000));
+        if (weekNow !== weekSaved) { state.stats.weeklyStars = 0; state.stats.weeklyResetDate = now.toISOString(); }
+      } else { state.stats.weeklyResetDate = new Date().toISOString(); }
     }
   } catch (e) { /* ignore */ }
 }
@@ -1780,16 +1973,20 @@ function endMatch() {
   else state.stats.draws++;
   if (state.playerScore > state.stats.bestScore) state.stats.bestScore = state.playerScore;
   state.stats.totalDrinksServed += matchDrinksServed;
-  saveStats();
+
+  // Award power-up rewards and weekly stars
+  const isWin = state.playerScore > state.opponentScore;
+  const isDraw = state.playerScore === state.opponentScore;
+  const matchRewards = awardMatchRewards(isWin, isDraw);
 
   // Check for arena promotion
   const promoted = newArena.id > oldArena.id;
   if (promoted) {
     showArenaUnlockOverlay(newArena, oldArena, function() {
-      showResultScreen(trophyChange, oldTrophies);
+      showResultScreen(trophyChange, oldTrophies, matchRewards);
     });
   } else {
-    showResultScreen(trophyChange, oldTrophies);
+    showResultScreen(trophyChange, oldTrophies, matchRewards);
   }
 }
 
@@ -1827,7 +2024,7 @@ function showArenaUnlockOverlay(newArena, oldArena, callback) {
   overlay.addEventListener('click', dismiss);
 }
 
-function showResultScreen(trophyChange, oldTrophies) {
+function showResultScreen(trophyChange, oldTrophies, matchRewards) {
   const title = document.getElementById('result-title');
   if (state.playerScore > state.opponentScore) {
     title.textContent = 'YOU WIN!';
@@ -1868,6 +2065,9 @@ function showResultScreen(trophyChange, oldTrophies) {
     }
   }
 
+  // Render rewards and weekly stars
+  if (matchRewards) renderMatchRewards(matchRewards.rewards, matchRewards.stars);
+
   showScreen('result');
 }
 
@@ -1889,12 +2089,17 @@ function startMatch() {
   state.selectedGlass = null;
   state.customers = [];
   state.customerQueue = [];
-  state.activePowerUp = null;
-  state.playerPowerUps = [null, null];
-  state.opponentPowerUps = [null, null];
+  // Player loadout from pre-match selection
+  state.playerPowerUps = state.loadout.map(t => t ? { type: t, used: false } : null);
+  // AI loadout: pick 2 random from arena roster
+  const aiRoster = arena.powerUps;
+  state.opponentPowerUps = [0, 1].map(() => {
+    const t = aiRoster[Math.floor(Math.random() * aiRoster.length)];
+    return { type: t, used: false };
+  });
   state.activeEffects = {
-    playerFlashPour: 0,
-    opponentFlashPour: 0,
+    playerFlashPours: 0,
+    opponentFlashPours: 0,
   };
   state.ai = { nextPourTime: 0, nextServeCheck: 0, thinkingTarget: null, undosRemaining: 3, undoPending: false };
   state.swapMode = false;
@@ -1904,7 +2109,6 @@ function startMatch() {
   state.spawnRechargeTimer = CFG.SPAWN_RECHARGE_TIME;
   state.aiSpawnCharges = CFG.SPAWN_START_CHARGES;
   state.aiSpawnRechargeTimer = CFG.SPAWN_RECHARGE_TIME;
-  nextPowerUpSpawn = CFG.FIRST_POWERUP_SPAWN;
   undoHistory = [];
   matchDrinksServed = 0;
   matchBestCombo = 0;
@@ -2077,11 +2281,6 @@ document.getElementById('opponent-board').addEventListener('click', (e) => {
   if (!glass || glass.dataset.index === undefined) return;
   if (typeof handleOpponentGlassTap === 'function') handleOpponentGlassTap(parseInt(glass.dataset.index));
 });
-// Floating power-up bubble (recreated each frame, use delegation on customer-zone)
-document.getElementById('customer-zone').addEventListener('click', (e) => {
-  const bubble = e.target.closest('.floating-powerup');
-  if (bubble) { e.stopPropagation(); playerCollectPowerUp(); }
-});
 // Power-up inventory slots (persistent elements, use delegation on parent)
 document.querySelector('.powerup-inventory').addEventListener('click', (e) => {
   const slot = e.target.closest('.powerup-slot');
@@ -2185,7 +2384,7 @@ document.getElementById('btn-play').addEventListener('click', () => {
 });
 
 document.getElementById('btn-start').addEventListener('click', () => {
-  try { startMatch(); } catch(e) { alert('startMatch error: ' + e.message); console.error(e); }
+  showLoadoutScreen();
 });
 
 document.getElementById('btn-undo').addEventListener('click', () => {
@@ -2267,10 +2466,245 @@ document.addEventListener('keydown', (e) => {
   }
 });
 
+// ===== POWER-UP TOOLTIPS (long press) =====
+const POWERUP_DESCRIPTIONS = {
+  extraBottle: { name: 'Extra Bottle', desc: 'Adds one empty bottle permanently for the rest of the match.' },
+  flashPour: { name: 'Flash Pour', desc: 'Your next 3 pours are instant. Use when you see a clear route!' },
+  swap: { name: 'Swap', desc: 'Tap 2 bottles to swap their entire contents instantly.' },
+  clearBottle: { name: 'Clear Bottle', desc: 'Tap a bottle to discard all its contents. Emergency rescue!' },
+};
+
+let tooltipEl = null;
+let longPressTimer = null;
+
+function showTooltip(type, x, y) {
+  hideTooltip();
+  const info = POWERUP_DESCRIPTIONS[type];
+  if (!info) return;
+  tooltipEl = document.createElement('div');
+  tooltipEl.className = 'pu-tooltip';
+  tooltipEl.innerHTML =
+    '<div class="pu-tooltip-icon">' + (POWERUP_ICONS[type] || '?') + '</div>' +
+    '<div class="pu-tooltip-name">' + info.name + '</div>' +
+    '<div class="pu-tooltip-desc">' + info.desc + '</div>';
+  document.body.appendChild(tooltipEl);
+  // Position: center above the tap point, clamp to viewport
+  const rect = tooltipEl.getBoundingClientRect();
+  let left = x - rect.width / 2;
+  let top = y - rect.height - 16;
+  if (left < 8) left = 8;
+  if (left + rect.width > window.innerWidth - 8) left = window.innerWidth - rect.width - 8;
+  if (top < 8) top = y + 20;
+  tooltipEl.style.left = left + 'px';
+  tooltipEl.style.top = top + 'px';
+}
+
+function hideTooltip() {
+  if (tooltipEl) { tooltipEl.remove(); tooltipEl = null; }
+  if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
+}
+
+// Long press detection for any element with data-pu-type
+function setupLongPress(container) {
+  let pressType = null;
+  function onStart(e) {
+    const el = e.target.closest('[data-pu-type]');
+    if (!el) return;
+    pressType = el.dataset.puType;
+    const touch = e.touches ? e.touches[0] : e;
+    longPressTimer = setTimeout(() => {
+      showTooltip(pressType, touch.clientX, touch.clientY);
+    }, 400);
+  }
+  function onEnd() { hideTooltip(); }
+  container.addEventListener('pointerdown', onStart);
+  container.addEventListener('pointerup', onEnd);
+  container.addEventListener('pointerleave', onEnd);
+  container.addEventListener('pointercancel', onEnd);
+}
+
+// Dismiss tooltip on any tap elsewhere
+document.addEventListener('pointerdown', (e) => {
+  if (tooltipEl && !e.target.closest('[data-pu-type]')) hideTooltip();
+});
+
+// ===== LOADOUT SCREEN =====
+let loadoutTimer = null;
+
+function showLoadoutScreen() {
+  state.loadout = [null, null];
+  showScreen('loadout');
+  renderLoadoutInventory();
+  renderLoadoutSlots();
+  // Auto-ready timer: 10 seconds
+  let remaining = 10;
+  const timerEl = document.getElementById('loadout-timer');
+  timerEl.textContent = 'Auto-ready in ' + remaining + 's';
+  if (loadoutTimer) clearInterval(loadoutTimer);
+  loadoutTimer = setInterval(() => {
+    remaining--;
+    if (remaining <= 0) {
+      clearInterval(loadoutTimer); loadoutTimer = null;
+      startMatchFromLoadout();
+    } else {
+      timerEl.textContent = 'Auto-ready in ' + remaining + 's';
+    }
+  }, 1000);
+}
+
+function renderLoadoutSlots() {
+  for (let i = 0; i < 2; i++) {
+    const el = document.getElementById('loadout-slot-' + i);
+    if (!el) continue;
+    if (state.loadout[i]) {
+      el.textContent = POWERUP_ICONS[state.loadout[i]] || '?';
+      el.className = 'loadout-slot filled';
+      el.dataset.puType = state.loadout[i];
+    } else {
+      el.textContent = '';
+      el.className = 'loadout-slot';
+      delete el.dataset.puType;
+    }
+  }
+}
+
+function renderLoadoutInventory() {
+  const container = document.getElementById('loadout-inventory');
+  if (!container) return;
+  container.innerHTML = '';
+  const arena = getArena(state.stats.trophies);
+  const available = arena.powerUps;
+  const inv = state.stats.powerUpInventory;
+  for (const type of available) {
+    const count = inv[type] || 0;
+    const inLoadout = state.loadout.filter(l => l === type).length;
+    const remaining = count - inLoadout;
+    const btn = document.createElement('div');
+    btn.className = 'loadout-pu-btn' + (remaining <= 0 ? ' disabled' : '');
+    btn.innerHTML = '<span class="pu-icon">' + (POWERUP_ICONS[type] || '?') + '</span><span class="pu-count">x' + remaining + '</span>';
+    btn.dataset.type = type;
+    btn.dataset.puType = type;
+    if (remaining > 0) {
+      btn.addEventListener('click', () => {
+        const slot = state.loadout.indexOf(null);
+        if (slot < 0) return; // both slots full
+        state.loadout[slot] = type;
+        renderLoadoutSlots();
+        renderLoadoutInventory();
+      });
+    }
+    container.appendChild(btn);
+  }
+}
+
+// Tap loadout slot to remove
+document.querySelector('.loadout-slots').addEventListener('click', (e) => {
+  const slot = e.target.closest('.loadout-slot');
+  if (!slot) return;
+  const idx = parseInt(slot.dataset.idx);
+  if (state.loadout[idx]) {
+    state.loadout[idx] = null;
+    renderLoadoutSlots();
+    renderLoadoutInventory();
+  }
+});
+
+document.getElementById('btn-ready').addEventListener('click', () => {
+  if (loadoutTimer) { clearInterval(loadoutTimer); loadoutTimer = null; }
+  startMatchFromLoadout();
+});
+
+function startMatchFromLoadout() {
+  // Deduct selected power-ups from inventory
+  for (const type of state.loadout) {
+    if (type && state.stats.powerUpInventory[type] > 0) {
+      state.stats.powerUpInventory[type]--;
+    }
+  }
+  saveStats();
+  try { startMatch(); } catch(e) { alert('startMatch error: ' + e.message); console.error(e); }
+}
+
+// ===== MATCH REWARDS =====
+const REWARD_WEIGHTS = { extraBottle: 30, flashPour: 30, swap: 25, clearBottle: 15 };
+
+function rollPowerUpReward() {
+  const arena = getArena(state.stats.trophies);
+  const available = arena.powerUps;
+  const weights = {};
+  for (const t of available) { if (REWARD_WEIGHTS[t]) weights[t] = REWARD_WEIGHTS[t]; }
+  const total = Object.values(weights).reduce((a, b) => a + b, 0);
+  let r = Math.random() * total;
+  for (const [t, w] of Object.entries(weights)) { r -= w; if (r <= 0) return t; }
+  return available[0];
+}
+
+function awardMatchRewards(isWin, isDraw) {
+  const count = isWin ? 2 : 1; // win=2, lose/draw=1
+  const rewards = [];
+  for (let i = 0; i < count; i++) {
+    const type = rollPowerUpReward();
+    state.stats.powerUpInventory[type] = (state.stats.powerUpInventory[type] || 0) + 1;
+    rewards.push(type);
+  }
+  // Return unused loadout power-ups to inventory
+  for (let i = 0; i < 2; i++) {
+    const pu = state.playerPowerUps[i];
+    if (pu && !pu.used) {
+      state.stats.powerUpInventory[pu.type] = (state.stats.powerUpInventory[pu.type] || 0) + 1;
+    }
+  }
+  // Weekly stars
+  const stars = isWin ? 3 : isDraw ? 2 : 1;
+  state.stats.weeklyStars = (state.stats.weeklyStars || 0) + stars;
+  // Weekly milestones: 5->1pu, 12->2pu, 20->3pu, 30->1 guaranteed rare
+  const milestones = [5, 12, 20, 30];
+  const oldStars = state.stats.weeklyStars - stars;
+  for (const m of milestones) {
+    if (oldStars < m && state.stats.weeklyStars >= m) {
+      const bonus = m === 30 ? 1 : (m === 20 ? 3 : m === 12 ? 2 : 1);
+      for (let j = 0; j < bonus; j++) {
+        const bt = m === 30 ? 'clearBottle' : rollPowerUpReward();
+        state.stats.powerUpInventory[bt] = (state.stats.powerUpInventory[bt] || 0) + 1;
+        rewards.push(bt);
+      }
+    }
+  }
+  saveStats();
+  return { rewards, stars };
+}
+
+function renderMatchRewards(rewards, stars) {
+  // Rewards icons
+  const iconsEl = document.getElementById('result-rewards-icons');
+  if (iconsEl) {
+    iconsEl.innerHTML = '';
+    for (const type of rewards) {
+      const icon = document.createElement('div');
+      icon.className = 'reward-icon';
+      icon.textContent = POWERUP_ICONS[type] || '?';
+      iconsEl.appendChild(icon);
+    }
+  }
+  // Weekly stars
+  const starsEl = document.getElementById('weekly-stars-earned');
+  if (starsEl) starsEl.textContent = '\u2B50 +' + stars + ' stars';
+  const textEl = document.getElementById('weekly-progress-text');
+  const nextMilestone = [5, 12, 20, 30].find(m => state.stats.weeklyStars < m) || 30;
+  if (textEl) textEl.textContent = state.stats.weeklyStars + ' / ' + nextMilestone + ' to next reward';
+  const fillEl = document.getElementById('weekly-progress-fill');
+  if (fillEl) fillEl.style.width = Math.min(100, (state.stats.weeklyStars / nextMilestone) * 100) + '%';
+}
+
 // ===== INIT =====
 loadStats();
 renderHomeStats();
 showScreen('home');
+
+// Setup long-press tooltips on loadout and in-match power-up containers
+setupLongPress(document.getElementById('loadout-inventory'));
+setupLongPress(document.querySelector('.loadout-slots'));
+setupLongPress(document.querySelector('.powerup-inventory'));
 
 // ============================================================
 // MODULE 4: CUSTOMER SYSTEM
@@ -2376,8 +2810,6 @@ function renderCustomers() {
   const zone = document.getElementById('customer-zone');
   if (!zone) { console.warn('NO ZONE'); return; }
   // Preserve floating power-up bubble before clearing
-  const bubble = zone.querySelector('.floating-powerup');
-  const bubbleClone = bubble ? bubble.cloneNode(true) : null;
   zone.innerHTML = '';
 
   for (let i = 0; i < CFG.VISIBLE_CUSTOMERS; i++) {
@@ -2675,6 +3107,7 @@ function aiMakePour(diff) {
   // Skip if no good move found or best move is very bad
   if (bestMove && bestScore > -5) {
     doPourRaw(glasses, bestMove[0], bestMove[1]);
+    consumeFlashPour('opponent');
     renderOpponentBoard();
   }
 }
@@ -2775,8 +3208,6 @@ function aiCheckServe(diff) {
 // MODULE 8: POWER-UP SYSTEM
 // ============================================================
 
-let nextPowerUpSpawn = CFG.FIRST_POWERUP_SPAWN;
-
 const POWERUP_ICONS = {
   extraBottle: '\u2795',    // plus
   flashPour:   '\u26A1',    // lightning
@@ -2785,103 +3216,57 @@ const POWERUP_ICONS = {
 };
 
 function updatePowerUps(dt) {
-  // Spawn timer
-  nextPowerUpSpawn -= dt;
-  if (nextPowerUpSpawn <= 0 && !state.activePowerUp) {
-    spawnPowerUp();
-    nextPowerUpSpawn = CFG.POWERUP_SPAWN_MIN + Math.random() * (CFG.POWERUP_SPAWN_MAX - CFG.POWERUP_SPAWN_MIN);
-  }
-
-  // Linger timer for active floating power-up
-  if (state.activePowerUp) {
-    state.activePowerUp.lingerTimer -= dt;
-    // AI grab attempt
-    if (state.activePowerUp.aiGrabTimer !== undefined) {
-      state.activePowerUp.aiGrabTimer -= dt;
-      if (state.activePowerUp.aiGrabTimer <= 0) {
-        const diff = getAIDifficulty();
-        if (Math.random() < diff.grabChance) {
-          aiCollectPowerUp(); // may set activePowerUp to null
-        }
-        if (state.activePowerUp) state.activePowerUp.aiGrabTimer = 999; // don't try again
-      }
-    }
-    if (state.activePowerUp && state.activePowerUp.lingerTimer <= 0) {
-      state.activePowerUp = null; // expired
-    }
-  }
-
-  // AI use held power-ups
+  // AI condition-based power-up usage (no more bubble spawning)
+  const elapsed = CFG.MATCH_DURATION - state.timer;
+  const emptyCount = state.opponentGlasses.filter(g => g.layers.length === 0).length;
   for (let i = 0; i < state.opponentPowerUps.length; i++) {
     const pu = state.opponentPowerUps[i];
-    if (pu && pu.useTimer !== undefined) {
-      pu.useTimer -= dt;
-      if (pu.useTimer <= 0) {
-        aiUsePowerUp(i);
+    if (!pu || pu.used) continue;
+    let shouldUse = false;
+    switch (pu.type) {
+      case 'extraBottle': shouldUse = elapsed > 5 && elapsed < 15 && emptyCount <= 1; break;
+      case 'flashPour': {
+        // Use when a serve is close (pure glass with 3+ layers matching a customer)
+        const nearServe = state.opponentGlasses.some(g =>
+          isGlassPure(g) && g.layers.length >= 3 &&
+          state.customers.some(c => !c.servedByOpponent && c.color === g.layers[0]));
+        shouldUse = nearServe;
+        break;
       }
+      case 'swap': shouldUse = emptyCount === 0; break;
+      case 'clearBottle': shouldUse = emptyCount === 0 && !state.opponentGlasses.some(g => isGlassPure(g) && g.layers.length > 0); break;
+    }
+    if (shouldUse && Math.random() < 0.3) { // 30% chance per tick to act on condition
+      aiUsePowerUp(i);
+      break; // only 1 per tick
     }
   }
 }
 
 function updateEffects(dt) {
-  // Flash pour (player)
-  if (state.activeEffects.playerFlashPour > 0) state.activeEffects.playerFlashPour -= dt;
-  // Flash pour (opponent)
-  if (state.activeEffects.opponentFlashPour > 0) state.activeEffects.opponentFlashPour -= dt;
+  // Flash pour is now pour-count based, not time-based — decremented in doPour/aiMakePour
+}
+
+function consumeFlashPour(side) {
+  if (side === 'player' && state.activeEffects.playerFlashPours > 0) state.activeEffects.playerFlashPours--;
+  if (side === 'opponent' && state.activeEffects.opponentFlashPours > 0) state.activeEffects.opponentFlashPours--;
 }
 
 // --- Power-up Spawning ---
 
-function spawnPowerUp() {
-  const arena = state.currentArena || getArena(state.stats.trophies);
-  const availableTypes = arena.powerUps;
-
-  // Build filtered weights for only available types
-  const weights = {};
-  for (const t of availableTypes) {
-    if (CFG.POWERUP_WEIGHTS[t] !== undefined) {
-      weights[t] = CFG.POWERUP_WEIGHTS[t];
-    }
-  }
-  const total = Object.values(weights).reduce((a, b) => a + b, 0);
-  if (total <= 0) return; // no power-ups available
-
-  let r = Math.random() * total;
-  let type = availableTypes[0];
-  for (const [t, w] of Object.entries(weights)) {
-    r -= w;
-    if (r <= 0) { type = t; break; }
-  }
-
-  state.activePowerUp = {
-    type,
-    lingerTimer: CFG.POWERUP_LINGER,
-    aiGrabTimer: CFG.AI_POWERUP_GRAB_DELAY_MIN + Math.random() * (CFG.AI_POWERUP_GRAB_DELAY_MAX - CFG.AI_POWERUP_GRAB_DELAY_MIN),
-  };
-}
-
-// --- Player Collecting and Using Power-ups ---
-
-function playerCollectPowerUp() {
-  if (!state.activePowerUp) return;
-  const slot = state.playerPowerUps.indexOf(null);
-  if (slot < 0) return; // inventory full
-  state.playerPowerUps[slot] = { type: state.activePowerUp.type };
-  state.activePowerUp = null;
-}
+// --- Player Using Power-ups (loadout system) ---
 
 function playerUsePowerUp(slotIndex) {
   const pu = state.playerPowerUps[slotIndex];
-  if (!pu) return;
+  if (!pu || pu.used) return;
 
   switch (pu.type) {
     case 'extraBottle':
-      // Permanent empty bottle for the rest of the match
       state.playerGlasses.push({ layers: [] });
       renderPlayerBoard();
       break;
     case 'flashPour':
-      state.activeEffects.playerFlashPour = CFG.FLASH_POUR_DURATION;
+      state.activeEffects.playerFlashPours = 3; // next 3 pours are instant
       renderPlayerBoard();
       break;
     case 'swap':
@@ -2894,7 +3279,7 @@ function playerUsePowerUp(slotIndex) {
       renderPlayerBoard();
       break;
   }
-  state.playerPowerUps[slotIndex] = null;
+  pu.used = true;
 }
 
 function executeSwap(idx1, idx2) {
@@ -2910,31 +3295,19 @@ function handleOpponentGlassTap(index) {
   // No interactive actions on opponent board in v6.1
 }
 
-// --- AI Collecting and Using Power-ups ---
-
-function aiCollectPowerUp() {
-  if (!state.activePowerUp) return;
-  const slot = state.opponentPowerUps.indexOf(null);
-  if (slot < 0) return;
-  state.opponentPowerUps[slot] = {
-    type: state.activePowerUp.type,
-    useTimer: CFG.AI_POWERUP_USE_DELAY_MIN + Math.random() * (CFG.AI_POWERUP_USE_DELAY_MAX - CFG.AI_POWERUP_USE_DELAY_MIN),
-  };
-  state.activePowerUp = null;
-}
+// --- AI Using Power-ups (loadout system) ---
 
 function aiUsePowerUp(slotIndex) {
   const pu = state.opponentPowerUps[slotIndex];
-  if (!pu) return;
+  if (!pu || pu.used) return;
 
   switch (pu.type) {
     case 'extraBottle':
-      // Permanent empty bottle for AI
       state.opponentGlasses.push({ layers: [] });
       renderOpponentBoard();
       break;
     case 'flashPour':
-      state.activeEffects.opponentFlashPour = CFG.FLASH_POUR_DURATION;
+      state.activeEffects.opponentFlashPours = 3;
       break;
     case 'swap':
       aiExecuteSwap();
@@ -2943,7 +3316,7 @@ function aiUsePowerUp(slotIndex) {
       aiExecuteClearBottle();
       break;
   }
-  state.opponentPowerUps[slotIndex] = null;
+  pu.used = true;
 }
 
 function aiExecuteSwap() {
@@ -2985,52 +3358,35 @@ function aiExecuteClearBottle() {
 // --- Power-up Rendering ---
 
 function renderPowerUps() {
-  // 1. Floating power-up bubble in customer zone
-  const zone = document.getElementById('customer-zone');
-  if (!zone) return;
-
-  // Remove old floating bubble if any
-  const oldBubble = zone.querySelector('.floating-powerup');
-  if (oldBubble) oldBubble.remove();
-
-  if (state.activePowerUp) {
-    const bubble = document.createElement('div');
-    bubble.className = 'floating-powerup powerup-bob';
-    bubble.textContent = POWERUP_ICONS[state.activePowerUp.type] || '?';
-    bubble.title = state.activePowerUp.type + ' (tap to collect)';
-    // Click handled by delegated handler on customer-zone
-    zone.appendChild(bubble);
-  }
-
-  // 2. Player inventory slots
+  // 1. Player loadout slots (tap to activate, grey out after use)
   for (let i = 0; i < 2; i++) {
     const slotEl = document.getElementById('powerup-slot-' + i);
     if (!slotEl) continue;
     const pu = state.playerPowerUps[i];
-    if (pu) {
+    if (pu && !pu.used) {
       slotEl.textContent = POWERUP_ICONS[pu.type] || '?';
       slotEl.className = 'powerup-slot filled';
-      slotEl.title = pu.type + ' (tap to use)';
-      // Click handled by delegated handler on powerup-inventory
+      slotEl.dataset.puType = pu.type;
+    } else if (pu && pu.used) {
+      slotEl.textContent = POWERUP_ICONS[pu.type] || '?';
+      slotEl.className = 'powerup-slot used';
+      slotEl.dataset.puType = pu.type;
     } else {
       slotEl.textContent = '';
       slotEl.className = 'powerup-slot';
-      slotEl.title = 'Empty slot';
+      delete slotEl.dataset.puType;
     }
   }
 
-  // 3. Opponent inventory dots
+  // 2. Opponent loadout dots (filled = unused, empty = spent)
   for (let i = 0; i < 2; i++) {
     const dot = document.getElementById('opp-pu-dot-' + i);
     if (!dot) continue;
-    if (state.opponentPowerUps[i]) {
-      dot.className = 'opp-powerup-dot filled';
-    } else {
-      dot.className = 'opp-powerup-dot';
-    }
+    const opu = state.opponentPowerUps[i];
+    dot.className = 'opp-powerup-dot' + (opu && !opu.used ? ' filled' : '');
   }
 
-  // 4. Mode banners
+  // 3. Mode banners
   const matchScreen = document.getElementById('screen-match');
   if (!matchScreen) return;
   const oldBanner = matchScreen.querySelector('.mode-banner');
@@ -3046,12 +3402,17 @@ function renderPowerUps() {
     banner.className = 'mode-banner';
     banner.textContent = state.swapFirst !== null ? '\u{1F504} Tap second glass to swap' : '\u{1F504} Tap a glass to swap';
     matchScreen.appendChild(banner);
+  } else if (state.activeEffects.playerFlashPours > 0) {
+    const banner = document.createElement('div');
+    banner.className = 'mode-banner';
+    banner.textContent = '\u26A1 Flash Pour: ' + state.activeEffects.playerFlashPours + ' pours left';
+    matchScreen.appendChild(banner);
   }
 
-  // 5. Flash pour visual indicator on player board wrapper
+  // 4. Flash pour visual indicator on player board wrapper
   const wrapper = document.querySelector('.player-board-wrapper');
   if (wrapper) {
-    if (state.activeEffects.playerFlashPour > 0) {
+    if (state.activeEffects.playerFlashPours > 0) {
       wrapper.classList.add('flash-pour-active');
     } else {
       wrapper.classList.remove('flash-pour-active');

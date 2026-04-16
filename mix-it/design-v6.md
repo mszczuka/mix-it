@@ -1,4 +1,4 @@
-# MIX IT v6.1 — BAR CLASH
+# MIX IT v6.2 — BAR CLASH
 
 **Date:** 2026-04-15  
 **Status:** Design — prototype built  
@@ -36,6 +36,9 @@ This version focuses on:
 - Pour-sort puzzle as the skill expression layer
 - Color Spawn as the material injection system to prevent boards from stalling
 - Parallel boards with shared objectives to create interaction without direct interference
+- A light meta loop that gives players a reason to keep playing beyond one match
+- Wins should feed both competitive progression and future match preparation
+- Meta should stay close to the PvP core and avoid heavy collection scaffolding
 
 The match runs on a single board with Color Spawn providing ongoing material. Players sort, fill, and serve drinks while competing for the same customers.
 
@@ -63,15 +66,18 @@ The following systems stay conceptually the same:
 Changed:
 - Freeze power-up removed from roster
 - Workspace stabilized by starting with **2 empty bottles**
-- Prototype power-ups aligned with pour-sort:
-  - Extra Bottle (permanent)
+- Prototype power-ups aligned with pour-sort routing:
+  - Extra Bottle
   - Flash Pour
   - Swap
   - Clear Bottle
-- Power-ups changed from random in-match bubble spawns to pre-match loadout selection
-- Each power-up is a single-use consumable per match
-- New pre-match screen added for loadout selection
-- Players earn power-ups from match results (win/lose rewards)
+- Power-ups changed from random in-match bubble spawns to **pre-match loadout selection**
+- The player now has a **persistent power-up inventory** between matches
+- Each selected power-up has **1 use per match**
+- A new **loadout screen** is added before the countdown
+- Match results now award **power-up rewards**
+- A new **weekly star track** is added as a second progression layer
+- The game now has a **light meta loop without collection systems**
 
 ---
 
@@ -83,16 +89,16 @@ Portrait layout:
 +--------------------------------------+
 |  YOU 750      0:27    900 [av] Name  |
 +--------------------------------------+
-|          Opponent board (flex)        |
-|       small glasses + PU dots         |
+|          Opponent board (flex)       |
+|       small glasses + PU dots        |
 +--------------------------------------+
-|           Customer zone               |
-|   3 shared customers + patience       |
+|           Customer zone              |
+|   3 shared customers + patience      |
 +--------------------------------------+
-|      Power-up loadout (2 slots)       |
+|      Power-up loadout (2 slots)      |
 +--------------------------------------+
-|          Player board (flex)          |
-|       full-size glasses               |
+|          Player board (flex)         |
+|       full-size glasses              |
 |  [Spawn]                    [Undo]   |
 +--------------------------------------+
 ```
@@ -103,8 +109,8 @@ Portrait layout:
 | Score bar | Your score left, timer center, opponent avatar + name + score right |
 | Opponent board | AI glasses (flex), power-up dots (filled = unused, empty = spent) |
 | Customer zone | 3 active customers, patience bars — **no floating power-up bubbles** |
-| Power-up loadout | 2 pre-selected power-up slots (tap to activate, greys out after use) |
-| Player board | Your interactive glasses (flex), spawn button, undo button |
+| Power-up loadout | 2 pre-selected power-up slots (tap to activate, grey out after use) |
+| Player board | Your interactive glasses, Spawn button, Undo button |
 
 ---
 
@@ -281,46 +287,104 @@ Customer generation biases toward colors abundant on both boards (weighted by la
 
 The prototype keeps 4 power-ups, all aligned with pour-sort routing and workspace.
 
-### 8.1 Inventory
-- Max held power-ups: **2**
-- Power-ups spawn as a floating bubble in the customer zone
-- Player taps the bubble to collect
-- Tap a held power-up slot to activate
-- If inventory is full, player must use one before grabbing another
+#### 8.1 Loadout
+
+- Before each match, the player selects **2 power-ups** from their inventory
+- Each selected power-up has **1 use** during that match
+- Tap the slot to activate the power-up
+- After use, the slot becomes empty / greyed out
+- If a selected power-up is **not used**, it returns to inventory after the match
+- If the player owns fewer than 2 power-ups, empty slots are allowed
+
+#### 8.1.1 Starter inventory
+
+On first launch, the player receives:
+
+| Power-up | Starting quantity |
+|---|---|
+| Extra Bottle | 5 |
+| Flash Pour | 5 |
+| Swap | 3 |
+| Clear Bottle | 3 |
+
+#### 8.1.2 Match rewards
+
+| Result | Reward |
+|---|---|
+| Win | 2 random power-ups from the arena's unlocked roster |
+| Lose | 1 random power-up from the arena's unlocked roster |
+| Draw | 1 random power-up from the arena's unlocked roster |
+
+Reward weights:
+
+| Power-up | Weight |
+|---|---|
+| Extra Bottle | 30% |
+| Flash Pour | 30% |
+| Swap | 25% |
+| Clear Bottle | 15% |
+
+Design note:
+- Keep **Clear Bottle** slightly rarer because it is the strongest rescue tool
 
 ---
 
-### 8.2 Power-up roster
+#### 8.2 Power-up roster
 
 #### Extra Bottle +
-- Adds one empty bottle **permanently** for the rest of the match
-- Purpose: workspace expansion
+- Adds one empty bottle permanently for the rest of the match
+- **1 use**
+- Activates immediately on tap
+- Purpose: workspace expansion / safe opener
 
 #### Flash Pour (lightning)
-- Your pours become instant for **8 seconds**
-- Purpose: speed conversion when you already see the route
+- Your **next 3 pours are instant**
+- **1 use**
+- Activates immediately on tap
+- Show remaining fast pours on the slot UI
+- Purpose: tempo conversion / serve race spike
 
 #### Swap (arrows)
 - Select any 2 of your bottles
 - Their entire contents swap instantly
-- Purpose: repositioning / route rescue
+- **1 use**
+- Tap slot, then tap 2 bottles
+- Purpose: tactical conversion / route rescue
 
 #### Clear Bottle (sponge)
-- Select one of your bottles
-- All contents are discarded
-- Bottle becomes empty
-- Purpose: emergency anti-deadlock valve
+- Select 1 bottle
+- All contents are discarded and the bottle becomes empty
+- **1 use**
+- Tap slot, then tap 1 bottle
+- Purpose: emergency anti-deadlock / panic reset
 
 ---
 
-### 8.3 Power-up spawning
-- First spawn: **8 seconds** into the match
-- Next spawns: every **12-18 seconds**
-- Power-up bubble lingers for **6 seconds**
-- AI may collect it if player does not (after 2-4 second delay, based on arena grab chance)
-- AI uses collected power-ups after 3-5 second delay
+#### 8.3 Power-up availability by arena
 
-Power-ups stay as variance and comeback tools.
+Power-ups unlock through arena progression.
+Players can only select from power-ups already unlocked.
+
+| Arena | Available power-ups |
+|---|---|
+| Juice Stand (0-199) | Extra Bottle, Flash Pour |
+| Beach Bar (200-499) | + Swap |
+| Cocktail Lounge (500+) | + Clear Bottle |
+
+Once unlocked, a power-up stays available in all later arenas.
+
+---
+
+#### 8.4 Power-up design rule
+
+Power-ups should not replace the puzzle.
+They should only do one of three jobs:
+- tempo spike
+- board rescue
+- workspace expansion
+
+A power-up should help the player convert a route, save a bad board, or open more workspace.
+It should not solve the board automatically.
 
 ---
 
@@ -357,11 +421,24 @@ Every AI tick:
 5. Occasionally make a random legal move based on arena mistake rate
 6. Serve after a reaction delay based on arena difficulty
 
-### 9.4 AI power-up usage
-- **Extra Bottle:** adds permanent empty bottle
-- **Flash Pour:** activates for 8 seconds
-- **Swap:** swaps two random non-empty glasses
-- **Clear Bottle:** clears most clogged glass (only when board has 0-1 empty glasses)
+#### 9.4 AI loadout and usage
+
+- AI pre-selects **2 power-ups** at match start from the arena's unlocked roster
+- Selection is shown as dots in the opponent board zone
+- Filled dot = unused, empty dot = spent
+
+AI usage rules:
+
+| Power-up | AI usage condition |
+|---|---|
+| Extra Bottle | Use within first 15 seconds if workspace is tight |
+| Flash Pour | Use when AI can reach a serve within the next 2 pours |
+| Swap | Use when board is blocked but a swap creates a near-serve route |
+| Clear Bottle | Use when board has 0 empty bottles and no clean route |
+
+- AI usage delay: 2-4 seconds after condition is met
+- AI does not collect power-ups mid-match
+- Remove all bubble-grab logic from AI behavior
 
 ---
 
@@ -419,15 +496,43 @@ Arenas can scale:
 
 ## 12. Match Flow
 
-### 12.1 Flow
-HOME -> MATCHMAKING -> PRE-MATCH -> COUNTDOWN -> MATCH -> RESULT
+#### 12.1 Flow
+
+HOME -> MATCHMAKING -> LOADOUT -> COUNTDOWN -> MATCH -> RESULT
 
 ### 12.2 Matchmaking
 - Fake search with cycling opponent avatars/names (15-22 cycles, decelerating)
 - Opponent generated within +/-100 trophies, clamped to arena range
 - "Opponent found!" reveal with START button
 
-### 12.3 Countdown
+#### 12.3 Loadout screen
+
+After the opponent is found, show a simple loadout panel:
+
+```
++--------------------------------------+
+|         CHOOSE YOUR POWER-UPS        |
++--------------------------------------+
+|                                      |
+|  [slot 1: ___]     [slot 2: ___]     |
+|                                      |
++--------------------------------------+
+| Extra Bottle (x3)  Flash Pour (x4)   |
+| Swap (x2)          Clear Bottle (x1) |
++--------------------------------------+
+|             [ READY ]                |
++--------------------------------------+
+```
+
+Rules:
+- Tap a power-up in inventory to assign it to a slot
+- Tap a filled slot to remove it
+- Player may leave slots empty
+- READY starts the countdown
+- Auto-ready timer: 10 seconds
+- If timer expires, the match starts with the current selection
+
+### 12.4 Countdown
 - 3... 2... 1... MIX!
 - Board visible during countdown but not interactive
 
@@ -441,6 +546,8 @@ HOME -> MATCHMAKING -> PRE-MATCH -> COUNTDOWN -> MATCH -> RESULT
 - Stats (matches, win rate, best score, drinks served)
 - PLAY button
 - Reset button (bottom-right, subtle white square at 10% opacity) — confirms via popup, wipes all progress (trophies, stats, arena floor)
+- Weekly progress widget (stars + next milestone)
+- Power-up inventory button / summary
 
 ### Result
 - Win / Lose / Draw
@@ -451,6 +558,64 @@ HOME -> MATCHMAKING -> PRE-MATCH -> COUNTDOWN -> MATCH -> RESULT
 - Match stats (drinks served, best combo, arena)
 - Play Again / Home
 - Arena unlock overlay if promoted (shows new features)
+- Power-up rewards panel
+- Weekly stars gained this match
+- Current weekly track progress
+
+Example reward block:
+
+```
++--------------------------------------+
+|              REWARDS                 |
+|   [Flash Pour]   [Extra Bottle]      |
+|        +1 per reward roll            |
++--------------------------------------+
+|           WEEKLY PROGRESS            |
+|            Stars: +3                 |
+|        14 / 20 to next reward        |
++--------------------------------------+
+```
+
+---
+
+## Weekly Track
+
+The weekly track is the second progression axis beyond trophies.
+It exists to give the player a reason to keep playing even when ladder gain is slow.
+
+### Weekly stars
+
+| Match result | Stars |
+|---|---|
+| Win | 3 |
+| Draw | 2 |
+| Lose | 1 |
+
+### Rules
+- Every completed match grants stars
+- Weekly stars fill a simple milestone track
+- The weekly track resets once per week
+- Rewards are claimable immediately when a milestone is reached
+
+### Weekly reward types
+- power-up bundles
+- small soft-currency rewards (optional later)
+- lightweight cosmetic rewards (optional later)
+
+### Prototype recommendation
+For prototype scope, reward only:
+- power-up bundles
+- one larger final weekly reward
+
+### Example prototype track
+- 5 stars -> 1 random power-up
+- 12 stars -> 2 random power-ups
+- 20 stars -> 3 random power-ups
+- 30 stars -> 1 guaranteed rare-weight roll
+
+Design rule:
+- The weekly track should support the core loop, not overshadow it
+- It is a retention support layer, not the main game
 
 ---
 
@@ -473,14 +638,22 @@ Required:
 - Trophy progression
 - Arenas with unlock overlay
 - Visible opponent board with power-up dots
+- Pre-match loadout screen (2 slots)
+- Persistent power-up inventory
+- Post-match power-up rewards
+- Weekly star track
+- Weekly progress UI on Home and Result
 
 Not required:
 - Real multiplayer
-- Chests
-- Battle pass
-- Sticker album
-- Shop
 - Sound
+- Collection system
+- Sticker album
+- Recipe book / set completion
+- Village / bar renovation meta
+- Chest timers
+- Shop
+- Battle pass
 
 ---
 
@@ -494,12 +667,15 @@ If time is tight, build this subset first:
 - Serve + scoring
 - AI opponent
 - Color Spawn
-- 2 power-ups only:
+- 2 power-ups in loadout system:
   - Flash Pour
-  - Clear Bottle
+  - Swap
+- Starter inventory for those 2 power-ups
+- Win/Lose power-up rewards
+- Weekly stars only (no full weekly reward UI required in first slice)
 
-This smallest slice is enough to answer the main question:
-**Is PvP customer-racing fun with pour-sort puzzle mechanics?**
+Design note:
+- This is the smallest slice that tests both the PvP core and the reason to keep playing
 
 ---
 
@@ -512,6 +688,12 @@ This smallest slice is enough to answer the main question:
 5. Is the **60% customer-weighted** spawn color bias the right ratio?
 6. Should combo bonus cap at some maximum multiplier?
 7. Is the visible opponent board readable enough, or should the opponent status be simplified?
+8. Does pre-match loadout selection make the match feel more strategic?
+9. Does the player understand why winning matters beyond trophies?
+10. Is the win reward rate high enough to keep loadout choice interesting?
+11. Does Flash Pour feel better as "next 3 pours are instant" than as a timed buff?
+12. Does the weekly track create healthy motivation, or does it feel like noise?
+13. Is BAR CLASH already sticky enough with ladder + loadout + weekly track, without collection?
 
 ---
 
