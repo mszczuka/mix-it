@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git -C \"d:/ClaudeProject/mix-it\" log --oneline -5)",
+      "Read(//c/Users/mszczuka/.claude/plugins/cache/claude-plugins-official/superpowers/5.0.7/skills/brainstorming/**)",
+      "Bash(bash \"C:/Users/mszczuka/.claude/plugins/cache/claude-plugins-official/superpowers/5.0.7/skills/brainstorming/scripts/start-server.sh\" --project-dir \"d:/ClaudeProject/clean-sweep-rush\")",
+      "Read(//c/Users/mszczuka/.claude/plugins/cache/claude-plugins-official/superpowers/5.0.7/skills/subagent-driven-development/**)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "WebSearch"
+    ],
+    "additionalDirectories": [
+      "d:\\ClaudeProject"
+    ]
+  }
+}

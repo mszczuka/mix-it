@@ -11,7 +11,7 @@ html, body {
   width: 100%; height: 100%;
   overflow: hidden;
   font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-  background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
+  background: linear-gradient(180deg, #08081a 0%, #060e1e 100%);
   color: #FFFFFF;
   user-select: none;
   -webkit-user-select: none;
@@ -144,6 +144,20 @@ html, body {
 .play-btn:active {
   transform: scale(0.97);
 }
+.reset-btn {
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: rgba(255,255,255,0.1);
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.reset-btn:hover {
+  background: rgba(255,255,255,0.2);
+}
 
 /* ===== PREMATCH SCREEN ===== */
 #screen-prematch {
@@ -271,6 +285,7 @@ html, body {
 }
 .score-player .score-value { color: #FFD700; }
 .score-opponent .score-value { color: #FF4444; }
+.opp-match-avatar { font-size: 18px; }
 .timer-display {
   font-size: 28px;
   font-weight: 900;
@@ -284,14 +299,16 @@ html, body {
 
 /* Opponent Board */
 .opponent-board {
-  height: 130px;
+  flex: 1;
+  min-height: 60px;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
+  align-content: center;
   justify-content: center;
   gap: 6px;
   padding: 8px 16px;
   opacity: 0.8;
-  flex-shrink: 0;
   background: rgba(0,0,0,0.15);
 }
 
@@ -392,7 +409,7 @@ html, body {
   justify-content: center;
   padding: 8px 16px;
   position: relative;
-  min-height: 200px;
+  min-height: 120px;
 }
 .player-board {
   display: flex;
@@ -913,12 +930,14 @@ html, body {
   border-color: #FFD700 !important;
   box-shadow: 0 0 12px rgba(255,215,0,0.3);
 }
-@keyframes pourLiquid {
-  0% { max-height: 0; opacity: 0.5; }
-  100% { max-height: 100%; opacity: 1; }
+@keyframes pourFill {
+  0% { transform: scaleY(0); opacity: 0.5; }
+  70% { transform: scaleY(1.06); opacity: 1; }
+  100% { transform: scaleY(1); opacity: 1; }
 }
-.pour-anim .glass-layer:last-child {
-  animation: pourLiquid 0.4s ease-out;
+.glass-layer.pour-new {
+  transform-origin: bottom center;
+  animation: pourFill 0.35s ease-out both;
 }
 </style>
 </head>
@@ -961,6 +980,7 @@ html, body {
     </div>
 
     <button class="play-btn" id="btn-play">PLAY</button>
+    <div class="reset-btn" id="btn-reset"></div>
   </div>
 
   <!-- ===== PREMATCH SCREEN ===== -->
@@ -982,6 +1002,18 @@ html, body {
     <button class="start-btn hidden" id="btn-start">START</button>
   </div>
 
+  <!-- ===== LOADOUT SCREEN ===== -->
+  <div id="screen-loadout" class="screen hidden">
+    <div class="loadout-title">CHOOSE YOUR POWER-UPS</div>
+    <div class="loadout-timer" id="loadout-timer"></div>
+    <div class="loadout-slots">
+      <div class="loadout-slot" id="loadout-slot-0" data-idx="0"></div>
+      <div class="loadout-slot" id="loadout-slot-1" data-idx="1"></div>
+    </div>
+    <div class="loadout-inventory" id="loadout-inventory"></div>
+    <button class="play-btn" id="btn-ready">READY</button>
+  </div>
+
   <!-- ===== MATCH SCREEN ===== -->
   <div id="screen-match" class="screen hidden">
     <div id="debug-error" style="position:fixed;top:0;left:0;right:0;background:red;color:white;font-size:10px;padding:2px 6px;z-index:9999;display:none;"></div>
@@ -995,7 +1027,8 @@ html, body {
       <div class="timer-display" id="timer-display">1:30</div>
       <div class="score-opponent">
         <span class="score-value" id="opponent-score">0</span>
-        <span class="score-label">OPP</span>
+        <span class="opp-match-avatar" id="opp-match-avatar"></span>
+        <span class="score-label" id="opp-match-name">OPP</span>
       </div>
     </div>
 
@@ -1113,28 +1146,28 @@ const CFG = {
   AI_POWERUP_USE_DELAY_MIN: 3,
   AI_POWERUP_USE_DELAY_MAX: 5,
   GAME_WIDTH: 420,
-  SPAWN_RECHARGE_TIME: 2,
-  SPAWN_MAX_CHARGES: Infinity,
-  SPAWN_START_CHARGES: 1,
+  SPAWN_RECHARGE_TIME: 1,
+  SPAWN_MAX_CHARGES: 12,
+  SPAWN_START_CHARGES: 5,
   SPAWN_CUSTOMER_WEIGHT: 0.6,
   // Arena system
   ARENAS: [
     { id: 0, name: 'Juice Stand',     emoji: '\u{1F9C3}', min: 0,    max: 199,   colors: 3, sourceGlasses: 3, emptyGlasses: 2, powerUps: ['extraBottle','flashPour'],                          bg: ['#FF8C42','#FFA07A'] },
-    { id: 1, name: 'Beach Bar',       emoji: '\u{1F3D6}\uFE0F', min: 200,  max: 499,   colors: 3, sourceGlasses: 3, emptyGlasses: 2, powerUps: ['extraBottle','flashPour','swap'],               bg: ['#0077B6','#00B4D8'] },
-    { id: 2, name: 'Cocktail Lounge', emoji: '\u{1F378}', min: 500,  max: 999,   colors: 4, sourceGlasses: 4, emptyGlasses: 2, powerUps: ['extraBottle','flashPour','swap','clearBottle'],  bg: ['#2D1B69','#1a1a2e'] },
-    { id: 3, name: 'Speakeasy',       emoji: '\u{1F943}', min: 1000, max: 1499,  colors: 4, sourceGlasses: 4, emptyGlasses: 2, powerUps: ['extraBottle','flashPour','swap','clearBottle'],  bg: ['#1B4D2E','#0D2818'] },
-    { id: 4, name: 'Rooftop Terrace', emoji: '\u{1F306}', min: 1500, max: 2499,  colors: 5, sourceGlasses: 5, emptyGlasses: 2, powerUps: ['extraBottle','flashPour','swap','clearBottle'],  bg: ['#FF6B6B','#FFD93D'] },
-    { id: 5, name: 'Grand Hotel',     emoji: '\u{1F3E8}', min: 2500, max: 99999, colors: 5, sourceGlasses: 5, emptyGlasses: 2, powerUps: ['extraBottle','flashPour','swap','clearBottle'],  bg: ['#1a1a1a','#2D2D00'] },
+    { id: 1, name: 'Beach Bar',       emoji: '\u{1F3D6}\uFE0F', min: 200,  max: 499,   colors: 5, sourceGlasses: 4, emptyGlasses: 3, powerUps: ['extraBottle','flashPour','swap'],               bg: ['#0077B6','#00B4D8'] },
+    { id: 2, name: 'Cocktail Lounge', emoji: '\u{1F378}', min: 500,  max: 999,   colors: 7, sourceGlasses: 5, emptyGlasses: 3, powerUps: ['extraBottle','flashPour','swap','clearBottle'],  bg: ['#2D1B69','#1a1a2e'] },
+    { id: 3, name: 'Speakeasy',       emoji: '\u{1F943}', min: 1000, max: 1499,  colors: 7, sourceGlasses: 6, emptyGlasses: 4, powerUps: ['extraBottle','flashPour','swap','clearBottle'],  bg: ['#1B4D2E','#0D2818'] },
+    { id: 4, name: 'Rooftop Terrace', emoji: '\u{1F306}', min: 1500, max: 2499,  colors: 7, sourceGlasses: 7, emptyGlasses: 5, powerUps: ['extraBottle','flashPour','swap','clearBottle'],  bg: ['#FF6B6B','#FFD93D'] },
+    { id: 5, name: 'Grand Hotel',     emoji: '\u{1F3E8}', min: 2500, max: 99999, colors: 7, sourceGlasses: 8, emptyGlasses: 5, powerUps: ['extraBottle','flashPour','swap','clearBottle'],  bg: ['#1a1a1a','#2D2D00'] },
   ],
-  ALL_COLORS: ['#FF4444', '#4488FF', '#FFCC00', '#44CC44', '#AA44FF'],
-  ALL_COLOR_NAMES: ['Red', 'Blue', 'Yellow', 'Green', 'Purple'],
+  ALL_COLORS: ['#FF4444', '#4488FF', '#FFCC00', '#44CC44', '#AA44FF', '#FF8800', '#FF66AA', '#00CCBB'],
+  ALL_COLOR_NAMES: ['Red', 'Blue', 'Yellow', 'Green', 'Purple', 'Orange', 'Pink', 'Teal'],
   AI_PER_ARENA: [
-    { pourMin: 1.5, pourMax: 2.5, mistakeRate: 0.12, powerUpGrab: 0.50, serveDelay: 0.6 },
-    { pourMin: 1.2, pourMax: 2.0, mistakeRate: 0.08, powerUpGrab: 0.60, serveDelay: 0.5 },
-    { pourMin: 1.0, pourMax: 1.8, mistakeRate: 0.05, powerUpGrab: 0.70, serveDelay: 0.4 },
-    { pourMin: 0.8, pourMax: 1.5, mistakeRate: 0.03, powerUpGrab: 0.75, serveDelay: 0.3 },
-    { pourMin: 0.6, pourMax: 1.2, mistakeRate: 0.02, powerUpGrab: 0.85, serveDelay: 0.2 },
-    { pourMin: 0.4, pourMax: 0.9, mistakeRate: 0.01, powerUpGrab: 0.90, serveDelay: 0.15 },
+    { pourMin: 0.35, pourMax: 0.6, mistakeRate: 0.03, powerUpGrab: 0.80, serveDelay: 0.15 },
+    { pourMin: 0.3, pourMax: 0.5, mistakeRate: 0.02, powerUpGrab: 0.85, serveDelay: 0.12 },
+    { pourMin: 0.25, pourMax: 0.45, mistakeRate: 0.015, powerUpGrab: 0.88, serveDelay: 0.1 },
+    { pourMin: 0.2, pourMax: 0.4, mistakeRate: 0.01, powerUpGrab: 0.90, serveDelay: 0.08 },
+    { pourMin: 0.18, pourMax: 0.3, mistakeRate: 0.005, powerUpGrab: 0.93, serveDelay: 0.06 },
+    { pourMin: 0.15, pourMax: 0.25, mistakeRate: 0.003, powerUpGrab: 0.95, serveDelay: 0.05 },
   ],
   TROPHY_WIN_BASE: 25, TROPHY_WIN_PER_100: 5, TROPHY_WIN_CAP: 40,
   TROPHY_LOSE_BASE: 15, TROPHY_LOSE_PER_150: 3, TROPHY_LOSE_CAP: 25,
@@ -1216,13 +1249,16 @@ let state = {
   countdownTimer: CFG.COUNTDOWN_DURATION,
   matchSeed: 0,
   difficulty: 'medium',
-  stats: { matchesPlayed: 0, wins: 0, losses: 0, draws: 0, bestScore: 0, totalDrinksServed: 0, trophies: 0, arenaFloor: 0 },
+  stats: { matchesPlayed: 0, wins: 0, losses: 0, draws: 0, bestScore: 0, totalDrinksServed: 0, trophies: 0, arenaFloor: 0,
+    powerUpInventory: { extraBottle: 5, flashPour: 5, swap: 3, clearBottle: 3 } },
+  loadout: [null, null],
   currentArena: null,
   currentOpponent: null,
 };
 
 // Undo history
 let undoHistory = [];
+let pourAnimTarget = null;
 let matchDrinksServed = 0;
 let matchBestCombo = 0;
 
@@ -1286,7 +1322,8 @@ function doPour(fromIdx, toIdx) {
   if (!canPour(fromIdx, toIdx)) return false;
   // Snapshot for undo
   undoHistory.push(deepCloneGlasses(state.playerGlasses));
-  doPourRaw(state.playerGlasses, fromIdx, toIdx);
+  const moved = doPourRaw(state.playerGlasses, fromIdx, toIdx);
+  pourAnimTarget = { glassIndex: toIdx, layerCount: moved };
   // Check if destination is now serveable (placeholder - full check in Module 4+)
   checkServeable();
   return true;
@@ -1399,7 +1436,16 @@ function isGlassServeable(glass) {
 // ===== RENDERING =====
 function renderGlass(glass, index, isPlayer) {
   const el = document.createElement('div');
-  const layerHeight = isPlayer ? 30 : 17;
+  let layerHeight;
+  if (isPlayer) {
+    const count = state.playerGlasses.length;
+    layerHeight = count <= 6 ? 30 : count <= 8 ? 26 : 22;
+    el.style.width = (count <= 6 ? 60 : count <= 8 ? 50 : 44) + 'px';
+  } else {
+    const count = state.opponentGlasses.length;
+    layerHeight = count <= 7 ? 17 : 14;
+    el.style.width = (count <= 7 ? 35 : 28) + 'px';
+  }
   const totalHeight = CFG.GLASS_CAPACITY * layerHeight + 4;
   el.className = 'glass ' + (isPlayer ? 'player-glass' : 'opponent-glass');
 
@@ -1414,6 +1460,8 @@ function renderGlass(glass, index, isPlayer) {
   }
 
   // Render layers bottom to top
+  const animStart = (isPlayer && pourAnimTarget && pourAnimTarget.glassIndex === index)
+    ? glass.layers.length - pourAnimTarget.layerCount : -1;
   for (let i = 0; i < glass.layers.length; i++) {
     const layer = document.createElement('div');
     layer.className = 'glass-layer';
@@ -1421,6 +1469,10 @@ function renderGlass(glass, index, isPlayer) {
     layer.style.backgroundColor = COLOR_HEX[glass.layers[i]] || '#888';
     if (i === 0) {
       layer.style.borderRadius = '0 0 4px 4px';
+    }
+    if (i >= animStart && animStart >= 0) {
+      layer.classList.add('pour-new');
+      layer.style.animationDelay = ((i - animStart) * 0.08) + 's';
     }
     el.appendChild(layer);
   }
@@ -1438,6 +1490,7 @@ function renderPlayerBoard() {
   state.playerGlasses.forEach((glass, i) => {
     container.appendChild(renderGlass(glass, i, true));
   });
+  pourAnimTarget = null;
 }
 
 function renderOpponentBoard() {
@@ -1843,7 +1896,7 @@ function startMatch() {
     playerFlashPour: 0,
     opponentFlashPour: 0,
   };
-  state.ai = { nextPourTime: 0, nextServeCheck: 0, thinkingTarget: null };
+  state.ai = { nextPourTime: 0, nextServeCheck: 0, thinkingTarget: null, undosRemaining: 3, undoPending: false };
   state.swapMode = false;
   state.swapFirst = null;
   state.clearBottleMode = false;
@@ -1869,6 +1922,14 @@ function startMatch() {
   const gameEl = document.getElementById('game');
   if (gameEl) {
     gameEl.style.background = 'linear-gradient(180deg, ' + arena.bg[0] + ' 0%, ' + arena.bg[1] + ' 100%)';
+  }
+
+  // Show opponent info in score bar
+  if (state.currentOpponent) {
+    const oam = document.getElementById('opp-match-avatar');
+    const onm = document.getElementById('opp-match-name');
+    if (oam) oam.textContent = state.currentOpponent.avatar;
+    if (onm) onm.textContent = state.currentOpponent.name;
   }
 
   // Render
@@ -1914,26 +1975,49 @@ function useSpawn() {
   }
   state.spawnCharges--;
   state.playerGlasses[idx].layers.push(pickSpawnColor());
+  pourAnimTarget = { glassIndex: idx, layerCount: 1 };
   renderPlayerBoard();
   updateSpawnButton();
 }
 
 function aiUseSpawn() {
   if (state.aiSpawnCharges <= 0) return;
-  const idx = findSpawnTarget(state.opponentGlasses);
-  if (idx < 0) return;
-  state.aiSpawnCharges--;
+  const glasses = state.opponentGlasses;
+
+  // Pick a color the AI needs (customer-weighted)
   const arena = state.currentArena || getArena(state.stats.trophies);
   const colorNames = getArenaColors(arena).names;
-  // AI uses same color weighting
   let color;
-  if (Math.random() < CFG.SPAWN_CUSTOMER_WEIGHT && state.customers.length > 0) {
+  if (Math.random() < 0.8 && state.customers.length > 0) {
     const cc = state.customers.filter(c => !c.servedByOpponent).map(c => c.color);
     color = cc.length > 0 ? cc[Math.floor(Math.random() * cc.length)] : colorNames[Math.floor(Math.random() * colorNames.length)];
   } else {
     color = colorNames[Math.floor(Math.random() * colorNames.length)];
   }
-  state.opponentGlasses[idx].layers.push(color);
+
+  // Smart target: prefer glass where top color matches, then empty, avoid pure glasses
+  let bestIdx = -1, bestPriority = -1;
+  for (let i = 0; i < glasses.length; i++) {
+    const g = glasses[i];
+    if (g.layers.length >= CFG.GLASS_CAPACITY) continue;
+    // Skip pure glasses with different color (don't pollute them)
+    if (isGlassPure(g) && g.layers.length > 0 && g.layers[0] !== color) continue;
+    let priority = 0;
+    if (g.layers.length > 0 && g.layers[g.layers.length - 1] === color) priority = 3; // top matches
+    else if (g.layers.length === 0) priority = 1; // empty
+    else priority = 0; // mixed
+    if (priority > bestPriority) { bestPriority = priority; bestIdx = i; }
+  }
+  // Fallback to any non-full glass
+  if (bestIdx < 0) {
+    for (let i = 0; i < glasses.length; i++) {
+      if (glasses[i].layers.length < CFG.GLASS_CAPACITY) { bestIdx = i; break; }
+    }
+  }
+  if (bestIdx < 0) return;
+
+  state.aiSpawnCharges--;
+  glasses[bestIdx].layers.push(color);
   renderOpponentBoard();
 }
 
@@ -1959,7 +2043,7 @@ function updateSpawns(dt) {
     const totalLayers = state.opponentGlasses.reduce((sum, g) => sum + g.layers.length, 0);
     const hasEmptySpace = state.opponentGlasses.some(g => g.layers.length < CFG.GLASS_CAPACITY);
     const chargesFull = state.aiSpawnCharges >= CFG.SPAWN_MAX_CHARGES;
-    if (hasEmptySpace && (chargesFull || totalLayers < 12 || Math.random() < 0.3)) {
+    if (hasEmptySpace && (chargesFull || totalLayers < 20 || Math.random() < 0.5)) {
       aiUseSpawn();
     }
   }
@@ -2112,6 +2196,14 @@ document.getElementById('btn-spawn').addEventListener('click', () => {
   useSpawn();
 });
 
+document.getElementById('btn-reset').addEventListener('click', () => {
+  if (confirm('Reset all progress? This will erase your trophies, stats, and arena progress.')) {
+    state.stats = { matchesPlayed: 0, wins: 0, losses: 0, draws: 0, bestScore: 0, totalDrinksServed: 0, trophies: 0, arenaFloor: 0 };
+    saveStats();
+    renderHomeStats();
+  }
+});
+
 document.getElementById('btn-play-again').addEventListener('click', () => {
   startMatchmaking();
 });
@@ -2184,14 +2276,15 @@ showScreen('home');
 // MODULE 4: CUSTOMER SYSTEM
 // ============================================================
 
+const CUSTOMER_EMOJIS = ['\u{1F604}','\u{1F929}','\u{1F60E}','\u{1F9D0}','\u{1F973}','\u{1F60B}','\u{1F913}','\u{1F47D}','\u{1F916}','\u{1F98A}'];
+
 function generateCustomerQueue(seed) {
-  // Pre-generate 30 customers for the match
+  // Seed initial batch; new customers are generated on the fly via spawnNewCustomer
   const rng = createRNG(seed + 42);
   const queue = [];
   const arena = state.currentArena || getArena(state.stats.trophies);
   const colorNames = getArenaColors(arena).names;
-  const emojis = ['\u{1F604}','\u{1F929}','\u{1F60E}','\u{1F9D0}','\u{1F973}','\u{1F60B}','\u{1F913}','\u{1F47D}','\u{1F916}','\u{1F98A}'];
-  for (let i = 0; i < 30; i++) {
+  for (let i = 0; i < 10; i++) {
     queue.push({
       color: colorNames[Math.floor(rng() * colorNames.length)],
       patience: CFG.CUSTOMER_PATIENCE,
@@ -2200,10 +2293,41 @@ function generateCustomerQueue(seed) {
       servedByOpponent: false,
       graceTimer: 0,
       leaving: false,
-      emoji: emojis[Math.floor(rng() * emojis.length)],
+      emoji: CUSTOMER_EMOJIS[Math.floor(rng() * CUSTOMER_EMOJIS.length)],
     });
   }
   return queue;
+}
+
+function spawnNewCustomer() {
+  // Generate a customer biased toward colors abundant on the boards
+  const arena = state.currentArena || getArena(state.stats.trophies);
+  const colorNames = getArenaColors(arena).names;
+
+  // Count layers per color across both boards
+  const colorCounts = {};
+  colorNames.forEach(c => colorCounts[c] = 0);
+  state.playerGlasses.forEach(g => g.layers.forEach(l => { if (colorCounts[l] !== undefined) colorCounts[l]++; }));
+  state.opponentGlasses.forEach(g => g.layers.forEach(l => { if (colorCounts[l] !== undefined) colorCounts[l]++; }));
+
+  // Build weighted pool: colors with more layers on board get higher weight
+  const pool = [];
+  for (const c of colorNames) {
+    const weight = Math.max(1, colorCounts[c]);
+    for (let i = 0; i < weight; i++) pool.push(c);
+  }
+
+  const color = pool[Math.floor(Math.random() * pool.length)];
+  return {
+    color,
+    patience: CFG.CUSTOMER_PATIENCE,
+    maxPatience: CFG.CUSTOMER_PATIENCE,
+    servedByPlayer: false,
+    servedByOpponent: false,
+    graceTimer: 0,
+    leaving: false,
+    emoji: CUSTOMER_EMOJIS[Math.floor(Math.random() * CUSTOMER_EMOJIS.length)],
+  };
 }
 
 function spawnInitialCustomers() {
@@ -2226,9 +2350,7 @@ function updateCustomers(dt) {
       if (c.graceTimer <= 0 || (c.servedByPlayer && c.servedByOpponent)) {
         // Remove customer, spawn next
         state.customers.splice(i, 1);
-        if (state.customerQueue.length > 0) {
-          state.customers.push(state.customerQueue.shift());
-        }
+        state.customers.push(state.customerQueue.length > 0 ? state.customerQueue.shift() : spawnNewCustomer());
         continue;
       }
     }
@@ -2242,9 +2364,7 @@ function updateCustomers(dt) {
         state.opponentScore += CFG.CUSTOMER_LEAVE_PENALTY;
         c.leaving = true;
         state.customers.splice(i, 1);
-        if (state.customerQueue.length > 0) {
-          state.customers.push(state.customerQueue.shift());
-        }
+        state.customers.push(state.customerQueue.length > 0 ? state.customerQueue.shift() : spawnNewCustomer());
         showScorePop(CFG.CUSTOMER_LEAVE_PENALTY, 'player');
         showScorePop(CFG.CUSTOMER_LEAVE_PENALTY, 'opponent');
       }
@@ -2506,10 +2626,12 @@ function updateAI(dt) {
 }
 
 function aiMakePour(diff) {
+  if (state.ai.undoPending) return; // wait for undo to resolve
   const glasses = state.opponentGlasses;
 
   // Mistake: X% chance of random legal move
   if (Math.random() < diff.mistakeRate) {
+    const snapshot = deepCloneGlasses(glasses);
     const randomMoves = [];
     for (let i = 0; i < glasses.length; i++)
       for (let j = 0; j < glasses.length; j++)
@@ -2518,6 +2640,18 @@ function aiMakePour(diff) {
       const [f, t] = randomMoves[Math.floor(Math.random() * randomMoves.length)];
       doPourRaw(glasses, f, t);
       renderOpponentBoard();
+
+      // AI may realize mistake and undo (if undos remaining)
+      if (state.ai.undosRemaining > 0 && Math.random() < 0.5) {
+        state.ai.undoPending = true;
+        setTimeout(() => {
+          if (state.phase !== 'playing') { state.ai.undoPending = false; return; }
+          state.opponentGlasses = snapshot;
+          state.ai.undosRemaining--;
+          state.ai.undoPending = false;
+          renderOpponentBoard();
+        }, 400 + Math.random() * 400);
+      }
     }
     return;
   }
@@ -2538,7 +2672,11 @@ function aiMakePour(diff) {
     }
   }
 
-  if (bestMove) { doPourRaw(glasses, bestMove[0], bestMove[1]); renderOpponentBoard(); }
+  // Skip if no good move found or best move is very bad
+  if (bestMove && bestScore > -5) {
+    doPourRaw(glasses, bestMove[0], bestMove[1]);
+    renderOpponentBoard();
+  }
 }
 
 function evaluateAIPour(glasses, from, to, targetColors) {
@@ -2550,10 +2688,21 @@ function evaluateAIPour(glasses, from, to, targetColors) {
 
   let score = 0;
 
-  // +5 if pour creates a FULL pure glass matching a customer (instant serve!)
-  if (dest.layers.length === CFG.GLASS_CAPACITY && isGlassPure(dest) && targetColors.includes(dest.layers[0])) score += 5;
-  // +3 if pour creates a pure glass matching a customer (any size)
-  else if (isGlassPure(dest) && dest.layers.length > 0 && targetColors.includes(dest.layers[0])) score += 3;
+  // Count workspace before and after
+  const emptyBefore = glasses.filter(g => g.layers.length === 0).length;
+  const emptyAfter = simGlasses.filter(g => g.layers.length === 0).length;
+
+  // HARD BLOCK: never pour if it leaves 0 empties (unless it creates an instant serve)
+  const createsServe = dest.layers.length === CFG.GLASS_CAPACITY && isGlassPure(dest) && targetColors.includes(dest.layers[0]);
+  if (emptyAfter === 0 && !createsServe) return -100;
+
+  // +8 if pour creates a FULL pure glass matching a customer (instant serve!)
+  if (createsServe) score += 8;
+  // +4 if pour creates a pure glass matching a customer (any size)
+  else if (isGlassPure(dest) && dest.layers.length > 0 && targetColors.includes(dest.layers[0])) score += 4;
+
+  // +3 if pour fully empties the source glass (creates workspace!)
+  if (src.layers.length === 0) score += 3;
 
   // +2 if pour increases same-color stack toward a target color
   if (targetColors.includes(srcColor)) {
@@ -2562,11 +2711,8 @@ function evaluateAIPour(glasses, from, to, targetColors) {
     if (newStack > oldStack) score += 2;
   }
 
-  // +1 if pour consolidates (moves color to glass that already has it)
-  if (glasses[to].layers.length > 0 && glasses[to].layers.includes(srcColor)) score += 1;
-
-  // +1 if pour fully empties the source glass (creates workspace)
-  if (src.layers.length === 0) score += 1;
+  // +1 if pour consolidates (moves color to glass that already has it on top)
+  if (glasses[to].layers.length > 0 && glasses[to].layers[glasses[to].layers.length - 1] === srcColor) score += 1;
 
   // -1 if pour breaks an existing same-color stack on source
   if (src.layers.length > 0) {
@@ -2575,12 +2721,14 @@ function evaluateAIPour(glasses, from, to, targetColors) {
     if (newSrcStack < oldSrcStack && oldSrcStack > 1) score -= 1;
   }
 
-  // -2 if pour fills the last empty glass (losing workspace)
-  const emptyCount = simGlasses.filter(g => g.layers.length === 0).length;
-  if (emptyCount === 0) score -= 2;
+  // -4 if pour reduces to only 1 empty glass
+  if (emptyAfter === 1 && emptyBefore > 1) score -= 4;
 
   // -1 if pouring to a non-target color glass when targets are available
   if (targetColors.length > 0 && !targetColors.includes(srcColor)) score -= 0.5;
+
+  // -1 if pouring onto a different color (creating a mixed stack)
+  if (glasses[to].layers.length > 0 && glasses[to].layers[glasses[to].layers.length - 1] !== srcColor) score -= 2;
 
   return score;
 }
