@@ -159,8 +159,66 @@ html, body {
   background: rgba(255,255,255,0.2);
 }
 
+/* ===== HOME TOP BAR ===== */
+.home-top-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 48px;
+  background: rgba(0,0,0,0.5);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  gap: 10px;
+  z-index: 10;
+  backdrop-filter: blur(10px);
+}
+.top-bar-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.1);
+  border: 2px solid rgba(255,215,0,0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+.top-bar-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.8);
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.top-bar-stat {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 16px;
+  padding: 4px 10px;
+  flex-shrink: 0;
+}
+.top-bar-icon {
+  font-size: 14px;
+  line-height: 1;
+}
+.top-bar-value {
+  font-size: 13px;
+  font-weight: 800;
+  color: #FFD700;
+}
+
 /* ===== HOME TAB PANELS ===== */
 #screen-home {
+  padding-top: 48px !important;
   padding-bottom: 64px !important;
 }
 .home-tab-panel {
@@ -1472,6 +1530,20 @@ html, body {
 
   <!-- ===== HOME SCREEN ===== -->
   <div id="screen-home" class="screen">
+    <!-- Top Bar -->
+    <div class="home-top-bar">
+      <div class="top-bar-avatar" id="top-bar-avatar">&#x1F9D1;&#x200D;&#x1F373;</div>
+      <div class="top-bar-name" id="top-bar-name">Player</div>
+      <div class="top-bar-stat">
+        <span class="top-bar-icon">&#x1F3C6;</span>
+        <span class="top-bar-value" id="top-bar-trophies">0</span>
+      </div>
+      <div class="top-bar-stat">
+        <span class="top-bar-icon">&#x2B50;</span>
+        <span class="top-bar-value" id="top-bar-stars">0</span>
+      </div>
+    </div>
+
     <!-- Tab: Home (default) -->
     <div class="home-tab-panel" id="tab-home">
       <div class="home-title">BAR CLASH</div>
@@ -2278,6 +2350,12 @@ function saveStats() {
 }
 
 function renderHomeStats() {
+  // Top bar
+  const tbTrophies = document.getElementById('top-bar-trophies');
+  const tbStars = document.getElementById('top-bar-stars');
+  if (tbTrophies) tbTrophies.textContent = state.stats.trophies;
+  if (tbStars) tbStars.textContent = state.stats.weeklyStars || 0;
+
   document.getElementById('stat-matches').textContent = state.stats.matchesPlayed;
   // Show win rate instead of raw wins
   const winRate = state.stats.matchesPlayed > 0
