@@ -823,11 +823,37 @@ html, body {
   cursor: pointer;
   transition: all 0.2s;
   flex-shrink: 0;
+  position: relative;
 }
 .undo-btn:hover {
   border-color: rgba(255,255,255,0.4);
   color: #fff;
   background: rgba(255,255,255,0.1);
+}
+.undo-btn.disabled {
+  opacity: 0.25;
+  cursor: default;
+}
+.undo-btn.disabled:hover {
+  border-color: rgba(255,255,255,0.2);
+  color: rgba(255,255,255,0.5);
+  background: rgba(255,255,255,0.06);
+}
+.undo-count {
+  font-size: 11px;
+  font-weight: 700;
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  background: rgba(255,215,0,0.9);
+  color: #1a1a2e;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
 }
 .spawn-btn {
   width: 52px;
@@ -2022,9 +2048,20 @@ function doPour(fromIdx, toIdx) {
 
 function doUndo() {
   if (undoHistory.length === 0) return;
+  if (state.undosRemaining <= 0) return;
   state.playerGlasses = undoHistory.pop();
   state.selectedGlass = null;
+  state.undosRemaining--;
   renderPlayerBoard();
+  updateUndoButton();
+}
+
+function updateUndoButton() {
+  const btn = document.getElementById('btn-undo');
+  if (!btn) return;
+  const remaining = state.undosRemaining || 0;
+  btn.innerHTML = '&#x21A9; <span class="undo-count">' + remaining + '</span>';
+  btn.classList.toggle('disabled', remaining <= 0);
 }
 
 function deepCloneGlasses(glasses) {
@@ -2834,6 +2871,7 @@ function startMatch() {
   state.aiSpawnCharges = CFG.SPAWN_START_CHARGES;
   state.aiSpawnRechargeTimer = CFG.SPAWN_RECHARGE_TIME;
   undoHistory = [];
+  state.undosRemaining = 3;
   matchDrinksServed = 0;
   matchBestCombo = 0;
   // v6.3: Reset mastery tracking
@@ -2869,6 +2907,7 @@ function startMatch() {
   renderOpponentBoard();
   renderCustomers();
   updateSpawnButton();
+  updateUndoButton();
 
   showScreen('match');
   startCountdown();
