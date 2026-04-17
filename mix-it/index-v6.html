@@ -2676,7 +2676,7 @@ let state = {
   difficulty: 'medium',
   stats: { matchesPlayed: 0, wins: 0, losses: 0, draws: 0, bestScore: 0, totalDrinksServed: 0, trophies: 0, arenaFloor: 0,
     powerUpInventory: { extraBottle: 2, flashPour: 2, swap: 0, clearBottle: 0 },
-    gold: 50, lastPlayDate: null, firstWinToday: false,
+    gold: 0, lastPlayDate: null, firstWinToday: false,
     venue: {},
     promotedArenas: [0], // arenas already promoted to (0 = starter)
     boosterMastery: { extraBottle: 0, flashPour: 0, swap: 0, clearBottle: 0 } },
@@ -3080,7 +3080,7 @@ function loadStats() {
       if (state.stats.trophies === undefined) state.stats.trophies = 0;
       if (state.stats.arenaFloor === undefined) state.stats.arenaFloor = 0;
       if (!state.stats.powerUpInventory) state.stats.powerUpInventory = { extraBottle: 3, flashPour: 3, swap: 0, clearBottle: 0 };
-      if (state.stats.gold === undefined) state.stats.gold = 50;
+      if (state.stats.gold === undefined) state.stats.gold = 0;
       if (state.stats.tutorialDone === undefined) state.stats.tutorialDone = false;
       if (state.stats.venueHintShown === undefined) state.stats.venueHintShown = false;
       if (!state.stats.venue) state.stats.venue = {};
@@ -4387,7 +4387,7 @@ document.getElementById('btn-reset').addEventListener('click', () => {
   if (confirm('Reset all progress? This will erase your trophies, stats, and arena progress.')) {
     state.stats = { matchesPlayed: 0, wins: 0, losses: 0, draws: 0, bestScore: 0, totalDrinksServed: 0, trophies: 0, arenaFloor: 0,
       powerUpInventory: { extraBottle: 2, flashPour: 2, swap: 0, clearBottle: 0 },
-      gold: 50, lastPlayDate: null, firstWinToday: false,
+      gold: 0, lastPlayDate: null, firstWinToday: false,
       venue: {},
       promotedArenas: [0] };
     saveStats();
@@ -4436,6 +4436,56 @@ function goHome() {
   showScreen('home');
   switchHomeTab('home');
   renderHomeStats();
+  renderHomeVenuePreview();
+  // Show venue tab hint after first match if player has gold and hasn't seen hint
+  if (state.stats.gold > 0 && !state.stats.venueHintShown) {
+    showVenueTabHint();
+  }
+}
+
+function showVenueTabHint() {
+  // Remove any existing hint
+  const old = document.getElementById('venue-tab-hint');
+  if (old) old.remove();
+  const oldLabel = document.getElementById('venue-tab-hint-label');
+  if (oldLabel) oldLabel.remove();
+
+  const venueBtn = document.getElementById('nav-venue');
+  if (!venueBtn) return;
+
+  const hint = document.createElement('div');
+  hint.id = 'venue-tab-hint';
+  hint.style.cssText = 'position:absolute;z-index:100;font-size:28px;pointer-events:none;animation:tutorialBounce 1s ease-in-out infinite;';
+  hint.textContent = '\u{1F447}';
+
+  const label = document.createElement('div');
+  label.id = 'venue-tab-hint-label';
+  label.style.cssText = 'position:absolute;z-index:100;font-family:Nunito,sans-serif;font-size:12px;font-weight:900;color:#ffc700;text-shadow:0 1px 3px rgba(0,0,0,0.8);pointer-events:none;animation:tutorialBounce 1s ease-in-out infinite;white-space:nowrap;text-align:center;';
+  label.textContent = 'Spend your gold here!';
+
+  // Position above the Venue nav button
+  const navBar = document.querySelector('.home-nav-bar');
+  if (navBar) {
+    const btnRect = venueBtn.getBoundingClientRect();
+    const navRect = navBar.getBoundingClientRect();
+    hint.style.left = (btnRect.left - navRect.left + btnRect.width / 2 - 14) + 'px';
+    hint.style.bottom = (navRect.height + 4) + 'px';
+    label.style.left = (btnRect.left - navRect.left + btnRect.width / 2 - 60) + 'px';
+    label.style.bottom = (navRect.height + 36) + 'px';
+    label.style.width = '120px';
+    navBar.style.position = 'relative';
+    navBar.appendChild(hint);
+    navBar.appendChild(label);
+  }
+
+  // Remove hint when venue tab is clicked
+  venueBtn.addEventListener('click', function removeHint() {
+    const h = document.getElementById('venue-tab-hint');
+    const l = document.getElementById('venue-tab-hint-label');
+    if (h) h.remove();
+    if (l) l.remove();
+    venueBtn.removeEventListener('click', removeHint);
+  }, { once: true });
 }
 
 // ===== KEYBOARD SUPPORT =====
