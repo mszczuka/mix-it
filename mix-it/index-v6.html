@@ -245,7 +245,7 @@ html, body {
   overflow-y: auto;
   min-height: 0;
 }
-#venue-map-preview { pointer-events: auto; opacity: 1; overflow: hidden; min-height: 400px; }
+/* venue map removed — upgrades happen on Home map directly */
 .home-tab-panel.hidden { display: none !important; }
 .tab-panel-title {
   font-family: 'Lilita One', cursive;
@@ -568,8 +568,6 @@ html, body {
   border-radius: 14px;
   background: linear-gradient(180deg, #1a6030 0%, #2a8040 40%, #8B7355 70%, #6B5B40 100%);
   box-shadow: inset 0 0 20px rgba(0,0,0,0.3);
-  pointer-events: none;
-  opacity: 0.9;
 }
 /* Venue list overlay */
 .venue-list-overlay {
@@ -2270,17 +2268,12 @@ html, body {
       <div class="ranking-list" id="ranking-list"></div>
     </div>
 
-    <!-- Tab: Venue (1:1 duplicate of Home) -->
+    <!-- Tab: Venue (reuses Home's venue preview) -->
     <div class="home-tab-panel hidden" id="tab-venue">
-      <div class="home-venue-preview" id="venue-map-preview"></div>
-
-      <div class="arena-badge-box">
-        <div class="venue-gold-display" id="venue-gold-display"></div>
-        <div class="venue-progress-text" id="venue-progress-text"></div>
-      </div>
-
+      <div class="venue-gold-display" id="venue-gold-display"></div>
+      <div class="venue-progress-text" id="venue-progress-text"></div>
+      <div style="font-size:12px;color:rgba(255,255,255,0.4);text-align:center;">Tap + on buildings in the Home tab to upgrade</div>
       <button class="venue-list-btn" id="btn-venue-list">Upgrade List</button>
-
       <div class="venue-list-overlay hidden" id="venue-list-overlay">
         <div class="venue-list-panel">
           <div class="venue-list-header">
@@ -3236,8 +3229,8 @@ function renderVenue() {
   const progEl = document.getElementById('venue-progress-text');
   if (progEl) progEl.textContent = totalUpgrades + ' / 25 upgrades';
 
-  // Visual map with tappable green upgrade buttons (same component as Home)
-  renderVenueMap(document.getElementById('venue-map-preview'), arenaId, true);
+  // Venue map is on the Home tab — refresh it with interactive buttons
+  renderHomeVenuePreview();
 
   // Building list (inside overlay)
   const buildingsEl = document.getElementById('venue-buildings');
@@ -3449,7 +3442,7 @@ function renderVenueMap(container, arenaId, interactive) {
 
 function renderHomeVenuePreview() {
   const arena = getArena(state.stats.trophies);
-  renderVenueMap(document.getElementById('home-venue-preview'), arena.id, false);
+  renderVenueMap(document.getElementById('home-venue-preview'), arena.id, true);
 }
 
 function renderBoostersTab() {
