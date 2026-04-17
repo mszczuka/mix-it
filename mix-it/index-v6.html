@@ -4385,15 +4385,52 @@ document.getElementById('btn-quit-home').addEventListener('click', () => {
 });
 
 document.getElementById('btn-reset').addEventListener('click', () => {
-  if (confirm('Reset all progress? This will erase your trophies, stats, and arena progress.')) {
+  // In-game reset popup
+  const overlay = document.createElement('div');
+  overlay.className = 'venue-reward-popup';
+  const card = document.createElement('div');
+  card.className = 'venue-reward-card';
+  card.innerHTML =
+    '<div class="venue-reward-emoji">\u{26A0}\uFE0F</div>' +
+    '<div class="venue-reward-title" style="color:#FF4444;">RESET PROGRESS?</div>' +
+    '<div style="font-family:Nunito,sans-serif;font-size:13px;font-weight:700;color:rgba(255,255,255,0.8);text-align:center;line-height:1.5;">' +
+    'This will erase all your trophies, gold, boosters, venue progress, and stats.<br><br>' +
+    '<b style="color:#ffc700;">After reset, please refresh the game.</b></div>';
+  // Buttons
+  const btns = document.createElement('div');
+  btns.style.cssText = 'display:flex;gap:12px;margin-top:12px;';
+  const confirmBtn = document.createElement('button');
+  confirmBtn.className = 'play-btn';
+  confirmBtn.style.cssText = 'width:130px;font-size:16px;margin:0;background:linear-gradient(180deg,#FF4444,#CC0000);box-shadow:0 5px 0 #800000;';
+  confirmBtn.textContent = 'RESET';
+  confirmBtn.addEventListener('click', () => {
     state.stats = { matchesPlayed: 0, wins: 0, losses: 0, draws: 0, bestScore: 0, totalDrinksServed: 0, trophies: 0, arenaFloor: 0,
       powerUpInventory: { extraBottle: 2, flashPour: 2, swap: 0, clearBottle: 0 },
       gold: 0, lastPlayDate: null, firstWinToday: false,
-      venue: {},
+      venue: {}, tutorialDone: false, venueHintShown: false,
       promotedArenas: [0] };
     saveStats();
-    renderHomeStats();
-  }
+    overlay.remove();
+    // Show "refresh" message
+    const msg = document.createElement('div');
+    msg.className = 'venue-reward-popup';
+    msg.innerHTML = '<div class="venue-reward-card">' +
+      '<div class="venue-reward-emoji">\u2705</div>' +
+      '<div class="venue-reward-title" style="color:#44CC44;">RESET DONE</div>' +
+      '<div style="font-family:Nunito,sans-serif;font-size:14px;font-weight:700;color:rgba(255,255,255,0.8);text-align:center;">Please refresh the game now</div>' +
+      '</div>';
+    document.body.appendChild(msg);
+  });
+  const cancelBtn = document.createElement('button');
+  cancelBtn.className = 'venue-list-btn';
+  cancelBtn.style.cssText = 'padding:10px 24px;';
+  cancelBtn.textContent = 'CANCEL';
+  cancelBtn.addEventListener('click', () => overlay.remove());
+  btns.appendChild(confirmBtn);
+  btns.appendChild(cancelBtn);
+  card.appendChild(btns);
+  overlay.appendChild(card);
+  document.body.appendChild(overlay);
 });
 
 document.getElementById('btn-play-again').addEventListener('click', () => {
