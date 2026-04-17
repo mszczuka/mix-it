@@ -245,7 +245,7 @@ html, body {
   overflow-y: auto;
   min-height: 0;
 }
-/* venue map removed — upgrades happen on Home map directly */
+#venue-map-preview { pointer-events: auto; opacity: 1; overflow: visible; }
 .home-tab-panel.hidden { display: none !important; }
 .tab-panel-title {
   font-family: 'Lilita One', cursive;
@@ -568,6 +568,8 @@ html, body {
   border-radius: 14px;
   background: linear-gradient(180deg, #1a6030 0%, #2a8040 40%, #8B7355 70%, #6B5B40 100%);
   box-shadow: inset 0 0 20px rgba(0,0,0,0.3);
+  pointer-events: none;
+  opacity: 0.9;
 }
 /* Venue list overlay */
 .venue-list-overlay {
@@ -2268,12 +2270,17 @@ html, body {
       <div class="ranking-list" id="ranking-list"></div>
     </div>
 
-    <!-- Tab: Venue (reuses Home's venue preview) -->
+    <!-- Tab: Venue (1:1 duplicate of Home) -->
     <div class="home-tab-panel hidden" id="tab-venue">
-      <div class="venue-gold-display" id="venue-gold-display"></div>
-      <div class="venue-progress-text" id="venue-progress-text"></div>
-      <div style="font-size:12px;color:rgba(255,255,255,0.4);text-align:center;">Tap + on buildings in the Home tab to upgrade</div>
+      <div class="home-venue-preview" id="venue-map-preview"></div>
+
+      <div class="arena-badge-box">
+        <div class="venue-gold-display" id="venue-gold-display"></div>
+        <div class="venue-progress-text" id="venue-progress-text"></div>
+      </div>
+
       <button class="venue-list-btn" id="btn-venue-list">Upgrade List</button>
+
       <div class="venue-list-overlay hidden" id="venue-list-overlay">
         <div class="venue-list-panel">
           <div class="venue-list-header">
@@ -2511,7 +2518,7 @@ html, body {
 
 // ===== CONFIG =====
 const CFG = {
-  MATCH_DURATION: 60,
+  MATCH_DURATION: 90,
   COUNTDOWN_DURATION: 3,
   GLASS_CAPACITY: 4,
   VISIBLE_CUSTOMERS: 3,
@@ -3073,9 +3080,9 @@ function loadStats() {
       if (state.stats.trophies === undefined) state.stats.trophies = 0;
       if (state.stats.arenaFloor === undefined) state.stats.arenaFloor = 0;
       if (!state.stats.powerUpInventory) state.stats.powerUpInventory = { extraBottle: 3, flashPour: 3, swap: 0, clearBottle: 0 };
-      if (state.stats.gold === undefined || state.stats.gold === 50) state.stats.gold = 0;
+      if (state.stats.gold === undefined) state.stats.gold = 0;
       if (state.stats.tutorialDone === undefined) state.stats.tutorialDone = false;
-      if (state.stats.venueHintShown === undefined || state.stats.venueHintShown === true) state.stats.venueHintShown = false;
+      if (state.stats.venueHintShown === undefined) state.stats.venueHintShown = false;
       if (!state.stats.venue) state.stats.venue = {};
       // v6.3 fields
       if (!state.stats.promotedArenas) state.stats.promotedArenas = [0];
@@ -3229,8 +3236,8 @@ function renderVenue() {
   const progEl = document.getElementById('venue-progress-text');
   if (progEl) progEl.textContent = totalUpgrades + ' / 25 upgrades';
 
-  // Venue map is on the Home tab — refresh it with interactive buttons
-  renderHomeVenuePreview();
+  // Visual map with tappable green upgrade buttons (same component as Home)
+  renderVenueMap(document.getElementById('venue-map-preview'), arenaId, true);
 
   // Building list (inside overlay)
   const buildingsEl = document.getElementById('venue-buildings');
@@ -3397,14 +3404,14 @@ function renderVenueMap(container, arenaId, interactive) {
             renderHomeVenuePreview();
             if (result.buildingReward) showVenueRewardPopup('Building Complete!', '\u{1F3D7}', result.buildingReward, 0);
             if (result.venueReward) showVenueRewardPopup('Venue Complete!', '\u{1F389}', result.venueReward, result.venueGold);
-            // First upgrade hint — give a free booster as welcome reward
+            // First upgrade hint
             if (!state.stats.venueHintShown) {
               state.stats.venueHintShown = true;
-              const bonusType = 'extraBottle';
-              state.stats.powerUpInventory[bonusType] = (state.stats.powerUpInventory[bonusType] || 0) + 1;
               saveStats();
-              showVenueRewardPopup('Upgrade Your Venue!', '\u{1F3D7}', [bonusType], 0,
-                'Build all 5 venues to earn boosters!\nEach completed building rewards you with powerful boosters for your matches.\n\nHere\'s a free booster to get you started!');
+              setTimeout(() => {
+                showVenueRewardPopup('Upgrade Your Venue!', '\u{1F3D7}', [],  0,
+                  'Build all 5 venues to earn boosters!\nEach completed building rewards you with powerful boosters for your matches.');
+              }, result.buildingReward ? 1500 : 300);
             }
           }
         }
@@ -3442,7 +3449,7 @@ function renderVenueMap(container, arenaId, interactive) {
 
 function renderHomeVenuePreview() {
   const arena = getArena(state.stats.trophies);
-  renderVenueMap(document.getElementById('home-venue-preview'), arena.id, true);
+  renderVenueMap(document.getElementById('home-venue-preview'), arena.id, false);
 }
 
 function renderBoostersTab() {
@@ -3565,7 +3572,7 @@ function showVenueRewardPopup(title, emoji, boosterTypes, goldAmount, customText
   const btn = document.createElement('button');
   btn.className = 'play-btn';
   btn.style.cssText = 'width:180px;margin-top:8px;font-size:18px;';
-  btn.textContent = (boosterTypes && boosterTypes.length > 0) || (goldAmount && goldAmount > 0) ? 'CLAIM' : 'GOT IT';
+  btn.textContent = 'COLLECT';
   btn.addEventListener('click', () => overlay.remove());
   card.appendChild(btn);
   overlay.appendChild(card);
@@ -4453,7 +4460,7 @@ function showVenueTabHint() {
 
   const label = document.createElement('div');
   label.id = 'venue-tab-hint-label';
-  label.style.cssText = 'position:absolute;z-index:100;font-family:Nunito,sans-serif;font-size:12px;font-weight:900;color:#ffc700;pointer-events:none;animation:tutorialBounce 1s ease-in-out infinite;white-space:nowrap;text-align:center;background:#0a2a50;padding:6px 32px;border-radius:8px;border:1px solid rgba(255,215,0,0.3);';
+  label.style.cssText = 'position:absolute;z-index:100;font-family:Nunito,sans-serif;font-size:12px;font-weight:900;color:#ffc700;text-shadow:0 1px 3px rgba(0,0,0,0.8);pointer-events:none;animation:tutorialBounce 1s ease-in-out infinite;white-space:nowrap;text-align:center;';
   label.textContent = 'Spend your gold here!';
 
   // Position above the Venue nav button
@@ -5806,11 +5813,9 @@ document.getElementById('btn-tutorial-done').addEventListener('click', () => {
 // ============================================================
 // INIT (placed at end so all modules are defined)
 // ============================================================
-try {
 loadStats();
 renderHomeStats();
 renderHomeVenuePreview();
-} catch(e) { document.title = 'INIT ERR: ' + e.message; console.error('INIT ERROR:', e); }
 // Show splash for 4 seconds with progress bar, then fade to home
 showScreen('splash');
 requestAnimationFrame(() => {
