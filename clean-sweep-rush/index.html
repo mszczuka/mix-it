@@ -1066,38 +1066,188 @@ const state = {
 
 // ===== LEVEL DATA =====
 const LEVELS = [
+  // --- Levels 1-3 (original onboarding) ---
   {
-    worldName:   'Backyard Chaos',
-    levelName:   'First Wash',
-    levelNumber: 1,
-    timer:       60,
-    startX:      225,
-    startY:      600,
+    worldName: 'Backyard Chaos', levelName: 'First Wash', levelNumber: 1,
+    timer: 60, startX: 225, startY: 600,
     targets: [
       { type: 'clean_object', objectType: 'pot', amount: 3, icon: '\u{1FAB4}', label: 'Pots' },
     ],
   },
   {
-    worldName:   'Backyard Chaos',
-    levelName:   'Garden Path',
-    levelNumber: 2,
-    timer:       55,
-    startX:      225,
-    startY:      600,
+    worldName: 'Backyard Chaos', levelName: 'Garden Path', levelNumber: 2,
+    timer: 55, startX: 225, startY: 600,
     targets: [
-      { type: 'clean_dirt',   dirtTag: 'target_mud', amount: 4, icon: '\u{1F4A7}', label: 'Mud Patches' },
+      { type: 'clean_dirt', dirtTag: 'target_mud', amount: 4, icon: '\u{1F4A7}', label: 'Mud Patches' },
       { type: 'clean_object', objectType: 'bench', amount: 1, icon: '\u{1FA91}', label: 'Bench' },
     ],
   },
   {
-    worldName:   'Backyard Chaos',
-    levelName:   'Backyard Blitz',
-    levelNumber: 3,
-    timer:       60,
-    startX:      225,
-    startY:      600,
+    worldName: 'Backyard Chaos', levelName: 'Backyard Blitz', levelNumber: 3,
+    timer: 60, startX: 225, startY: 600,
     targets: [
       { type: 'restore_object', objectId: 'birdbath', icon: '\u{1F426}', label: 'Restore Birdbath' },
+    ],
+  },
+  // --- Levels 4-8: Early Expansion ---
+  {
+    worldName: 'Backyard Chaos', levelName: 'Potting Corner', levelNumber: 4,
+    timer: 55, startX: 225, startY: 600,
+    targets: [
+      { type: 'clean_object', objectType: 'pot', amount: 4, icon: '\u{1FAB4}', label: 'Pots' },
+    ],
+  },
+  {
+    worldName: 'Backyard Chaos', levelName: 'Bench Wipe', levelNumber: 5,
+    timer: 55, startX: 225, startY: 600,
+    targets: [
+      { type: 'clean_object', objectType: 'bench', amount: 1, icon: '\u{1FA91}', label: 'Bench' },
+      { type: 'clean_dirt', dirtTag: 'target_mud', amount: 4, icon: '\u{1F4A7}', label: 'Mud Patches' },
+    ],
+  },
+  {
+    worldName: 'Backyard Chaos', levelName: 'Gate Mud', levelNumber: 6,
+    timer: 60, startX: 225, startY: 600,
+    targets: [
+      { type: 'clean_dirt', dirtTag: 'target_mud', amount: 6, icon: '\u{1F4A7}', label: 'Mud Patches' },
+    ],
+  },
+  {
+    worldName: 'Backyard Chaos', levelName: 'Birdbath Prep', levelNumber: 7,
+    timer: 60, startX: 225, startY: 600,
+    targets: [
+      { type: 'restore_object', objectId: 'birdbath', icon: '\u{1F426}', label: 'Restore Birdbath' },
+    ],
+  },
+  {
+    worldName: 'Backyard Chaos', levelName: 'Leaf Sweep', levelNumber: 8,
+    timer: 55, startX: 225, startY: 600,
+    targets: [
+      { type: 'clean_dirt', dirtTag: 'target_leaves', amount: 8, icon: '\u{1F342}', label: 'Leaves' },
+      { type: 'clean_object', objectType: 'pot', amount: 2, icon: '\u{1FAB4}', label: 'Pots' },
+    ],
+  },
+  // --- Levels 9-13: Mixed Goals and First Relief ---
+  {
+    worldName: 'Backyard Chaos', levelName: 'Garden Path', levelNumber: 9,
+    timer: 65, startX: 225, startY: 600,
+    targets: [
+      { type: 'clean_dirt', dirtTag: 'target_mud', amount: 5, icon: '\u{1F4A7}', label: 'Mud Patches' },
+      { type: 'clean_object', objectType: 'bench', amount: 2, icon: '\u{1FA91}', label: 'Bench' },
+    ],
+  },
+  {
+    worldName: 'Backyard Chaos', levelName: 'Quick Cleanup', levelNumber: 10,
+    timer: 50, startX: 225, startY: 600,
+    targets: [
+      { type: 'clean_object', objectType: 'pot', amount: 5, icon: '\u{1FAB4}', label: 'Pots' },
+    ],
+  },
+  {
+    worldName: 'Backyard Chaos', levelName: 'Compost Route', levelNumber: 11,
+    timer: 65, startX: 225, startY: 600,
+    targets: [
+      { type: 'clean_dirt', dirtTag: 'target_sludge', amount: 4, icon: '\u{1F7E4}', label: 'Sludge' },
+      { type: 'clean_dirt', dirtTag: 'target_mud', amount: 3, icon: '\u{1F4A7}', label: 'Mud Patches' },
+    ],
+  },
+  {
+    worldName: 'Backyard Chaos', levelName: 'Patio Area', levelNumber: 12,
+    timer: 70, startX: 225, startY: 600,
+    targets: [
+      { type: 'clean_area', areaId: 'main', threshold: 0.7, icon: '\u{1F9F9}', label: 'Area Clean' },
+      { type: 'clean_object', objectType: 'bench', amount: 1, icon: '\u{1FA91}', label: 'Bench' },
+    ],
+  },
+  {
+    worldName: 'Backyard Chaos', levelName: 'Lamp Restore', levelNumber: 13,
+    timer: 70, startX: 225, startY: 600,
+    targets: [
+      { type: 'restore_object', objectId: 'lamp', icon: '\u{1F4A1}', label: 'Restore Lamp' },
+      { type: 'clean_dirt', dirtTag: 'target_leaves', amount: 6, icon: '\u{1F342}', label: 'Leaves' },
+    ],
+  },
+  // --- Levels 14-18: Mid World ---
+  {
+    worldName: 'Backyard Chaos', levelName: 'Mud Spiral', levelNumber: 14,
+    timer: 70, startX: 225, startY: 600,
+    targets: [
+      { type: 'clean_dirt', dirtTag: 'target_mud', amount: 8, icon: '\u{1F4A7}', label: 'Mud Patches' },
+    ],
+  },
+  {
+    worldName: 'Backyard Chaos', levelName: 'Sprinkler Leak', levelNumber: 15,
+    timer: 75, startX: 225, startY: 600,
+    targets: [
+      { type: 'restore_object', objectId: 'sprinkler', icon: '\u{1F4A6}', label: 'Restore Sprinkler' },
+      { type: 'clean_dirt', dirtTag: 'target_mud', amount: 5, icon: '\u{1F4A7}', label: 'Mud Patches' },
+    ],
+  },
+  {
+    worldName: 'Backyard Chaos', levelName: 'Garden Cart', levelNumber: 16,
+    timer: 75, startX: 225, startY: 600,
+    targets: [
+      { type: 'clean_object', objectType: 'cart', amount: 1, icon: '\u{1F6D2}', label: 'Garden Cart' },
+      { type: 'clean_dirt', dirtTag: 'target_sludge', amount: 4, icon: '\u{1F7E4}', label: 'Sludge' },
+      { type: 'clean_object', objectType: 'pot', amount: 2, icon: '\u{1FAB4}', label: 'Pots' },
+    ],
+  },
+  {
+    worldName: 'Backyard Chaos', levelName: 'Side Yard Clean', levelNumber: 17,
+    timer: 75, startX: 225, startY: 600,
+    targets: [
+      { type: 'clean_area', areaId: 'main', threshold: 0.75, icon: '\u{1F9F9}', label: 'Area Clean' },
+    ],
+  },
+  {
+    worldName: 'Backyard Chaos', levelName: 'Fence Unlock', levelNumber: 18,
+    timer: 80, startX: 225, startY: 600,
+    targets: [
+      { type: 'clean_dirt', dirtTag: 'target_mud', amount: 4, icon: '\u{1F4A7}', label: 'Mud Patches' },
+      { type: 'restore_object', objectId: 'birdbath', icon: '\u{1F426}', label: 'Restore Birdbath' },
+    ],
+  },
+  // --- Levels 19-23: Late World / Mini-Finale ---
+  {
+    worldName: 'Backyard Chaos', levelName: 'Back Corner', levelNumber: 19,
+    timer: 75, startX: 225, startY: 600,
+    targets: [
+      { type: 'clean_dirt', dirtTag: 'target_sludge', amount: 5, icon: '\u{1F7E4}', label: 'Sludge' },
+      { type: 'clean_dirt', dirtTag: 'target_leaves', amount: 8, icon: '\u{1F342}', label: 'Leaves' },
+    ],
+  },
+  {
+    worldName: 'Backyard Chaos', levelName: 'Coin Rinse', levelNumber: 20,
+    timer: 55, startX: 225, startY: 600,
+    targets: [
+      { type: 'clean_object', objectType: 'pot', amount: 6, icon: '\u{1FAB4}', label: 'Pots' },
+      { type: 'clean_object', objectType: 'bench', amount: 2, icon: '\u{1FA91}', label: 'Bench' },
+    ],
+  },
+  {
+    worldName: 'Backyard Chaos', levelName: 'Fountain Access', levelNumber: 21,
+    timer: 80, startX: 225, startY: 600,
+    targets: [
+      { type: 'clean_dirt', dirtTag: 'target_mud', amount: 5, icon: '\u{1F4A7}', label: 'Mud Patches' },
+      { type: 'restore_object', objectId: 'fountain', icon: '\u26F2', label: 'Restore Fountain' },
+    ],
+  },
+  {
+    worldName: 'Backyard Chaos', levelName: 'Light the Yard', levelNumber: 22,
+    timer: 85, startX: 225, startY: 600,
+    targets: [
+      { type: 'restore_object', objectId: 'lights1', icon: '\u{1F4A1}', label: 'Restore Lights' },
+      { type: 'restore_object', objectId: 'lights2', icon: '\u{1F4A1}', label: 'Restore Lights' },
+      { type: 'clean_dirt', dirtTag: 'target_leaves', amount: 10, icon: '\u{1F342}', label: 'Leaves' },
+    ],
+  },
+  {
+    worldName: 'Backyard Chaos', levelName: 'Backyard Reborn', levelNumber: 23,
+    timer: 90, startX: 225, startY: 600,
+    targets: [
+      { type: 'clean_area', areaId: 'main', threshold: 0.8, icon: '\u{1F9F9}', label: 'Area Clean' },
+      { type: 'restore_object', objectId: 'fountain', icon: '\u26F2', label: 'Restore Fountain' },
+      { type: 'restore_object', objectId: 'lights1', icon: '\u{1F4A1}', label: 'Restore Lights' },
     ],
   },
 ];
@@ -1460,7 +1610,7 @@ function populateResultScreen() {
     starsEl.innerHTML = '';
     const msgEl = document.createElement('div');
     msgEl.style.cssText = 'font-size:15px;color:#fff;font-weight:700;margin-bottom:6px;';
-    msgEl.textContent = 'All 3 levels cleared!';
+    msgEl.textContent = 'All ' + LEVELS.length + ' levels cleared!';
     summaryEl.appendChild(msgEl);
     const subEl = document.createElement('div');
     subEl.style.cssText = 'font-size:12px;color:#aaccaa;margin-bottom:8px;';
@@ -2158,6 +2308,19 @@ function startLevel() {
   }
 
   loadLevel(level);
+
+  // Snapshot initial dirt count per area for static area targets
+  state.areaTargetInitialCounts = {};
+  state.targets.forEach(target => {
+    if (target.type === 'clean_area') {
+      const areaId = target.areaId || null;
+      const count = areaId
+        ? state.dirtNodes.filter(d => d.areaId === areaId).length
+        : state.dirtNodes.length;
+      state.areaTargetInitialCounts[areaId || '__all__'] = count;
+    }
+  });
+
   showScreen('gameplay');
 }
 
@@ -2328,14 +2491,24 @@ function checkAreaTargets() {
     if (target.type !== 'clean_area') return;
 
     const areaId = target.areaId || null;
-    const allDirt = areaId
+    const key = areaId || '__all__';
+
+    // Use static initial count as denominator so hazard-spawned dirt doesn't change it
+    const initialTotal = (state.areaTargetInitialCounts && state.areaTargetInitialCounts[key])
+      ? state.areaTargetInitialCounts[key]
+      : 0;
+
+    // Count how many of the INITIAL dirt nodes are cleared
+    // Only count dirt nodes that existed at level start (index < initialTotal won't work
+    // because hazard dirt is appended). Instead, count all cleared dirt with matching areaId,
+    // but cap the denominator at the initial count.
+    const allAreaDirt = areaId
       ? state.dirtNodes.filter(d => d.areaId === areaId)
       : state.dirtNodes;
+    const cleared = allAreaDirt.filter(d => !d.alive).length;
 
-    const total   = allDirt.length;
-    const cleared = allDirt.filter(d => !d.alive).length;
-
-    target.current = total > 0 ? cleared / total : 0;
+    const total = initialTotal > 0 ? initialTotal : allAreaDirt.length;
+    target.current = total > 0 ? Math.min(cleared / total, 1.0) : 0;
 
     if (target.threshold !== undefined && target.current >= target.threshold) {
       target.done = true;
@@ -2392,93 +2565,546 @@ function renderDirt() {
   });
 }
 
-// ===== LEVEL LOADER =====
-// All positions recalculated for 450x800 portrait canvas
+// ===== LEVEL LAYOUTS (data-driven) =====
+// Each layout keyed by level index (0-22). Contains arrays for dirt, objects, locks, hazards, powerUps.
 
-function loadLevel(level) {
-  if (state.levelIndex === 0) {
-    // Level 1 — "First Wash" (60s)
-    // Tutorial: learn spray, clean pots, immediate satisfaction
-    // 6 mud (reduced from 12), 3 pots (reduced from 4)
-    // No locks, no hazards, no power-ups
-    spawnDirt([
-      // 2 mud near start for instant payoff
+const LEVEL_LAYOUTS = {
+  // --- Level 1: First Wash ---
+  0: {
+    dirt: [
       { id: 1, x: 200, y: 580, type: 'mud' },
       { id: 2, x: 260, y: 560, type: 'mud' },
-      // 4 more spread around
       { id: 3, x: 120, y: 400, type: 'mud' },
       { id: 4, x: 320, y: 350, type: 'mud' },
       { id: 5, x: 180, y: 250, type: 'mud' },
       { id: 6, x: 350, y: 500, type: 'mud' },
-    ]);
-    // 3 pots — 1 near start, 2 farther
-    spawnObjects([
+    ],
+    objects: [
       { x: 300, y: 580, type: 'pot' },
       { x: 100, y: 350, type: 'pot' },
       { x: 350, y: 220, type: 'pot' },
-    ]);
-
-  } else if (state.levelIndex === 1) {
-    // Level 2 — "Garden Path" (55s)
-    // Multi-target reading: 4 tagged mud + 1 bench
-    // No locks, no hazards, no power-ups
-    // Some leaves as scenic clutter (non-target)
-    spawnDirt([
-      // 2 target mud near start
+    ],
+  },
+  // --- Level 2: Garden Path ---
+  1: {
+    dirt: [
       { id: 'l2_mud1', x: 200, y: 580, type: 'mud', targetTag: 'target_mud' },
       { id: 'l2_mud2', x: 280, y: 540, type: 'mud', targetTag: 'target_mud' },
-      // 2 target mud farther
       { id: 'l2_mud3', x: 120, y: 350, type: 'mud', targetTag: 'target_mud' },
       { id: 'l2_mud4', x: 330, y: 280, type: 'mud', targetTag: 'target_mud' },
-    ]);
-    // A few leaves (non-target, scenic)
-    spawnDirt([
+      // scenic leaves (non-target)
       { x: 100, y: 450, type: 'leaves' },
       { x: 250, y: 380, type: 'leaves' },
       { x: 350, y: 480, type: 'leaves' },
       { x: 160, y: 250, type: 'leaves' },
-    ]);
-    // 1 bench, visible from the start
-    spawnObjects([
+    ],
+    objects: [
       { id: 'l2_bench1', x: 225, y: 200, type: 'bench' },
-    ]);
-
-  } else if (state.levelIndex === 2) {
-    // Level 3 — "Backyard Blitz" (60s)
-    // Teaches restore: clear blockers → unlock gate → clean sludge → restore birdbath
-    // 1 lock, 2 blocker mud, 2 sludge near birdbath. No hazards.
-    // Optional turbo power-up (not required to win)
-    spawnDirt([
-      // 2 blocker mud near gate (clean these to unlock)
+    ],
+  },
+  // --- Level 3: Backyard Blitz ---
+  2: {
+    dirt: [
       { id: 'l3_gate_mud1', x: 200, y: 420, type: 'mud' },
       { id: 'l3_gate_mud2', x: 260, y: 400, type: 'mud' },
-      // A few scenic mud
       { id: 'l3_mud1', x: 150, y: 560, type: 'mud' },
       { id: 'l3_mud2', x: 320, y: 530, type: 'mud' },
-    ]);
-    // 2 sludge near birdbath (behind lock)
-    spawnDirt([
       { id: 'l3_sludge1', x: 200, y: 200, type: 'sludge', locked: true },
       { id: 'l3_sludge2', x: 260, y: 220, type: 'sludge', locked: true },
-    ]);
-    // Birdbath — restore target (locked behind gate, needs sludge cleared first)
-    spawnObjects([{
+    ],
+    objects: [{
       id: 'birdbath', x: 225, y: 180, type: 'birdbath',
       hp: 60, locked: true, restoreRequired: true,
-    }]);
-    // 1 lock: clear blocker mud to unlock sludge + birdbath area
-    spawnLocks([{
-      id: 'l3_gate',
-      x: 225, y: 340, width: 60, height: 8,
+    }],
+    locks: [{
+      id: 'l3_gate', x: 225, y: 340, width: 60, height: 8,
       requiredDirtCleared: ['l3_gate_mud1', 'l3_gate_mud2'],
       unlocksDirt: ['l3_sludge1', 'l3_sludge2'],
       unlocksObjects: ['birdbath'],
-    }]);
-    // Optional turbo power-up (celebratory assist)
-    spawnPowerUpDefs([
+    }],
+    powerUps: [
       { x: 225, y: 460, type: 'turbo', spawnAfter: 15, duration: 8 },
-    ]);
-  }
+    ],
+  },
+  // --- Level 4: Potting Corner ---
+  3: {
+    dirt: [
+      { x: 180, y: 590, type: 'mud' },
+      { x: 290, y: 570, type: 'mud' },
+      { x: 100, y: 420, type: 'leaves' },
+      { x: 340, y: 380, type: 'leaves' },
+      { x: 200, y: 300, type: 'mud' },
+    ],
+    objects: [
+      { x: 250, y: 600, type: 'pot' },
+      { x: 130, y: 480, type: 'pot' },
+      { x: 350, y: 300, type: 'pot' },
+      { x: 90, y: 200, type: 'pot' },
+    ],
+  },
+  // --- Level 5: Bench Wipe ---
+  4: {
+    dirt: [
+      { id: 'l5_mud1', x: 160, y: 600, type: 'mud', targetTag: 'target_mud' },
+      { id: 'l5_mud2', x: 300, y: 580, type: 'mud', targetTag: 'target_mud' },
+      { id: 'l5_mud3', x: 110, y: 380, type: 'mud', targetTag: 'target_mud' },
+      { id: 'l5_mud4', x: 350, y: 250, type: 'mud', targetTag: 'target_mud' },
+      // scenic
+      { x: 220, y: 450, type: 'leaves' },
+      { x: 380, y: 500, type: 'leaves' },
+    ],
+    objects: [
+      { id: 'l5_bench1', x: 225, y: 300, type: 'bench' },
+    ],
+  },
+  // --- Level 6: Gate Mud (first lock) ---
+  5: {
+    dirt: [
+      { id: 'l6_mud1', x: 180, y: 580, type: 'mud', targetTag: 'target_mud' },
+      { id: 'l6_mud2', x: 280, y: 560, type: 'mud', targetTag: 'target_mud' },
+      { id: 'l6_mud3', x: 150, y: 450, type: 'mud', targetTag: 'target_mud' },
+      { id: 'l6_mud4', x: 320, y: 430, type: 'mud', targetTag: 'target_mud' },
+      // blocker dirt near gate
+      { id: 'l6_blocker1', x: 200, y: 380, type: 'mud' },
+      { id: 'l6_blocker2', x: 260, y: 370, type: 'mud' },
+      // locked mud behind gate
+      { id: 'l6_mud5', x: 180, y: 220, type: 'mud', targetTag: 'target_mud', locked: true },
+      { id: 'l6_mud6', x: 280, y: 200, type: 'mud', targetTag: 'target_mud', locked: true },
+    ],
+    locks: [{
+      id: 'l6_gate', x: 225, y: 310, width: 80, height: 8,
+      requiredDirtCleared: ['l6_blocker1', 'l6_blocker2'],
+      unlocksDirt: ['l6_mud5', 'l6_mud6'],
+      unlocksObjects: [],
+    }],
+  },
+  // --- Level 7: Birdbath Prep (restore refresher) ---
+  6: {
+    dirt: [
+      { id: 'l7_mud1', x: 190, y: 560, type: 'mud' },
+      { id: 'l7_mud2', x: 270, y: 540, type: 'mud' },
+      // blocker for gate
+      { id: 'l7_blocker1', x: 210, y: 400, type: 'mud' },
+      { id: 'l7_blocker2', x: 250, y: 390, type: 'mud' },
+      // sludge near birdbath (behind lock)
+      { id: 'l7_sludge1', x: 200, y: 200, type: 'sludge', locked: true },
+      { id: 'l7_sludge2', x: 260, y: 210, type: 'sludge', locked: true },
+    ],
+    objects: [{
+      id: 'birdbath', x: 225, y: 170, type: 'birdbath',
+      hp: 60, locked: true, restoreRequired: true,
+    }],
+    locks: [{
+      id: 'l7_gate', x: 225, y: 320, width: 60, height: 8,
+      requiredDirtCleared: ['l7_blocker1', 'l7_blocker2'],
+      unlocksDirt: ['l7_sludge1', 'l7_sludge2'],
+      unlocksObjects: ['birdbath'],
+    }],
+  },
+  // --- Level 8: Leaf Sweep ---
+  7: {
+    dirt: [
+      // 8 target leaves spread out
+      { id: 'l8_leaf1', x: 200, y: 600, type: 'leaves', targetTag: 'target_leaves' },
+      { id: 'l8_leaf2', x: 300, y: 580, type: 'leaves', targetTag: 'target_leaves' },
+      { id: 'l8_leaf3', x: 120, y: 500, type: 'leaves', targetTag: 'target_leaves' },
+      { id: 'l8_leaf4', x: 350, y: 460, type: 'leaves', targetTag: 'target_leaves' },
+      { id: 'l8_leaf5', x: 80, y: 350, type: 'leaves', targetTag: 'target_leaves' },
+      { id: 'l8_leaf6', x: 380, y: 300, type: 'leaves', targetTag: 'target_leaves' },
+      { id: 'l8_leaf7', x: 150, y: 200, type: 'leaves', targetTag: 'target_leaves' },
+      { id: 'l8_leaf8', x: 320, y: 150, type: 'leaves', targetTag: 'target_leaves' },
+      // scenic mud
+      { x: 250, y: 420, type: 'mud' },
+      { x: 180, y: 300, type: 'mud' },
+    ],
+    objects: [
+      { x: 100, y: 600, type: 'pot' },
+      { x: 370, y: 200, type: 'pot' },
+    ],
+  },
+  // --- Level 9: Garden Path (broader route) ---
+  8: {
+    dirt: [
+      // 5 target mud in two lanes
+      { id: 'l9_mud1', x: 100, y: 580, type: 'mud', targetTag: 'target_mud' },
+      { id: 'l9_mud2', x: 100, y: 420, type: 'mud', targetTag: 'target_mud' },
+      { id: 'l9_mud3', x: 100, y: 260, type: 'mud', targetTag: 'target_mud' },
+      { id: 'l9_mud4', x: 350, y: 480, type: 'mud', targetTag: 'target_mud' },
+      { id: 'l9_mud5', x: 350, y: 300, type: 'mud', targetTag: 'target_mud' },
+      // scenic
+      { x: 225, y: 550, type: 'leaves' },
+      { x: 225, y: 350, type: 'leaves' },
+      { x: 225, y: 180, type: 'leaves' },
+    ],
+    objects: [
+      { id: 'l9_bench1', x: 100, y: 150, type: 'bench' },
+      { id: 'l9_bench2', x: 350, y: 150, type: 'bench' },
+    ],
+  },
+  // --- Level 10: Quick Cleanup (relief level) ---
+  9: {
+    dirt: [
+      // light scenic dirt
+      { x: 200, y: 560, type: 'mud' },
+      { x: 260, y: 530, type: 'leaves' },
+      { x: 180, y: 380, type: 'mud' },
+    ],
+    objects: [
+      // 5 pots in dense cluster
+      { x: 225, y: 590, type: 'pot' },
+      { x: 160, y: 500, type: 'pot' },
+      { x: 290, y: 490, type: 'pot' },
+      { x: 180, y: 350, type: 'pot' },
+      { x: 280, y: 300, type: 'pot' },
+    ],
+  },
+  // --- Level 11: Compost Route ---
+  10: {
+    dirt: [
+      // 4 target sludge
+      { id: 'l11_s1', x: 180, y: 580, type: 'sludge', targetTag: 'target_sludge' },
+      { id: 'l11_s2', x: 300, y: 450, type: 'sludge', targetTag: 'target_sludge' },
+      { id: 'l11_s3', x: 120, y: 320, type: 'sludge', targetTag: 'target_sludge' },
+      { id: 'l11_s4', x: 340, y: 200, type: 'sludge', targetTag: 'target_sludge' },
+      // 3 target mud
+      { id: 'l11_m1', x: 280, y: 600, type: 'mud', targetTag: 'target_mud' },
+      { id: 'l11_m2', x: 200, y: 400, type: 'mud', targetTag: 'target_mud' },
+      { id: 'l11_m3', x: 350, y: 300, type: 'mud', targetTag: 'target_mud' },
+      // scenic leaves
+      { x: 100, y: 500, type: 'leaves' },
+      { x: 380, y: 380, type: 'leaves' },
+    ],
+  },
+  // --- Level 12: Patio Area (first static area target) ---
+  11: {
+    dirt: [
+      // all dirt has areaId 'main' for area target
+      { x: 180, y: 600, type: 'mud', areaId: 'main' },
+      { x: 280, y: 580, type: 'mud', areaId: 'main' },
+      { x: 120, y: 500, type: 'leaves', areaId: 'main' },
+      { x: 350, y: 480, type: 'leaves', areaId: 'main' },
+      { x: 200, y: 420, type: 'mud', areaId: 'main' },
+      { x: 300, y: 380, type: 'mud', areaId: 'main' },
+      { x: 150, y: 300, type: 'leaves', areaId: 'main' },
+      { x: 340, y: 260, type: 'mud', areaId: 'main' },
+      { x: 100, y: 200, type: 'mud', areaId: 'main' },
+      { x: 280, y: 160, type: 'leaves', areaId: 'main' },
+    ],
+    objects: [
+      { id: 'l12_bench1', x: 225, y: 300, type: 'bench' },
+    ],
+  },
+  // --- Level 13: Lamp Restore ---
+  12: {
+    dirt: [
+      // 6 target leaves
+      { id: 'l13_leaf1', x: 160, y: 600, type: 'leaves', targetTag: 'target_leaves' },
+      { id: 'l13_leaf2', x: 300, y: 580, type: 'leaves', targetTag: 'target_leaves' },
+      { id: 'l13_leaf3', x: 100, y: 480, type: 'leaves', targetTag: 'target_leaves' },
+      { id: 'l13_leaf4', x: 370, y: 420, type: 'leaves', targetTag: 'target_leaves' },
+      { id: 'l13_leaf5', x: 150, y: 350, type: 'leaves', targetTag: 'target_leaves' },
+      { id: 'l13_leaf6', x: 350, y: 300, type: 'leaves', targetTag: 'target_leaves' },
+      // blocker mud for gate
+      { id: 'l13_blocker1', x: 200, y: 250, type: 'mud' },
+      { id: 'l13_blocker2', x: 260, y: 240, type: 'mud' },
+      // sludge near lamp (behind lock)
+      { id: 'l13_sludge1', x: 210, y: 130, type: 'sludge', locked: true },
+      { id: 'l13_sludge2', x: 250, y: 120, type: 'sludge', locked: true },
+    ],
+    objects: [{
+      id: 'lamp', x: 225, y: 100, type: 'lamp',
+      hp: 70, locked: true, restoreRequired: true,
+    }],
+    locks: [{
+      id: 'l13_gate', x: 225, y: 190, width: 70, height: 8,
+      requiredDirtCleared: ['l13_blocker1', 'l13_blocker2'],
+      unlocksDirt: ['l13_sludge1', 'l13_sludge2'],
+      unlocksObjects: ['lamp'],
+    }],
+  },
+  // --- Level 14: Mud Spiral ---
+  13: {
+    dirt: [
+      // 8 target mud in spiral pattern
+      { id: 'l14_m1', x: 225, y: 620, type: 'mud', targetTag: 'target_mud' },
+      { id: 'l14_m2', x: 340, y: 560, type: 'mud', targetTag: 'target_mud' },
+      { id: 'l14_m3', x: 380, y: 430, type: 'mud', targetTag: 'target_mud' },
+      { id: 'l14_m4', x: 300, y: 320, type: 'mud', targetTag: 'target_mud' },
+      { id: 'l14_m5', x: 180, y: 280, type: 'mud', targetTag: 'target_mud' },
+      { id: 'l14_m6', x: 80, y: 380, type: 'mud', targetTag: 'target_mud' },
+      { id: 'l14_m7', x: 100, y: 510, type: 'mud', targetTag: 'target_mud' },
+      { id: 'l14_m8', x: 225, y: 180, type: 'mud', targetTag: 'target_mud' },
+      // scenic
+      { x: 300, y: 650, type: 'leaves' },
+      { x: 150, y: 150, type: 'leaves' },
+    ],
+  },
+  // --- Level 15: Sprinkler Leak (first soft hazard) ---
+  14: {
+    dirt: [
+      // 5 target mud
+      { id: 'l15_m1', x: 180, y: 590, type: 'mud', targetTag: 'target_mud' },
+      { id: 'l15_m2', x: 300, y: 560, type: 'mud', targetTag: 'target_mud' },
+      { id: 'l15_m3', x: 130, y: 430, type: 'mud', targetTag: 'target_mud' },
+      { id: 'l15_m4', x: 340, y: 370, type: 'mud', targetTag: 'target_mud' },
+      { id: 'l15_m5', x: 200, y: 300, type: 'mud', targetTag: 'target_mud' },
+      // blocker for gate
+      { id: 'l15_blocker1', x: 200, y: 240, type: 'mud' },
+      { id: 'l15_blocker2', x: 260, y: 230, type: 'mud' },
+      // sludge near sprinkler (behind lock)
+      { id: 'l15_sludge1', x: 200, y: 130, type: 'sludge', locked: true },
+      { id: 'l15_sludge2', x: 260, y: 120, type: 'sludge', locked: true },
+    ],
+    objects: [{
+      id: 'sprinkler', x: 230, y: 100, type: 'sprinkler',
+      hp: 60, locked: true, restoreRequired: true,
+    }],
+    locks: [{
+      id: 'l15_gate', x: 225, y: 185, width: 70, height: 8,
+      requiredDirtCleared: ['l15_blocker1', 'l15_blocker2'],
+      unlocksDirt: ['l15_sludge1', 'l15_sludge2'],
+      unlocksObjects: ['sprinkler'],
+    }],
+    hazards: [
+      // soft hazard away from main target area (bottom-right corner)
+      { x: 390, y: 650, type: 'recontamination_vent', respawnInterval: 12, respawnRadius: 35 },
+    ],
+  },
+  // --- Level 16: Garden Cart (first 3-target) ---
+  15: {
+    dirt: [
+      // 4 target sludge
+      { id: 'l16_s1', x: 120, y: 580, type: 'sludge', targetTag: 'target_sludge' },
+      { id: 'l16_s2', x: 350, y: 500, type: 'sludge', targetTag: 'target_sludge' },
+      { id: 'l16_s3', x: 100, y: 350, type: 'sludge', targetTag: 'target_sludge' },
+      { id: 'l16_s4', x: 330, y: 250, type: 'sludge', targetTag: 'target_sludge' },
+      // scenic
+      { x: 225, y: 650, type: 'mud' },
+      { x: 200, y: 450, type: 'leaves' },
+      { x: 300, y: 380, type: 'mud' },
+    ],
+    objects: [
+      { x: 225, y: 300, type: 'cart' },
+      { x: 150, y: 600, type: 'pot' },
+      { x: 380, y: 180, type: 'pot' },
+    ],
+  },
+  // --- Level 17: Side Yard Clean (second area target) ---
+  16: {
+    dirt: [
+      { x: 100, y: 620, type: 'mud', areaId: 'main' },
+      { x: 300, y: 600, type: 'mud', areaId: 'main' },
+      { x: 60, y: 500, type: 'leaves', areaId: 'main' },
+      { x: 380, y: 520, type: 'leaves', areaId: 'main' },
+      { x: 150, y: 420, type: 'sludge', areaId: 'main' },
+      { x: 320, y: 400, type: 'mud', areaId: 'main' },
+      { x: 80, y: 310, type: 'mud', areaId: 'main' },
+      { x: 370, y: 280, type: 'leaves', areaId: 'main' },
+      { x: 200, y: 220, type: 'mud', areaId: 'main' },
+      { x: 300, y: 160, type: 'sludge', areaId: 'main' },
+      { x: 120, y: 130, type: 'leaves', areaId: 'main' },
+      { x: 400, y: 100, type: 'mud', areaId: 'main' },
+    ],
+  },
+  // --- Level 18: Fence Unlock ---
+  17: {
+    dirt: [
+      // 4 target mud in front area
+      { id: 'l18_m1', x: 170, y: 600, type: 'mud', targetTag: 'target_mud' },
+      { id: 'l18_m2', x: 300, y: 580, type: 'mud', targetTag: 'target_mud' },
+      { id: 'l18_m3', x: 120, y: 480, type: 'mud', targetTag: 'target_mud' },
+      { id: 'l18_m4', x: 350, y: 450, type: 'mud', targetTag: 'target_mud' },
+      // blocker for gate
+      { id: 'l18_blocker1', x: 190, y: 370, type: 'mud' },
+      { id: 'l18_blocker2', x: 270, y: 360, type: 'mud' },
+      // sludge near birdbath (behind lock)
+      { id: 'l18_sludge1', x: 200, y: 190, type: 'sludge', locked: true },
+      { id: 'l18_sludge2', x: 260, y: 180, type: 'sludge', locked: true },
+      // scenic
+      { x: 380, y: 300, type: 'leaves' },
+      { x: 100, y: 250, type: 'leaves', locked: true },
+    ],
+    objects: [{
+      id: 'birdbath', x: 225, y: 150, type: 'birdbath',
+      hp: 60, locked: true, restoreRequired: true,
+    }],
+    locks: [{
+      id: 'l18_gate', x: 225, y: 300, width: 80, height: 8,
+      requiredDirtCleared: ['l18_blocker1', 'l18_blocker2'],
+      unlocksDirt: ['l18_sludge1', 'l18_sludge2'],
+      unlocksObjects: ['birdbath'],
+    }],
+    powerUps: [
+      { x: 350, y: 550, type: 'turbo', spawnAfter: 20, duration: 8 },
+    ],
+  },
+  // --- Level 19: Back Corner ---
+  18: {
+    dirt: [
+      // 5 target sludge
+      { id: 'l19_s1', x: 200, y: 610, type: 'sludge', targetTag: 'target_sludge' },
+      { id: 'l19_s2', x: 340, y: 520, type: 'sludge', targetTag: 'target_sludge' },
+      { id: 'l19_s3', x: 100, y: 400, type: 'sludge', targetTag: 'target_sludge' },
+      { id: 'l19_s4', x: 360, y: 300, type: 'sludge', targetTag: 'target_sludge' },
+      { id: 'l19_s5', x: 180, y: 180, type: 'sludge', targetTag: 'target_sludge' },
+      // 8 target leaves
+      { id: 'l19_l1', x: 280, y: 630, type: 'leaves', targetTag: 'target_leaves' },
+      { id: 'l19_l2', x: 130, y: 550, type: 'leaves', targetTag: 'target_leaves' },
+      { id: 'l19_l3', x: 380, y: 460, type: 'leaves', targetTag: 'target_leaves' },
+      { id: 'l19_l4', x: 200, y: 480, type: 'leaves', targetTag: 'target_leaves' },
+      { id: 'l19_l5', x: 300, y: 350, type: 'leaves', targetTag: 'target_leaves' },
+      { id: 'l19_l6', x: 80, y: 280, type: 'leaves', targetTag: 'target_leaves' },
+      { id: 'l19_l7', x: 350, y: 200, type: 'leaves', targetTag: 'target_leaves' },
+      { id: 'l19_l8', x: 120, y: 120, type: 'leaves', targetTag: 'target_leaves' },
+    ],
+  },
+  // --- Level 20: Coin Rinse (relief level) ---
+  19: {
+    dirt: [
+      { x: 180, y: 550, type: 'mud' },
+      { x: 270, y: 530, type: 'leaves' },
+      { x: 150, y: 380, type: 'mud' },
+      { x: 310, y: 350, type: 'leaves' },
+    ],
+    objects: [
+      { x: 200, y: 620, type: 'pot' },
+      { x: 300, y: 600, type: 'pot' },
+      { x: 130, y: 480, type: 'pot' },
+      { x: 330, y: 460, type: 'pot' },
+      { x: 100, y: 300, type: 'pot' },
+      { x: 370, y: 250, type: 'pot' },
+      { id: 'l20_bench1', x: 225, y: 200, type: 'bench' },
+      { id: 'l20_bench2', x: 225, y: 400, type: 'bench' },
+    ],
+  },
+  // --- Level 21: Fountain Access ---
+  20: {
+    dirt: [
+      // 5 target mud
+      { id: 'l21_m1', x: 170, y: 600, type: 'mud', targetTag: 'target_mud' },
+      { id: 'l21_m2', x: 320, y: 560, type: 'mud', targetTag: 'target_mud' },
+      { id: 'l21_m3', x: 100, y: 440, type: 'mud', targetTag: 'target_mud' },
+      { id: 'l21_m4', x: 360, y: 380, type: 'mud', targetTag: 'target_mud' },
+      { id: 'l21_m5', x: 200, y: 310, type: 'mud', targetTag: 'target_mud' },
+      // blocker for gate
+      { id: 'l21_blocker1', x: 190, y: 250, type: 'mud' },
+      { id: 'l21_blocker2', x: 270, y: 240, type: 'mud' },
+      // sludge near fountain (behind lock)
+      { id: 'l21_sludge1', x: 200, y: 130, type: 'sludge', locked: true },
+      { id: 'l21_sludge2', x: 260, y: 120, type: 'sludge', locked: true },
+      { id: 'l21_sludge3', x: 230, y: 100, type: 'sludge', locked: true },
+    ],
+    objects: [{
+      id: 'fountain', x: 225, y: 80, type: 'fountain',
+      hp: 80, radiusX: 24, radiusY: 18, locked: true, restoreRequired: true,
+    }],
+    locks: [{
+      id: 'l21_gate', x: 225, y: 190, width: 80, height: 8,
+      requiredDirtCleared: ['l21_blocker1', 'l21_blocker2'],
+      unlocksDirt: ['l21_sludge1', 'l21_sludge2', 'l21_sludge3'],
+      unlocksObjects: ['fountain'],
+    }],
+    powerUps: [
+      { x: 100, y: 550, type: 'turbo', spawnAfter: 25, duration: 8 },
+    ],
+  },
+  // --- Level 22: Light the Yard ---
+  21: {
+    dirt: [
+      // 10 target leaves
+      { id: 'l22_l1', x: 100, y: 620, type: 'leaves', targetTag: 'target_leaves' },
+      { id: 'l22_l2', x: 300, y: 610, type: 'leaves', targetTag: 'target_leaves' },
+      { id: 'l22_l3', x: 180, y: 530, type: 'leaves', targetTag: 'target_leaves' },
+      { id: 'l22_l4', x: 380, y: 500, type: 'leaves', targetTag: 'target_leaves' },
+      { id: 'l22_l5', x: 60, y: 430, type: 'leaves', targetTag: 'target_leaves' },
+      { id: 'l22_l6', x: 280, y: 400, type: 'leaves', targetTag: 'target_leaves' },
+      { id: 'l22_l7', x: 140, y: 320, type: 'leaves', targetTag: 'target_leaves' },
+      { id: 'l22_l8', x: 370, y: 280, type: 'leaves', targetTag: 'target_leaves' },
+      { id: 'l22_l9', x: 200, y: 200, type: 'leaves', targetTag: 'target_leaves' },
+      { id: 'l22_l10', x: 320, y: 150, type: 'leaves', targetTag: 'target_leaves' },
+      // blocker mud for gate 1 (left lights)
+      { id: 'l22_blocker1', x: 100, y: 260, type: 'mud' },
+      { id: 'l22_blocker2', x: 100, y: 220, type: 'mud' },
+      // blocker mud for gate 2 (right lights)
+      { id: 'l22_blocker3', x: 350, y: 210, type: 'mud' },
+      { id: 'l22_blocker4', x: 350, y: 170, type: 'mud' },
+      // sludge near lights (behind locks)
+      { id: 'l22_sludge1', x: 100, y: 120, type: 'sludge', locked: true },
+      { id: 'l22_sludge2', x: 350, y: 90, type: 'sludge', locked: true },
+    ],
+    objects: [
+      { id: 'lights1', x: 100, y: 80, type: 'lights', hp: 50, locked: true, restoreRequired: true },
+      { id: 'lights2', x: 350, y: 70, type: 'lights', hp: 50, locked: true, restoreRequired: true },
+    ],
+    locks: [
+      {
+        id: 'l22_gate1', x: 100, y: 170, width: 50, height: 8,
+        requiredDirtCleared: ['l22_blocker1', 'l22_blocker2'],
+        unlocksDirt: ['l22_sludge1'],
+        unlocksObjects: ['lights1'],
+      },
+      {
+        id: 'l22_gate2', x: 350, y: 130, width: 50, height: 8,
+        requiredDirtCleared: ['l22_blocker3', 'l22_blocker4'],
+        unlocksDirt: ['l22_sludge2'],
+        unlocksObjects: ['lights2'],
+      },
+    ],
+  },
+  // --- Level 23: Backyard Reborn (world mini-finale) ---
+  22: {
+    dirt: [
+      // area dirt (all areaId: 'main')
+      { x: 160, y: 630, type: 'mud', areaId: 'main' },
+      { x: 300, y: 610, type: 'mud', areaId: 'main' },
+      { x: 80, y: 540, type: 'leaves', areaId: 'main' },
+      { x: 380, y: 520, type: 'mud', areaId: 'main' },
+      { x: 200, y: 480, type: 'leaves', areaId: 'main' },
+      { x: 340, y: 430, type: 'mud', areaId: 'main' },
+      { x: 110, y: 400, type: 'sludge', areaId: 'main' },
+      { x: 280, y: 350, type: 'mud', areaId: 'main' },
+      { x: 150, y: 300, type: 'leaves', areaId: 'main' },
+      { x: 370, y: 270, type: 'mud', areaId: 'main' },
+      { x: 60, y: 250, type: 'mud', areaId: 'main' },
+      { x: 320, y: 200, type: 'leaves', areaId: 'main' },
+      // blocker for gate
+      { id: 'l23_blocker1', x: 190, y: 200, type: 'mud', areaId: 'main' },
+      { id: 'l23_blocker2', x: 260, y: 190, type: 'mud', areaId: 'main' },
+      // sludge near fountain + lights (behind lock)
+      { id: 'l23_sludge1', x: 180, y: 110, type: 'sludge', locked: true, areaId: 'main' },
+      { id: 'l23_sludge2', x: 260, y: 100, type: 'sludge', locked: true, areaId: 'main' },
+    ],
+    objects: [
+      { id: 'fountain', x: 225, y: 80, type: 'fountain', hp: 80, radiusX: 24, radiusY: 18, locked: true, restoreRequired: true },
+      { id: 'lights1', x: 100, y: 70, type: 'lights', hp: 50, locked: true, restoreRequired: true },
+    ],
+    locks: [{
+      id: 'l23_gate', x: 225, y: 155, width: 90, height: 8,
+      requiredDirtCleared: ['l23_blocker1', 'l23_blocker2'],
+      unlocksDirt: ['l23_sludge1', 'l23_sludge2'],
+      unlocksObjects: ['fountain', 'lights1'],
+    }],
+    hazards: [
+      // one soft hazard outside the main counted area (top-right corner, away from targets)
+      { x: 400, y: 680, type: 'recontamination_vent', respawnInterval: 14, respawnRadius: 30 },
+    ],
+    powerUps: [
+      { x: 225, y: 450, type: 'turbo', spawnAfter: 30, duration: 10 },
+    ],
+  },
+};
+
+// ===== LEVEL LOADER =====
+// Data-driven: reads from LEVEL_LAYOUTS
+
+function loadLevel(level) {
+  const layout = LEVEL_LAYOUTS[state.levelIndex];
+  if (!layout) return;
+  if (layout.dirt) spawnDirt(layout.dirt);
+  if (layout.objects) spawnObjects(layout.objects);
+  if (layout.locks) spawnLocks(layout.locks);
+  if (layout.hazards) spawnHazards(layout.hazards);
+  if (layout.powerUps) spawnPowerUpDefs(layout.powerUps);
 }
 
 // ===== PARTICLE SYSTEM =====
@@ -3488,6 +4114,16 @@ function renderObjects() {
       renderBench(obj, cleanRatio);
     } else if (obj.type === 'birdbath') {
       renderBirdbath(obj, cleanRatio);
+    } else if (obj.type === 'cart') {
+      renderCart(obj, cleanRatio);
+    } else if (obj.type === 'fountain') {
+      renderFountain(obj, cleanRatio);
+    } else if (obj.type === 'lamp') {
+      renderLamp(obj, cleanRatio);
+    } else if (obj.type === 'sprinkler') {
+      renderSprinkler(obj, cleanRatio);
+    } else if (obj.type === 'lights') {
+      renderLights(obj, cleanRatio);
     }
   });
 }
@@ -3668,6 +4304,393 @@ function renderBirdbath(obj, cleanRatio) {
     ctx.fillStyle   = '#4a3a18';
     ctx.beginPath();
     ctx.ellipse(x, y, obj.radiusX, obj.radiusY, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+}
+
+// ===== NEW OBJECT RENDERERS (v5) =====
+
+function renderCart(obj, cleanRatio) {
+  const x = obj.x;
+  const y = obj.y;
+
+  // Shadow
+  ctx.save();
+  ctx.globalAlpha = 0.3;
+  ctx.fillStyle = 'rgba(0,0,0,0.4)';
+  ctx.beginPath();
+  ctx.ellipse(x, y + 16, 24, 7, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  const dirtyBody = '#5a4a3a';
+  const cleanBody = '#8a7a60';
+  const bodyColor = lerpColor(dirtyBody, cleanBody, cleanRatio);
+  const darkBody = lerpColor('#3a2a1a', '#6a5a40', cleanRatio);
+
+  // Cart body (wider rectangle)
+  ctx.fillStyle = bodyColor;
+  ctx.fillRect(x - 20, y - 8, 40, 18);
+
+  // Cart rim
+  ctx.fillStyle = darkBody;
+  ctx.fillRect(x - 20, y - 10, 40, 4);
+
+  // Wheel
+  const wheelColor = lerpColor('#3a3a3a', '#666666', cleanRatio);
+  ctx.fillStyle = wheelColor;
+  ctx.beginPath();
+  ctx.arc(x + 14, y + 14, 5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(x - 14, y + 14, 5, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Handle
+  ctx.strokeStyle = darkBody;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(x - 20, y);
+  ctx.lineTo(x - 30, y - 12);
+  ctx.stroke();
+
+  // Clean sparkle
+  if (obj.cleaned) {
+    const pulse = 0.6 + 0.4 * Math.sin(Date.now() * 0.006);
+    ctx.save();
+    ctx.globalAlpha = pulse;
+    ctx.fillStyle = '#ffffaa';
+    ctx.beginPath();
+    ctx.arc(x, y - 16, 3, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // Dirty overlay
+  if (!obj.cleaned) {
+    const dirtyAlpha = (1 - cleanRatio) * 0.5;
+    ctx.save();
+    ctx.globalAlpha = dirtyAlpha;
+    ctx.fillStyle = '#4a3818';
+    ctx.beginPath();
+    ctx.ellipse(x, y + 2, 22, 14, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+}
+
+function renderFountain(obj, cleanRatio) {
+  const x = obj.x;
+  const y = obj.y;
+
+  // Shadow
+  ctx.save();
+  ctx.globalAlpha = 0.3;
+  ctx.fillStyle = 'rgba(0,0,0,0.4)';
+  ctx.beginPath();
+  ctx.ellipse(x + 2, y + 30, 22, 8, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  const dirtyStone = '#5a5a4a';
+  const cleanStone = '#a0a090';
+  const stoneColor = lerpColor(dirtyStone, cleanStone, cleanRatio);
+  const darkStone = lerpColor('#2a2a1a', '#707060', cleanRatio);
+
+  // Base pedestal
+  ctx.fillStyle = darkStone;
+  ctx.fillRect(x - 8, y + 8, 16, 22);
+
+  // Basin (larger than birdbath)
+  ctx.fillStyle = stoneColor;
+  ctx.beginPath();
+  ctx.ellipse(x, y + 4, 24, 14, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = darkStone;
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  // Inner basin
+  ctx.fillStyle = lerpColor('#4a4a3a', '#808070', cleanRatio);
+  ctx.beginPath();
+  ctx.ellipse(x, y + 4, 18, 10, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Top spout
+  ctx.fillStyle = stoneColor;
+  ctx.fillRect(x - 3, y - 12, 6, 16);
+  ctx.beginPath();
+  ctx.arc(x, y - 12, 5, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Animated water when restored
+  if (obj.restored) {
+    const t = Date.now() * 0.003;
+    ctx.save();
+    // Water jets
+    for (let i = 0; i < 3; i++) {
+      const angle = (t + i * 2.1) % (Math.PI * 2);
+      const jx = x + Math.cos(angle) * 8;
+      const jy = y - 14 - Math.abs(Math.sin(t + i)) * 10;
+      ctx.globalAlpha = 0.7;
+      ctx.fillStyle = '#44bbff';
+      ctx.beginPath();
+      ctx.arc(jx, jy, 2.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    // Water surface
+    const wave = Math.sin(t) * 2;
+    ctx.globalAlpha = 0.65;
+    ctx.fillStyle = '#44aaee';
+    ctx.beginPath();
+    ctx.ellipse(x, y + 4 + wave * 0.3, 16, 8, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 0.35;
+    ctx.fillStyle = '#aaddff';
+    ctx.beginPath();
+    ctx.ellipse(x - 4, y + 2 + wave * 0.5, 7, 4, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // Dirty overlay
+  if (!obj.cleaned) {
+    const dirtyAlpha = (1 - cleanRatio) * 0.5;
+    ctx.save();
+    ctx.globalAlpha = dirtyAlpha;
+    ctx.fillStyle = '#4a3a18';
+    ctx.beginPath();
+    ctx.ellipse(x, y + 4, obj.radiusX || 24, obj.radiusY || 18, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+}
+
+function renderLamp(obj, cleanRatio) {
+  const x = obj.x;
+  const y = obj.y;
+
+  // Shadow
+  ctx.save();
+  ctx.globalAlpha = 0.25;
+  ctx.fillStyle = 'rgba(0,0,0,0.4)';
+  ctx.beginPath();
+  ctx.ellipse(x + 2, y + 26, 10, 4, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  const dirtyMetal = '#4a4a40';
+  const cleanMetal = '#888878';
+  const metalColor = lerpColor(dirtyMetal, cleanMetal, cleanRatio);
+  const darkMetal = lerpColor('#2a2a20', '#5a5a50', cleanRatio);
+
+  // Pole (tall thin rectangle)
+  ctx.fillStyle = metalColor;
+  ctx.fillRect(x - 3, y - 10, 6, 36);
+
+  // Base
+  ctx.fillStyle = darkMetal;
+  ctx.fillRect(x - 8, y + 22, 16, 4);
+
+  // Lamp head (circle on top)
+  ctx.fillStyle = lerpColor('#5a5a40', '#cccc88', cleanRatio);
+  ctx.beginPath();
+  ctx.arc(x, y - 14, 8, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = metalColor;
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  // Glow when restored
+  if (obj.restored) {
+    const pulse = 0.5 + 0.3 * Math.sin(Date.now() * 0.005);
+    ctx.save();
+    // Outer glow
+    ctx.globalAlpha = pulse * 0.3;
+    ctx.fillStyle = '#ffff88';
+    ctx.beginPath();
+    ctx.arc(x, y - 14, 20, 0, Math.PI * 2);
+    ctx.fill();
+    // Inner glow
+    ctx.globalAlpha = pulse * 0.8;
+    ctx.fillStyle = '#ffffcc';
+    ctx.beginPath();
+    ctx.arc(x, y - 14, 8, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // Dirty overlay
+  if (!obj.cleaned) {
+    const dirtyAlpha = (1 - cleanRatio) * 0.45;
+    ctx.save();
+    ctx.globalAlpha = dirtyAlpha;
+    ctx.fillStyle = '#3a3018';
+    ctx.beginPath();
+    ctx.ellipse(x, y + 6, obj.radiusX || 12, obj.radiusY || 20, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+}
+
+function renderSprinkler(obj, cleanRatio) {
+  const x = obj.x;
+  const y = obj.y;
+
+  // Shadow
+  ctx.save();
+  ctx.globalAlpha = 0.25;
+  ctx.fillStyle = 'rgba(0,0,0,0.4)';
+  ctx.beginPath();
+  ctx.ellipse(x, y + 12, 10, 4, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  const dirtyMetal = '#4a5a4a';
+  const cleanMetal = '#66aa66';
+  const metalColor = lerpColor(dirtyMetal, cleanMetal, cleanRatio);
+
+  // Base stake
+  ctx.fillStyle = lerpColor('#3a3a2a', '#5a5a4a', cleanRatio);
+  ctx.fillRect(x - 2, y, 4, 12);
+
+  // Sprinkler head (small circle)
+  ctx.fillStyle = metalColor;
+  ctx.beginPath();
+  ctx.arc(x, y - 2, 7, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = lerpColor('#2a3a2a', '#448844', cleanRatio);
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  // Nozzle dots
+  ctx.fillStyle = lerpColor('#3a4a3a', '#558855', cleanRatio);
+  for (let i = 0; i < 4; i++) {
+    const a = (i / 4) * Math.PI * 2;
+    ctx.beginPath();
+    ctx.arc(x + Math.cos(a) * 4, y - 2 + Math.sin(a) * 4, 1.5, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Spray lines when restored
+  if (obj.restored) {
+    const t = Date.now() * 0.004;
+    ctx.save();
+    ctx.strokeStyle = '#44bbff';
+    ctx.lineWidth = 1.5;
+    for (let i = 0; i < 6; i++) {
+      const angle = (t + i * 1.05) % (Math.PI * 2);
+      const len = 10 + Math.sin(t * 2 + i) * 4;
+      ctx.globalAlpha = 0.4 + 0.3 * Math.sin(t + i);
+      ctx.beginPath();
+      ctx.moveTo(x + Math.cos(angle) * 7, y - 2 + Math.sin(angle) * 7);
+      ctx.lineTo(x + Math.cos(angle) * (7 + len), y - 2 + Math.sin(angle) * (7 + len));
+      ctx.stroke();
+    }
+    // Water droplets
+    for (let i = 0; i < 4; i++) {
+      const da = (t * 0.8 + i * 1.5) % (Math.PI * 2);
+      const dr = 12 + Math.sin(t + i * 2) * 6;
+      ctx.globalAlpha = 0.5;
+      ctx.fillStyle = '#88ddff';
+      ctx.beginPath();
+      ctx.arc(x + Math.cos(da) * dr, y - 2 + Math.sin(da) * dr, 1.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  // Dirty overlay
+  if (!obj.cleaned) {
+    const dirtyAlpha = (1 - cleanRatio) * 0.5;
+    ctx.save();
+    ctx.globalAlpha = dirtyAlpha;
+    ctx.fillStyle = '#3a3818';
+    ctx.beginPath();
+    ctx.ellipse(x, y, obj.radiusX || 10, obj.radiusY || 10, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+}
+
+function renderLights(obj, cleanRatio) {
+  const x = obj.x;
+  const y = obj.y;
+
+  // Shadow
+  ctx.save();
+  ctx.globalAlpha = 0.2;
+  ctx.fillStyle = 'rgba(0,0,0,0.4)';
+  ctx.beginPath();
+  ctx.ellipse(x, y + 10, 18, 4, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  const dirtyWire = '#3a3a30';
+  const cleanWire = '#6a6a5a';
+  const wireColor = lerpColor(dirtyWire, cleanWire, cleanRatio);
+
+  // Wire (horizontal line)
+  ctx.strokeStyle = wireColor;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(x - 20, y);
+  ctx.lineTo(x + 20, y);
+  ctx.stroke();
+
+  // Support posts
+  ctx.fillStyle = lerpColor('#2a2a20', '#5a5a4a', cleanRatio);
+  ctx.fillRect(x - 22, y - 2, 4, 12);
+  ctx.fillRect(x + 18, y - 2, 4, 12);
+
+  // Light bulbs (5 dots along the wire)
+  const bulbColor = obj.restored
+    ? '#ffee66'
+    : lerpColor('#4a4a30', '#aaa880', cleanRatio);
+
+  for (let i = 0; i < 5; i++) {
+    const bx = x - 16 + i * 8;
+    const by = y + 3 + Math.sin(i * 1.2) * 2;
+
+    // Drooping wire to bulb
+    ctx.strokeStyle = wireColor;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(bx, y);
+    ctx.lineTo(bx, by);
+    ctx.stroke();
+
+    ctx.fillStyle = bulbColor;
+    ctx.beginPath();
+    ctx.arc(bx, by + 2, 2.5, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Glow when restored
+  if (obj.restored) {
+    const pulse = 0.4 + 0.3 * Math.sin(Date.now() * 0.004);
+    ctx.save();
+    for (let i = 0; i < 5; i++) {
+      const bx = x - 16 + i * 8;
+      const by = y + 5 + Math.sin(i * 1.2) * 2;
+      ctx.globalAlpha = pulse * 0.35;
+      ctx.fillStyle = '#ffff88';
+      ctx.beginPath();
+      ctx.arc(bx, by, 8, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  // Dirty overlay
+  if (!obj.cleaned) {
+    const dirtyAlpha = (1 - cleanRatio) * 0.45;
+    ctx.save();
+    ctx.globalAlpha = dirtyAlpha;
+    ctx.fillStyle = '#3a3018';
+    ctx.beginPath();
+    ctx.ellipse(x, y + 2, obj.radiusX || 22, obj.radiusY || 10, 0, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
   }
