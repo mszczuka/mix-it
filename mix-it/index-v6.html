@@ -245,7 +245,7 @@ html, body {
   overflow-y: auto;
   min-height: 0;
 }
-#venue-map-preview { pointer-events: auto; opacity: 1; overflow: hidden; }
+#venue-map-preview { pointer-events: auto; opacity: 1; overflow: hidden; min-height: 400px; }
 .home-tab-panel.hidden { display: none !important; }
 .tab-panel-title {
   font-family: 'Lilita One', cursive;
@@ -3316,9 +3316,8 @@ const VENUE_POSITIONS = [
 ];
 
 function renderVenueMap(container, arenaId, interactive) {
-  if (!container) { console.warn('renderVenueMap: no container!'); return; }
+  if (!container) return;
   container.innerHTML = '';
-  console.log('renderVenueMap', container.id, 'interactive:', interactive, 'children before:', container.childElementCount);
   const venueState = getVenueState(arenaId);
   const costs = VENUE_COSTS[arenaId] || VENUE_COSTS[0];
   const gold = state.stats.gold || 0;
@@ -3428,7 +3427,6 @@ function renderVenueMap(container, arenaId, interactive) {
     }
 
     container.appendChild(el);
-    console.log('  appended building', i, VENUE_BUILDINGS[i], 'at', pos.x, pos.y);
 
     // Show bouncing hint arrow on first affordable + button (only once, only on venue tab)
     if (interactive && !state.stats.venueHintShown && !done && canAfford && !container._hintShown) {
