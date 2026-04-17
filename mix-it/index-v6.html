@@ -2026,6 +2026,115 @@ html, body {
   transform-origin: bottom center;
   animation: pourFill 0.35s ease-out both;
 }
+/* Customer served checkmark */
+.customer-served-check {
+  position: absolute;
+  inset: 0;
+  background: rgba(68,204,68,0.2);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: customerCheckPop 0.5s ease-out;
+  pointer-events: none;
+}
+.customer-served-check span {
+  font-size: 36px;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
+}
+@keyframes customerCheckPop {
+  0% { transform: scale(0); opacity: 0; }
+  50% { transform: scale(1.3); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes tutorialBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+/* ===== TUTORIAL ===== */
+#screen-tutorial {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: linear-gradient(180deg, #144985 0%, #0d3460 100%);
+}
+.tutorial-header {
+  text-align: center;
+  padding: 16px;
+}
+.tutorial-header h2 {
+  font-family: 'Lilita One', cursive;
+  font-size: 22px;
+  color: #ffc700;
+  -webkit-text-stroke: 0.5px #000;
+  text-shadow: 0 2px 0 #000;
+}
+.tutorial-header p {
+  font-size: 13px;
+  color: rgba(255,255,255,0.6);
+  margin-top: 4px;
+}
+.tutorial-customer {
+  display: flex;
+  justify-content: center;
+  padding: 12px;
+}
+.tutorial-board {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 16px;
+}
+/* Tutorial complete popup */
+.tutorial-popup {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  backdrop-filter: blur(6px);
+}
+.tutorial-popup.hidden { display: none !important; }
+.tutorial-popup-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  background: linear-gradient(180deg, #1a5a9e, #0d3460);
+  border: 2px solid rgba(255,215,0,0.3);
+  border-radius: 24px;
+  padding: 32px 28px;
+  margin: 20px;
+  box-shadow: 0 16px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1);
+  max-width: 320px;
+}
+.tutorial-popup-emoji {
+  font-size: 56px;
+  animation: countdownPop 0.6s ease-out;
+}
+.tutorial-popup-title {
+  font-family: 'Lilita One', cursive;
+  font-size: 36px;
+  color: #ffc700;
+  -webkit-text-stroke: 0.7px #000;
+  text-shadow: 0 3px 0 #000;
+  text-align: center;
+}
+.tutorial-popup-text {
+  font-family: 'Nunito', sans-serif;
+  font-size: 15px;
+  font-weight: 800;
+  color: rgba(255,255,255,0.85);
+  text-align: center;
+  line-height: 1.5;
+}
 </style>
 </head>
 <body>
@@ -2037,6 +2146,24 @@ html, body {
     <img src="Assets/mix-it-splash.png" alt="" style="max-width:100%;max-height:100%;object-fit:contain;">
     <div style="position:absolute;bottom:40px;left:40px;right:40px;height:4px;background:rgba(255,255,255,0.1);border-radius:2px;overflow:hidden;">
       <div id="splash-progress" style="height:100%;width:0%;background:linear-gradient(90deg,#FFD700,#FFA500);border-radius:2px;transition:width 1.8s linear;"></div>
+    </div>
+  </div>
+
+  <!-- ===== TUTORIAL SCREEN ===== -->
+  <div id="screen-tutorial" class="screen hidden">
+    <div class="tutorial-header">
+      <h2>SORT THE COLORS!</h2>
+      <p>Pour colors into bottles to fill a pure drink, then tap to serve</p>
+    </div>
+    <div class="tutorial-customer" id="tutorial-customer"></div>
+    <div class="tutorial-board" id="tutorial-board"></div>
+    <div class="tutorial-popup hidden" id="tutorial-popup">
+      <div class="tutorial-popup-card">
+        <div class="tutorial-popup-emoji">&#x1F389;</div>
+        <div class="tutorial-popup-title">GREAT JOB!</div>
+        <div class="tutorial-popup-text">Now race against an opponent!<br>Be faster in completing drink orders to win!</div>
+        <button class="play-btn" id="btn-tutorial-done" style="width:220px;margin-top:8px;">LET'S GO!</button>
+      </div>
     </div>
   </div>
 
@@ -2362,11 +2489,11 @@ const CFG = {
   SPAWN_CUSTOMER_WEIGHT: 0.6,
   // Arena system
   ARENAS: [
-    { id: 0, name: 'Juice Stand',     emoji: '\u{1F9C3}', min: 0,    max: 199,   colors: 3, sourceGlasses: 3, emptyGlasses: 2, powerUps: ['extraBottle','flashPour'],                          bg: ['#FF8C42','#FFA07A'], goldWin: 35, goldLose: 20, goldDraw: 25, firstWinBonus: 20, promoReward: null },
-    { id: 1, name: 'Beach Bar',       emoji: '\u{1F3D6}\uFE0F', min: 200,  max: 499,   colors: 5, sourceGlasses: 4, emptyGlasses: 3, powerUps: ['extraBottle','flashPour','swap'],               bg: ['#0077B6','#00B4D8'], goldWin: 40, goldLose: 22, goldDraw: 30, firstWinBonus: 25, promoReward: { boosters: [{type:'swap',count:2}], gold: 40 } },
+    { id: 0, name: 'Juice Stand',     emoji: '\u{1F9C3}', min: 0,    max: 199,   colors: 3, sourceGlasses: 3, emptyGlasses: 2, powerUps: ['extraBottle','flashPour'],                          bg: ['#5c3210','#3d1a08'], goldWin: 35, goldLose: 20, goldDraw: 25, firstWinBonus: 20, promoReward: null },
+    { id: 1, name: 'Beach Bar',       emoji: '\u{1F3D6}\uFE0F', min: 200,  max: 499,   colors: 5, sourceGlasses: 4, emptyGlasses: 3, powerUps: ['extraBottle','flashPour','swap'],               bg: ['#003d5c','#002940'], goldWin: 40, goldLose: 22, goldDraw: 30, firstWinBonus: 25, promoReward: { boosters: [{type:'swap',count:2}], gold: 40 } },
     { id: 2, name: 'Cocktail Lounge', emoji: '\u{1F378}', min: 500,  max: 999,   colors: 7, sourceGlasses: 5, emptyGlasses: 3, powerUps: ['extraBottle','flashPour','swap','clearBottle'],  bg: ['#2D1B69','#1a1a2e'], goldWin: 50, goldLose: 25, goldDraw: 35, firstWinBonus: 30, promoReward: { boosters: [{type:'clearBottle',count:2}], gold: 60 } },
     { id: 3, name: 'Speakeasy',       emoji: '\u{1F943}', min: 1000, max: 1499,  colors: 7, sourceGlasses: 6, emptyGlasses: 4, powerUps: ['extraBottle','flashPour','swap','clearBottle'],  bg: ['#1B4D2E','#0D2818'], goldWin: 60, goldLose: 30, goldDraw: 40, firstWinBonus: 35, promoReward: { boosters: [], gold: 100 } },
-    { id: 4, name: 'Rooftop Terrace', emoji: '\u{1F306}', min: 1500, max: 2499,  colors: 7, sourceGlasses: 7, emptyGlasses: 5, powerUps: ['extraBottle','flashPour','swap','clearBottle'],  bg: ['#FF6B6B','#FFD93D'], goldWin: 70, goldLose: 35, goldDraw: 45, firstWinBonus: 40, promoReward: { boosters: [], gold: 125 } },
+    { id: 4, name: 'Rooftop Terrace', emoji: '\u{1F306}', min: 1500, max: 2499,  colors: 7, sourceGlasses: 7, emptyGlasses: 5, powerUps: ['extraBottle','flashPour','swap','clearBottle'],  bg: ['#5c1a1a','#3d2800'], goldWin: 70, goldLose: 35, goldDraw: 45, firstWinBonus: 40, promoReward: { boosters: [], gold: 125 } },
     { id: 5, name: 'Grand Hotel',     emoji: '\u{1F3E8}', min: 2500, max: 99999, colors: 7, sourceGlasses: 8, emptyGlasses: 5, powerUps: ['extraBottle','flashPour','swap','clearBottle'],  bg: ['#1a1a1a','#2D2D00'], goldWin: 80, goldLose: 40, goldDraw: 50, firstWinBonus: 50, promoReward: { boosters: [], gold: 150 } },
   ],
   ALL_COLORS: ['#FF4444', '#4488FF', '#FFCC00', '#44CC44', '#AA44FF', '#FF8800', '#FF66AA', '#00CCBB'],
@@ -2425,13 +2552,21 @@ function getArenaColors(arena) {
 function getAIDifficulty() {
   const arenaIdx = getArena(state.stats.trophies).id;
   const ai = CFG.AI_PER_ARENA[arenaIdx];
-  return {
+  const diff = {
     pourIntervalMin: ai.pourMin,
     pourIntervalMax: ai.pourMax,
     mistakeRate: ai.mistakeRate,
     serveDelay: ai.serveDelay,
     grabChance: ai.powerUpGrab,
   };
+  // First 2 matches: AI is very slow and makes lots of mistakes
+  if (state.stats.matchesPlayed < 2) {
+    diff.pourIntervalMin = 2.0;
+    diff.pourIntervalMax = 3.5;
+    diff.mistakeRate = 0.4;
+    diff.serveDelay = 1.5;
+  }
+  return diff;
 }
 
 function calculateTrophyChange(playerScore, opponentScore) {
@@ -2678,7 +2813,7 @@ function isGlassServeable(glass) {
   if (!isGlassPure(glass)) return false;
   const glassColor = glass.layers[0];
   return state.customers.some(c =>
-    !c.servedByPlayer && c.color === glassColor
+    !c.servedByPlayer && !c.leaving && c.color === glassColor
   );
 }
 
@@ -2887,6 +3022,7 @@ function loadStats() {
       if (state.stats.arenaFloor === undefined) state.stats.arenaFloor = 0;
       if (!state.stats.powerUpInventory) state.stats.powerUpInventory = { extraBottle: 3, flashPour: 3, swap: 0, clearBottle: 0 };
       if (state.stats.gold === undefined) state.stats.gold = 50;
+      if (state.stats.tutorialDone === undefined) state.stats.tutorialDone = false;
       if (!state.stats.venue) state.stats.venue = {};
       // v6.3 fields
       if (!state.stats.promotedArenas) state.stats.promotedArenas = [0];
@@ -4632,12 +4768,12 @@ function renderCustomers() {
       c.color.charAt(0).toUpperCase() + c.color.slice(1);
     slot.appendChild(drinkLabel);
 
-    // Served badge
+    // Served checkmark overlay
     if (c.servedByPlayer || c.servedByOpponent) {
-      const badge = document.createElement('div');
-      badge.style.cssText = 'position:absolute;top:4px;right:4px;background:#44CC44;color:#fff;font-size:8px;font-weight:800;padding:1px 4px;border-radius:4px;text-transform:uppercase;';
-      badge.textContent = 'SERVED!';
-      slot.appendChild(badge);
+      const check = document.createElement('div');
+      check.className = 'customer-served-check';
+      check.innerHTML = '<span>\u2705</span>';
+      slot.appendChild(check);
       slot.style.opacity = '0.6';
     }
 
@@ -4681,7 +4817,7 @@ function serveGlass(glassIndex) {
   let targetIdx = -1;
   for (let i = 0; i < state.customers.length; i++) {
     const c = state.customers[i];
-    if (!c.servedByPlayer && c.color === glassColor) {
+    if (!c.servedByPlayer && !c.leaving && c.color === glassColor) {
       if (!targetCustomer || c.patience < targetCustomer.patience) {
         targetCustomer = c;
         targetIdx = i;
@@ -5226,6 +5362,270 @@ function renderPowerUps() {
 }
 
 // ============================================================
+// TUTORIAL LEVELS
+// ============================================================
+let tutorialGlasses = [];
+let tutorialSelectedGlass = null;
+let tutorialCustomerColor = 'red';
+let tutorialLevel = 0;
+let tutorialSpawnColor = null;
+
+const TUTORIAL_LEVELS = [
+  {
+    title: 'SORT THE COLORS!',
+    desc: 'Pour colors into bottles to fill a pure drink, then tap to serve',
+    color: 'red',
+    glasses: [ { layers: ['red', 'red'] }, { layers: ['red', 'red'] }, { layers: [] } ],
+    showSpawn: false,
+    popupTitle: 'GREAT JOB!',
+    popupText: 'You sorted and served a drink!',
+    popupEmoji: '\u{1F389}',
+  },
+  {
+    title: 'USE THE SPAWN!',
+    desc: 'Tap the Spawn button to add a color layer. Fill bottles to serve!',
+    color: 'blue',
+    glasses: [ { layers: ['blue'] }, { layers: [] } ],
+    showSpawn: true,
+    spawnColor: 'blue',
+    popupTitle: 'AWESOME!',
+    popupText: 'Now race against an opponent!\nBe faster in completing drink orders to win!',
+    popupEmoji: '\u{1F525}',
+  },
+];
+
+function startTutorial() {
+  tutorialLevel = 0;
+  startTutorialLevel();
+}
+
+function startTutorialLevel() {
+  const level = TUTORIAL_LEVELS[tutorialLevel];
+  showScreen('tutorial');
+  tutorialSelectedGlass = null;
+  tutorialCustomerColor = level.color;
+  tutorialSpawnColor = level.spawnColor || null;
+  tutorialGlasses = level.glasses.map(g => ({ layers: [...g.layers] }));
+
+  // Update header
+  const header = document.querySelector('.tutorial-header');
+  if (header) header.innerHTML = '<h2>' + level.title + '</h2><p>' + level.desc + '</p>';
+
+  // Update popup
+  const popTitle = document.querySelector('.tutorial-popup-title');
+  const popText = document.querySelector('.tutorial-popup-text');
+  const popEmoji = document.querySelector('.tutorial-popup-emoji');
+  const popBtn = document.getElementById('btn-tutorial-done');
+  if (popTitle) popTitle.textContent = level.popupTitle;
+  if (popText) popText.textContent = level.popupText;
+  if (popEmoji) popEmoji.textContent = level.popupEmoji;
+  if (popBtn) popBtn.textContent = tutorialLevel < TUTORIAL_LEVELS.length - 1 ? 'NEXT' : "LET'S GO!";
+  document.getElementById('tutorial-popup').classList.add('hidden');
+
+  // Show/hide spawn button (match-style)
+  let spawnBtn = document.getElementById('tutorial-spawn');
+  if (!spawnBtn && level.showSpawn) {
+    spawnBtn = document.createElement('button');
+    spawnBtn.id = 'tutorial-spawn';
+    spawnBtn.className = 'spawn-btn';
+    spawnBtn.style.cssText = 'position:absolute;bottom:16px;left:16px;z-index:5;';
+    spawnBtn.innerHTML =
+      '<svg class="spawn-ring" viewBox="0 0 36 36"><circle class="spawn-ring-bg" cx="18" cy="18" r="16"/><circle class="spawn-ring-fill" cx="18" cy="18" r="16" style="stroke-dashoffset:0"/></svg>' +
+      '<span class="spawn-label">\u{1F379}</span>';
+    spawnBtn.addEventListener('click', tutorialUseSpawn);
+    document.getElementById('screen-tutorial').appendChild(spawnBtn);
+  }
+  if (spawnBtn) spawnBtn.style.display = level.showSpawn ? 'flex' : 'none';
+
+  // Arrow pointing at spawn button
+  let arrow = document.getElementById('tutorial-arrow');
+  if (!arrow && level.showSpawn) {
+    arrow = document.createElement('div');
+    arrow.id = 'tutorial-arrow';
+    arrow.style.cssText = 'position:absolute;bottom:75px;left:22px;z-index:6;font-size:28px;animation:tutorialBounce 1s ease-in-out infinite;pointer-events:none;';
+    arrow.textContent = '\u{1F447}';
+    const label = document.createElement('div');
+    label.style.cssText = 'position:absolute;bottom:105px;left:8px;z-index:6;font-family:Nunito,sans-serif;font-size:12px;font-weight:900;color:#ffc700;text-shadow:0 1px 2px rgba(0,0,0,0.7);pointer-events:none;white-space:nowrap;animation:tutorialBounce 1s ease-in-out infinite;';
+    label.textContent = 'Tap here to spawn!';
+    label.id = 'tutorial-arrow-label';
+    document.getElementById('screen-tutorial').appendChild(arrow);
+    document.getElementById('screen-tutorial').appendChild(label);
+  }
+  if (arrow) arrow.style.display = level.showSpawn ? 'block' : 'none';
+  const arrowLabel = document.getElementById('tutorial-arrow-label');
+  if (arrowLabel) arrowLabel.style.display = level.showSpawn ? 'block' : 'none';
+
+  renderTutorialCustomer();
+  renderTutorialBoard();
+}
+
+function tutorialUseSpawn() {
+  if (!tutorialSpawnColor) return;
+  // Hide the arrow hint after first use
+  const arrow = document.getElementById('tutorial-arrow');
+  const arrowLabel = document.getElementById('tutorial-arrow-label');
+  if (arrow) arrow.style.display = 'none';
+  if (arrowLabel) arrowLabel.style.display = 'none';
+  // Find a non-full glass
+  for (let i = 0; i < tutorialGlasses.length; i++) {
+    if (tutorialGlasses[i].layers.length < CFG.GLASS_CAPACITY) {
+      tutorialGlasses[i].layers.push(tutorialSpawnColor);
+      renderTutorialBoard();
+      return;
+    }
+  }
+}
+
+function renderTutorialCustomer() {
+  const zone = document.getElementById('tutorial-customer');
+  if (!zone) return;
+  zone.innerHTML = '';
+  const colorHex = COLOR_HEX[tutorialCustomerColor] || '#888';
+  const colorName = tutorialCustomerColor.charAt(0).toUpperCase() + tutorialCustomerColor.slice(1);
+  const slot = document.createElement('div');
+  slot.className = 'customer-slot';
+  slot.innerHTML =
+    '<div class="customer-emoji">\u{1F604}</div>' +
+    '<div class="customer-drink-label" style="color:' + colorHex + ';">' +
+    '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:' + colorHex + ';margin-right:3px;vertical-align:middle;"></span>' + colorName + '</div>';
+  zone.appendChild(slot);
+}
+
+function renderTutorialBoard() {
+  const container = document.getElementById('tutorial-board');
+  if (!container) return;
+  container.innerHTML = '';
+  const layerHeight = 30;
+
+  for (let i = 0; i < tutorialGlasses.length; i++) {
+    const glass = tutorialGlasses[i];
+    const totalHeight = CFG.GLASS_CAPACITY * layerHeight + 4;
+    const el = document.createElement('div');
+    el.className = 'glass player-glass';
+    el.style.height = totalHeight + 'px';
+    el.style.width = '70px';
+
+    if (glass.layers.length === 0) el.classList.add('empty-glass');
+    if (tutorialSelectedGlass === i) el.classList.add('selected');
+
+    // Check if serveable (full + pure + matches customer)
+    const isPure = glass.layers.length === CFG.GLASS_CAPACITY && glass.layers.every(l => l === glass.layers[0]);
+    const isServeable = isPure && glass.layers[0] === tutorialCustomerColor;
+    if (isServeable) el.classList.add('serveable');
+
+    for (let j = 0; j < glass.layers.length; j++) {
+      const layer = document.createElement('div');
+      layer.className = 'glass-layer';
+      layer.style.height = layerHeight + 'px';
+      layer.style.backgroundColor = COLOR_HEX[glass.layers[j]] || '#888';
+      if (j === 0) layer.style.borderRadius = '0 0 4px 4px';
+      el.appendChild(layer);
+    }
+
+    el.dataset.index = i;
+    el.addEventListener('click', () => handleTutorialTap(i));
+    container.appendChild(el);
+  }
+}
+
+function handleTutorialTap(index) {
+  const glass = tutorialGlasses[index];
+
+  // If serveable, serve it with fly animation
+  const isPure = glass.layers.length === CFG.GLASS_CAPACITY && glass.layers.every(l => l === glass.layers[0]);
+  if (isPure && glass.layers[0] === tutorialCustomerColor) {
+    // Get positions for animation
+    const glassEl = document.querySelectorAll('#tutorial-board .glass')[index];
+    const customerEl = document.querySelector('#tutorial-customer .customer-slot');
+    if (glassEl && customerEl) {
+      const glassRect = glassEl.getBoundingClientRect();
+      const custRect = customerEl.getBoundingClientRect();
+      const colorHex = COLOR_HEX[glass.layers[0]] || '#888';
+
+      // Create flying bottle clone
+      const fly = document.createElement('div');
+      fly.style.cssText = 'position:fixed;z-index:300;pointer-events:none;width:' + glassRect.width + 'px;height:' + glassRect.height + 'px;border:2px solid rgba(255,255,255,0.3);border-radius:4px 4px 12px 12px;border-top:none;overflow:hidden;display:flex;flex-direction:column-reverse;';
+      fly.style.left = glassRect.left + 'px';
+      fly.style.top = glassRect.top + 'px';
+      for (let l = 0; l < glass.layers.length; l++) {
+        const layer = document.createElement('div');
+        layer.style.cssText = 'width:100%;height:25%;background:' + colorHex + ';';
+        fly.appendChild(layer);
+      }
+      document.body.appendChild(fly);
+
+      // Animate to customer
+      const dx = custRect.left + custRect.width / 2 - glassRect.left - glassRect.width / 2;
+      const dy = custRect.top + custRect.height / 2 - glassRect.top - glassRect.height / 2;
+      fly.animate([
+        { transform: 'translate(0,0) scale(1)', opacity: 1 },
+        { transform: 'translate(' + dx + 'px,' + dy + 'px) scale(0.4)', opacity: 0.3 }
+      ], { duration: 500, easing: 'cubic-bezier(0.2,0.8,0.3,1)', fill: 'forwards' });
+
+      // Pulse the customer slot
+      customerEl.classList.add('served-anim');
+      setTimeout(() => customerEl.classList.remove('served-anim'), 500);
+
+      setTimeout(() => { if (fly.parentNode) fly.remove(); }, 550);
+    }
+
+    glass.layers = [];
+    tutorialSelectedGlass = null;
+    renderTutorialBoard();
+    // Level complete after animation
+    setTimeout(() => {
+      // Add checkmark to customer
+      const custSlot = document.querySelector('#tutorial-customer .customer-slot');
+      if (custSlot) {
+        const check = document.createElement('div');
+        check.className = 'customer-served-check';
+        check.innerHTML = '<span>\u2705</span>';
+        custSlot.appendChild(check);
+      }
+      setTimeout(() => {
+        document.getElementById('tutorial-popup').classList.remove('hidden');
+      }, 600);
+    }, 500);
+    return;
+  }
+
+  if (tutorialSelectedGlass === null) {
+    if (glass.layers.length > 0) {
+      tutorialSelectedGlass = index;
+      renderTutorialBoard();
+    }
+  } else if (tutorialSelectedGlass === index) {
+    tutorialSelectedGlass = null;
+    renderTutorialBoard();
+  } else {
+    // Try pour
+    if (canPourRaw(tutorialGlasses, tutorialSelectedGlass, index)) {
+      doPourRaw(tutorialGlasses, tutorialSelectedGlass, index);
+      tutorialSelectedGlass = null;
+      renderTutorialBoard();
+    } else {
+      tutorialSelectedGlass = glass.layers.length > 0 ? index : null;
+      renderTutorialBoard();
+    }
+  }
+}
+
+document.getElementById('btn-tutorial-done').addEventListener('click', () => {
+  tutorialLevel++;
+  if (tutorialLevel < TUTORIAL_LEVELS.length) {
+    // Next tutorial level
+    startTutorialLevel();
+  } else {
+    // All tutorials done
+    state.stats.tutorialDone = true;
+    saveStats();
+    showScreen('home');
+    renderHomeStats();
+    renderHomeVenuePreview();
+  }
+});
+
+// ============================================================
 // INIT (placed at end so all modules are defined)
 // ============================================================
 loadStats();
@@ -5240,7 +5640,10 @@ requestAnimationFrame(() => {
 setTimeout(() => {
   const splash = document.getElementById('screen-splash');
   if (splash) splash.style.opacity = '0';
-  setTimeout(() => { showScreen('home'); }, 600);
+  setTimeout(() => {
+    if (!state.stats.tutorialDone) { startTutorial(); }
+    else { showScreen('home'); }
+  }, 600);
 }, 1800);
 
 // Setup long-press tooltips on loadout and in-match power-up containers
