@@ -220,6 +220,43 @@ body {
 }
 
 /* Bottom water tank bar */
+/* ===== VIRTUAL JOYSTICK ===== */
+#joystick-zone {
+  position: absolute;
+  bottom: 45px;
+  right: 15px;
+  width: 120px;
+  height: 120px;
+  z-index: 7;
+  pointer-events: auto;
+  display: none; /* shown only on touch devices during gameplay */
+}
+#joystick-base {
+  position: absolute;
+  top: 0; left: 0;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.08);
+  border: 2px solid rgba(255,255,255,0.15);
+}
+#joystick-stick {
+  position: absolute;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: rgba(68,170,255,0.4);
+  border: 2px solid rgba(68,170,255,0.6);
+  top: 35px;
+  left: 35px;
+  transition: none;
+}
+#joystick-stick.active {
+  background: rgba(68,170,255,0.6);
+  border-color: rgba(68,200,255,0.9);
+  box-shadow: 0 0 12px rgba(68,170,255,0.4);
+}
+
 #water-tank-bar {
   position: absolute;
   bottom: 8px;
@@ -790,6 +827,12 @@ body {
     </div>
   </div>
 
+  <!-- Virtual joystick (touch devices only) -->
+  <div id="joystick-zone">
+    <div id="joystick-base"></div>
+    <div id="joystick-stick"></div>
+  </div>
+
   <!-- Bottom water tank bar -->
   <div id="water-tank-bar" class="hidden">
     <span id="water-tank-icon">&#x1F4A6;</span>
@@ -1358,6 +1401,7 @@ function showScreen(name) {
   upgrades.classList.add('hidden');
   bottomNav.classList.add('hidden');
   waterTankBar.classList.add('hidden');
+  joystickZone.style.display = 'none';
 
   if (name === 'home') {
     home.classList.remove('hidden');
@@ -1375,6 +1419,8 @@ function showScreen(name) {
   } else if (name === 'gameplay') {
     gameplay_hud.classList.remove('hidden');
     waterTankBar.classList.remove('hidden');
+    // Show joystick on touch devices
+    if (isTouchDevice) joystickZone.style.display = 'block';
   } else if (name === 'result') {
     result.classList.remove('hidden');
     populateResultScreen();
@@ -1728,28 +1774,108 @@ canvas.addEventListener('mousedown', (e) => {
 canvas.addEventListener('mouseup',    () => { state.inputActive = false; }); // stop spraying
 canvas.addEventListener('mouseleave', () => { state.inputActive = false; });
 
-// Touch events
+// ===== VIRTUAL JOYSTICK (touch devices) =====
+const joystickZone = document.getElementById('joystick-zone');
+const joystickBase = document.getElementById('joystick-base');
+const joystickStick = document.getElementById('joystick-stick');
+const JOY_RADIUS = 60;       // base radius
+const JOY_DEAD = 8;          // dead zone px
+const JOY_AIM_SPEED = 320;   // canvas px/sec aim movement speed
+let joyActive = false;
+let joyCenterX = 0;
+let joyCenterY = 0;
+let joyDx = 0, joyDy = 0;    // normalized -1..1
+let isTouchDevice = false;
+
+// Detect touch device and show joystick
+function enableJoystick() {
+  if (isTouchDevice) return;
+  isTouchDevice = true;
+  joystickZone.style.display = 'block';
+}
+
+// Joystick touch handlers (on the joystick zone element)
+joystickZone.addEventListener('touchstart', (e) => {
+  e.preventDefault();
+  e.stopPropagation();
+  enableJoystick();
+  if (state.screen !== 'gameplay') return;
+  const touch = e.touches[0];
+  const rect = joystickBase.getBoundingClientRect();
+  joyCenterX = rect.left + rect.width / 2;
+  joyCenterY = rect.top + rect.height / 2;
+  joyActive = true;
+  state.inputActive = true;
+  joystickStick.classList.add('active');
+  updateJoystickFromTouch(touch);
+}, { passive: false });
+
+joystickZone.addEventListener('touchmove', (e) => {
+  e.preventDefault();
+  e.stopPropagation();
+  if (!joyActive) return;
+  updateJoystickFromTouch(e.touches[0]);
+}, { passive: false });
+
+joystickZone.addEventListener('touchend', (e) => {
+  e.preventDefault();
+  joyActive = false;
+  joyDx = 0;
+  joyDy = 0;
+  state.inputActive = false;
+  joystickStick.classList.remove('active');
+  // Reset stick to center
+  joystickStick.style.left = '35px';
+  joystickStick.style.top = '35px';
+});
+
+joystickZone.addEventListener('touchcancel', () => {
+  joyActive = false;
+  joyDx = 0;
+  joyDy = 0;
+  state.inputActive = false;
+  joystickStick.classList.remove('active');
+  joystickStick.style.left = '35px';
+  joystickStick.style.top = '35px';
+});
+
+function updateJoystickFromTouch(touch) {
+  let dx = touch.clientX - joyCenterX;
+  let dy = touch.clientY - joyCenterY;
+  const dist_j = Math.sqrt(dx * dx + dy * dy);
+
+  // Clamp to base radius
+  if (dist_j > JOY_RADIUS) {
+    dx = (dx / dist_j) * JOY_RADIUS;
+    dy = (dy / dist_j) * JOY_RADIUS;
+  }
+
+  // Move stick visual
+  joystickStick.style.left = (35 + dx) + 'px';
+  joystickStick.style.top = (35 + dy) + 'px';
+
+  // Normalize to -1..1 (with dead zone)
+  if (dist_j < JOY_DEAD) {
+    joyDx = 0;
+    joyDy = 0;
+  } else {
+    const effective = Math.min(dist_j, JOY_RADIUS);
+    const norm = (effective - JOY_DEAD) / (JOY_RADIUS - JOY_DEAD);
+    joyDx = (dx / dist_j) * norm;
+    joyDy = (dy / dist_j) * norm;
+  }
+}
+
+// Canvas touch events — show joystick on first touch, prevent direct aiming
 canvas.addEventListener('touchstart', (e) => {
   e.preventDefault();
-  if (state.screen !== 'gameplay') return;
-  const t = e.touches[0];
-  const c = canvasCoords(t.clientX, t.clientY);
-  state.targetX = c.x;
-  state.targetY = c.y;
-  state.inputActive = true;
+  enableJoystick();
+  // Don't aim from canvas touch — use joystick instead
 }, { passive: false });
 
 canvas.addEventListener('touchmove', (e) => {
   e.preventDefault();
-  if (state.screen !== 'gameplay') return;
-  const t = e.touches[0];
-  const c = canvasCoords(t.clientX, t.clientY);
-  state.targetX = c.x;
-  state.targetY = c.y;
 }, { passive: false });
-
-canvas.addEventListener('touchend',    () => { state.inputActive = false; });
-canvas.addEventListener('touchcancel', () => { state.inputActive = false; });
 
 function updateBot(dt) {
   if (state.paused) return;
@@ -1758,14 +1884,21 @@ function updateBot(dt) {
   state.botX = CANVAS_W / 2;
   state.botY = CANVAS_H - 50;
 
-  // Lerp aim point toward input target (upgrade affects responsiveness)
-  const lerpBase = getEffectiveAimLerp();
-  const t = 1 - Math.pow(lerpBase, dt);
-  state.aimX = lerp(state.aimX, state.targetX, t);
-  state.aimY = lerp(state.aimY, state.targetY, t);
+  const margin = 20;
+
+  if (joyActive && isTouchDevice) {
+    // Joystick mode: move aim point in the joystick direction
+    state.aimX += joyDx * JOY_AIM_SPEED * dt;
+    state.aimY += joyDy * JOY_AIM_SPEED * dt;
+  } else {
+    // Mouse mode: lerp aim point toward mouse target
+    const lerpBase = getEffectiveAimLerp();
+    const t = 1 - Math.pow(lerpBase, dt);
+    state.aimX = lerp(state.aimX, state.targetX, t);
+    state.aimY = lerp(state.aimY, state.targetY, t);
+  }
 
   // Clamp aim within arena bounds
-  const margin = 20;
   state.aimX = clamp(state.aimX, margin, CANVAS_W - margin);
   state.aimY = clamp(state.aimY, margin, CANVAS_H - margin);
 }
