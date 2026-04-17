@@ -2049,6 +2049,64 @@ html, body {
 }
 .customer-served-check.no-anim { animation: none; }
 
+/* ===== VENUE REWARD POPUP ===== */
+.venue-reward-popup {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 500;
+  backdrop-filter: blur(4px);
+}
+.venue-reward-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  background: linear-gradient(180deg, #1a5a9e, #0d3460);
+  border: 2px solid rgba(255,215,0,0.3);
+  border-radius: 20px;
+  padding: 28px 24px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1);
+  max-width: 300px;
+  animation: countdownPop 0.4s ease-out;
+}
+.venue-reward-emoji { font-size: 48px; }
+.venue-reward-title {
+  font-family: 'Lilita One', cursive;
+  font-size: 24px;
+  color: #ffc700;
+  -webkit-text-stroke: 0.5px #000;
+  text-shadow: 0 2px 0 #000;
+  text-align: center;
+}
+.venue-reward-items {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.venue-reward-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 8px 12px;
+  background: rgba(255,215,0,0.1);
+  border: 1px solid rgba(255,215,0,0.25);
+  border-radius: 10px;
+}
+.venue-reward-item .ri-icon { font-size: 28px; }
+.venue-reward-item .ri-name { font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.6); }
+.venue-reward-gold {
+  font-family: 'Nunito', sans-serif;
+  font-size: 18px;
+  font-weight: 900;
+  color: #FFD700;
+}
+
 @keyframes tutorialBounce {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-8px); }
@@ -3212,8 +3270,8 @@ function renderVenue() {
           if (result) {
             renderVenue();
             renderHomeStats();
-            if (result.buildingReward) alert('Building Complete! Reward: ' + result.buildingReward.map(t => BOOSTER_NAMES[t]).join(' + '));
-            if (result.venueReward) alert('VENUE COMPLETE! Reward: ' + result.venueReward.map(t => BOOSTER_NAMES[t]).join(' + ') + (result.venueGold ? ' + ' + result.venueGold + ' Gold' : ''));
+            if (result.buildingReward) showVenueRewardPopup('Building Complete!', '\u{1F3D7}', result.buildingReward, 0);
+            if (result.venueReward) showVenueRewardPopup('Venue Complete!', '\u{1F389}', result.venueReward, result.venueGold);
           }
         });
       }
@@ -3343,8 +3401,8 @@ function renderVenueMap(container, arenaId, interactive) {
             renderVenue();
             renderHomeStats();
             renderHomeVenuePreview();
-            if (result.buildingReward) alert('Building Complete! Reward: ' + result.buildingReward.map(t => BOOSTER_NAMES[t]).join(' + '));
-            if (result.venueReward) alert('VENUE COMPLETE! Reward: ' + result.venueReward.map(t => BOOSTER_NAMES[t]).join(' + ') + (result.venueGold ? ' + ' + result.venueGold + ' Gold' : ''));
+            if (result.buildingReward) showVenueRewardPopup('Building Complete!', '\u{1F3D7}', result.buildingReward, 0);
+            if (result.venueReward) showVenueRewardPopup('Venue Complete!', '\u{1F389}', result.venueReward, result.venueGold);
           }
         }
       });
@@ -3446,6 +3504,46 @@ function renderBoostersTab() {
       cartEl.appendChild(el);
     }
   }
+}
+
+// ===== VENUE REWARD POPUP =====
+function showVenueRewardPopup(title, emoji, boosterTypes, goldAmount) {
+  const overlay = document.createElement('div');
+  overlay.className = 'venue-reward-popup';
+  const card = document.createElement('div');
+  card.className = 'venue-reward-card';
+  card.innerHTML = '<div class="venue-reward-emoji">' + emoji + '</div>' +
+    '<div class="venue-reward-title">' + title + '</div>';
+  // Booster items
+  if (boosterTypes && boosterTypes.length > 0) {
+    const items = document.createElement('div');
+    items.className = 'venue-reward-items';
+    for (const type of boosterTypes) {
+      const item = document.createElement('div');
+      item.className = 'venue-reward-item';
+      item.innerHTML = '<span class="ri-icon">' + (POWERUP_ICONS[type] || '?') + '</span>' +
+        '<span class="ri-name">' + (BOOSTER_NAMES[type] || type) + '</span>';
+      items.appendChild(item);
+    }
+    card.appendChild(items);
+  }
+  // Gold
+  if (goldAmount && goldAmount > 0) {
+    const gold = document.createElement('div');
+    gold.className = 'venue-reward-gold';
+    gold.textContent = '\u{1FA99} +' + goldAmount + ' Gold';
+    card.appendChild(gold);
+  }
+  // OK button
+  const btn = document.createElement('button');
+  btn.className = 'play-btn';
+  btn.style.cssText = 'width:180px;margin-top:8px;font-size:18px;';
+  btn.textContent = 'COLLECT';
+  btn.addEventListener('click', () => overlay.remove());
+  card.appendChild(btn);
+  overlay.appendChild(card);
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+  document.body.appendChild(overlay);
 }
 
 // Dismiss venue tooltips on tap outside (but not on pip buttons)
