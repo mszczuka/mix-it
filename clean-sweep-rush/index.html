@@ -162,7 +162,7 @@ body {
   to   { opacity: 0.75; transform: scale(1.07); }
 }
 
-/* ===== WATER BAR ===== */
+/* ===== WATER BAR (BOTTOM HORIZONTAL) ===== */
 #hud-right {
   display: flex;
   flex-direction: column;
@@ -170,55 +170,159 @@ body {
   gap: 2px;
 }
 
-#water-bar-container {
-  width: 22px;
-  height: 70px;
-  background: rgba(0,0,0,0.4);
-  border-radius: 6px;
-  border: 1.5px solid rgba(100,180,255,0.3);
-  overflow: hidden;
-  position: relative;
+#hud-gold {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #ffcc44;
 }
 
-#water-bar-fill {
+#hud-gold-icon { font-size: 14px; }
+
+#hud-gold-value {
+  transition: transform 0.15s;
+}
+
+#hud-gold-value.pulse {
+  animation: goldPulse 0.3s ease;
+}
+
+@keyframes goldPulse {
+  0%   { transform: scale(1); color: #ffcc44; }
+  50%  { transform: scale(1.3); color: #ffee88; }
+  100% { transform: scale(1); color: #ffcc44; }
+}
+
+/* Bottom water tank bar */
+#water-tank-bar {
   position: absolute;
-  bottom: 0;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(0,0,0,0.55);
+  border-radius: 10px;
+  padding: 5px 10px;
+  width: 80%;
+  max-width: 360px;
+  pointer-events: none;
+}
+
+#water-tank-bar.hidden { display: none; }
+
+#water-tank-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+#water-tank-track {
+  flex: 1;
+  height: 14px;
+  background: rgba(0,0,0,0.4);
+  border-radius: 7px;
+  border: 1.5px solid rgba(100,180,255,0.25);
+  position: relative;
+  overflow: hidden;
+}
+
+#water-tank-fill {
+  position: absolute;
+  top: 0;
   left: 0;
-  right: 0;
-  background: linear-gradient(to top, #2288cc, #44bbff);
-  border-radius: 0 0 4px 4px;
-  transition: height 0.1s;
+  bottom: 0;
+  background: linear-gradient(to right, #2288cc, #44bbff);
+  border-radius: 5px;
+  transition: width 0.08s linear;
 }
 
-#water-bar-container.low #water-bar-fill {
-  background: linear-gradient(to top, #cc2222, #ff4444);
-  animation: waterPulse 0.5s ease-in-out infinite alternate;
+#water-tank-reserve-marker {
+  position: absolute;
+  top: -1px;
+  bottom: -1px;
+  width: 2px;
+  background: rgba(255,80,80,0.7);
+  z-index: 2;
 }
 
-@keyframes waterPulse {
+#water-tank-reserve-zone {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  background: rgba(255,60,60,0.12);
+  border-radius: 5px 0 0 5px;
+}
+
+/* Water bar visual states */
+#water-tank-bar.low-water #water-tank-fill {
+  background: linear-gradient(to right, #cc8822, #ffaa33);
+  animation: waterPulseSubtle 0.7s ease-in-out infinite alternate;
+}
+
+#water-tank-bar.reserve #water-tank-fill {
+  background: linear-gradient(to right, #cc2222, #ff4444);
+  animation: waterPulseStrong 0.4s ease-in-out infinite alternate;
+}
+
+#water-tank-bar.locked #water-tank-fill {
+  background: linear-gradient(to right, #666, #888);
+  animation: none;
+}
+
+#water-tank-bar.locked #water-tank-track {
+  border-color: rgba(150,150,150,0.4);
+}
+
+@keyframes waterPulseSubtle {
   from { opacity: 1; }
-  to   { opacity: 0.5; }
+  to   { opacity: 0.7; }
 }
 
-#water-bar-label {
-  font-size: 8px;
+@keyframes waterPulseStrong {
+  from { opacity: 1; }
+  to   { opacity: 0.45; }
+}
+
+#water-tank-lock-overlay {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  font-size: 9px;
+  font-weight: 700;
+  color: #ddd;
+  z-index: 3;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.6);
+}
+
+#water-tank-bar.locked #water-tank-lock-overlay {
+  display: flex;
+}
+
+#water-tank-pct {
+  font-size: 9px;
   font-weight: 700;
   color: #88ccff;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  min-width: 30px;
+  text-align: right;
+  flex-shrink: 0;
 }
 
-#refill-indicator {
-  font-size: 9px;
-  color: #44ddff;
-  font-weight: 700;
-  display: none;
+#water-tank-bar.locked #water-tank-pct {
+  color: #aaa;
 }
 
 /* ===== POWERUP HUD ===== */
 #powerup-hud {
   position: absolute;
-  bottom: 14px;
+  bottom: 48px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 5;
@@ -655,13 +759,24 @@ body {
         <div id="hud-timer">45</div>
       </div>
       <div id="hud-right">
-        <div id="water-bar-label">H2O</div>
-        <div id="water-bar-container">
-          <div id="water-bar-fill" style="height:100%"></div>
+        <div id="hud-gold">
+          <span id="hud-gold-icon">&#x1FA99;</span>
+          <span id="hud-gold-value">0</span>
         </div>
-        <div id="refill-indicator">REFILL</div>
       </div>
     </div>
+  </div>
+
+  <!-- Bottom water tank bar -->
+  <div id="water-tank-bar" class="hidden">
+    <span id="water-tank-icon">&#x1F4A6;</span>
+    <div id="water-tank-track">
+      <div id="water-tank-reserve-zone"></div>
+      <div id="water-tank-fill" style="width:100%"></div>
+      <div id="water-tank-reserve-marker"></div>
+      <div id="water-tank-lock-overlay">&#x1F512; Recharge</div>
+    </div>
+    <span id="water-tank-pct">100%</span>
   </div>
 
   <!-- Power-up indicator -->
@@ -747,10 +862,13 @@ const HAZARD_RESPAWN_INTERVAL = 4;
 const HAZARD_RESPAWN_RADIUS = 60;
 const SCREEN_SHAKE_DECAY = 0.9;
 
-// Water tank defaults
+// Water tank defaults (v3: auto-regen system)
 const WATER_CAPACITY_BASE = 100;
-const WATER_DRAIN_RATE_BASE = 15;   // per second while spraying
-const WATER_REFILL_RATE_BASE = 60;  // per second at refill points
+const WATER_DRAIN_RATE_BASE = 14;   // per second while spraying (hold-to-spray)
+const WATER_REGEN_RATE_BASE = 10;   // per second while idle (not spraying)
+const WATER_LOCKED_REGEN_RATE_BASE = 12;  // per second during locked recharge
+const WATER_RESERVE_THRESHOLD_PCT = 0.20; // 20% of capacity
+const WATER_LOW_WARNING_PCT = 0.30;       // 30% low-water warning
 
 // Colors
 const COL_GRASS       = '#4a7a3a';
@@ -807,8 +925,8 @@ const UPGRADE_DEFS = {
       { cost: 1200, unlockLevel: 70 },
     ]
   },
-  refill_speed: {
-    name: 'Refill Speed', icon: '\u{26A1}', effectLabel: '+6% per rank',
+  regen_speed: {
+    name: 'Regen Speed', icon: '\u{26A1}', effectLabel: '+6% per rank',
     unlockLevel: 15, perRank: 0.06,
     ranks: [
       { cost: 160, unlockLevel: 15 },
@@ -839,9 +957,10 @@ const UPGRADE_DEFS = {
 
 // ===== BOOSTER DEFINITIONS =====
 const BOOSTER_DEFS = [
-  { id: 'time_bonus',  name: '+10 Seconds', icon: '\u{23F0}', cost: 80,  effect: 'time' },
-  { id: 'bigger_tank', name: 'Bigger Tank', icon: '\u{1FAA3}', cost: 70,  effect: 'tank' },
-  { id: 'wide_nozzle', name: 'Wide Nozzle', icon: '\u{1F300}', cost: 90,  effect: 'width' },
+  { id: 'time_bonus',  name: '+10 Seconds',  icon: '\u{23F0}', cost: 80,  effect: 'time' },
+  { id: 'bigger_tank', name: 'Bigger Tank',  icon: '\u{1FAA3}', cost: 70,  effect: 'tank' },
+  { id: 'wide_nozzle', name: 'Wide Nozzle',  icon: '\u{1F300}', cost: 90,  effect: 'width' },
+  { id: 'turbo_regen', name: 'Turbo Regen',  icon: '\u{1F4A7}', cost: 75,  effect: 'turbo_regen' },
 ];
 
 // ===== PLAYER PROGRESSION (persists across levels, not across refreshes) =====
@@ -852,7 +971,7 @@ const progression = {
     spray_power: 0,
     tank_capacity: 0,
     spray_width: 0,
-    refill_speed: 0,
+    regen_speed: 0,
     move_speed: 0,
   },
 };
@@ -897,19 +1016,24 @@ const state = {
   isCleaning:    false,
   sprayNode:     null,
 
-  // Water tank system
-  waterCapacity:    WATER_CAPACITY_BASE,
-  waterCurrent:     WATER_CAPACITY_BASE,
-  waterDrainRate:   WATER_DRAIN_RATE_BASE,
-  waterRefillRate:  WATER_REFILL_RATE_BASE,
-  refillPoints:     [],
-  nearRefillPoint:  false,
+  // Water tank system (v3: auto-regen with reserve lock)
+  waterCapacity:        WATER_CAPACITY_BASE,
+  waterCurrent:         WATER_CAPACITY_BASE,
+  waterDrainRate:       WATER_DRAIN_RATE_BASE,
+  waterRegenRate:       WATER_REGEN_RATE_BASE,
+  waterLockedRegenRate: WATER_LOCKED_REGEN_RATE_BASE,
+  waterReserveThreshold: WATER_CAPACITY_BASE * WATER_RESERVE_THRESHOLD_PCT,
+  isLockedRecharge:     false,
 
   // Booster applied for current level
   activeBooster: null,
 
-  // Coins earned this level (for result screen)
+  // Gold earned this level (for result screen & in-level HUD)
+  levelGold: 0,
   coinsEarnedThisLevel: 0,
+
+  // Anti-clutter: batch dirt gold feedback
+  lastDirtGoldTime: 0,
 };
 
 // ===== LEVEL DATA =====
@@ -1015,8 +1139,16 @@ function getEffectiveWaterCapacity() {
   return cap;
 }
 
-function getEffectiveRefillRate() {
-  return WATER_REFILL_RATE_BASE * getUpgradeMultiplier('refill_speed');
+function getEffectiveRegenRate() {
+  let rate = WATER_REGEN_RATE_BASE * getUpgradeMultiplier('regen_speed');
+  if (state.activeBooster === 'turbo_regen') rate *= 1.4;
+  return rate;
+}
+
+function getEffectiveLockedRegenRate() {
+  let rate = WATER_LOCKED_REGEN_RATE_BASE * getUpgradeMultiplier('regen_speed');
+  if (state.activeBooster === 'turbo_regen') rate *= 1.4;
+  return rate;
 }
 
 function getEffectiveAimLerp() {
@@ -1038,6 +1170,7 @@ function showScreen(name) {
   const powerupHud = document.getElementById('powerup-hud');
   const upgrades   = document.getElementById('screen-upgrades');
   const bottomNav  = document.getElementById('bottom-nav');
+  const waterTankBar = document.getElementById('water-tank-bar');
 
   // Hide all
   home.classList.add('hidden');
@@ -1047,6 +1180,7 @@ function showScreen(name) {
   powerupHud.classList.add('hidden');
   upgrades.classList.add('hidden');
   bottomNav.classList.add('hidden');
+  waterTankBar.classList.add('hidden');
 
   if (name === 'home') {
     home.classList.remove('hidden');
@@ -1063,6 +1197,7 @@ function showScreen(name) {
     populateIntroScreen();
   } else if (name === 'gameplay') {
     gameplay_hud.classList.remove('hidden');
+    waterTankBar.classList.remove('hidden');
   } else if (name === 'result') {
     result.classList.remove('hidden');
     populateResultScreen();
@@ -1095,7 +1230,7 @@ function populateUpgradesScreen() {
   const container = document.getElementById('upgrade-lanes');
   container.innerHTML = '';
 
-  const laneKeys = ['spray_power', 'tank_capacity', 'spray_width', 'refill_speed', 'move_speed'];
+  const laneKeys = ['spray_power', 'tank_capacity', 'spray_width', 'regen_speed', 'move_speed'];
 
   laneKeys.forEach(key => {
     const def = UPGRADE_DEFS[key];
@@ -1303,14 +1438,14 @@ function populateResultScreen() {
     subEl.textContent = 'Core loop validation ready for review.';
     summaryEl.appendChild(subEl);
     // Show coins earned
-    addSummaryRow(summaryEl, 'Wash Coins Earned', '+' + state.coinsEarnedThisLevel);
-    addSummaryRow(summaryEl, 'Total Coins', progression.washCoins.toString());
+    addSummaryRow(summaryEl, 'Gold Earned', '+' + state.coinsEarnedThisLevel + ' \u{1FA99}');
+    addSummaryRow(summaryEl, 'Total Gold', progression.washCoins.toString() + ' \u{1FA99}');
   } else if (win) {
     const timeBonus = Math.max(0, Math.round(state.timeLeft));
     addSummaryRow(summaryEl, 'Time Bonus', '+' + timeBonus + 's');
     addSummaryRow(summaryEl, 'Stars', '\u2605'.repeat(stars));
-    addSummaryRow(summaryEl, 'Wash Coins Earned', '+' + state.coinsEarnedThisLevel);
-    addSummaryRow(summaryEl, 'Total Coins', progression.washCoins.toString());
+    addSummaryRow(summaryEl, 'Gold Earned', '+' + state.coinsEarnedThisLevel + ' \u{1FA99}');
+    addSummaryRow(summaryEl, 'Total Gold', progression.washCoins.toString() + ' \u{1FA99}');
   } else {
     state.targets.forEach(t => {
       let progressStr;
@@ -1324,6 +1459,9 @@ function populateResultScreen() {
       addSummaryRow(summaryEl, t.label, progressStr);
     });
     addSummaryRow(summaryEl, 'Status', "Time's up!");
+    if (state.coinsEarnedThisLevel > 0) {
+      addSummaryRow(summaryEl, 'Gold Kept (50%)', '+' + state.coinsEarnedThisLevel + ' \u{1FA99}');
+    }
   }
 
   // Action buttons
@@ -1499,7 +1637,6 @@ function render() {
 
   drawArena();
   renderProps();
-  renderRefillPoints();
   renderDirt();
   renderLocks();
   renderObjects();
@@ -1572,7 +1709,7 @@ function drawBot() {
   const aimAngle = Math.atan2(state.aimY - y, state.aimX - x);
 
   let recoilX = 0, recoilY = 0;
-  if (state.isCleaning && state.inputActive && state.waterCurrent > 0) {
+  if (state.isCleaning && state.inputActive && state.waterCurrent > 0 && !state.isLockedRecharge) {
     recoilX = (Math.random() - 0.5) * 3;
     recoilY = (Math.random() - 0.5) * 3;
   }
@@ -1617,7 +1754,7 @@ function drawBot() {
 
   const nozzleW = 8;
   const nozzleH = 12;
-  const hasWater = state.waterCurrent > 0;
+  const hasWater = state.waterCurrent > 0 && !state.isLockedRecharge;
   const nozzleColor = (state.inputActive && hasWater)
     ? (hasTurbo ? '#44ffff' : '#88ccff')
     : (hasTurbo ? '#22aadd' : '#5599cc');
@@ -1670,7 +1807,7 @@ function drawBot() {
 
 function drawSplashCircle() {
   if (!state.inputActive) return;
-  if (state.waterCurrent <= 0) return; // no water = no splash
+  if (state.waterCurrent <= 0 || state.isLockedRecharge) return; // no water or locked = no splash
 
   const ax = state.aimX;
   const ay = state.aimY;
@@ -1725,7 +1862,7 @@ function drawSplashCircle() {
 
 function updateStream() {
   if (!state.inputActive) return;
-  if (state.waterCurrent <= 0) return; // no water = no stream
+  if (state.waterCurrent <= 0 || state.isLockedRecharge) return; // no water or locked = no stream
   if (state.screen !== 'gameplay' || state.paused) return;
 
   const fromX = state.botX;
@@ -1771,95 +1908,65 @@ function updateStream() {
   }
 }
 
-// ===== REFILL POINT RENDERER =====
-
-function renderRefillPoints() {
-  const now = Date.now();
-  state.refillPoints.forEach(rp => {
-    const pulse = 0.6 + 0.4 * Math.sin(now * 0.003);
-
-    // Outer glow
-    ctx.save();
-    ctx.globalAlpha = 0.15 * pulse;
-    const grad = ctx.createRadialGradient(rp.x, rp.y, 0, rp.x, rp.y, rp.radius);
-    grad.addColorStop(0, '#44bbff');
-    grad.addColorStop(1, 'rgba(68,187,255,0)');
-    ctx.fillStyle = grad;
-    ctx.beginPath();
-    ctx.arc(rp.x, rp.y, rp.radius, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Circle border
-    ctx.globalAlpha = 0.4 * pulse;
-    ctx.strokeStyle = '#44bbff';
-    ctx.lineWidth = 2;
-    ctx.setLineDash([4, 4]);
-    ctx.beginPath();
-    ctx.arc(rp.x, rp.y, rp.radius, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.setLineDash([]);
-
-    // Water drop icon
-    ctx.globalAlpha = 0.8;
-    ctx.font = '16px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillStyle = '#ffffff';
-    ctx.fillText('\u{1F4A7}', rp.x, rp.y);
-
-    ctx.restore();
-  });
-}
-
-// ===== WATER TANK UPDATE =====
+// ===== WATER TANK UPDATE (v3: auto-regen with reserve lock) =====
 
 function updateWater(dt) {
   if (state.paused) return;
 
-  // Drain water while actively cleaning
-  if (state.isCleaning && state.inputActive && state.waterCurrent > 0) {
-    state.waterCurrent -= state.waterDrainRate * dt;
-    if (state.waterCurrent < 0) state.waterCurrent = 0;
-  }
+  const isSpraying = state.isCleaning && state.inputActive && !state.isLockedRecharge;
 
-  // Check refill: aim point near a refill point AND not cleaning
-  state.nearRefillPoint = false;
-  if (state.waterCurrent < state.waterCapacity) {
-    state.refillPoints.forEach(rp => {
-      const d = dist(state.aimX, state.aimY, rp.x, rp.y);
-      if (d <= rp.radius) {
-        state.nearRefillPoint = true;
-        // Refill when not actively cleaning (or when water is 0)
-        if (!state.isCleaning || state.waterCurrent <= 0) {
-          state.waterCurrent = Math.min(
-            state.waterCapacity,
-            state.waterCurrent + state.waterRefillRate * dt
-          );
-        }
+  if (isSpraying) {
+    // Drain water while actively spraying
+    state.waterCurrent -= state.waterDrainRate * dt;
+    if (state.waterCurrent <= 0) {
+      state.waterCurrent = 0;
+      // Trigger reserve lock
+      state.isLockedRecharge = true;
+    }
+  } else if (state.isLockedRecharge) {
+    // Locked recharge: regen at locked rate until full
+    state.waterCurrent += getEffectiveLockedRegenRate() * dt;
+    if (state.waterCurrent >= state.waterCapacity) {
+      state.waterCurrent = state.waterCapacity;
+      state.isLockedRecharge = false;
+    }
+  } else {
+    // Normal idle regen
+    if (state.waterCurrent < state.waterCapacity) {
+      state.waterCurrent += getEffectiveRegenRate() * dt;
+      if (state.waterCurrent > state.waterCapacity) {
+        state.waterCurrent = state.waterCapacity;
       }
-    });
+    }
   }
 }
 
 function updateWaterHUD() {
-  const fillEl = document.getElementById('water-bar-fill');
-  const containerEl = document.getElementById('water-bar-container');
-  const refillEl = document.getElementById('refill-indicator');
-  if (!fillEl) return;
+  const bar = document.getElementById('water-tank-bar');
+  const fillEl = document.getElementById('water-tank-fill');
+  const pctEl = document.getElementById('water-tank-pct');
+  const reserveZone = document.getElementById('water-tank-reserve-zone');
+  const reserveMarker = document.getElementById('water-tank-reserve-marker');
+  if (!fillEl || !bar) return;
 
   const pct = (state.waterCurrent / state.waterCapacity) * 100;
-  fillEl.style.height = pct + '%';
+  const reservePct = (state.waterReserveThreshold / state.waterCapacity) * 100;
 
-  if (pct < 20) {
-    containerEl.classList.add('low');
-  } else {
-    containerEl.classList.remove('low');
-  }
+  fillEl.style.width = pct + '%';
+  pctEl.textContent = Math.round(pct) + '%';
 
-  if (state.nearRefillPoint) {
-    refillEl.style.display = 'block';
-  } else {
-    refillEl.style.display = 'none';
+  // Position reserve zone and marker
+  reserveZone.style.width = reservePct + '%';
+  reserveMarker.style.left = reservePct + '%';
+
+  // Visual state classes
+  bar.classList.remove('low-water', 'reserve', 'locked');
+  if (state.isLockedRecharge) {
+    bar.classList.add('locked');
+  } else if (pct <= reservePct) {
+    bar.classList.add('reserve');
+  } else if (pct <= WATER_LOW_WARNING_PCT * 100) {
+    bar.classList.add('low-water');
   }
 }
 
@@ -1928,7 +2035,6 @@ function startLevel() {
 
   // Calculate effective water capacity
   const effectiveCap = getEffectiveWaterCapacity();
-  const effectiveRefill = getEffectiveRefillRate();
 
   // Timer with booster
   let levelTimer = level.timer;
@@ -1953,7 +2059,6 @@ function startLevel() {
   state.powerUps       = [];
   state.activePowerUps = [];
   state.targets        = level.targets.map(t => Object.assign({}, t, { current: 0, progress: 0, done: false }));
-  state.refillPoints   = [];
 
   state.comboCount  = 0;
   state.comboTimer  = 0;
@@ -1966,15 +2071,19 @@ function startLevel() {
   state.stars    = 0;
   state.usedContinue = false;
   state.coinsEarnedThisLevel = 0;
+  state.levelGold = 0;
+  state.lastDirtGoldTime = 0;
 
   state.isCleaning = false;
 
-  // Water
-  state.waterCapacity   = effectiveCap;
-  state.waterCurrent    = effectiveCap;
-  state.waterDrainRate  = WATER_DRAIN_RATE_BASE;
-  state.waterRefillRate = effectiveRefill;
-  state.nearRefillPoint = false;
+  // Water (v3: auto-regen with reserve lock)
+  state.waterCapacity        = effectiveCap;
+  state.waterCurrent         = effectiveCap;
+  state.waterDrainRate       = WATER_DRAIN_RATE_BASE;
+  state.waterRegenRate       = getEffectiveRegenRate();
+  state.waterLockedRegenRate = getEffectiveLockedRegenRate();
+  state.waterReserveThreshold = effectiveCap * WATER_RESERVE_THRESHOLD_PCT;
+  state.isLockedRecharge     = false;
 
   // Stop any active spray noise
   if (state.sprayNode) {
@@ -2060,7 +2169,7 @@ function updateDirt(dt) {
   state.isCleaning = false;
 
   if (!state.inputActive) return;
-  if (state.waterCurrent <= 0) return; // No water = no cleaning
+  if (state.waterCurrent <= 0 || state.isLockedRecharge) return; // No water or locked = no cleaning
 
   const effectiveCleanPower = getEffectiveCleanPower();
   const effectiveCRX = getEffectiveCleanRadiusX();
@@ -2105,6 +2214,17 @@ function updateDirt(dt) {
 
 function onDirtCleared(dirt) {
   spawnRevealPulse(dirt.x, dirt.y);
+
+  // Award gold for dirt clearing (+1, batched every 0.5s to avoid clutter)
+  const now = Date.now();
+  if (now - state.lastDirtGoldTime >= 500) {
+    state.lastDirtGoldTime = now;
+    awardLevelGold(1, dirt.x, dirt.y);
+  } else {
+    // Still award the gold, just skip the floating text
+    state.levelGold += 1;
+    updateGoldHUD();
+  }
 
   if (dirt.targetTag) {
     state.targets.forEach(target => {
@@ -2235,11 +2355,6 @@ function loadLevel(level) {
 
   } else if (state.levelIndex === 1) {
     // Level 2 -- Garden Path (portrait)
-    // 1 refill point
-    state.refillPoints = [
-      { x: 380, y: 450, radius: 35 },
-    ];
-
     spawnDirt([
       { id: 'l2_mud1', x: 200, y: 600, type: 'mud', targetTag: 'target_mud' },
       { id: 'l2_mud2', x: 260, y: 540, type: 'mud', targetTag: 'target_mud' },
@@ -2283,12 +2398,6 @@ function loadLevel(level) {
 
   } else if (state.levelIndex === 2) {
     // Level 3 -- Backyard Blitz (portrait)
-    // 1-2 refill points
-    state.refillPoints = [
-      { x: 80,  y: 350, radius: 35 },
-      { x: 370, y: 600, radius: 30 },
-    ];
-
     spawnDirt([
       { id: 'l3_mud1', x: 200, y: 560, type: 'mud', areaId: 'main' },
       { id: 'l3_mud2', x: 100, y: 480, type: 'mud', areaId: 'main' },
@@ -2892,7 +3001,7 @@ function updateSpraySound() {
     if (!actx) return;
 
     const isGameplay = state.screen === 'gameplay' && !state.paused;
-    const shouldPlay = isGameplay && state.isCleaning && state.waterCurrent > 0;
+    const shouldPlay = isGameplay && state.isCleaning && state.waterCurrent > 0 && !state.isLockedRecharge;
 
     if (shouldPlay) {
       if (!state.sprayNode) {
@@ -3081,7 +3190,7 @@ function spawnObjects(defs) {
 function updateObjects(dt) {
   if (state.paused) return;
   if (!state.inputActive) return;
-  if (state.waterCurrent <= 0) return; // No water = no cleaning
+  if (state.waterCurrent <= 0 || state.isLockedRecharge) return; // No water or locked = no cleaning
 
   const aimX = state.aimX;
   const aimY = state.aimY;
@@ -3121,6 +3230,13 @@ function updateObjects(dt) {
 function onObjectCleaned(obj) {
   spawnSparkleBurst(obj.x, obj.y);
   triggerShake(2);
+
+  // Award gold based on object type
+  if (obj.restoreRequired) {
+    awardLevelGold(5, obj.x, obj.y); // Restore interaction: +5
+  } else {
+    awardLevelGold(3, obj.x, obj.y); // Target object cleaned: +3
+  }
 
   state.targets.forEach(target => {
     let updated = false;
@@ -3173,6 +3289,9 @@ function updateHUD() {
       timerEl.classList.remove('warning');
     }
   }
+
+  // Gold counter
+  updateGoldHUD();
 
   // Targets
   const targetsEl = document.getElementById('hud-targets');
@@ -3232,22 +3351,49 @@ function checkWinCondition() {
   }
 }
 
+// ===== GOLD SYSTEM (v3: in-level earning with floating feedback) =====
+
+function awardLevelGold(amount, worldX, worldY) {
+  state.levelGold += amount;
+  updateGoldHUD();
+
+  // Spawn floating gold text
+  spawnParticle({
+    x:       worldX + randRange(-10, 10),
+    y:       worldY - 10,
+    vx:      randRange(-8, 8),
+    vy:      -50,
+    life:    1.0,
+    size:    amount >= 3 ? 16 : 13,
+    color:   'rgba(255,204,50,0.95)',
+    type:    'text',
+    text:    '+' + amount,
+    shrink:  false,
+    gravity: -10,
+    friction: 0.98,
+  });
+
+  // Pulse the gold HUD counter
+  const valEl = document.getElementById('hud-gold-value');
+  if (valEl) {
+    valEl.classList.remove('pulse');
+    void valEl.offsetWidth; // reflow to restart animation
+    valEl.classList.add('pulse');
+  }
+}
+
+function updateGoldHUD() {
+  const valEl = document.getElementById('hud-gold-value');
+  if (valEl) {
+    valEl.textContent = state.levelGold;
+  }
+}
+
 // ===== COIN REWARD CALCULATION =====
 
 function calculateLevelReward() {
-  const levelNum = LEVELS[state.levelIndex] ? LEVELS[state.levelIndex].levelNumber : 1;
-  let baseReward;
-  if (levelNum <= 10) baseReward = 60;
-  else if (levelNum <= 25) baseReward = 85;
-  else if (levelNum <= 50) baseReward = 110;
-  else if (levelNum <= 80) baseReward = 140;
-  else baseReward = 175;
-
-  let bonus = 0;
-  if (!state.usedContinue) bonus += 15;
-  if (state.timeLeft >= 20) bonus += 10;
-
-  return baseReward + bonus;
+  // In v3, the in-level gold IS the reward
+  return state.levelGold;
 }
 
 function onLevelWin() {
@@ -3260,10 +3406,9 @@ function onLevelWin() {
   else if (t >=  5) state.stars = 2;
   else              state.stars = 1;
 
-  // Award coins
-  const reward = calculateLevelReward();
-  state.coinsEarnedThisLevel = reward;
-  progression.washCoins += reward;
+  // In v3: the in-level gold IS the reward
+  state.coinsEarnedThisLevel = state.levelGold;
+  progression.washCoins += state.levelGold;
 
   // Update campaign progress
   const levelNum = LEVELS[state.levelIndex] ? LEVELS[state.levelIndex].levelNumber : 1;
@@ -3279,7 +3424,10 @@ function onLevelFail() {
   if (state.won) return;
   if (state.screen !== 'gameplay') return;
   state.won = false;
-  state.coinsEarnedThisLevel = 0;
+  // On fail, player keeps some gold earned (half, rounded down)
+  const partialGold = Math.floor(state.levelGold * 0.5);
+  state.coinsEarnedThisLevel = partialGold;
+  progression.washCoins += partialGold;
   playFailSound();
   showScreen('result');
 }
