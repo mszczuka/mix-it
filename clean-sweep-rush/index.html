@@ -220,6 +220,110 @@ body {
 }
 
 /* Bottom water tank bar */
+/* ===== RESET BUTTON & POPUP ===== */
+#reset-btn {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  width: 28px;
+  height: 28px;
+  background: rgba(255,255,255,0.2);
+  border-radius: 4px;
+  cursor: pointer;
+}
+#reset-popup {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  z-index: 60;
+  background: rgba(0,0,0,0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+#reset-popup.hidden { display: none; }
+#reset-card {
+  background: linear-gradient(160deg, #2a1a1a, #1a1414);
+  border: 2px solid rgba(200,60,60,0.4);
+  border-radius: 20px;
+  padding: 28px 24px;
+  max-width: 300px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.5);
+}
+#reset-title {
+  font-size: 20px;
+  font-weight: 900;
+  color: #ff6666;
+  margin-bottom: 12px;
+}
+#reset-text {
+  font-size: 13px;
+  color: #ccaaaa;
+  margin-bottom: 24px;
+  line-height: 1.5;
+}
+#reset-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ===== TUTORIAL POPUP ===== */
+#tutorial-popup {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  z-index: 50;
+  background: rgba(0,0,0,0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+#tutorial-popup.hidden { display: none; }
+#tutorial-card {
+  background: linear-gradient(160deg, #1a3a2a, #142a1a);
+  border: 2px solid rgba(68,170,136,0.4);
+  border-radius: 20px;
+  padding: 28px 24px;
+  max-width: 320px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.5);
+}
+#tutorial-title {
+  font-size: 22px;
+  font-weight: 900;
+  color: #44dd88;
+  margin-bottom: 20px;
+  letter-spacing: 0.02em;
+}
+#tutorial-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 24px;
+  text-align: left;
+}
+.tutorial-step {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+  color: #cce8cc;
+  line-height: 1.4;
+}
+.tutorial-icon {
+  font-size: 24px;
+  flex-shrink: 0;
+  width: 32px;
+  text-align: center;
+}
+.tutorial-text b {
+  color: #fff;
+}
+
 #water-tank-bar {
   position: absolute;
   bottom: 8px;
@@ -802,6 +906,32 @@ body {
     <span id="water-tank-pct">100%</span>
   </div>
 
+  <!-- Tutorial popup (level 1 only) -->
+  <div id="tutorial-popup" class="hidden">
+    <div id="tutorial-card">
+      <div id="tutorial-title">How to Play</div>
+      <div id="tutorial-steps">
+        <div class="tutorial-step">
+          <span class="tutorial-icon">👆</span>
+          <span class="tutorial-text"><b>Tap & hold</b> to spray water</span>
+        </div>
+        <div class="tutorial-step">
+          <span class="tutorial-icon">🎯</span>
+          <span class="tutorial-text">Aim at <b>dirty objects</b> to clean them</span>
+        </div>
+        <div class="tutorial-step">
+          <span class="tutorial-icon">💧</span>
+          <span class="tutorial-text"><b>Release</b> to recharge your water tank</span>
+        </div>
+        <div class="tutorial-step">
+          <span class="tutorial-icon">⏱️</span>
+          <span class="tutorial-text">Complete all <b>goals</b> before time runs out</span>
+        </div>
+      </div>
+      <button id="tutorial-btn" class="btn-primary">Got it!</button>
+    </div>
+  </div>
+
   <!-- Power-up indicator -->
   <div id="powerup-hud" class="hidden"></div>
 
@@ -821,6 +951,19 @@ body {
       <div id="home-level-name">First Wash</div>
     </div>
     <button class="btn-primary" id="btn-play">PLAY</button>
+    <div id="reset-btn"></div>
+  </div>
+
+  <!-- Reset confirm popup -->
+  <div id="reset-popup" class="hidden">
+    <div id="reset-card">
+      <div id="reset-title">Reset Progress?</div>
+      <div id="reset-text">This will erase all levels, upgrades, and gold. Start as a new player.</div>
+      <div id="reset-actions">
+        <button class="btn-primary" id="reset-confirm" style="background:#cc3333;box-shadow:0 4px 16px rgba(200,50,50,0.4);">Reset Everything</button>
+        <button class="btn-secondary" id="reset-cancel">Cancel</button>
+      </div>
+    </div>
   </div>
 
   <!-- Intro screen -->
@@ -2324,7 +2467,44 @@ function startLevel() {
   });
 
   showScreen('gameplay');
+
+  // Show tutorial on level 1 (first time only)
+  if (state.levelIndex === 0 && !state._tutorialShown) {
+    state.paused = true;
+    document.getElementById('tutorial-popup').classList.remove('hidden');
+  }
 }
+
+// Tutorial dismiss
+document.getElementById('tutorial-btn').addEventListener('click', () => {
+  document.getElementById('tutorial-popup').classList.add('hidden');
+  state.paused = false;
+  state._tutorialShown = true;
+});
+
+// ===== RESET PROGRESS =====
+document.getElementById('reset-btn').addEventListener('click', () => {
+  document.getElementById('reset-popup').classList.remove('hidden');
+});
+
+document.getElementById('reset-cancel').addEventListener('click', () => {
+  document.getElementById('reset-popup').classList.add('hidden');
+});
+
+document.getElementById('reset-confirm').addEventListener('click', () => {
+  // Reset all progression
+  progression.campaignLevel = 0;
+  progression.washCoins = 200;
+  progression.upgradeRanks.spray_power = 0;
+  progression.upgradeRanks.tank_capacity = 0;
+  progression.upgradeRanks.spray_width = 0;
+  progression.upgradeRanks.regen_speed = 0;
+  progression.upgradeRanks.move_speed = 0;
+  state.levelIndex = 0;
+  state._tutorialShown = false;
+  document.getElementById('reset-popup').classList.add('hidden');
+  showScreen('home');
+});
 
 // ===== BOTTOM NAV =====
 
