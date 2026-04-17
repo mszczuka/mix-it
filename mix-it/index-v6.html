@@ -3404,13 +3404,16 @@ function renderVenueMap(container, arenaId, interactive) {
             renderHomeVenuePreview();
             if (result.buildingReward) showVenueRewardPopup('Building Complete!', '\u{1F3D7}', result.buildingReward, 0);
             if (result.venueReward) showVenueRewardPopup('Venue Complete!', '\u{1F389}', result.venueReward, result.venueGold);
-            // First upgrade hint
+            // First upgrade hint — give a free booster as welcome reward
             if (!state.stats.venueHintShown) {
               state.stats.venueHintShown = true;
+              // Grant a free Extra Bottle
+              const bonusType = 'extraBottle';
+              state.stats.powerUpInventory[bonusType] = (state.stats.powerUpInventory[bonusType] || 0) + 1;
               saveStats();
               setTimeout(() => {
-                showVenueRewardPopup('Upgrade Your Venue!', '\u{1F3D7}', [],  0,
-                  'Build all 5 venues to earn boosters!\nEach completed building rewards you with powerful boosters for your matches.');
+                showVenueRewardPopup('Upgrade Your Venue!', '\u{1F3D7}', [bonusType], 0,
+                  'Build all 5 venues to earn boosters!\nEach completed building rewards you with powerful boosters for your matches.\n\nHere\'s a free booster to get you started!');
               }, result.buildingReward ? 1500 : 300);
             }
           }
@@ -3572,7 +3575,7 @@ function showVenueRewardPopup(title, emoji, boosterTypes, goldAmount, customText
   const btn = document.createElement('button');
   btn.className = 'play-btn';
   btn.style.cssText = 'width:180px;margin-top:8px;font-size:18px;';
-  btn.textContent = 'COLLECT';
+  btn.textContent = (boosterTypes && boosterTypes.length > 0) || (goldAmount && goldAmount > 0) ? 'CLAIM' : 'GOT IT';
   btn.addEventListener('click', () => overlay.remove());
   card.appendChild(btn);
   overlay.appendChild(card);
