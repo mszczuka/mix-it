@@ -46,6 +46,30 @@ body {
   display: none;
 }
 
+/* ===== SPLASH SCREEN ===== */
+#screen-splash {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  z-index: 100;
+  background: #1a2a1a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.6s ease-out;
+}
+#screen-splash.fade-out {
+  opacity: 0;
+  pointer-events: none;
+}
+#screen-splash.hidden {
+  display: none;
+}
+#splash-img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
 /* ===== BUTTONS ===== */
 .btn-primary {
   background: #44aa88;
@@ -237,7 +261,6 @@ body {
   bottom: 0;
   background: linear-gradient(to right, #2288cc, #44bbff);
   border-radius: 5px;
-  transition: width 0.08s linear;
 }
 
 #water-tank-reserve-marker {
@@ -782,8 +805,13 @@ body {
   <!-- Power-up indicator -->
   <div id="powerup-hud" class="hidden"></div>
 
+  <!-- Splash screen -->
+  <div id="screen-splash">
+    <img src="Assets/mudman-splash.png" alt="MudMan Cleaner" id="splash-img">
+  </div>
+
   <!-- Home screen -->
-  <div id="screen-home" class="screen">
+  <div id="screen-home" class="screen hidden">
     <div id="home-title">Clean Sweep Rush</div>
     <div id="home-subtitle">Restoration Puzzle</div>
     <div id="home-coins"><span>&#x1FA99;</span> <span id="home-coins-value">200</span></div>
@@ -865,8 +893,8 @@ const SCREEN_SHAKE_DECAY = 0.9;
 // Water tank defaults (v3: auto-regen system)
 const WATER_CAPACITY_BASE = 100;
 const WATER_DRAIN_RATE_BASE = 14;   // per second while spraying (hold-to-spray)
-const WATER_REGEN_RATE_BASE = 10;   // per second while idle (not spraying)
-const WATER_LOCKED_REGEN_RATE_BASE = 12;  // per second during locked recharge
+const WATER_REGEN_RATE_BASE = 22;   // per second while idle (not spraying)
+const WATER_LOCKED_REGEN_RATE_BASE = 30;  // per second during locked recharge
 const WATER_RESERVE_THRESHOLD_PCT = 0.20; // 20% of capacity
 const WATER_LOW_WARNING_PCT = 0.30;       // 30% low-water warning
 
@@ -1042,35 +1070,34 @@ const LEVELS = [
     worldName:   'Backyard Chaos',
     levelName:   'First Wash',
     levelNumber: 1,
-    timer:       45,
+    timer:       60,
     startX:      225,
     startY:      600,
     targets: [
-      { type: 'clean_object', objectType: 'pot', amount: 4, icon: '\u{1FAB4}', label: 'Pots' },
+      { type: 'clean_object', objectType: 'pot', amount: 3, icon: '\u{1FAB4}', label: 'Pots' },
     ],
   },
   {
     worldName:   'Backyard Chaos',
     levelName:   'Garden Path',
     levelNumber: 2,
-    timer:       40,
+    timer:       55,
     startX:      225,
     startY:      600,
     targets: [
-      { type: 'clean_dirt',   dirtTag: 'target_mud', amount: 6, icon: '\u{1F4A7}', label: 'Mud Patches' },
-      { type: 'clean_object', objectType: 'bench', amount: 2, icon: '\u{1FA91}', label: 'Benches' },
+      { type: 'clean_dirt',   dirtTag: 'target_mud', amount: 4, icon: '\u{1F4A7}', label: 'Mud Patches' },
+      { type: 'clean_object', objectType: 'bench', amount: 1, icon: '\u{1FA91}', label: 'Bench' },
     ],
   },
   {
     worldName:   'Backyard Chaos',
     levelName:   'Backyard Blitz',
     levelNumber: 3,
-    timer:       35,
-    startX:      200,
+    timer:       60,
+    startX:      225,
     startY:      600,
     targets: [
-      { type: 'clean_area',     areaId:    'main',     threshold: 0.8, icon: '\u{1F33F}', label: 'Area Clean' },
-      { type: 'restore_object', objectType: 'birdbath', amount:   1,   icon: '\u{1F426}', label: 'Birdbath' },
+      { type: 'restore_object', objectId: 'birdbath', icon: '\u{1F426}', label: 'Restore Birdbath' },
     ],
   },
 ];
@@ -1347,8 +1374,10 @@ function populateIntroScreen() {
     targetsContainer.appendChild(card);
   });
 
-  // Populate boosters
-  populateIntroBoosters();
+  // Hide boosters on intro screen
+  const boosterContainer = document.getElementById('intro-boosters');
+  if (boosterContainer) boosterContainer.style.display = 'none';
+  _selectedBoosterId = null;
 }
 
 // Selected booster tracking for intro screen
@@ -1478,22 +1507,14 @@ function populateResultScreen() {
     actionsEl.appendChild(btnHome);
 
   } else if (win) {
-    const btnNext = document.createElement('button');
-    btnNext.className   = 'btn-primary';
-    btnNext.textContent = 'Next Level';
-    btnNext.addEventListener('click', () => {
+    const btnContinue = document.createElement('button');
+    btnContinue.className   = 'btn-primary';
+    btnContinue.textContent = 'Continue';
+    btnContinue.addEventListener('click', () => {
       state.levelIndex++;
-      showScreen('intro');
-    });
-    actionsEl.appendChild(btnNext);
-
-    const btnHome = document.createElement('button');
-    btnHome.className   = 'btn-secondary';
-    btnHome.textContent = 'Home';
-    btnHome.addEventListener('click', () => {
       showScreen('home');
     });
-    actionsEl.appendChild(btnHome);
+    actionsEl.appendChild(btnContinue);
 
   } else {
     const btnRetry = document.createElement('button');
@@ -1537,13 +1558,13 @@ function canvasCoords(clientX, clientY) {
   };
 }
 
-// Mouse events
+// Mouse events — hold-to-spray: mousemove aims, mousedown/up controls spray
 canvas.addEventListener('mousemove', (e) => {
   if (state.screen !== 'gameplay') return;
   const c = canvasCoords(e.clientX, e.clientY);
   state.targetX = c.x;
   state.targetY = c.y;
-  state.inputActive = true;
+  // Aim follows mouse always, but inputActive (spray) only when pressed
 });
 
 canvas.addEventListener('mousedown', (e) => {
@@ -1551,10 +1572,10 @@ canvas.addEventListener('mousedown', (e) => {
   const c = canvasCoords(e.clientX, e.clientY);
   state.targetX = c.x;
   state.targetY = c.y;
-  state.inputActive = true;
+  state.inputActive = true; // start spraying
 });
 
-canvas.addEventListener('mouseup',    () => { /* nozzle: inputActive stays true while over canvas */ });
+canvas.addEventListener('mouseup',    () => { state.inputActive = false; }); // stop spraying
 canvas.addEventListener('mouseleave', () => { state.inputActive = false; });
 
 // Touch events
@@ -1700,106 +1721,148 @@ function drawFence() {
 }
 
 function drawBot() {
-  const x  = state.botX;
-  const y  = state.botY;
+  const nozzleX = state.botX;
+  const nozzleY = state.botY;
+  const hasTurbo = state.activePowerUps.some(p => p.type === 'turbo');
+  const hasWater = state.waterCurrent > 0 && !state.isLockedRecharge;
+  const isSpraying = state.inputActive && hasWater && state.isCleaning;
+  const aimAngle = Math.atan2(state.aimY - nozzleY, state.aimX - nozzleX);
 
-  const hasTurbo  = state.activePowerUps.some(p => p.type === 'turbo');
-  const glowMult  = hasTurbo ? 2.2 : 1.0;
-
-  const aimAngle = Math.atan2(state.aimY - y, state.aimX - x);
-
+  // Recoil when spraying
   let recoilX = 0, recoilY = 0;
-  if (state.isCleaning && state.inputActive && state.waterCurrent > 0 && !state.isLockedRecharge) {
+  if (isSpraying) {
     recoilX = (Math.random() - 0.5) * 3;
-    recoilY = (Math.random() - 0.5) * 3;
+    recoilY = (Math.random() - 0.5) * 2;
   }
 
-  const glowGrad = ctx.createRadialGradient(x, y, 0, x, y, 38 * glowMult);
-  glowGrad.addColorStop(0,   hasTurbo ? 'rgba(68,210,255,0.45)' : COL_BOT_GLOW);
-  glowGrad.addColorStop(1,   'rgba(0,0,0,0)');
-  ctx.fillStyle = glowGrad;
-  ctx.beginPath();
-  ctx.ellipse(x, y, 38 * glowMult, 28 * glowMult, 0, 0, Math.PI * 2);
-  ctx.fill();
+  // ---- HOSE: flexible curve from bottom-center (water bar) to nozzle ----
+  const hoseStartX = CANVAS_W / 2;
+  const hoseStartY = CANVAS_H + 5; // just below canvas edge (connects to water bar)
+  const hoseEndX = nozzleX + recoilX;
+  const hoseEndY = nozzleY + recoilY;
 
-  ctx.fillStyle = 'rgba(0,0,0,0.35)';
-  ctx.beginPath();
-  ctx.ellipse(x + 3, y + BOT_RADIUS_Y + 4, BOT_RADIUS_X - 2, 6, 0, 0, Math.PI * 2);
-  ctx.fill();
+  // Control points for a natural hanging-hose bezier curve
+  const midX = (hoseStartX + hoseEndX) / 2;
+  const sag = 30 + Math.abs(hoseEndX - hoseStartX) * 0.15; // more sag when nozzle is off-center
+  const cp1x = hoseStartX + (hoseEndX - hoseStartX) * 0.15;
+  const cp1y = hoseStartY - 30;
+  const cp2x = midX;
+  const cp2y = Math.max(hoseEndY + sag, hoseStartY - 60);
 
+  // Hose shadow
   ctx.save();
-  ctx.translate(x + recoilX, y + recoilY);
-  ctx.rotate(aimAngle + Math.PI / 2);
-
-  const bw = BOT_RADIUS_X * 2;
-  const bh = BOT_RADIUS_Y * 2.8;
-
-  const topH  = 10;
-  const sideH = bh - topH;
-  const topColor = hasTurbo ? '#88eeff' : '#66ccff';
-  ctx.fillStyle = topColor;
-  roundRect(ctx, -bw / 2, -bh / 2, bw, topH, 6);
-  ctx.fill();
-
-  ctx.fillStyle = hasTurbo ? '#22aaee' : COL_BOT;
-  roundRect(ctx, -bw / 2, -bh / 2 + topH - 2, bw, sideH, 6);
-  ctx.fill();
-
-  ctx.save();
-  ctx.globalAlpha = 0.4;
-  ctx.fillStyle   = '#ffffff';
-  roundRect(ctx, -bw / 2 + 5, -bh / 2 + 3, bw * 0.35, topH - 2, 3);
-  ctx.fill();
+  ctx.strokeStyle = 'rgba(0,0,0,0.2)';
+  ctx.lineWidth = 10;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(hoseStartX + 2, hoseStartY + 2);
+  ctx.bezierCurveTo(cp1x + 2, cp1y + 2, cp2x + 2, cp2y + 2, hoseEndX + 2, hoseEndY + 2);
+  ctx.stroke();
   ctx.restore();
 
-  const nozzleW = 8;
-  const nozzleH = 12;
-  const hasWater = state.waterCurrent > 0 && !state.isLockedRecharge;
-  const nozzleColor = (state.inputActive && hasWater)
-    ? (hasTurbo ? '#44ffff' : '#88ccff')
-    : (hasTurbo ? '#22aadd' : '#5599cc');
-  ctx.fillStyle = nozzleColor;
-  roundRect(ctx, -nozzleW / 2, -bh / 2 - nozzleH + 2, nozzleW, nozzleH, 3);
+  // Hose body — thick rubber tube
+  ctx.save();
+  ctx.strokeStyle = state.isLockedRecharge ? '#555566' : (hasTurbo ? '#2288bb' : '#336688');
+  ctx.lineWidth = 8;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.beginPath();
+  ctx.moveTo(hoseStartX, hoseStartY);
+  ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, hoseEndX, hoseEndY);
+  ctx.stroke();
+
+  // Hose highlight stripe (thinner, lighter, offset)
+  ctx.strokeStyle = state.isLockedRecharge ? '#666677' : (hasTurbo ? '#55ccee' : '#5599aa');
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(hoseStartX - 1, hoseStartY);
+  ctx.bezierCurveTo(cp1x - 1, cp1y - 1, cp2x - 1, cp2y - 1, hoseEndX - 1, hoseEndY - 1);
+  ctx.stroke();
+  ctx.restore();
+
+  // Water flow inside hose (animated dashes when spraying)
+  if (isSpraying) {
+    ctx.save();
+    ctx.strokeStyle = hasTurbo ? 'rgba(68,220,255,0.5)' : 'rgba(100,180,255,0.4)';
+    ctx.lineWidth = 4;
+    ctx.lineCap = 'round';
+    ctx.setLineDash([6, 8]);
+    ctx.lineDashOffset = -(Date.now() * 0.15) % 14; // animated flow
+    ctx.beginPath();
+    ctx.moveTo(hoseStartX, hoseStartY);
+    ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, hoseEndX, hoseEndY);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.restore();
+  }
+
+  // ---- NOZZLE HEAD at the end of the hose ----
+  ctx.save();
+  ctx.translate(hoseEndX, hoseEndY);
+  ctx.rotate(aimAngle);
+
+  // Nozzle body (metal cylinder)
+  const nw = 22, nh = 10;
+  ctx.fillStyle = state.isLockedRecharge ? '#556' : (hasTurbo ? '#55ddff' : '#4499cc');
+  roundRect(ctx, -4, -nh / 2, nw, nh, 4);
   ctx.fill();
 
-  if (state.inputActive && hasWater) {
+  // Nozzle grip ring
+  ctx.fillStyle = state.isLockedRecharge ? '#445' : (hasTurbo ? '#227799' : '#2a6688');
+  ctx.fillRect(-4, -nh / 2, 6, nh);
+
+  // Nozzle tip (narrower end)
+  ctx.fillStyle = state.isLockedRecharge ? '#667' : (hasTurbo ? '#88eeff' : '#77bbdd');
+  roundRect(ctx, nw - 8, -nh / 2 + 2, 8, nh - 4, 3);
+  ctx.fill();
+
+  // Nozzle tip glow when spraying
+  if (isSpraying) {
     ctx.save();
-    ctx.globalAlpha = 0.6 + 0.3 * Math.sin(Date.now() * 0.01);
-    const nGrad = ctx.createRadialGradient(0, -bh / 2 - nozzleH / 2, 0, 0, -bh / 2 - nozzleH / 2, 12);
-    nGrad.addColorStop(0, hasTurbo ? 'rgba(68,255,255,0.6)' : 'rgba(130,200,255,0.5)');
-    nGrad.addColorStop(1, 'rgba(0,0,0,0)');
-    ctx.fillStyle = nGrad;
+    ctx.globalAlpha = 0.5 + 0.3 * Math.sin(Date.now() * 0.012);
+    const tipGrad = ctx.createRadialGradient(nw, 0, 0, nw, 0, 14);
+    tipGrad.addColorStop(0, hasTurbo ? 'rgba(68,255,255,0.7)' : 'rgba(130,200,255,0.6)');
+    tipGrad.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = tipGrad;
     ctx.beginPath();
-    ctx.arc(0, -bh / 2 - nozzleH / 2, 12, 0, Math.PI * 2);
+    ctx.arc(nw, 0, 14, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
   }
 
-  ctx.fillStyle = hasTurbo ? '#004488' : '#1155aa';
-  ctx.beginPath();
-  ctx.arc(-7, 4, 4, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.beginPath();
-  ctx.arc(7, 4, 4, 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.fillStyle = hasTurbo ? '#44ffff' : COL_SPRAY;
-  ctx.beginPath();
-  ctx.arc(-7, 4, 2.5, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.beginPath();
-  ctx.arc(7, 4, 2.5, 0, Math.PI * 2);
-  ctx.fill();
+  // Lock icon on nozzle when locked
+  if (state.isLockedRecharge) {
+    ctx.fillStyle = 'rgba(255,80,80,0.8)';
+    ctx.font = 'bold 11px system-ui';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.rotate(-aimAngle); // un-rotate for readable text
+    ctx.fillText('🔒', 0, -14);
+  }
 
   ctx.restore();
 
+  // ---- CONNECTION FITTING at water bar ----
+  // Small metallic coupling where hose meets the bottom
+  ctx.save();
+  ctx.fillStyle = '#778899';
+  ctx.beginPath();
+  ctx.arc(hoseStartX, CANVAS_H - 2, 6, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#99aabb';
+  ctx.beginPath();
+  ctx.arc(hoseStartX, CANVAS_H - 2, 3, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  // Turbo ring around nozzle
   if (hasTurbo) {
     ctx.save();
     ctx.strokeStyle = '#44ffff';
-    ctx.lineWidth   = 2.5;
-    ctx.globalAlpha = 0.7 + 0.3 * Math.sin(Date.now() * 0.008);
+    ctx.lineWidth = 2;
+    ctx.globalAlpha = 0.6 + 0.3 * Math.sin(Date.now() * 0.008);
     ctx.beginPath();
-    ctx.ellipse(x, y, BOT_RADIUS_X + 6, BOT_RADIUS_Y + 5, 0, 0, Math.PI * 2);
+    ctx.arc(hoseEndX, hoseEndY, 18, 0, Math.PI * 2);
     ctx.stroke();
     ctx.restore();
   }
@@ -1913,7 +1976,8 @@ function updateStream() {
 function updateWater(dt) {
   if (state.paused) return;
 
-  const isSpraying = state.isCleaning && state.inputActive && !state.isLockedRecharge;
+  // Water drains whenever player holds to spray, even if not hitting dirt
+  const isSpraying = state.inputActive && !state.isLockedRecharge;
 
   if (isSpraying) {
     // Drain water while actively spraying
@@ -1949,24 +2013,23 @@ function updateWaterHUD() {
   const reserveMarker = document.getElementById('water-tank-reserve-marker');
   if (!fillEl || !bar) return;
 
-  const pct = (state.waterCurrent / state.waterCapacity) * 100;
-  const reservePct = (state.waterReserveThreshold / state.waterCapacity) * 100;
+  const cap = state.waterCapacity || 1;
+  const pct = clamp((state.waterCurrent / cap) * 100, 0, 100);
+  const reservePct = clamp((state.waterReserveThreshold / cap) * 100, 0, 100);
 
-  fillEl.style.width = pct + '%';
+  fillEl.style.width = pct.toFixed(1) + '%';
   pctEl.textContent = Math.round(pct) + '%';
 
   // Position reserve zone and marker
   reserveZone.style.width = reservePct + '%';
   reserveMarker.style.left = reservePct + '%';
 
-  // Visual state classes
+  // Visual state classes — red only below 20% reserve
   bar.classList.remove('low-water', 'reserve', 'locked');
   if (state.isLockedRecharge) {
     bar.classList.add('locked');
   } else if (pct <= reservePct) {
     bar.classList.add('reserve');
-  } else if (pct <= WATER_LOW_WARNING_PCT * 100) {
-    bar.classList.add('low-water');
   }
 }
 
@@ -2118,8 +2181,15 @@ document.getElementById('btn-start').addEventListener('click', startLevel);
 window.addEventListener('resize', resizeCanvas);
 resizeCanvas();
 
-// Show home screen on load
-showScreen('home');
+// Show splash for 2 seconds, then fade to home
+const splashEl = document.getElementById('screen-splash');
+setTimeout(() => {
+  splashEl.classList.add('fade-out');
+  setTimeout(() => {
+    splashEl.classList.add('hidden');
+    showScreen('home');
+  }, 600); // wait for fade-out transition to finish
+}, 2000);
 
 // Kick off the render loop
 requestAnimationFrame((t) => { lastTime = t; gameLoop(t); });
@@ -2327,130 +2397,86 @@ function renderDirt() {
 
 function loadLevel(level) {
   if (state.levelIndex === 0) {
-    // Level 1 -- portrait layout: 450 wide, 800 tall, bot at bottom ~750
-    // No refill point needed (short level, generous tank)
+    // Level 1 — "First Wash" (60s)
+    // Tutorial: learn spray, clean pots, immediate satisfaction
+    // 6 mud (reduced from 12), 3 pots (reduced from 4)
+    // No locks, no hazards, no power-ups
     spawnDirt([
-      // Near bot start for immediate satisfaction
-      { id: 1,  x: 200, y: 580, type: 'mud' },
-      { id: 2,  x: 225, y: 610, type: 'mud' },
-      { id: 3,  x: 260, y: 570, type: 'mud' },
-      // Spread across arena
-      { id: 4,  x: 100, y: 200, type: 'mud' },
-      { id: 5,  x: 180, y: 300, type: 'mud' },
-      { id: 6,  x: 320, y: 250, type: 'mud' },
-      { id: 7,  x: 380, y: 350, type: 'mud' },
-      { id: 8,  x: 120, y: 430, type: 'mud' },
-      { id: 9,  x: 280, y: 400, type: 'mud' },
-      { id: 10, x: 370, y: 520, type: 'mud' },
-      { id: 11, x: 150, y: 660, type: 'mud' },
-      { id: 12, x: 340, y: 680, type: 'mud' },
+      // 2 mud near start for instant payoff
+      { id: 1, x: 200, y: 580, type: 'mud' },
+      { id: 2, x: 260, y: 560, type: 'mud' },
+      // 4 more spread around
+      { id: 3, x: 120, y: 400, type: 'mud' },
+      { id: 4, x: 320, y: 350, type: 'mud' },
+      { id: 5, x: 180, y: 250, type: 'mud' },
+      { id: 6, x: 350, y: 500, type: 'mud' },
     ]);
-    // 4 flower pots
+    // 3 pots — 1 near start, 2 farther
     spawnObjects([
-      { x: 80,  y: 300, type: 'pot' },
-      { x: 370, y: 280, type: 'pot' },
-      { x: 160, y: 520, type: 'pot' },
-      { x: 330, y: 620, type: 'pot' },
+      { x: 300, y: 580, type: 'pot' },
+      { x: 100, y: 350, type: 'pot' },
+      { x: 350, y: 220, type: 'pot' },
     ]);
 
   } else if (state.levelIndex === 1) {
-    // Level 2 -- Garden Path (portrait)
+    // Level 2 — "Garden Path" (55s)
+    // Multi-target reading: 4 tagged mud + 1 bench
+    // No locks, no hazards, no power-ups
+    // Some leaves as scenic clutter (non-target)
     spawnDirt([
-      { id: 'l2_mud1', x: 200, y: 600, type: 'mud', targetTag: 'target_mud' },
-      { id: 'l2_mud2', x: 260, y: 540, type: 'mud', targetTag: 'target_mud' },
-      { id: 'l2_mud3', x: 140, y: 500, type: 'mud', targetTag: 'target_mud' },
-      // Gate-blocking mud
-      { id: 'l2_gate_mud1', x: 340, y: 300, type: 'mud' },
-      { id: 'l2_gate_mud2', x: 370, y: 320, type: 'mud' },
-      // More target mud
-      { id: 'l2_mud4', x: 100, y: 300, type: 'mud', targetTag: 'target_mud' },
-      { id: 'l2_mud5', x: 200, y: 220, type: 'mud', targetTag: 'target_mud' },
-      { id: 'l2_mud6', x: 80,  y: 560, type: 'mud', targetTag: 'target_mud' },
-      // Behind gate (locked)
-      { id: 'l2_locked_mud1', x: 370, y: 160, type: 'mud', locked: true },
-      { id: 'l2_locked_mud2', x: 400, y: 200, type: 'mud', locked: true },
+      // 2 target mud near start
+      { id: 'l2_mud1', x: 200, y: 580, type: 'mud', targetTag: 'target_mud' },
+      { id: 'l2_mud2', x: 280, y: 540, type: 'mud', targetTag: 'target_mud' },
+      // 2 target mud farther
+      { id: 'l2_mud3', x: 120, y: 350, type: 'mud', targetTag: 'target_mud' },
+      { id: 'l2_mud4', x: 330, y: 280, type: 'mud', targetTag: 'target_mud' },
     ]);
+    // A few leaves (non-target, scenic)
     spawnDirt([
-      { x: 100, y: 380, type: 'leaves' },
-      { x: 140, y: 260, type: 'leaves' },
-      { x: 240, y: 320, type: 'leaves' },
-      { x: 290, y: 460, type: 'leaves' },
-      { x: 170, y: 660, type: 'leaves' },
-      { x: 350, y: 550, type: 'leaves' },
-      { x: 70,  y: 430, type: 'leaves' },
-      { x: 280, y: 200, type: 'leaves' },
+      { x: 100, y: 450, type: 'leaves' },
+      { x: 250, y: 380, type: 'leaves' },
+      { x: 350, y: 480, type: 'leaves' },
+      { x: 160, y: 250, type: 'leaves' },
     ]);
+    // 1 bench, visible from the start
     spawnObjects([
-      { id: 'l2_bench1', x: 120, y: 630, type: 'bench' },
-      { id: 'l2_bench2', x: 390, y: 130, type: 'bench', locked: true },
+      { id: 'l2_bench1', x: 225, y: 200, type: 'bench' },
     ]);
-    spawnLocks([{
-      id: 'l2_gate',
-      x: 360, y: 250, width: 50, height: 8,
-      requiredDirtCleared: ['l2_gate_mud1', 'l2_gate_mud2'],
-      unlocksDirt: ['l2_locked_mud1', 'l2_locked_mud2'],
-      unlocksObjects: ['l2_bench2'],
-    }]);
-    spawnPowerUpDefs([{
-      x: 225, y: 400, type: 'turbo',
-      spawnAfter: 15, duration: 8,
-    }]);
 
   } else if (state.levelIndex === 2) {
-    // Level 3 -- Backyard Blitz (portrait)
+    // Level 3 — "Backyard Blitz" (60s)
+    // Teaches restore: clear blockers → unlock gate → clean sludge → restore birdbath
+    // 1 lock, 2 blocker mud, 2 sludge near birdbath. No hazards.
+    // Optional turbo power-up (not required to win)
     spawnDirt([
-      { id: 'l3_mud1', x: 200, y: 560, type: 'mud', areaId: 'main' },
-      { id: 'l3_mud2', x: 100, y: 480, type: 'mud', areaId: 'main' },
-      { id: 'l3_mud3', x: 300, y: 520, type: 'mud', areaId: 'main' },
-      { id: 'l3_mud4', x: 170, y: 370, type: 'mud', areaId: 'main' },
-      // Gate-blocking mud
-      { id: 'l3_gate1_mud', x: 80, y: 280, type: 'mud', areaId: 'main' },
-      { id: 'l3_gate2_mud1', x: 350, y: 380, type: 'mud', areaId: 'main' },
-      { id: 'l3_gate2_mud2', x: 380, y: 360, type: 'mud', areaId: 'main' },
-      // Behind gate 1
-      { id: 'l3_locked1_mud', x: 60, y: 180, type: 'mud', areaId: 'main', locked: true },
+      // 2 blocker mud near gate (clean these to unlock)
+      { id: 'l3_gate_mud1', x: 200, y: 420, type: 'mud' },
+      { id: 'l3_gate_mud2', x: 260, y: 400, type: 'mud' },
+      // A few scenic mud
+      { id: 'l3_mud1', x: 150, y: 560, type: 'mud' },
+      { id: 'l3_mud2', x: 320, y: 530, type: 'mud' },
     ]);
+    // 2 sludge near birdbath (behind lock)
     spawnDirt([
-      { x: 140, y: 590, type: 'leaves', areaId: 'main' },
-      { x: 260, y: 310, type: 'leaves', areaId: 'main' },
-      { x: 190, y: 660, type: 'leaves', areaId: 'main' },
-      { x: 320, y: 230, type: 'leaves', areaId: 'main' },
-      { x: 80,  y: 620, type: 'leaves', areaId: 'main' },
-      { x: 390, y: 540, type: 'leaves', areaId: 'main' },
+      { id: 'l3_sludge1', x: 200, y: 200, type: 'sludge', locked: true },
+      { id: 'l3_sludge2', x: 260, y: 220, type: 'sludge', locked: true },
     ]);
-    spawnDirt([
-      { id: 'l3_sludge1', x: 380, y: 180, type: 'sludge', areaId: 'main', locked: true },
-      { id: 'l3_sludge2', x: 400, y: 210, type: 'sludge', areaId: 'main', locked: true },
-      { id: 'l3_sludge3', x: 390, y: 150, type: 'sludge', areaId: 'main', locked: true },
-      { id: 'l3_sludge4', x: 410, y: 170, type: 'sludge', areaId: 'main', locked: true },
-    ]);
+    // Birdbath — restore target (locked behind gate, needs sludge cleared first)
     spawnObjects([{
-      id: 'birdbath', x: 395, y: 175, type: 'birdbath',
+      id: 'birdbath', x: 225, y: 180, type: 'birdbath',
       hp: 60, locked: true, restoreRequired: true,
     }]);
-    spawnLocks([
-      {
-        id: 'l3_gate1',
-        x: 70, y: 230, width: 45, height: 8,
-        requiredDirtCleared: ['l3_gate1_mud'],
-        unlocksDirt: ['l3_locked1_mud'],
-        unlocksObjects: [],
-      },
-      {
-        id: 'l3_gate2',
-        x: 380, y: 280, width: 50, height: 8,
-        requiredDirtCleared: ['l3_gate2_mud1', 'l3_gate2_mud2'],
-        unlocksDirt: ['l3_sludge1', 'l3_sludge2', 'l3_sludge3', 'l3_sludge4'],
-        unlocksObjects: ['birdbath'],
-      },
-    ]);
-    spawnHazards([{
-      x: 140, y: 420, type: 'recontamination_vent',
-      respawnInterval: 4, respawnRadius: 50,
+    // 1 lock: clear blocker mud to unlock sludge + birdbath area
+    spawnLocks([{
+      id: 'l3_gate',
+      x: 225, y: 340, width: 60, height: 8,
+      requiredDirtCleared: ['l3_gate_mud1', 'l3_gate_mud2'],
+      unlocksDirt: ['l3_sludge1', 'l3_sludge2'],
+      unlocksObjects: ['birdbath'],
     }]);
+    // Optional turbo power-up (celebratory assist)
     spawnPowerUpDefs([
-      { x: 225, y: 430, type: 'turbo', spawnAfter: 15, duration: 8 },
-      { x: 290, y: 350, type: 'magnet', spawnAfter: 10, duration: 6 },
+      { x: 225, y: 460, type: 'turbo', spawnAfter: 15, duration: 8 },
     ]);
   }
 }

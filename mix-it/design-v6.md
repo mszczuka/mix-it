@@ -1,6 +1,6 @@
-# MIX IT v6.2 — BAR CLASH
+# MIX IT v6.5 — BAR CLASH
 
-**Date:** 2026-04-15  
+**Date:** 2026-04-17  
 **Status:** Design — prototype built  
 **Type:** Mobile F2P PvP casual game  
 **Core mechanic:** Water Sort Puzzle + real-time PvP serve-race  
@@ -64,24 +64,32 @@ The following systems stay conceptually the same:
 ## 4. What changes from v6
 
 Changed:
-- Freeze power-up removed from roster
+- Freeze booster removed from roster
 - Workspace stabilized by starting with **2 empty bottles**
-- Prototype power-ups aligned with pour-sort routing:
-  - Extra Bottle
-  - Flash Pour
-  - Swap
-  - Clear Bottle
-- Power-ups changed from random in-match bubble spawns to **pre-match loadout selection**
-- The player now has a **persistent power-up inventory** between matches
-- Each selected power-up has **1 use per match**
-- A new **loadout screen** is added before the countdown
-- Match results now award **power-up rewards**
-- A new **weekly star track** is added as a second progression layer
-- The game now has a **light meta loop without collection systems**
+- Power-ups are now consistently referred to as **Boosters**
+- Boosters are selected before the match from a persistent inventory (2 fixed slots)
+- Gold is earned from match completions and match results
+- Direct post-match booster drops are removed from normal match rewards
+- New **Venue Progression** system added as the primary gold sink
+- Home shows the current venue visually only
+- New **Venue** tab added in the bottom menu for upgrades and reward claims
+- Boosters are granted mainly through venue milestones and arena promotions
 
 ---
 
 ## 5. Match Layout
+
+### Home top bar
+
+```
+HOME TOP BAR:
+[Trophies]   [Gold]   [Arena]
+```
+
+### In-match layout
+
+No gold is shown in the active match HUD.
+Gold and venue progression are **meta-layer systems** and should not clutter the match HUD.
 
 Portrait layout:
 
@@ -90,12 +98,12 @@ Portrait layout:
 |  YOU 750      0:27    900 [av] Name  |
 +--------------------------------------+
 |          Opponent board (flex)       |
-|       small glasses + PU dots        |
+|     small glasses + booster dots     |
 +--------------------------------------+
 |           Customer zone              |
 |   3 shared customers + patience      |
 +--------------------------------------+
-|      Power-up loadout (2 slots)      |
+|      Booster loadout (2 slots)       |
 +--------------------------------------+
 |          Player board (flex)         |
 |       full-size glasses              |
@@ -107,9 +115,9 @@ Portrait layout:
 | Zone | Content |
 |---|---|
 | Score bar | Your score left, timer center, opponent avatar + name + score right |
-| Opponent board | AI glasses (flex), power-up dots (filled = unused, empty = spent) |
-| Customer zone | 3 active customers, patience bars — **no floating power-up bubbles** |
-| Power-up loadout | 2 pre-selected power-up slots (tap to activate, grey out after use) |
+| Opponent board | AI glasses (flex), booster dots (filled = unused, empty = spent) |
+| Customer zone | 3 active customers, patience bars — **no floating booster bubbles** |
+| Booster loadout | 2 pre-selected booster slots (tap to activate, grey out after use) |
 | Player board | Your interactive glasses, Spawn button, Undo button |
 
 ---
@@ -283,108 +291,156 @@ Customer generation biases toward colors abundant on both boards (weighted by la
 
 ---
 
-## 8. Power-Ups (Prototype)
+## 8. Boosters
 
-The prototype keeps 4 power-ups, all aligned with pour-sort routing and workspace.
+### 8.0 Booster economy philosophy
 
-#### 8.1 Loadout
+Boosters remain:
+- tactical
+- pre-selected
+- 1-use per match if activated
+- consumable
 
-- Before each match, the player selects **2 power-ups** from their inventory
-- Each selected power-up has **1 use** during that match
-- Tap the slot to activate the power-up
-- After use, the slot becomes empty / greyed out
-- If a selected power-up is **not used**, it returns to inventory after the match
-- If the player owns fewer than 2 power-ups, empty slots are allowed
+But the economy changes:
+- boosters are **not** granted after every normal match
+- boosters are granted mainly through venue milestones
+- unused equipped boosters return to inventory after the match
+- used boosters leave inventory and must be replenished
+
+They should help the player convert skill into tempo, rescue, or workspace.
+
+They should **not**:
+- become permanent stat upgrades
+- create power creep
+- replace the core puzzle
+
+This makes boosters feel more deliberate and lets the game control supply more tightly.
+
+---
+
+### 8.1 Loadout
+
+- Before each match, the player selects up to **2 boosters** from inventory
+- The player always has exactly **2 loadout slots**
+- Each selected booster has **1 use** during the match
+- A booster is consumed only if activated
+- If a selected booster is not used, it returns to inventory after the match
+- Empty slots are allowed
+
+#### Design note
+The loadout layer stays tactical and Match Masters-like, but booster acquisition is no longer tied to every result screen.
 
 #### 8.1.1 Starter inventory
 
 On first launch, the player receives:
 
-| Power-up | Starting quantity |
-|---|---|
-| Extra Bottle | 5 |
-| Flash Pour | 5 |
-| Swap | 3 |
-| Clear Bottle | 3 |
+| Booster | Starting quantity |
+|---|---:|
+| Extra Bottle | 2 |
+| Flash Pour | 2 |
+| Swap | 0 |
+| Clear Bottle | 0 |
 
-#### 8.1.2 Match rewards
+Additional first-launch grant:
+- **50 Gold**
 
-| Result | Reward |
-|---|---|
-| Win | 2 random power-ups from the arena's unlocked roster |
-| Lose | 1 random power-up from the arena's unlocked roster |
-| Draw | 1 random power-up from the arena's unlocked roster |
-
-Reward weights:
-
-| Power-up | Weight |
-|---|---|
-| Extra Bottle | 30% |
-| Flash Pour | 30% |
-| Swap | 25% |
-| Clear Bottle | 15% |
-
-Design note:
-- Keep **Clear Bottle** slightly rarer because it is the strongest rescue tool
+#### Why
+The player should:
+- understand boosters immediately
+- have enough supply for the first few matches
+- see the first venue rewards matter quickly
+- not start with such a huge stock that venue rewards feel irrelevant
 
 ---
 
-#### 8.2 Power-up roster
+### 8.2 Booster roster
 
-#### Extra Bottle +
+Keep the same four booster effects, defined as consumable inventory items.
+
+#### Extra Bottle
 - Adds one empty bottle permanently for the rest of the match
-- **1 use**
-- Activates immediately on tap
-- Purpose: workspace expansion / safe opener
+- 1 use
+- Role: workspace / setup
 
-#### Flash Pour (lightning)
-- Your **next 3 pours are instant**
-- **1 use**
-- Activates immediately on tap
-- Show remaining fast pours on the slot UI
-- Purpose: tempo conversion / serve race spike
+#### Flash Pour
+- Your next **3 pours** are instant
+- 1 use
+- Role: tempo spike / serve conversion
 
-#### Swap (arrows)
-- Select any 2 of your bottles
-- Their entire contents swap instantly
-- **1 use**
-- Tap slot, then tap 2 bottles
-- Purpose: tactical conversion / route rescue
+#### Swap
+- Select any 2 bottles; their full contents swap
+- 1 use
+- Role: tactical rescue / route conversion
 
-#### Clear Bottle (sponge)
-- Select 1 bottle
-- All contents are discarded and the bottle becomes empty
-- **1 use**
-- Tap slot, then tap 1 bottle
-- Purpose: emergency anti-deadlock / panic reset
+#### Clear Bottle
+- Select 1 bottle; discard all contents and make it empty
+- 1 use
+- Role: emergency anti-deadlock
+
+#### Design note
+Flash Pour is changed from an 8-second timer to **next 3 pours are instant** because that is clearer in a puzzle-routing game and easier to value economically.
 
 ---
 
-#### 8.3 Power-up availability by arena
+### 8.3 Booster unlocks by arena
 
-Power-ups unlock through arena progression.
-Players can only select from power-ups already unlocked.
-
-| Arena | Available power-ups |
+| Arena | Unlocked boosters |
 |---|---|
 | Juice Stand (0-199) | Extra Bottle, Flash Pour |
 | Beach Bar (200-499) | + Swap |
-| Cocktail Lounge (500+) | + Clear Bottle |
+| Cocktail Lounge (500-999) | + Clear Bottle |
+| Speakeasy+ | no new booster unlocks |
 
-Once unlocked, a power-up stays available in all later arenas.
+#### Rule
+Once a booster is unlocked, it stays available permanently for:
+- pre-match loadout selection
+- venue milestone reward tables
+- Utility Cart emergency purchases
 
 ---
 
-#### 8.4 Power-up design rule
+### 8.4 Booster reward sources
 
-Power-ups should not replace the puzzle.
-They should only do one of three jobs:
-- tempo spike
-- board rescue
-- workspace expansion
+Normal match results do **not** grant random boosters.
 
-A power-up should help the player convert a route, save a bad board, or open more workspace.
-It should not solve the board automatically.
+Main booster sources are:
+1. Starter inventory
+2. Building completion rewards (5/5)
+3. Full venue completion rewards
+4. Arena promotion rewards
+5. Utility Cart emergency purchases
+
+#### Design goal
+Boosters should feel earned and paced, not sprayed after every match.
+
+---
+
+### 8.5 Utility Cart
+
+Inside the Venue tab, the player has access to a small **Utility Cart**.
+
+It is a safety valve, not the main progression loop.
+
+#### Purpose
+The Utility Cart exists so players are never fully blocked if they run low on boosters between milestone rewards.
+
+#### Purchase prices
+| Booster | Utility Cart price |
+|---|---:|
+| Extra Bottle | 60 |
+| Flash Pour | 70 |
+| Swap | 95 |
+| Clear Bottle | 120 |
+
+#### Rules
+- Only unlocked boosters can be purchased
+- No bundles in MVP
+- No random chest behavior
+- No discount rotation required in MVP
+- The cart sits below the building reward UI in the Venue tab
+
+#### Design note
+These prices are intentionally much worse value than milestone rewards. The Venue system should remain the primary booster source.
 
 ---
 
@@ -392,11 +448,13 @@ It should not solve the board automatically.
 
 The prototype still uses AI instead of real multiplayer.
 
+AI does not participate in the gold economy. AI does not buy boosters in a visible way. AI inventory is simulated and not part of the player's economy model.
+
 ### 9.1 AI board
 - Opponent board is visible
 - It shows actual AI bottle contents
 - Player can read what AI is working on
-- Opponent power-up inventory shown as dots (filled/empty)
+- Opponent booster inventory shown as dots (filled/empty)
 
 ### 9.2 AI undo ("back")
 - AI has **3 undos per match**
@@ -423,13 +481,13 @@ Every AI tick:
 
 #### 9.4 AI loadout and usage
 
-- AI pre-selects **2 power-ups** at match start from the arena's unlocked roster
+- AI pre-selects **2 boosters** at match start from the arena's unlocked roster
 - Selection is shown as dots in the opponent board zone
 - Filled dot = unused, empty dot = spent
 
 AI usage rules:
 
-| Power-up | AI usage condition |
+| Booster | AI usage condition |
 |---|---|
 | Extra Bottle | Use within first 15 seconds if workspace is tight |
 | Flash Pour | Use when AI can reach a serve within the next 2 pours |
@@ -437,7 +495,7 @@ AI usage rules:
 | Clear Bottle | Use when board has 0 empty bottles and no clean route |
 
 - AI usage delay: 2-4 seconds after condition is met
-- AI does not collect power-ups mid-match
+- AI does not collect boosters mid-match
 - Remove all bubble-grab logic from AI behavior
 
 ---
@@ -454,30 +512,149 @@ AI usage rules:
 
 ---
 
-## 11. Arenas
+## 11. Arenas + Venues
 
-Arena progression scales the boards and AI difficulty.
+### 11.0 Arena progression purpose
 
-### 11.1 Arena scaling knobs
+Arenas now do four things:
+1. Scale board depth and AI difficulty
+2. Unlock boosters
+3. Change the venue theme shown on Home and Venue screens
+4. Open a new set of venue upgrades and milestone rewards
+
+The player should feel:
+
+**New arena = new tactical layer + new visual place + new gold sink + new milestone rewards**
+
+---
+
+### 11.1 Venue theme mapping
+
+| Arena | Venue theme |
+|---|---|
+| Juice Stand | juice kiosk / stand |
+| Beach Bar | beach bar |
+| Cocktail Lounge | lounge interior |
+| Speakeasy | hidden bar |
+| Rooftop Terrace | rooftop venue |
+| Grand Hotel | luxury hotel bar |
+
+#### Rule
+Home always shows the player's **current active venue theme** visually, matching the highest unlocked arena.
+
+---
+
+### 11.2 Venue structure
+
+Each venue contains **5 upgradeable buildings / venue modules**.
+
+Recommended generic structure:
+1. Main Counter
+2. Seating Area
+3. Signage / Entrance
+4. Decor / Lighting
+5. Service Station / Shelf
+
+Each building has **5 upgrade levels**.
+
+Total venue progress:
+- **25 upgrade steps**
+- **5 building completion rewards**
+- **1 full venue completion reward**
+
+#### UI rule
+The building art and labels change per arena theme, but the underlying structure stays the same for production simplicity.
+
+---
+
+### 11.3 Venue upgrade costs by arena
+
+Each building in a venue uses the same level costs for that arena.
+
+| Arena | L1 | L2 | L3 | L4 | L5 | Total per building | Total per venue |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| Juice Stand | 20 | 25 | 30 | 30 | 35 | 140 | 700 |
+| Beach Bar | 25 | 30 | 35 | 40 | 50 | 180 | 900 |
+| Cocktail Lounge | 30 | 35 | 45 | 60 | 70 | 240 | 1200 |
+| Speakeasy | 35 | 45 | 55 | 75 | 90 | 300 | 1500 |
+| Rooftop Terrace | 40 | 55 | 70 | 95 | 120 | 380 | 1900 |
+| Grand Hotel | 50 | 65 | 85 | 120 | 140 | 460 | 2300 |
+
+#### Design goal
+Venue completion should take a meaningful number of matches, but not feel like a months-long project.
+
+---
+
+### 11.4 Venue milestone rewards
+
+#### Building completion rewards (5/5)
+Completing a building grants a **2-booster reward bundle** based on the currently unlocked roster.
+
+Example reward rules:
+- Juice Stand: `1 Extra Bottle + 1 Flash Pour`
+- Beach Bar: `1 common booster + 1 Swap`
+- Cocktail Lounge+: `1 common booster + 1 higher-tier roll from unlocked roster`
+
+#### Full venue completion rewards
+Completing all 5 buildings grants a larger reward:
+
+| Arena | Full venue reward |
+|---|---|
+| Juice Stand | 3 boosters |
+| Beach Bar | 3 boosters + 25 Gold |
+| Cocktail Lounge | 4 boosters + 40 Gold |
+| Speakeasy | 4 boosters + 60 Gold |
+| Rooftop Terrace | 5 boosters + 75 Gold |
+| Grand Hotel | 5 boosters + 100 Gold |
+
+#### Arena promotion reward
+Reaching a new arena also grants a one-time promotion reward:
+
+| Arena reached | Promotion reward |
+|---|---|
+| Beach Bar | Swap x1 + 30 Gold |
+| Cocktail Lounge | Clear Bottle x1 + 40 Gold |
+| Speakeasy | 60 Gold |
+| Rooftop Terrace | 80 Gold |
+| Grand Hotel | 100 Gold |
+
+#### Design goal
+The player should celebrate three separate beats:
+- finishing a building
+- finishing a venue
+- unlocking the next arena
+
+---
+
+### 11.5 Prototype arenas
+
+| Arena | Trophies | Colors | Bottles | Booster unlock | Win Gold | Lose Gold | Draw Gold | Venue total cost |
+|---|---:|---:|---|---|---:|---:|---:|---:|
+| Juice Stand | 0-199 | 3 | 3 full + 2 empty (5) | Extra Bottle, Flash Pour | 35 | 20 | 25 | 700 |
+| Beach Bar | 200-499 | 5 | 4 full + 3 empty (7) | + Swap | 40 | 22 | 30 | 900 |
+| Cocktail Lounge | 500-999 | 7 | 5 full + 3 empty (8) | + Clear Bottle | 50 | 25 | 35 | 1200 |
+| Speakeasy | 1000-1499 | 7 | 6 full + 4 empty (10) | no new booster | 60 | 30 | 40 | 1500 |
+| Rooftop Terrace | 1500-2499 | 7 | 7 full + 5 empty (12) | no new booster | 70 | 35 | 45 | 1900 |
+| Grand Hotel | 2500+ | 7 | 8 full + 5 empty (13) | no new booster | 80 | 40 | 50 | 2300 |
+
+#### Design note
+Early arenas unlock the full tactical roster.
+Later arenas stop adding more buttons and instead increase:
+- board depth
+- match value
+- purchasing power
+- status
+
+### 11.6 Arena scaling knobs
 Arenas can scale:
 - number of colors
 - number of bottles
-- power-up roster
-- AI skill (pour speed, mistake rate, serve delay, power-up grab chance)
+- booster roster
+- AI skill (pour speed, mistake rate, serve delay, booster grab chance)
 - customer patience tuning
 
-### 11.2 Prototype arenas
-| Arena | Trophies | Colors | Bottles | Power-ups |
-|---|---|---|---|---|
-| Juice Stand | 0-199 | 3 | 3 full + 2 empty (5) | Extra Bottle, Flash Pour |
-| Beach Bar | 200-499 | 5 | 4 full + 3 empty (7) | + Swap |
-| Cocktail Lounge | 500-999 | 7 | 5 full + 3 empty (8) | + Clear Bottle |
-| Speakeasy | 1000-1499 | 7 | 6 full + 4 empty (10) | All 4 |
-| Rooftop Terrace | 1500-2499 | 7 | 7 full + 5 empty (12) | All 4 |
-| Grand Hotel | 2500+ | 7 | 8 full + 5 empty (13) | All 4 |
-
-### 11.3 AI difficulty per arena
-| Arena | Pour interval | Mistake rate | Serve delay | Power-up grab |
+### 11.7 AI difficulty per arena
+| Arena | Pour interval | Mistake rate | Serve delay | Booster grab |
 |---|---|---|---|---|
 | Juice Stand | 0.35-0.6s | 3% | 0.15s | 80% |
 | Beach Bar | 0.3-0.5s | 2% | 0.12s | 85% |
@@ -486,7 +663,7 @@ Arenas can scale:
 | Rooftop Terrace | 0.18-0.3s | 0.5% | 0.06s | 93% |
 | Grand Hotel | 0.15-0.25s | 0.3% | 0.05s | 95% |
 
-### 11.4 Trophy system
+### 11.8 Trophy system
 - Win: +25 base, +5 per 100 point margin, cap 40
 - Lose: -15 base, -3 per 150 point margin, cap -25
 - Draw: +5
@@ -498,7 +675,7 @@ Arenas can scale:
 
 #### 12.1 Flow
 
-HOME -> MATCHMAKING -> LOADOUT -> COUNTDOWN -> MATCH -> RESULT
+HOME -> MATCHMAKING -> PRE-MATCH LOADOUT -> COUNTDOWN -> MATCH -> RESULT -> REWARD CLAIM -> HOME / VENUE
 
 ### 12.2 Matchmaking
 - Fake search with cycling opponent avatars/names (15-22 cycles, decelerating)
@@ -511,7 +688,7 @@ After the opponent is found, show a simple loadout panel:
 
 ```
 +--------------------------------------+
-|         CHOOSE YOUR POWER-UPS        |
+|         CHOOSE YOUR BOOSTERS         |
 +--------------------------------------+
 |                                      |
 |  [slot 1: ___]     [slot 2: ___]     |
@@ -525,7 +702,7 @@ After the opponent is found, show a simple loadout panel:
 ```
 
 Rules:
-- Tap a power-up in inventory to assign it to a slot
+- Tap a booster in inventory to assign it to a slot
 - Tap a filled slot to remove it
 - Player may leave slots empty
 - READY starts the countdown
@@ -536,90 +713,179 @@ Rules:
 - 3... 2... 1... MIX!
 - Board visible during countdown but not interactive
 
+### 12.5 Reward Claim
+
+After the result screen, the player sees:
+- win / lose / draw
+- trophy delta
+- gold earned
+- arena promotion reward (if any)
+- venue progress increment callout
+
+Example:
+
+```
+REWARDS
++30 Trophies
++40 Gold
+VENUE PROGRESS
+Beach Bar - Main Counter can now be upgraded
+```
+
+#### Rule
+Do **not** show booster rewards on a normal result screen unless the match also caused:
+- a building completion
+- a full venue completion
+- an arena promotion
+
+This keeps the result screen cleaner.
+
+### 12.6 Post-match navigation
+
+After reward claim, the player may:
+- tap **Play Again**
+- tap **Go to Venue**
+- tap **Home**
+
 ---
 
-## 13. Home / Result
+## 13. Home / Venue / Result
 
-### Home
+### 13.0 Bottom navigation
+
+Bottom menu has **2 primary tabs** in MVP:
+- **Home**
+- **Venue**
+
+Optional later tabs can be added, but are not required now.
+
+---
+
+### 13.1 Home
+
+Home becomes the fast-entry PvP screen.
+
+It should show:
 - Arena badge (emoji + name)
 - Trophy count with progress bar to next arena
+- Gold balance
 - Stats (matches, win rate, best score, drinks served)
 - PLAY button
+- Current venue visual preview
+- Small CTA: `Go to Venue`
 - Reset button (bottom-right, subtle white square at 10% opacity) — confirms via popup, wipes all progress (trophies, stats, arena floor)
-- Weekly progress widget (stars + next milestone)
-- Power-up inventory button / summary
+- Booster inventory summary
 
-### Result
-- Win / Lose / Draw
+Economy panel example:
+
+```
+Gold: 185
+Boosters:
+Extra Bottle x2
+Flash Pour x1
+Swap x0
+Clear Bottle x0
+```
+
+Next arena teaser:
+
+```
+NEXT ARENA: Beach Bar
+Unlocks: Swap
+Promotion Reward: Swap x1 + 30 Gold
+```
+
+#### Important rule
+The venue shown on Home is **visual only**.
+
+On Home, the player cannot:
+- tap buildings to upgrade
+- claim building rewards
+- open upgrade cards
+
+Home is for:
+- immediate readability
+- status
+- match entry
+
+---
+
+### 13.2 Venue tab
+
+The Venue tab is the dedicated progression screen.
+
+It contains:
+1. Large current venue artwork
+2. Venue progress header: `17 / 25 upgrades complete`
+3. Five building cards / buttons
+4. Upgrade cost button on the currently selected building
+5. Building reward preview: `Reward at 5/5`
+6. Full venue reward bar
+7. Utility Cart panel at the bottom
+
+#### Building card content
+Each building card shows:
+- building name
+- current level (`3/5`)
+- next upgrade cost in gold
+- final completion reward preview
+
+#### Upgrade interaction
+Selecting a building opens the building panel:
+- current level
+- next level visual preview
+- next cost
+- final reward at `5/5`
+- primary button: `UPGRADE - 40 GOLD`
+
+#### Reward claim behavior
+- Building completion rewards are claimed immediately on upgrade to `5/5`
+- Full venue completion reward is claimed immediately when the 25th upgrade is purchased
+
+---
+
+### 13.3 Result
+
 - Score comparison
-- Trophy change (+/- with color)
+- Trophy delta (+/- with color)
 - Trophy transition (old -> new)
+- Gold earned
 - Arena progress bar
 - Match stats (drinks served, best combo, arena)
 - Play Again / Home
 - Arena unlock overlay if promoted (shows new features)
-- Power-up rewards panel
-- Weekly stars gained this match
-- Current weekly track progress
+- Optional milestone reward reveal only if triggered
 
-Example reward block:
+Example result variants:
 
+#### Normal match
 ```
-+--------------------------------------+
-|              REWARDS                 |
-|   [Flash Pour]   [Extra Bottle]      |
-|        +1 per reward roll            |
-+--------------------------------------+
-|           WEEKLY PROGRESS            |
-|            Stars: +3                 |
-|        14 / 20 to next reward        |
-+--------------------------------------+
++35 Trophies
++50 Gold
 ```
+
+#### Match that finishes a building
+```
++35 Trophies
++50 Gold
+BUILDING COMPLETE!
+Reward: Flash Pour x1 + Swap x1
+```
+
+#### Match that finishes a venue
+```
++35 Trophies
++50 Gold
+VENUE COMPLETE!
+Reward: Clear Bottle x2 + Flash Pour x2 + 40 Gold
+```
+
+Do **not** show:
+- random booster drops from the result itself
 
 ---
 
-## Weekly Track
-
-The weekly track is the second progression axis beyond trophies.
-It exists to give the player a reason to keep playing even when ladder gain is slow.
-
-### Weekly stars
-
-| Match result | Stars |
-|---|---|
-| Win | 3 |
-| Draw | 2 |
-| Lose | 1 |
-
-### Rules
-- Every completed match grants stars
-- Weekly stars fill a simple milestone track
-- The weekly track resets once per week
-- Rewards are claimable immediately when a milestone is reached
-
-### Weekly reward types
-- power-up bundles
-- small soft-currency rewards (optional later)
-- lightweight cosmetic rewards (optional later)
-
-### Prototype recommendation
-For prototype scope, reward only:
-- power-up bundles
-- one larger final weekly reward
-
-### Example prototype track
-- 5 stars -> 1 random power-up
-- 12 stars -> 2 random power-ups
-- 20 stars -> 3 random power-ups
-- 30 stars -> 1 guaranteed rare-weight roll
-
-Design rule:
-- The weekly track should support the core loop, not overshadow it
-- It is a retention support layer, not the main game
-
----
-
-## 14. Prototype Scope (v6.1)
+## 14. Prototype Scope (v6.5)
 
 ### 14.1 What to build
 Required:
@@ -631,29 +897,40 @@ Required:
 - Combo bonus (escalating)
 - Color Spawn system
 - AI opponent with arena-scaled difficulty
-- 4 prototype power-ups
+- 4 prototype boosters
 - Home
 - Matchmaking with fake opponent search
 - Result with trophy change
 - Trophy progression
 - Arenas with unlock overlay
-- Visible opponent board with power-up dots
+- Visible opponent board with booster dots
 - Pre-match loadout screen (2 slots)
-- Persistent power-up inventory
-- Post-match power-up rewards
-- Weekly star track
-- Weekly progress UI on Home and Result
+- Persistent booster inventory
+- Gold soft currency
+- Venue tab in bottom navigation
+- Home venue visual preview
+- 5-building venue upgrade screen
+- Building completion rewards
+- Full venue completion rewards
+- Arena promotion rewards
+- Utility Cart emergency booster purchases
+- Arena-based gold rewards after each match
+- Reward claim step after match
+- Home screen gold display
 
 Not required:
 - Real multiplayer
 - Sound
 - Collection system
-- Sticker album
-- Recipe book / set completion
-- Village / bar renovation meta
+- Shop as a standalone main tab
 - Chest timers
-- Shop
+- Sticker album
 - Battle pass
+- Booster mastery
+- Weekly stars
+- Direct booster rewards after every match
+- Recipe book / set completion
+- Village / bar renovation meta (separate from venue system)
 
 ---
 
@@ -667,12 +944,12 @@ If time is tight, build this subset first:
 - Serve + scoring
 - AI opponent
 - Color Spawn
-- 2 power-ups in loadout system:
+- 2 boosters in loadout system:
   - Flash Pour
   - Swap
-- Starter inventory for those 2 power-ups
-- Win/Lose power-up rewards
-- Weekly stars only (no full weekly reward UI required in first slice)
+- Starter inventory for those 2 boosters
+- Gold rewards for win/lose/draw
+- Venue tab with at least 1 building upgradeable
 
 Design note:
 - This is the smallest slice that tests both the PvP core and the reason to keep playing
@@ -688,12 +965,12 @@ Design note:
 5. Is the **60% customer-weighted** spawn color bias the right ratio?
 6. Should combo bonus cap at some maximum multiplier?
 7. Is the visible opponent board readable enough, or should the opponent status be simplified?
-8. Does pre-match loadout selection make the match feel more strategic?
-9. Does the player understand why winning matters beyond trophies?
-10. Is the win reward rate high enough to keep loadout choice interesting?
-11. Does Flash Pour feel better as "next 3 pours are instant" than as a timed buff?
-12. Does the weekly track create healthy motivation, or does it feel like noise?
-13. Is BAR CLASH already sticky enough with ladder + loadout + weekly track, without collection?
+8. Does the Venue tab make gold feel more meaningful than a plain shop?
+9. Does showing the venue only visually on Home keep the main screen clean enough?
+10. Do building completion rewards arrive often enough to keep boosters feeling alive?
+11. Is the Utility Cart expensive enough to remain a safety valve rather than the main booster source?
+12. Does venue completion feel exciting, or too far away in later arenas?
+13. Do players understand the difference between trophies (climb) and gold (venue progress)?
 
 ---
 
@@ -703,7 +980,7 @@ Design note:
 2. No common hard-locks from lack of workspace
 3. Shared customers remain the emotional center of the match
 4. Matches feel closer to a competitive race, not two isolated solitaire boards
-5. Power-ups add tactical choice without replacing the core puzzle
+5. Boosters add tactical choice without replacing the core puzzle
 6. Color Spawn keeps the board fed without feeling like a waiting game
 
 ---
@@ -715,8 +992,165 @@ Design note:
 3. Color Spawn system
 4. AI opponent
 5. Result flow + trophies
-6. Power-ups
+6. Boosters
 7. Arena scaling
-8. Polish
+8. Venue progression
+9. Polish
 
 Cut polish first, not board readability or pacing.
+
+---
+
+## Economy Math
+
+This section is the balancing backbone for the venue-based economy.
+
+### 1. Gold income by match result
+
+Assume a long-term average player profile:
+- 50% win rate
+- 10% draw rate
+- 40% loss rate
+
+Expected gold per match:
+
+| Arena | Expected gold / match |
+|---|---:|
+| Juice Stand | 29.5 |
+| Beach Bar | 31.8 |
+| Cocktail Lounge | 38.5 |
+| Speakeasy | 46.0 |
+| Rooftop Terrace | 52.5 |
+| Grand Hotel | 60.0 |
+
+Example formula for Beach Bar:
+
+```
+0.5 x 40 + 0.1 x 30 + 0.4 x 22
+= 20 + 3 + 8.8
+= 31.8 expected gold per match
+```
+
+---
+
+### 2. Expected matches to finish a venue
+
+| Arena | Venue cost | Expected gold / match | Expected matches to finish venue |
+|---|---:|---:|---:|
+| Juice Stand | 700 | 29.5 | 23.7 |
+| Beach Bar | 900 | 31.8 | 28.3 |
+| Cocktail Lounge | 1200 | 38.5 | 31.2 |
+| Speakeasy | 1500 | 46.0 | 32.6 |
+| Rooftop Terrace | 1900 | 52.5 | 36.2 |
+| Grand Hotel | 2300 | 60.0 | 38.3 |
+
+#### Interpretation
+- Early venues complete fairly quickly
+- Mid venues become a medium-term goal
+- Late venues stay meaningful without becoming endless
+
+---
+
+### 3. Booster reward supply per venue
+
+Booster supply from venue milestones:
+
+| Arena | Building rewards | Full venue reward | Total boosters per venue |
+|---|---:|---:|---:|
+| Juice Stand | 5 buildings x 2 = 10 | 3 | 13 |
+| Beach Bar | 5 buildings x 2 = 10 | 3 | 13 |
+| Cocktail Lounge | 5 buildings x 2 = 10 | 4 | 14 |
+| Speakeasy | 5 buildings x 2 = 10 | 4 | 14 |
+| Rooftop Terrace | 5 buildings x 2 = 10 | 5 | 15 |
+| Grand Hotel | 5 buildings x 2 = 10 | 5 | 15 |
+
+Booster supply per expected match:
+
+| Arena | Boosters per venue | Expected matches | Booster supply / match |
+|---|---:|---:|---:|
+| Juice Stand | 13 | 23.7 | 0.55 |
+| Beach Bar | 13 | 28.3 | 0.46 |
+| Cocktail Lounge | 14 | 31.2 | 0.45 |
+| Speakeasy | 14 | 32.6 | 0.43 |
+| Rooftop Terrace | 15 | 36.2 | 0.41 |
+| Grand Hotel | 15 | 38.3 | 0.39 |
+
+---
+
+### 4. Booster consumption assumption
+
+Expected actual booster uses per match:
+
+| Arena band | Expected boosters used per match |
+|---|---:|
+| Juice Stand | 0.30 |
+| Beach Bar | 0.35 |
+| Cocktail Lounge | 0.40 |
+| Speakeasy | 0.45 |
+| Rooftop Terrace | 0.50 |
+| Grand Hotel | 0.50 |
+
+#### Why
+Players equip up to 2 boosters, but many matches use:
+- zero boosters in a dominant game
+- one booster in a normal game
+- two boosters only in high-pressure or comeback moments
+
+Because unused equipped boosters return to inventory, real consumption is much lower than equip count.
+
+---
+
+### 5. Sustainability check
+
+Compare booster supply to expected use:
+
+| Arena | Booster supply / match | Expected use / match | Net |
+|---|---:|---:|---:|
+| Juice Stand | 0.55 | 0.30 | +0.25 |
+| Beach Bar | 0.46 | 0.35 | +0.11 |
+| Cocktail Lounge | 0.45 | 0.40 | +0.05 |
+| Speakeasy | 0.43 | 0.45 | -0.02 |
+| Rooftop Terrace | 0.41 | 0.50 | -0.09 |
+| Grand Hotel | 0.39 | 0.50 | -0.11 |
+
+#### Interpretation
+- Early and mid game are self-sustaining through venue rewards alone
+- Late game is intentionally slightly tighter
+- The Utility Cart covers occasional shortages
+- Promotion rewards and venue-completion gold bonuses help smooth the curve
+
+This is intentional: boosters should feel available, but not infinite.
+
+---
+
+### 6. Gold pressure and Utility Cart safety valve
+
+Because venue upgrades are the primary gold sink, the Utility Cart must stay expensive.
+
+Example late-game tradeoff:
+- buy 1 Clear Bottle for 120 gold now
+- or keep that gold toward a venue upgrade
+
+This creates a healthy choice:
+- short-term tactical safety
+- versus long-term progression
+
+That tension is desirable.
+
+---
+
+### 7. First win of day bonus
+
+To help smooth weaker sessions, add:
+
+| Arena | First win bonus |
+|---|---:|
+| Juice Stand | 20 |
+| Beach Bar | 25 |
+| Cocktail Lounge | 30 |
+| Speakeasy | 35 |
+| Rooftop Terrace | 40 |
+| Grand Hotel | 50 |
+
+#### Why
+This gives the player a strong reason to come back daily without needing a weekly track or star system.
