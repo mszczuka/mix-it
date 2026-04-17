@@ -27,7 +27,6 @@ body {
   display: block;
   position: relative;
   z-index: 1;
-  /* aspect ratio maintained by JS resizeCanvas() */
 }
 
 /* ===== SCREEN OVERLAYS ===== */
@@ -93,34 +92,40 @@ body {
 
 #hud-bar {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   background: rgba(0,0,0,0.45);
-  padding: 8px 16px;
-  gap: 12px;
+  padding: 6px 10px;
+  gap: 8px;
+}
+
+#hud-left {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
 }
 
 #hud-targets {
   display: flex;
-  gap: 10px;
+  gap: 6px;
   flex-wrap: wrap;
-  flex: 1;
 }
 
 .hud-target-card {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   background: rgba(255,255,255,0.1);
   border: 1.5px solid rgba(255,255,255,0.2);
-  border-radius: 20px;
-  padding: 4px 12px 4px 8px;
-  font-size: 13px;
+  border-radius: 16px;
+  padding: 3px 8px 3px 6px;
+  font-size: 11px;
   font-weight: 600;
-  min-height: 32px;
+  min-height: 26px;
 }
 
-.hud-target-icon { font-size: 16px; line-height: 1; }
+.hud-target-icon { font-size: 13px; line-height: 1; }
 .hud-target-count { color: #fff; }
 
 .hud-target-card.done {
@@ -128,15 +133,22 @@ body {
   background: rgba(68,170,136,0.25);
 }
 
+#hud-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
 #hud-timer {
   background: #cc7722;
   color: #fff;
-  border-radius: 20px;
-  padding: 5px 16px;
-  font-size: 15px;
+  border-radius: 16px;
+  padding: 4px 14px;
+  font-size: 14px;
   font-weight: 800;
   letter-spacing: 0.03em;
-  min-width: 70px;
+  min-width: 60px;
   text-align: center;
 }
 
@@ -148,6 +160,59 @@ body {
 @keyframes timerPulse {
   from { opacity: 1; transform: scale(1); }
   to   { opacity: 0.75; transform: scale(1.07); }
+}
+
+/* ===== WATER BAR ===== */
+#hud-right {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+#water-bar-container {
+  width: 22px;
+  height: 70px;
+  background: rgba(0,0,0,0.4);
+  border-radius: 6px;
+  border: 1.5px solid rgba(100,180,255,0.3);
+  overflow: hidden;
+  position: relative;
+}
+
+#water-bar-fill {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(to top, #2288cc, #44bbff);
+  border-radius: 0 0 4px 4px;
+  transition: height 0.1s;
+}
+
+#water-bar-container.low #water-bar-fill {
+  background: linear-gradient(to top, #cc2222, #ff4444);
+  animation: waterPulse 0.5s ease-in-out infinite alternate;
+}
+
+@keyframes waterPulse {
+  from { opacity: 1; }
+  to   { opacity: 0.5; }
+}
+
+#water-bar-label {
+  font-size: 8px;
+  font-weight: 700;
+  color: #88ccff;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+#refill-indicator {
+  font-size: 9px;
+  color: #44ddff;
+  font-weight: 700;
+  display: none;
 }
 
 /* ===== POWERUP HUD ===== */
@@ -185,16 +250,16 @@ body {
 }
 
 #intro-world-name {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.2em;
   text-transform: uppercase;
   color: #44aa88;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 #intro-level-number {
-  font-size: 48px;
+  font-size: 42px;
   font-weight: 900;
   color: #fff;
   letter-spacing: -0.01em;
@@ -203,29 +268,29 @@ body {
 }
 
 #intro-level-subtitle {
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 600;
   color: #aaccaa;
-  margin-bottom: 28px;
+  margin-bottom: 20px;
 }
 
 #intro-targets {
   display: flex;
-  gap: 12px;
+  gap: 10px;
   flex-wrap: wrap;
   justify-content: center;
-  margin-bottom: 24px;
+  margin-bottom: 16px;
 }
 
 .intro-target-card {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   background: rgba(255,255,255,0.08);
   border: 1.5px solid rgba(255,255,255,0.18);
-  border-radius: 14px;
-  padding: 10px 18px 10px 12px;
-  font-size: 14px;
+  border-radius: 12px;
+  padding: 8px 14px 8px 10px;
+  font-size: 13px;
   font-weight: 600;
   animation: cardBounce 0.5s ease-out;
 }
@@ -236,20 +301,50 @@ body {
   100% { transform: translateY(0);    opacity: 1; }
 }
 
-.intro-target-icon { font-size: 20px; }
+.intro-target-icon { font-size: 18px; }
 .intro-target-label { color: #cceecc; }
-.intro-target-count { font-size: 18px; font-weight: 800; color: #fff; }
+.intro-target-count { font-size: 16px; font-weight: 800; color: #fff; }
 
 #intro-timer-preview {
   background: rgba(204,119,34,0.2);
   border: 1.5px solid #cc7722;
   border-radius: 20px;
-  padding: 6px 20px;
-  font-size: 14px;
+  padding: 5px 16px;
+  font-size: 13px;
   font-weight: 700;
   color: #ffaa44;
-  margin-bottom: 32px;
+  margin-bottom: 16px;
 }
+
+/* ===== BOOSTER SELECTION ON INTRO ===== */
+#intro-boosters {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-bottom: 18px;
+}
+
+.booster-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  background: rgba(255,255,255,0.06);
+  border: 1.5px solid rgba(255,255,255,0.15);
+  border-radius: 10px;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  min-width: 80px;
+  pointer-events: auto;
+}
+.booster-card:hover { border-color: #44aa88; background: rgba(68,170,136,0.1); }
+.booster-card.selected { border-color: #44dd88; background: rgba(68,220,136,0.2); }
+.booster-card.disabled { opacity: 0.4; pointer-events: none; }
+.booster-card-icon { font-size: 20px; }
+.booster-card-name { font-size: 10px; font-weight: 700; color: #cceecc; text-align: center; }
+.booster-card-cost { font-size: 10px; font-weight: 600; color: #ffcc44; }
 
 /* ===== RESULT SCREEN ===== */
 #screen-result {
@@ -257,16 +352,16 @@ body {
 }
 
 #result-icon {
-  font-size: 64px;
+  font-size: 56px;
   line-height: 1;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 #result-title {
-  font-size: 32px;
+  font-size: 28px;
   font-weight: 900;
   letter-spacing: 0.01em;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 #result-title.win  { color: #44dd88; }
@@ -274,9 +369,9 @@ body {
 
 #result-stars {
   display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
-  font-size: 36px;
+  gap: 8px;
+  margin-bottom: 14px;
+  font-size: 32px;
 }
 
 .star { color: #554400; transition: color 0.3s; }
@@ -284,27 +379,27 @@ body {
 
 #result-summary {
   background: rgba(255,255,255,0.06);
-  border-radius: 14px;
-  padding: 16px 24px;
-  margin-bottom: 28px;
-  font-size: 14px;
+  border-radius: 12px;
+  padding: 12px 20px;
+  margin-bottom: 18px;
+  font-size: 13px;
   color: #aaccaa;
   text-align: center;
-  min-width: 220px;
+  min-width: 200px;
 }
 
 #result-summary .summary-row {
   display: flex;
   justify-content: space-between;
-  gap: 24px;
-  padding: 3px 0;
+  gap: 20px;
+  padding: 2px 0;
 }
 
 #result-summary .summary-val { color: #fff; font-weight: 700; }
 
 #result-actions {
   display: flex;
-  gap: 14px;
+  gap: 12px;
   flex-wrap: wrap;
   justify-content: center;
 }
@@ -326,6 +421,222 @@ body {
   50%  { transform: scale(1.15); }
   100% { transform: scale(1); }
 }
+
+/* ===== HOME SCREEN ===== */
+#screen-home {
+  gap: 0;
+  justify-content: flex-start;
+  padding-top: 60px;
+  padding-bottom: 60px;
+}
+
+#home-title {
+  font-size: 32px;
+  font-weight: 900;
+  color: #44dd88;
+  margin-bottom: 4px;
+  letter-spacing: -0.01em;
+}
+
+#home-subtitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: #88aa88;
+  margin-bottom: 24px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+#home-coins {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255,204,68,0.12);
+  border: 1.5px solid rgba(255,204,68,0.3);
+  border-radius: 20px;
+  padding: 6px 16px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #ffcc44;
+  margin-bottom: 28px;
+}
+
+#home-world-card {
+  background: rgba(255,255,255,0.06);
+  border: 1.5px solid rgba(255,255,255,0.12);
+  border-radius: 14px;
+  padding: 18px 28px;
+  text-align: center;
+  margin-bottom: 28px;
+  min-width: 220px;
+}
+
+#home-world-name {
+  font-size: 11px;
+  font-weight: 700;
+  color: #44aa88;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+#home-level-display {
+  font-size: 36px;
+  font-weight: 900;
+  color: #fff;
+  margin-bottom: 4px;
+}
+
+#home-level-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #aaccaa;
+}
+
+#btn-play {
+  font-size: 20px;
+  padding: 16px 60px;
+  margin-top: 8px;
+}
+
+/* ===== UPGRADES SCREEN ===== */
+#screen-upgrades {
+  gap: 0;
+  justify-content: flex-start;
+  padding-top: 20px;
+  padding-bottom: 60px;
+  overflow-y: auto;
+}
+
+#upgrades-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 380px;
+  margin-bottom: 16px;
+}
+
+#upgrades-title {
+  font-size: 22px;
+  font-weight: 900;
+  color: #fff;
+}
+
+#upgrades-coins {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #ffcc44;
+}
+
+#upgrade-lanes {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  max-width: 380px;
+}
+
+.upgrade-lane-card {
+  background: rgba(255,255,255,0.05);
+  border: 1.5px solid rgba(255,255,255,0.1);
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.upgrade-lane-card.locked {
+  opacity: 0.45;
+}
+
+.upgrade-lane-icon {
+  font-size: 22px;
+  width: 32px;
+  text-align: center;
+}
+
+.upgrade-lane-info {
+  flex: 1;
+}
+
+.upgrade-lane-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 2px;
+}
+
+.upgrade-lane-detail {
+  font-size: 10px;
+  color: #88aa88;
+}
+
+.upgrade-lane-rank {
+  font-size: 10px;
+  color: #aaccaa;
+  font-weight: 600;
+}
+
+.btn-upgrade {
+  background: #44aa88;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+.btn-upgrade:hover { background: #55cc99; }
+.btn-upgrade:active { transform: scale(0.96); }
+.btn-upgrade:disabled { background: #555; cursor: default; opacity: 0.5; }
+
+.upgrade-locked-text {
+  font-size: 10px;
+  color: #886644;
+  font-weight: 600;
+  text-align: right;
+  min-width: 70px;
+}
+
+/* ===== BOTTOM NAV ===== */
+#bottom-nav {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 15;
+  display: flex;
+  background: rgba(0,0,0,0.7);
+  border-top: 1px solid rgba(255,255,255,0.1);
+}
+
+#bottom-nav.hidden { display: none; }
+
+.nav-tab {
+  flex: 1;
+  padding: 10px 0;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: #667766;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s;
+  border: none;
+  background: none;
+}
+
+.nav-tab:hover { color: #aaccaa; }
+.nav-tab.active { color: #44dd88; background: rgba(68,220,136,0.08); }
+
+.nav-tab-icon { font-size: 18px; display: block; margin-bottom: 2px; }
 </style>
 </head>
 <body>
@@ -337,45 +648,79 @@ body {
   <!-- HUD (gameplay overlay) -->
   <div id="hud" class="hidden">
     <div id="hud-bar">
-      <div id="hud-targets">
-        <!-- filled by updateHUD() -->
+      <div id="hud-left">
+        <div id="hud-targets"></div>
       </div>
-      <div id="hud-timer">45</div>
+      <div id="hud-center">
+        <div id="hud-timer">45</div>
+      </div>
+      <div id="hud-right">
+        <div id="water-bar-label">H2O</div>
+        <div id="water-bar-container">
+          <div id="water-bar-fill" style="height:100%"></div>
+        </div>
+        <div id="refill-indicator">REFILL</div>
+      </div>
     </div>
   </div>
 
   <!-- Power-up indicator -->
-  <div id="powerup-hud" class="hidden">
-    <!-- filled dynamically -->
+  <div id="powerup-hud" class="hidden"></div>
+
+  <!-- Home screen -->
+  <div id="screen-home" class="screen">
+    <div id="home-title">Clean Sweep Rush</div>
+    <div id="home-subtitle">Restoration Puzzle</div>
+    <div id="home-coins"><span>&#x1FA99;</span> <span id="home-coins-value">200</span></div>
+    <div id="home-world-card">
+      <div id="home-world-name">Backyard Chaos</div>
+      <div id="home-level-display">Level 1</div>
+      <div id="home-level-name">First Wash</div>
+    </div>
+    <button class="btn-primary" id="btn-play">PLAY</button>
   </div>
 
   <!-- Intro screen -->
-  <div id="screen-intro" class="screen">
+  <div id="screen-intro" class="screen hidden">
     <div id="intro-world-name">World 1</div>
     <div id="intro-level-number">Level 1</div>
     <div id="intro-level-subtitle">First Wash</div>
-    <div id="intro-targets">
-      <!-- filled by populateIntroScreen() -->
-    </div>
+    <div id="intro-targets"></div>
     <div id="intro-timer-preview">45 seconds</div>
+    <div id="intro-boosters"></div>
     <button class="btn-primary" id="btn-start">START</button>
   </div>
 
   <!-- Result screen -->
   <div id="screen-result" class="screen hidden">
-    <div id="result-icon">🏆</div>
+    <div id="result-icon">&#x1F3C6;</div>
     <div id="result-title" class="win">Level Complete!</div>
     <div id="result-stars">
-      <span class="star lit" id="star-1">★</span>
-      <span class="star lit" id="star-2">★</span>
-      <span class="star lit" id="star-3">★</span>
+      <span class="star lit" id="star-1">&#x2605;</span>
+      <span class="star lit" id="star-2">&#x2605;</span>
+      <span class="star lit" id="star-3">&#x2605;</span>
     </div>
-    <div id="result-summary">
-      <!-- filled by populateResultScreen() -->
+    <div id="result-summary"></div>
+    <div id="result-actions"></div>
+  </div>
+
+  <!-- Upgrades screen -->
+  <div id="screen-upgrades" class="screen hidden">
+    <div id="upgrades-header">
+      <div id="upgrades-title">Upgrades</div>
+      <div id="upgrades-coins"><span>&#x1FA99;</span> <span id="upgrades-coins-value">200</span></div>
     </div>
-    <div id="result-actions">
-      <!-- filled by populateResultScreen() -->
-    </div>
+    <div id="upgrade-lanes"></div>
+  </div>
+
+  <!-- Bottom navigation -->
+  <div id="bottom-nav" class="hidden">
+    <button class="nav-tab active" data-tab="home">
+      <span class="nav-tab-icon">&#x1F3E0;</span>Home
+    </button>
+    <button class="nav-tab" data-tab="upgrades">
+      <span class="nav-tab-icon">&#x2B06;&#xFE0F;</span>Upgrades
+    </button>
   </div>
 
 </div><!-- /#canvas-wrapper -->
@@ -384,8 +729,8 @@ body {
 'use strict';
 
 // ===== CONSTANTS & CONFIG =====
-const CANVAS_W = 800;
-const CANVAS_H = 600;
+const CANVAS_W = 450;
+const CANVAS_H = 800;
 const BOT_SPEED = 280;
 const BOT_RADIUS_X = 18;
 const BOT_RADIUS_Y = 12;
@@ -402,6 +747,11 @@ const HAZARD_RESPAWN_INTERVAL = 4;
 const HAZARD_RESPAWN_RADIUS = 60;
 const SCREEN_SHAKE_DECAY = 0.9;
 
+// Water tank defaults
+const WATER_CAPACITY_BASE = 100;
+const WATER_DRAIN_RATE_BASE = 15;   // per second while spraying
+const WATER_REFILL_RATE_BASE = 60;  // per second at refill points
+
 // Colors
 const COL_GRASS       = '#4a7a3a';
 const COL_GRASS_CLEAN = '#5a9a4a';
@@ -413,16 +763,110 @@ const COL_BOT_GLOW    = 'rgba(68,170,255,0.3)';
 const COL_SPRAY       = 'rgba(180,220,255,0.8)';
 const COL_FENCE       = '#8a7a5a';
 
+// ===== UPGRADE DEFINITIONS =====
+const UPGRADE_DEFS = {
+  spray_power: {
+    name: 'Spray Power', icon: '\u{1F4A7}', effectLabel: '+5% per rank',
+    unlockLevel: 0, perRank: 0.05,
+    ranks: [
+      { cost: 100, unlockLevel: 0 },
+      { cost: 160, unlockLevel: 0 },
+      { cost: 240, unlockLevel: 6 },
+      { cost: 340, unlockLevel: 12 },
+      { cost: 470, unlockLevel: 20 },
+      { cost: 630, unlockLevel: 30 },
+      { cost: 820, unlockLevel: 42 },
+      { cost: 1050, unlockLevel: 58 },
+    ]
+  },
+  tank_capacity: {
+    name: 'Tank Capacity', icon: '\u{1FAA3}', effectLabel: '+7% per rank',
+    unlockLevel: 4, perRank: 0.07,
+    ranks: [
+      { cost: 120, unlockLevel: 4 },
+      { cost: 180, unlockLevel: 6 },
+      { cost: 260, unlockLevel: 10 },
+      { cost: 360, unlockLevel: 16 },
+      { cost: 490, unlockLevel: 24 },
+      { cost: 650, unlockLevel: 34 },
+      { cost: 840, unlockLevel: 46 },
+      { cost: 1080, unlockLevel: 62 },
+    ]
+  },
+  spray_width: {
+    name: 'Spray Width', icon: '\u{1F300}', effectLabel: '+4% per rank',
+    unlockLevel: 8, perRank: 0.04,
+    ranks: [
+      { cost: 140, unlockLevel: 8 },
+      { cost: 210, unlockLevel: 11 },
+      { cost: 300, unlockLevel: 16 },
+      { cost: 420, unlockLevel: 22 },
+      { cost: 570, unlockLevel: 30 },
+      { cost: 750, unlockLevel: 40 },
+      { cost: 960, unlockLevel: 54 },
+      { cost: 1200, unlockLevel: 70 },
+    ]
+  },
+  refill_speed: {
+    name: 'Refill Speed', icon: '\u{26A1}', effectLabel: '+6% per rank',
+    unlockLevel: 15, perRank: 0.06,
+    ranks: [
+      { cost: 160, unlockLevel: 15 },
+      { cost: 240, unlockLevel: 18 },
+      { cost: 340, unlockLevel: 22 },
+      { cost: 470, unlockLevel: 28 },
+      { cost: 630, unlockLevel: 36 },
+      { cost: 820, unlockLevel: 48 },
+      { cost: 1040, unlockLevel: 60 },
+      { cost: 1300, unlockLevel: 76 },
+    ]
+  },
+  move_speed: {
+    name: 'Move Speed', icon: '\u{1F3C3}', effectLabel: '+3% per rank',
+    unlockLevel: 25, perRank: 0.03,
+    ranks: [
+      { cost: 180, unlockLevel: 25 },
+      { cost: 260, unlockLevel: 28 },
+      { cost: 360, unlockLevel: 34 },
+      { cost: 500, unlockLevel: 42 },
+      { cost: 670, unlockLevel: 52 },
+      { cost: 870, unlockLevel: 64 },
+      { cost: 1100, unlockLevel: 78 },
+      { cost: 1380, unlockLevel: 92 },
+    ]
+  },
+};
+
+// ===== BOOSTER DEFINITIONS =====
+const BOOSTER_DEFS = [
+  { id: 'time_bonus',  name: '+10 Seconds', icon: '\u{23F0}', cost: 80,  effect: 'time' },
+  { id: 'bigger_tank', name: 'Bigger Tank', icon: '\u{1FAA3}', cost: 70,  effect: 'tank' },
+  { id: 'wide_nozzle', name: 'Wide Nozzle', icon: '\u{1F300}', cost: 90,  effect: 'width' },
+];
+
+// ===== PLAYER PROGRESSION (persists across levels, not across refreshes) =====
+const progression = {
+  campaignLevel: 0,    // highest completed level number (0 = none)
+  washCoins: 200,
+  upgradeRanks: {
+    spray_power: 0,
+    tank_capacity: 0,
+    spray_width: 0,
+    refill_speed: 0,
+    move_speed: 0,
+  },
+};
+
 // ===== GAME STATE =====
 const state = {
-  screen:        'intro',   // 'intro' | 'gameplay' | 'result'
+  screen:        'home',   // 'home' | 'upgrades' | 'intro' | 'gameplay' | 'result'
   levelIndex:    0,
   timer:         45,
   timerElapsed:  0,
   paused:        false,
 
   botX:          CANVAS_W / 2,
-  botY:          CANVAS_H - 30,
+  botY:          CANVAS_H - 50,
   targetX:       CANVAS_W / 2,
   targetY:       CANVAS_H / 2,
   aimX:          CANVAS_W / 2,
@@ -447,10 +891,25 @@ const state = {
   won:           false,
   timeLeft:      0,
   stars:         0,
+  usedContinue:  false,
 
   audioCtx:      null,
   isCleaning:    false,
   sprayNode:     null,
+
+  // Water tank system
+  waterCapacity:    WATER_CAPACITY_BASE,
+  waterCurrent:     WATER_CAPACITY_BASE,
+  waterDrainRate:   WATER_DRAIN_RATE_BASE,
+  waterRefillRate:  WATER_REFILL_RATE_BASE,
+  refillPoints:     [],
+  nearRefillPoint:  false,
+
+  // Booster applied for current level
+  activeBooster: null,
+
+  // Coins earned this level (for result screen)
+  coinsEarnedThisLevel: 0,
 };
 
 // ===== LEVEL DATA =====
@@ -460,10 +919,10 @@ const LEVELS = [
     levelName:   'First Wash',
     levelNumber: 1,
     timer:       45,
-    startX:      400,
-    startY:      420,
+    startX:      225,
+    startY:      600,
     targets: [
-      { type: 'clean_object', objectType: 'pot', amount: 4, icon: '🪴', label: 'Pots' },
+      { type: 'clean_object', objectType: 'pot', amount: 4, icon: '\u{1FAB4}', label: 'Pots' },
     ],
   },
   {
@@ -471,11 +930,11 @@ const LEVELS = [
     levelName:   'Garden Path',
     levelNumber: 2,
     timer:       40,
-    startX:      400,
-    startY:      420,
+    startX:      225,
+    startY:      600,
     targets: [
-      { type: 'clean_dirt',   dirtTag: 'target_mud', amount: 6, icon: '💧', label: 'Mud Patches' },
-      { type: 'clean_object', objectType: 'bench', amount: 2, icon: '🪑', label: 'Benches' },
+      { type: 'clean_dirt',   dirtTag: 'target_mud', amount: 6, icon: '\u{1F4A7}', label: 'Mud Patches' },
+      { type: 'clean_object', objectType: 'bench', amount: 2, icon: '\u{1FA91}', label: 'Benches' },
     ],
   },
   {
@@ -483,58 +942,30 @@ const LEVELS = [
     levelName:   'Backyard Blitz',
     levelNumber: 3,
     timer:       35,
-    startX:      350,
-    startY:      420,
+    startX:      200,
+    startY:      600,
     targets: [
-      { type: 'clean_area',     areaId:    'main',     threshold: 0.8, icon: '🌿', label: 'Area Clean' },
-      { type: 'restore_object', objectType: 'birdbath', amount:   1,   icon: '🐦', label: 'Birdbath' },
+      { type: 'clean_area',     areaId:    'main',     threshold: 0.8, icon: '\u{1F33F}', label: 'Area Clean' },
+      { type: 'restore_object', objectType: 'birdbath', amount:   1,   icon: '\u{1F426}', label: 'Birdbath' },
     ],
   },
 ];
 
 // ===== UTILITIES =====
 
-/** Linear interpolation */
 function lerp(a, b, t) { return a + (b - a) * t; }
-
-/** Clamp value between min and max */
 function clamp(v, min, max) { return v < min ? min : v > max ? max : v; }
-
-/** Euclidean distance between two points */
 function dist(ax, ay, bx, by) {
   const dx = ax - bx, dy = ay - by;
   return Math.sqrt(dx * dx + dy * dy);
 }
-
-/**
- * Normalized ellipse distance: returns 0..1 at the edge, <1 inside, >1 outside.
- * @param {number} px Point x relative to ellipse center
- * @param {number} py Point y relative to ellipse center
- * @param {number} rx Semi-axis x
- * @param {number} ry Semi-axis y
- */
 function ellipseDist(px, py, rx, ry) {
   return Math.sqrt((px * px) / (rx * rx) + (py * py) / (ry * ry));
 }
-
-/** Random float in [min, max) */
 function randRange(min, max) { return min + Math.random() * (max - min); }
-
-/** Random integer in [min, max] */
 function randInt(min, max) { return Math.floor(randRange(min, max + 1)); }
-
-/** Quadratic ease-out: t should be 0..1 */
 function easeOut(t) { return 1 - (1 - t) * (1 - t); }
 
-/**
- * Draw a rounded rectangle on a canvas context.
- * @param {CanvasRenderingContext2D} ctx
- * @param {number} x Top-left x
- * @param {number} y Top-left y
- * @param {number} w Width
- * @param {number} h Height
- * @param {number} r Corner radius
- */
 function roundRect(ctx, x, y, w, h, r) {
   r = Math.min(r, w / 2, h / 2);
   ctx.beginPath();
@@ -550,27 +981,84 @@ function roundRect(ctx, x, y, w, h, r) {
   ctx.closePath();
 }
 
+// ===== UPGRADE EFFECT HELPERS =====
+
+function getUpgradeMultiplier(lane) {
+  const rank = progression.upgradeRanks[lane] || 0;
+  const def = UPGRADE_DEFS[lane];
+  return 1 + rank * def.perRank;
+}
+
+function getEffectiveCleanPower() {
+  let power = CLEAN_POWER * getUpgradeMultiplier('spray_power');
+  if (state.activeBooster === 'width') {
+    // wide nozzle doesn't boost power, but pressure_boost would
+  }
+  return power;
+}
+
+function getEffectiveCleanRadiusX() {
+  let r = CLEAN_RADIUS_X * getUpgradeMultiplier('spray_width');
+  if (state.activeBooster === 'width') r *= 1.25;
+  return r;
+}
+
+function getEffectiveCleanRadiusY() {
+  let r = CLEAN_RADIUS_Y * getUpgradeMultiplier('spray_width');
+  if (state.activeBooster === 'width') r *= 1.25;
+  return r;
+}
+
+function getEffectiveWaterCapacity() {
+  let cap = WATER_CAPACITY_BASE * getUpgradeMultiplier('tank_capacity');
+  if (state.activeBooster === 'tank') cap *= 1.3;
+  return cap;
+}
+
+function getEffectiveRefillRate() {
+  return WATER_REFILL_RATE_BASE * getUpgradeMultiplier('refill_speed');
+}
+
+function getEffectiveAimLerp() {
+  // Base lerp factor is 0.001; lower = more responsive.
+  // Move speed upgrade makes it even more responsive (lower pow base)
+  const mult = getUpgradeMultiplier('move_speed');
+  return Math.pow(0.001, 1 / mult); // more responsive
+}
+
 // ===== SCREEN MANAGER =====
 
-/**
- * Show a named screen and manage HUD visibility.
- * @param {'intro'|'gameplay'|'result'} name
- */
 function showScreen(name) {
   state.screen = name;
 
-  const intro    = document.getElementById('screen-intro');
+  const home       = document.getElementById('screen-home');
+  const intro      = document.getElementById('screen-intro');
   const gameplay_hud = document.getElementById('hud');
-  const result   = document.getElementById('screen-result');
+  const result     = document.getElementById('screen-result');
   const powerupHud = document.getElementById('powerup-hud');
+  const upgrades   = document.getElementById('screen-upgrades');
+  const bottomNav  = document.getElementById('bottom-nav');
 
   // Hide all
+  home.classList.add('hidden');
   intro.classList.add('hidden');
   gameplay_hud.classList.add('hidden');
   result.classList.add('hidden');
   powerupHud.classList.add('hidden');
+  upgrades.classList.add('hidden');
+  bottomNav.classList.add('hidden');
 
-  if (name === 'intro') {
+  if (name === 'home') {
+    home.classList.remove('hidden');
+    bottomNav.classList.remove('hidden');
+    populateHomeScreen();
+    updateNavTabs('home');
+  } else if (name === 'upgrades') {
+    upgrades.classList.remove('hidden');
+    bottomNav.classList.remove('hidden');
+    populateUpgradesScreen();
+    updateNavTabs('upgrades');
+  } else if (name === 'intro') {
     intro.classList.remove('hidden');
     populateIntroScreen();
   } else if (name === 'gameplay') {
@@ -581,7 +1069,117 @@ function showScreen(name) {
   }
 }
 
-/** Populate the intro screen with current level data */
+function updateNavTabs(activeTab) {
+  document.querySelectorAll('.nav-tab').forEach(tab => {
+    tab.classList.toggle('active', tab.getAttribute('data-tab') === activeTab);
+  });
+}
+
+// ===== HOME SCREEN =====
+
+function populateHomeScreen() {
+  const lvlIdx = Math.min(progression.campaignLevel, LEVELS.length - 1);
+  const level = LEVELS[lvlIdx];
+
+  document.getElementById('home-coins-value').textContent = progression.washCoins;
+  document.getElementById('home-world-name').textContent = level ? level.worldName : 'Backyard Chaos';
+  document.getElementById('home-level-display').textContent = 'Level ' + (level ? level.levelNumber : 1);
+  document.getElementById('home-level-name').textContent = level ? level.levelName : '';
+}
+
+// ===== UPGRADES SCREEN =====
+
+function populateUpgradesScreen() {
+  document.getElementById('upgrades-coins-value').textContent = progression.washCoins;
+
+  const container = document.getElementById('upgrade-lanes');
+  container.innerHTML = '';
+
+  const laneKeys = ['spray_power', 'tank_capacity', 'spray_width', 'refill_speed', 'move_speed'];
+
+  laneKeys.forEach(key => {
+    const def = UPGRADE_DEFS[key];
+    const currentRank = progression.upgradeRanks[key];
+    const laneUnlocked = progression.campaignLevel >= def.unlockLevel;
+
+    const card = document.createElement('div');
+    card.className = 'upgrade-lane-card' + (laneUnlocked ? '' : ' locked');
+
+    const iconEl = document.createElement('div');
+    iconEl.className = 'upgrade-lane-icon';
+    iconEl.textContent = def.icon;
+
+    const infoEl = document.createElement('div');
+    infoEl.className = 'upgrade-lane-info';
+
+    const nameEl = document.createElement('div');
+    nameEl.className = 'upgrade-lane-name';
+    nameEl.textContent = def.name;
+
+    const rankEl = document.createElement('div');
+    rankEl.className = 'upgrade-lane-rank';
+    rankEl.textContent = 'Rank ' + currentRank + ' / 8';
+
+    const detailEl = document.createElement('div');
+    detailEl.className = 'upgrade-lane-detail';
+
+    if (!laneUnlocked) {
+      detailEl.textContent = 'Unlocks at Level ' + def.unlockLevel;
+    } else {
+      const currentEffect = Math.round(currentRank * def.perRank * 100);
+      detailEl.textContent = 'Current: +' + currentEffect + '% | ' + def.effectLabel;
+    }
+
+    infoEl.appendChild(nameEl);
+    infoEl.appendChild(rankEl);
+    infoEl.appendChild(detailEl);
+
+    card.appendChild(iconEl);
+    card.appendChild(infoEl);
+
+    if (!laneUnlocked) {
+      const lockedEl = document.createElement('div');
+      lockedEl.className = 'upgrade-locked-text';
+      lockedEl.textContent = 'Level ' + def.unlockLevel;
+      card.appendChild(lockedEl);
+    } else if (currentRank >= 8) {
+      const maxEl = document.createElement('div');
+      maxEl.className = 'upgrade-locked-text';
+      maxEl.style.color = '#44dd88';
+      maxEl.textContent = 'MAX';
+      card.appendChild(maxEl);
+    } else {
+      const nextRankDef = def.ranks[currentRank];
+      const rankUnlocked = progression.campaignLevel >= nextRankDef.unlockLevel;
+      const canAfford = progression.washCoins >= nextRankDef.cost;
+
+      if (!rankUnlocked) {
+        const lockedEl = document.createElement('div');
+        lockedEl.className = 'upgrade-locked-text';
+        lockedEl.textContent = 'Level ' + nextRankDef.unlockLevel;
+        card.appendChild(lockedEl);
+      } else {
+        const btn = document.createElement('button');
+        btn.className = 'btn-upgrade';
+        btn.textContent = nextRankDef.cost + ' \u{1FA99}';
+        btn.disabled = !canAfford;
+        btn.addEventListener('click', () => {
+          if (progression.washCoins >= nextRankDef.cost) {
+            progression.washCoins -= nextRankDef.cost;
+            progression.upgradeRanks[key]++;
+            populateUpgradesScreen();
+          }
+        });
+        card.appendChild(btn);
+      }
+    }
+
+    container.appendChild(card);
+  });
+}
+
+// ===== INTRO SCREEN =====
+
 function populateIntroScreen() {
   const level = LEVELS[state.levelIndex];
   if (!level) return;
@@ -604,8 +1202,6 @@ function populateIntroScreen() {
       countLabel = (t.type === 'clean_area')
         ? Math.round(t.threshold * 100) + '%'
         : 'x' + t.amount;
-    } else {
-      countLabel = '';
     }
 
     card.innerHTML =
@@ -615,9 +1211,49 @@ function populateIntroScreen() {
 
     targetsContainer.appendChild(card);
   });
+
+  // Populate boosters
+  populateIntroBoosters();
 }
 
-/** Populate the result screen with win/fail state */
+// Selected booster tracking for intro screen
+let _selectedBoosterId = null;
+
+function populateIntroBoosters() {
+  const container = document.getElementById('intro-boosters');
+  container.innerHTML = '';
+  _selectedBoosterId = null;
+
+  BOOSTER_DEFS.forEach(bdef => {
+    const card = document.createElement('div');
+    const canAfford = progression.washCoins >= bdef.cost;
+    card.className = 'booster-card' + (canAfford ? '' : ' disabled');
+    card.setAttribute('data-booster-id', bdef.id);
+
+    card.innerHTML =
+      '<span class="booster-card-icon">' + bdef.icon + '</span>' +
+      '<span class="booster-card-name">' + bdef.name + '</span>' +
+      '<span class="booster-card-cost">' + bdef.cost + ' \u{1FA99}</span>';
+
+    card.addEventListener('click', () => {
+      if (!canAfford) return;
+      // Toggle selection
+      if (_selectedBoosterId === bdef.id) {
+        _selectedBoosterId = null;
+        document.querySelectorAll('.booster-card').forEach(c => c.classList.remove('selected'));
+      } else {
+        _selectedBoosterId = bdef.id;
+        document.querySelectorAll('.booster-card').forEach(c => c.classList.remove('selected'));
+        card.classList.add('selected');
+      }
+    });
+
+    container.appendChild(card);
+  });
+}
+
+// ===== RESULT SCREEN =====
+
 function populateResultScreen() {
   const win     = state.won;
   const stars   = state.stars;
@@ -632,15 +1268,15 @@ function populateResultScreen() {
 
   // Icon & title
   if (win && isLast) {
-    iconEl.textContent = '🎉';
+    iconEl.textContent = '\u{1F389}';
     titleEl.textContent = 'Prototype Complete!';
     titleEl.className   = 'win';
   } else if (win) {
-    iconEl.textContent  = '🏆';
+    iconEl.textContent  = '\u{1F3C6}';
     titleEl.textContent = 'Level Complete!';
     titleEl.className   = 'win';
   } else {
-    iconEl.textContent  = '😓';
+    iconEl.textContent  = '\u{1F613}';
     titleEl.textContent = 'Level Failed';
     titleEl.className   = 'fail';
   }
@@ -650,33 +1286,36 @@ function populateResultScreen() {
   for (let i = 1; i <= 3; i++) {
     const s = document.createElement('span');
     s.className = 'star' + (i <= stars ? ' lit' : '');
-    s.textContent = '★';
+    s.textContent = '\u2605';
     starsEl.appendChild(s);
   }
 
   // Summary
   summaryEl.innerHTML = '';
   if (win && isLast) {
-    // Prototype Complete special summary — no stars, just celebratory text
     starsEl.innerHTML = '';
     const msgEl = document.createElement('div');
-    msgEl.style.cssText = 'font-size:16px;color:#fff;font-weight:700;margin-bottom:6px;';
+    msgEl.style.cssText = 'font-size:15px;color:#fff;font-weight:700;margin-bottom:6px;';
     msgEl.textContent = 'All 3 levels cleared!';
     summaryEl.appendChild(msgEl);
     const subEl = document.createElement('div');
-    subEl.style.cssText = 'font-size:13px;color:#aaccaa;';
+    subEl.style.cssText = 'font-size:12px;color:#aaccaa;margin-bottom:8px;';
     subEl.textContent = 'Core loop validation ready for review.';
     summaryEl.appendChild(subEl);
+    // Show coins earned
+    addSummaryRow(summaryEl, 'Wash Coins Earned', '+' + state.coinsEarnedThisLevel);
+    addSummaryRow(summaryEl, 'Total Coins', progression.washCoins.toString());
   } else if (win) {
     const timeBonus = Math.max(0, Math.round(state.timeLeft));
     addSummaryRow(summaryEl, 'Time Bonus', '+' + timeBonus + 's');
-    addSummaryRow(summaryEl, 'Stars',      '★'.repeat(stars));
+    addSummaryRow(summaryEl, 'Stars', '\u2605'.repeat(stars));
+    addSummaryRow(summaryEl, 'Wash Coins Earned', '+' + state.coinsEarnedThisLevel);
+    addSummaryRow(summaryEl, 'Total Coins', progression.washCoins.toString());
   } else {
-    // Show target progress
     state.targets.forEach(t => {
       let progressStr;
       if (t.type === 'restore_object') {
-        progressStr = (t.current || 0) >= 1 ? '✓' : '0/1';
+        progressStr = (t.current || 0) >= 1 ? '\u2713' : '0/1';
       } else if (t.type === 'clean_area') {
         progressStr = Math.round((t.current || 0) * 100) + '% / ' + Math.round((t.threshold || 0) * 100) + '%';
       } else {
@@ -684,22 +1323,21 @@ function populateResultScreen() {
       }
       addSummaryRow(summaryEl, t.label, progressStr);
     });
-    addSummaryRow(summaryEl, 'Status', 'Time\'s up!');
+    addSummaryRow(summaryEl, 'Status', "Time's up!");
   }
 
   // Action buttons
   actionsEl.innerHTML = '';
 
   if (win && isLast) {
-    // End of prototype
-    const btnPlayAgain = document.createElement('button');
-    btnPlayAgain.className   = 'btn-primary';
-    btnPlayAgain.textContent = 'Play Again';
-    btnPlayAgain.addEventListener('click', () => {
+    const btnHome = document.createElement('button');
+    btnHome.className   = 'btn-primary';
+    btnHome.textContent = 'Home';
+    btnHome.addEventListener('click', () => {
       state.levelIndex = 0;
-      showScreen('intro');
+      showScreen('home');
     });
-    actionsEl.appendChild(btnPlayAgain);
+    actionsEl.appendChild(btnHome);
 
   } else if (win) {
     const btnNext = document.createElement('button');
@@ -711,14 +1349,13 @@ function populateResultScreen() {
     });
     actionsEl.appendChild(btnNext);
 
-    const btnMenu = document.createElement('button');
-    btnMenu.className   = 'btn-secondary';
-    btnMenu.textContent = 'Menu';
-    btnMenu.addEventListener('click', () => {
-      state.levelIndex = 0;
-      showScreen('intro');
+    const btnHome = document.createElement('button');
+    btnHome.className   = 'btn-secondary';
+    btnHome.textContent = 'Home';
+    btnHome.addEventListener('click', () => {
+      showScreen('home');
     });
-    actionsEl.appendChild(btnMenu);
+    actionsEl.appendChild(btnHome);
 
   } else {
     const btnRetry = document.createElement('button');
@@ -729,18 +1366,16 @@ function populateResultScreen() {
     });
     actionsEl.appendChild(btnRetry);
 
-    const btnMenu = document.createElement('button');
-    btnMenu.className   = 'btn-secondary';
-    btnMenu.textContent = 'Menu';
-    btnMenu.addEventListener('click', () => {
-      state.levelIndex = 0;
-      showScreen('intro');
+    const btnHome = document.createElement('button');
+    btnHome.className   = 'btn-secondary';
+    btnHome.textContent = 'Home';
+    btnHome.addEventListener('click', () => {
+      showScreen('home');
     });
-    actionsEl.appendChild(btnMenu);
+    actionsEl.appendChild(btnHome);
   }
 }
 
-/** Helper: add a row to the result summary div */
 function addSummaryRow(container, label, value) {
   const row = document.createElement('div');
   row.className = 'summary-row';
@@ -754,12 +1389,6 @@ function addSummaryRow(container, label, value) {
 
 const canvas = document.getElementById('game-canvas');
 
-/**
- * Convert client (screen) coordinates to canvas logical coordinates.
- * @param {number} clientX
- * @param {number} clientY
- * @returns {{x: number, y: number}}
- */
 function canvasCoords(clientX, clientY) {
   const rect   = canvas.getBoundingClientRect();
   const scaleX = CANVAS_W / rect.width;
@@ -787,7 +1416,6 @@ canvas.addEventListener('mousedown', (e) => {
   state.inputActive = true;
 });
 
-// Mouse up does NOT deactivate — continuous aiming while cursor is over canvas
 canvas.addEventListener('mouseup',    () => { /* nozzle: inputActive stays true while over canvas */ });
 canvas.addEventListener('mouseleave', () => { state.inputActive = false; });
 
@@ -814,19 +1442,16 @@ canvas.addEventListener('touchmove', (e) => {
 canvas.addEventListener('touchend',    () => { state.inputActive = false; });
 canvas.addEventListener('touchcancel', () => { state.inputActive = false; });
 
-/**
- * Update aim point — bot is fixed at bottom-center, aim lerps toward input target.
- * @param {number} dt Delta time in seconds
- */
 function updateBot(dt) {
   if (state.paused) return;
 
   // Bot position is fixed at bottom-center
   state.botX = CANVAS_W / 2;
-  state.botY = CANVAS_H - 30;
+  state.botY = CANVAS_H - 50;
 
-  // Lerp aim point toward input target (near-instant response)
-  const t = 1 - Math.pow(0.001, dt);
+  // Lerp aim point toward input target (upgrade affects responsiveness)
+  const lerpBase = getEffectiveAimLerp();
+  const t = 1 - Math.pow(lerpBase, dt);
   state.aimX = lerp(state.aimX, state.targetX, t);
   state.aimY = lerp(state.aimY, state.targetY, t);
 
@@ -840,20 +1465,18 @@ function updateBot(dt) {
 
 const ctx = canvas.getContext('2d');
 
-/** Resize canvas to maintain 4:3 (800x600) aspect ratio, centered in viewport */
+/** Resize canvas to maintain 9:16 portrait aspect ratio, centered in viewport */
 function resizeCanvas() {
   const ww = window.innerWidth;
   const wh = window.innerHeight;
 
-  const aspect = CANVAS_W / CANVAS_H; // 4/3
+  const aspect = CANVAS_W / CANVAS_H; // 9/16 = 0.5625
   let displayW, displayH;
 
   if (ww / wh > aspect) {
-    // Wider than 4:3 — constrain height
     displayH = wh;
     displayW = displayH * aspect;
   } else {
-    // Taller than 4:3 — constrain width
     displayW = ww;
     displayH = displayW / aspect;
   }
@@ -863,27 +1486,20 @@ function resizeCanvas() {
   canvas.width  = CANVAS_W;
   canvas.height = CANVAS_H;
 
-  // Also size the wrapper
   const wrapper = document.getElementById('canvas-wrapper');
   wrapper.style.width  = displayW + 'px';
   wrapper.style.height = displayH + 'px';
 
-  // HUD font scaling via CSS var
   document.documentElement.style.setProperty('--scale', (displayW / CANVAS_W).toFixed(3));
 }
 
-/** Main render function — called every frame */
 function render() {
   ctx.save();
-
-  // Apply screen shake
   ctx.translate(state.shakeX, state.shakeY);
 
-  // ---- Arena background ----
   drawArena();
-
-  // ---- Render order ----
   renderProps();
+  renderRefillPoints();
   renderDirt();
   renderLocks();
   renderObjects();
@@ -896,17 +1512,14 @@ function render() {
   ctx.restore();
 }
 
-/** Draw the arena: grass gradient + fence border */
 function drawArena() {
-  // Gradient: slightly darker at top for isometric depth feel
   const grad = ctx.createLinearGradient(0, 0, 0, CANVAS_H);
-  grad.addColorStop(0,   '#3a6a2a');  // darker top
+  grad.addColorStop(0,   '#3a6a2a');
   grad.addColorStop(0.5, COL_GRASS);
-  grad.addColorStop(1,   '#4a8a3a');  // slightly lighter bottom
+  grad.addColorStop(1,   '#4a8a3a');
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
 
-  // Subtle grass texture noise (thin lines)
   ctx.save();
   ctx.globalAlpha = 0.06;
   ctx.strokeStyle = '#ffffff';
@@ -922,66 +1535,48 @@ function drawArena() {
   drawFence();
 }
 
-/** Draw fence border with posts */
 function drawFence() {
-  const FENCE_THICKNESS  = 12;
-  const POST_SIZE        = 16;
+  const FENCE_THICKNESS  = 10;
+  const POST_SIZE        = 14;
   const POST_HALF        = POST_SIZE / 2;
-  const POST_SPACING     = 80;
+  const POST_SPACING     = 60;
 
-  // Fence rails (4 sides)
   ctx.fillStyle = COL_FENCE;
-
-  // Top
   ctx.fillRect(0, 0, CANVAS_W, FENCE_THICKNESS);
-  // Bottom
   ctx.fillRect(0, CANVAS_H - FENCE_THICKNESS, CANVAS_W, FENCE_THICKNESS);
-  // Left
   ctx.fillRect(0, 0, FENCE_THICKNESS, CANVAS_H);
-  // Right
   ctx.fillRect(CANVAS_W - FENCE_THICKNESS, 0, FENCE_THICKNESS, CANVAS_H);
 
-  // Fence posts (horizontal, top & bottom)
   ctx.fillStyle = '#a09070';
   for (let x = 0; x <= CANVAS_W; x += POST_SPACING) {
-    // Top posts
-    roundRect(ctx, x - POST_HALF, 0, POST_SIZE, POST_SIZE + 6, 3);
+    roundRect(ctx, x - POST_HALF, 0, POST_SIZE, POST_SIZE + 5, 3);
     ctx.fill();
-    // Bottom posts
-    roundRect(ctx, x - POST_HALF, CANVAS_H - POST_SIZE - 6, POST_SIZE, POST_SIZE + 6, 3);
+    roundRect(ctx, x - POST_HALF, CANVAS_H - POST_SIZE - 5, POST_SIZE, POST_SIZE + 5, 3);
     ctx.fill();
   }
-  // Fence posts (vertical, left & right)
   for (let y = 0; y <= CANVAS_H; y += POST_SPACING) {
-    // Left posts
-    roundRect(ctx, 0, y - POST_HALF, POST_SIZE + 6, POST_SIZE, 3);
+    roundRect(ctx, 0, y - POST_HALF, POST_SIZE + 5, POST_SIZE, 3);
     ctx.fill();
-    // Right posts
-    roundRect(ctx, CANVAS_W - POST_SIZE - 6, y - POST_HALF, POST_SIZE + 6, POST_SIZE, 3);
+    roundRect(ctx, CANVAS_W - POST_SIZE - 5, y - POST_HALF, POST_SIZE + 5, POST_SIZE, 3);
     ctx.fill();
   }
 }
 
-/** Draw the stationary nozzle bot at bottom-center, rotated toward aim point */
 function drawBot() {
   const x  = state.botX;
   const y  = state.botY;
 
-  // Check turbo active
   const hasTurbo  = state.activePowerUps.some(p => p.type === 'turbo');
   const glowMult  = hasTurbo ? 2.2 : 1.0;
 
-  // Calculate angle from nozzle to aim point
   const aimAngle = Math.atan2(state.aimY - y, state.aimX - x);
 
-  // Recoil offset when actively cleaning
   let recoilX = 0, recoilY = 0;
-  if (state.isCleaning && state.inputActive) {
+  if (state.isCleaning && state.inputActive && state.waterCurrent > 0) {
     recoilX = (Math.random() - 0.5) * 3;
     recoilY = (Math.random() - 0.5) * 3;
   }
 
-  // ---- Bot glow ----
   const glowGrad = ctx.createRadialGradient(x, y, 0, x, y, 38 * glowMult);
   glowGrad.addColorStop(0,   hasTurbo ? 'rgba(68,210,255,0.45)' : COL_BOT_GLOW);
   glowGrad.addColorStop(1,   'rgba(0,0,0,0)');
@@ -990,21 +1585,18 @@ function drawBot() {
   ctx.ellipse(x, y, 38 * glowMult, 28 * glowMult, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  // ---- Shadow ----
   ctx.fillStyle = 'rgba(0,0,0,0.35)';
   ctx.beginPath();
   ctx.ellipse(x + 3, y + BOT_RADIUS_Y + 4, BOT_RADIUS_X - 2, 6, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  // ---- Rotated bot body ----
   ctx.save();
   ctx.translate(x + recoilX, y + recoilY);
-  ctx.rotate(aimAngle + Math.PI / 2); // +90deg so "up" on the body points toward aim
+  ctx.rotate(aimAngle + Math.PI / 2);
 
-  const bw = BOT_RADIUS_X * 2;    // 36
-  const bh = BOT_RADIUS_Y * 2.8;  // ~33
+  const bw = BOT_RADIUS_X * 2;
+  const bh = BOT_RADIUS_Y * 2.8;
 
-  // Top face (lighter, brighter)
   const topH  = 10;
   const sideH = bh - topH;
   const topColor = hasTurbo ? '#88eeff' : '#66ccff';
@@ -1012,12 +1604,10 @@ function drawBot() {
   roundRect(ctx, -bw / 2, -bh / 2, bw, topH, 6);
   ctx.fill();
 
-  // Front face (main body colour)
   ctx.fillStyle = hasTurbo ? '#22aaee' : COL_BOT;
   roundRect(ctx, -bw / 2, -bh / 2 + topH - 2, bw, sideH, 6);
   ctx.fill();
 
-  // Highlight stripe
   ctx.save();
   ctx.globalAlpha = 0.4;
   ctx.fillStyle   = '#ffffff';
@@ -1025,18 +1615,17 @@ function drawBot() {
   ctx.fill();
   ctx.restore();
 
-  // Nozzle tip (small protruding rectangle pointing "up" = toward aim)
   const nozzleW = 8;
   const nozzleH = 12;
-  const nozzleColor = state.inputActive
+  const hasWater = state.waterCurrent > 0;
+  const nozzleColor = (state.inputActive && hasWater)
     ? (hasTurbo ? '#44ffff' : '#88ccff')
     : (hasTurbo ? '#22aadd' : '#5599cc');
   ctx.fillStyle = nozzleColor;
   roundRect(ctx, -nozzleW / 2, -bh / 2 - nozzleH + 2, nozzleW, nozzleH, 3);
   ctx.fill();
 
-  // Nozzle glow when streaming
-  if (state.inputActive) {
+  if (state.inputActive && hasWater) {
     ctx.save();
     ctx.globalAlpha = 0.6 + 0.3 * Math.sin(Date.now() * 0.01);
     const nGrad = ctx.createRadialGradient(0, -bh / 2 - nozzleH / 2, 0, 0, -bh / 2 - nozzleH / 2, 12);
@@ -1049,7 +1638,6 @@ function drawBot() {
     ctx.restore();
   }
 
-  // Front face details: two "nozzle dots"
   ctx.fillStyle = hasTurbo ? '#004488' : '#1155aa';
   ctx.beginPath();
   ctx.arc(-7, 4, 4, 0, Math.PI * 2);
@@ -1058,7 +1646,6 @@ function drawBot() {
   ctx.arc(7, 4, 4, 0, Math.PI * 2);
   ctx.fill();
 
-  // Nozzle glow dots
   ctx.fillStyle = hasTurbo ? '#44ffff' : COL_SPRAY;
   ctx.beginPath();
   ctx.arc(-7, 4, 2.5, 0, Math.PI * 2);
@@ -1067,9 +1654,8 @@ function drawBot() {
   ctx.arc(7, 4, 2.5, 0, Math.PI * 2);
   ctx.fill();
 
-  ctx.restore(); // end rotation
+  ctx.restore();
 
-  // ---- Turbo indicator ring (drawn in world space) ----
   if (hasTurbo) {
     ctx.save();
     ctx.strokeStyle = '#44ffff';
@@ -1082,33 +1668,28 @@ function drawBot() {
   }
 }
 
-/**
- * Draw the splash circle at the aim point when input is active.
- */
 function drawSplashCircle() {
   if (!state.inputActive) return;
+  if (state.waterCurrent <= 0) return; // no water = no splash
 
   const ax = state.aimX;
   const ay = state.aimY;
   const hasTurbo = state.activePowerUps.some(p => p.type === 'turbo');
-  const crX = CLEAN_RADIUS_X * (hasTurbo ? TURBO_RADIUS_MULT : 1);
-  const crY = CLEAN_RADIUS_Y * (hasTurbo ? TURBO_RADIUS_MULT : 1);
+  const crX = getEffectiveCleanRadiusX() * (hasTurbo ? TURBO_RADIUS_MULT : 1);
+  const crY = getEffectiveCleanRadiusY() * (hasTurbo ? TURBO_RADIUS_MULT : 1);
 
-  // Pulsing size oscillation
   const pulse = 1 + 0.06 * Math.sin(Date.now() * 0.006);
   const pcrX = crX * pulse;
   const pcrY = crY * pulse;
 
   ctx.save();
 
-  // Semi-transparent blue fill
   ctx.globalAlpha = 0.12;
   ctx.fillStyle = hasTurbo ? '#44ddff' : '#44aaff';
   ctx.beginPath();
   ctx.ellipse(ax, ay, pcrX, pcrY, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  // Dashed stroke
   ctx.globalAlpha = 0.45;
   ctx.setLineDash([5, 5]);
   ctx.strokeStyle = hasTurbo ? 'rgba(68,220,255,0.7)' : 'rgba(68,170,255,0.5)';
@@ -1120,7 +1701,6 @@ function drawSplashCircle() {
 
   ctx.restore();
 
-  // Spawn 1-2 small splash particles radiating outward
   if (state.screen === 'gameplay' && !state.paused) {
     const splashCount = randInt(1, 2);
     for (let i = 0; i < splashCount; i++) {
@@ -1143,11 +1723,9 @@ function drawSplashCircle() {
   }
 }
 
-/**
- * Spawn stream particles from nozzle to aim point each frame.
- */
 function updateStream() {
   if (!state.inputActive) return;
+  if (state.waterCurrent <= 0) return; // no water = no stream
   if (state.screen !== 'gameplay' || state.paused) return;
 
   const fromX = state.botX;
@@ -1162,18 +1740,14 @@ function updateStream() {
 
   const travelTime = randRange(0.25, 0.35);
 
-  // Scale arc curve with distance — higher aim = bigger parabola
   const distRatio = clamp(distance / 500, 0, 1);
-  const gravity = 20 + distRatio * 400; // 20 near nozzle, up to 420 at max range
+  const gravity = 20 + distRatio * 400;
 
-  // Projectile math: solve for initial velocity so particle lands on target
-  // vx = dx / t, vy = dy / t - 0.5 * g * t (compensate for gravity)
   const baseVx = dx / travelTime;
   const baseVy = dy / travelTime - 0.5 * gravity * travelTime;
 
   const count = randInt(3, 5);
   for (let i = 0; i < count; i++) {
-    // Apply jitter to velocity (+/- 8% angle spread, +/- 10% speed)
     const speedMult = randRange(0.9, 1.1);
     const angleJitter = (Math.random() - 0.5) * 0.16;
     const cos_j = Math.cos(angleJitter);
@@ -1197,25 +1771,111 @@ function updateStream() {
   }
 }
 
+// ===== REFILL POINT RENDERER =====
+
+function renderRefillPoints() {
+  const now = Date.now();
+  state.refillPoints.forEach(rp => {
+    const pulse = 0.6 + 0.4 * Math.sin(now * 0.003);
+
+    // Outer glow
+    ctx.save();
+    ctx.globalAlpha = 0.15 * pulse;
+    const grad = ctx.createRadialGradient(rp.x, rp.y, 0, rp.x, rp.y, rp.radius);
+    grad.addColorStop(0, '#44bbff');
+    grad.addColorStop(1, 'rgba(68,187,255,0)');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(rp.x, rp.y, rp.radius, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Circle border
+    ctx.globalAlpha = 0.4 * pulse;
+    ctx.strokeStyle = '#44bbff';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath();
+    ctx.arc(rp.x, rp.y, rp.radius, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Water drop icon
+    ctx.globalAlpha = 0.8;
+    ctx.font = '16px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText('\u{1F4A7}', rp.x, rp.y);
+
+    ctx.restore();
+  });
+}
+
+// ===== WATER TANK UPDATE =====
+
+function updateWater(dt) {
+  if (state.paused) return;
+
+  // Drain water while actively cleaning
+  if (state.isCleaning && state.inputActive && state.waterCurrent > 0) {
+    state.waterCurrent -= state.waterDrainRate * dt;
+    if (state.waterCurrent < 0) state.waterCurrent = 0;
+  }
+
+  // Check refill: aim point near a refill point AND not cleaning
+  state.nearRefillPoint = false;
+  if (state.waterCurrent < state.waterCapacity) {
+    state.refillPoints.forEach(rp => {
+      const d = dist(state.aimX, state.aimY, rp.x, rp.y);
+      if (d <= rp.radius) {
+        state.nearRefillPoint = true;
+        // Refill when not actively cleaning (or when water is 0)
+        if (!state.isCleaning || state.waterCurrent <= 0) {
+          state.waterCurrent = Math.min(
+            state.waterCapacity,
+            state.waterCurrent + state.waterRefillRate * dt
+          );
+        }
+      }
+    });
+  }
+}
+
+function updateWaterHUD() {
+  const fillEl = document.getElementById('water-bar-fill');
+  const containerEl = document.getElementById('water-bar-container');
+  const refillEl = document.getElementById('refill-indicator');
+  if (!fillEl) return;
+
+  const pct = (state.waterCurrent / state.waterCapacity) * 100;
+  fillEl.style.height = pct + '%';
+
+  if (pct < 20) {
+    containerEl.classList.add('low');
+  } else {
+    containerEl.classList.remove('low');
+  }
+
+  if (state.nearRefillPoint) {
+    refillEl.style.display = 'block';
+  } else {
+    refillEl.style.display = 'none';
+  }
+}
+
 // ===== GAME LOOP =====
 
 let lastTime = 0;
 
-/**
- * Main game loop — called every animation frame.
- * @param {number} timestamp ms from requestAnimationFrame
- */
 function gameLoop(timestamp) {
   const rawDt = (timestamp - lastTime) / 1000;
   lastTime    = timestamp;
-  const dt    = Math.min(rawDt, 0.05); // cap at 50ms to prevent spiral
+  const dt    = Math.min(rawDt, 0.05);
 
   if (state.screen === 'gameplay' && !state.paused) {
     updateBot(dt);
     updateStream();
     updateShake(dt);
-
-    // Stub update calls (filled in later tasks)
     updateDirt(dt);
     updateObjects(dt);
     updateLocks(dt);
@@ -1223,6 +1883,8 @@ function gameLoop(timestamp) {
     updateHazards(dt);
     updateCombo(dt);
     updateParticles(dt);
+    updateWater(dt);
+    updateWaterHUD();
     updateHUD();
     updateSpraySound();
     updateTimerTick();
@@ -1234,10 +1896,6 @@ function gameLoop(timestamp) {
   requestAnimationFrame(gameLoop);
 }
 
-/**
- * Decay screen shake values each frame.
- * @param {number} dt Delta time in seconds
- */
 function updateShake(dt) {
   const decay = Math.pow(SCREEN_SHAKE_DECAY, dt * 60);
   state.shakeX *= decay;
@@ -1246,10 +1904,6 @@ function updateShake(dt) {
   if (Math.abs(state.shakeY) < 0.1) state.shakeY = 0;
 }
 
-/**
- * Trigger a screen shake.
- * @param {number} intensity Pixel magnitude
- */
 function triggerShake(intensity) {
   state.shakeX = (Math.random() * 2 - 1) * intensity;
   state.shakeY = (Math.random() * 2 - 1) * intensity;
@@ -1257,22 +1911,35 @@ function triggerShake(intensity) {
 
 // ===== INIT =====
 
-/**
- * Start (or restart) the current level.
- * Resets all gameplay state from level data, then shows the gameplay screen.
- */
 function startLevel() {
   const level = LEVELS[state.levelIndex];
   if (!level) return;
 
+  // Apply booster if selected
+  state.activeBooster = null;
+  if (_selectedBoosterId) {
+    const bdef = BOOSTER_DEFS.find(b => b.id === _selectedBoosterId);
+    if (bdef && progression.washCoins >= bdef.cost) {
+      progression.washCoins -= bdef.cost;
+      state.activeBooster = bdef.effect;
+    }
+    _selectedBoosterId = null;
+  }
+
+  // Calculate effective water capacity
+  const effectiveCap = getEffectiveWaterCapacity();
+  const effectiveRefill = getEffectiveRefillRate();
+
+  // Timer with booster
+  let levelTimer = level.timer;
+  if (state.activeBooster === 'time') levelTimer += 10;
+
   // Reset state
-  state.timer        = level.timer;
+  state.timer        = levelTimer;
   state.timerElapsed = 0;
   state.paused       = false;
-  // Bot is fixed at bottom-center (nozzle position)
   state.botX         = CANVAS_W / 2;
-  state.botY         = CANVAS_H - 30;
-  // Aim point starts at center of arena
+  state.botY         = CANVAS_H - 50;
   state.aimX         = CANVAS_W / 2;
   state.aimY         = CANVAS_H / 2;
   state.targetX      = CANVAS_W / 2;
@@ -1286,6 +1953,7 @@ function startLevel() {
   state.powerUps       = [];
   state.activePowerUps = [];
   state.targets        = level.targets.map(t => Object.assign({}, t, { current: 0, progress: 0, done: false }));
+  state.refillPoints   = [];
 
   state.comboCount  = 0;
   state.comboTimer  = 0;
@@ -1294,12 +1962,21 @@ function startLevel() {
   state.shakeY      = 0;
 
   state.won      = false;
-  state.timeLeft = level.timer;
+  state.timeLeft = levelTimer;
   state.stars    = 0;
+  state.usedContinue = false;
+  state.coinsEarnedThisLevel = 0;
 
   state.isCleaning = false;
 
-  // Stop and disconnect any active spray noise to prevent audio bleed between levels
+  // Water
+  state.waterCapacity   = effectiveCap;
+  state.waterCurrent    = effectiveCap;
+  state.waterDrainRate  = WATER_DRAIN_RATE_BASE;
+  state.waterRefillRate = effectiveRefill;
+  state.nearRefillPoint = false;
+
+  // Stop any active spray noise
   if (state.sprayNode) {
     try {
       state.sprayNode.gain.gain.setValueAtTime(0, state.sprayNode.gain.context.currentTime);
@@ -1308,33 +1985,38 @@ function startLevel() {
     state.sprayNode = null;
   }
 
-  // Load level-specific data (stub for now)
   loadLevel(level);
-
   showScreen('gameplay');
 }
 
-// Wire the START button
+// ===== BOTTOM NAV =====
+
+document.querySelectorAll('.nav-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    const target = tab.getAttribute('data-tab');
+    if (target === 'home') showScreen('home');
+    else if (target === 'upgrades') showScreen('upgrades');
+  });
+});
+
+// Wire buttons
+document.getElementById('btn-play').addEventListener('click', () => {
+  state.levelIndex = Math.min(progression.campaignLevel, LEVELS.length - 1);
+  showScreen('intro');
+});
 document.getElementById('btn-start').addEventListener('click', startLevel);
 
-// Window resize
 window.addEventListener('resize', resizeCanvas);
-
-// Initial sizing
 resizeCanvas();
 
-// Show intro screen on load
-showScreen('intro');
+// Show home screen on load
+showScreen('home');
 
 // Kick off the render loop
 requestAnimationFrame((t) => { lastTime = t; gameLoop(t); });
 
 // ===== DIRT SYSTEM =====
 
-/**
- * Spawn dirt nodes from an array of definition objects.
- * @param {Array} defs Array of dirt definition objects
- */
 function spawnDirt(defs) {
   const typeDefaults = {
     sludge: { radiusX: 28, radiusY: 18, maxHP: 100 },
@@ -1364,10 +2046,6 @@ function spawnDirt(defs) {
   });
 }
 
-/**
- * Update dirt cleaning each frame.
- * @param {number} dt Delta time in seconds
- */
 function updateDirt(dt) {
   if (state.paused) return;
 
@@ -1381,30 +2059,29 @@ function updateDirt(dt) {
 
   state.isCleaning = false;
 
-  // Only clean when player is actively aiming
   if (!state.inputActive) return;
+  if (state.waterCurrent <= 0) return; // No water = no cleaning
+
+  const effectiveCleanPower = getEffectiveCleanPower();
+  const effectiveCRX = getEffectiveCleanRadiusX();
+  const effectiveCRY = getEffectiveCleanRadiusY();
 
   state.dirtNodes.forEach(dirt => {
     if (!dirt.alive || dirt.locked) return;
 
-    // Determine effective cleaning radius
-    let crX = CLEAN_RADIUS_X * radiusMult;
-    let crY = CLEAN_RADIUS_Y * radiusMult;
+    let crX = effectiveCRX * radiusMult;
+    let crY = effectiveCRY * radiusMult;
 
-    // Sludge magnet extends range
     if (dirt.type === 'sludge' && hasMagnet) {
       crX = Math.max(crX, SLUDGE_MAGNET_RADIUS);
       crY = Math.max(crY, SLUDGE_MAGNET_RADIUS);
     }
 
-    // Check if aim point overlaps with dirt using ellipse distance
     const ed = ellipseDist(dirt.x - aimX, dirt.y - aimY, crX, crY);
     if (ed > 1) return;
 
-    // Calculate cleaning power this frame
-    let cleanAmount = CLEAN_POWER * powerMult * dt;
+    let cleanAmount = effectiveCleanPower * powerMult * dt;
 
-    // Type-specific speed modifiers
     if (dirt.type === 'sludge' && !hasMagnet) {
       cleanAmount *= 0.4;
     } else if (dirt.type === 'leaves') {
@@ -1414,7 +2091,6 @@ function updateDirt(dt) {
     dirt.hp -= cleanAmount;
     state.isCleaning = true;
 
-    // Spray particle (30% chance per frame per dirt) — emits from splash point
     if (Math.random() < 0.3) {
       spawnSprayParticle(aimX, aimY, dirt.x, dirt.y, dirt.type);
     }
@@ -1427,14 +2103,9 @@ function updateDirt(dt) {
   });
 }
 
-/**
- * Called when a dirt node is fully cleaned.
- * @param {object} dirt The dirt node that was cleared
- */
 function onDirtCleared(dirt) {
   spawnRevealPulse(dirt.x, dirt.y);
 
-  // Update matching clean_dirt targets
   if (dirt.targetTag) {
     state.targets.forEach(target => {
       if (target.type === 'clean_dirt' && target.dirtTag === dirt.targetTag) {
@@ -1449,10 +2120,8 @@ function onDirtCleared(dirt) {
   checkAreaTargets();
   onCleanForCombo();
 
-  // Check if restore objects become ready
   state.objects && state.objects.forEach(obj => {
     if (!obj.restoreRequired || obj.restoreReady) return;
-    // Check if all sludge within 80px of this object is cleared
     const nearby = state.dirtNodes.filter(d =>
       d.type === 'sludge' && dist(d.x, d.y, obj.x, obj.y) <= 80
     );
@@ -1464,9 +2133,6 @@ function onDirtCleared(dirt) {
   });
 }
 
-/**
- * Update progress of clean_area targets based on cleared dirt nodes.
- */
 function checkAreaTargets() {
   state.targets.forEach(target => {
     if (target.type !== 'clean_area') return;
@@ -1489,7 +2155,6 @@ function checkAreaTargets() {
 
 // ===== DIRT RENDERER =====
 
-/** Render all alive dirt nodes with depth and fade effects */
 function renderDirt() {
   state.dirtNodes.forEach(dirt => {
     if (!dirt.alive) return;
@@ -1503,7 +2168,6 @@ function renderDirt() {
     const x = dirt.x;
     const y = dirt.y;
 
-    // Color by type
     let color;
     switch (dirt.type) {
       case 'mud':    color = COL_MUD;    break;
@@ -1514,7 +2178,6 @@ function renderDirt() {
 
     ctx.save();
 
-    // Clean ground reveal (bright green) when partially cleaned
     if (ratio < 0.8) {
       ctx.globalAlpha = (1 - ratio / 0.8) * 0.6;
       ctx.fillStyle   = COL_GRASS_CLEAN;
@@ -1523,14 +2186,12 @@ function renderDirt() {
       ctx.fill();
     }
 
-    // Bottom rim (darker, for tilt depth)
     ctx.globalAlpha = alpha * 0.6;
     ctx.fillStyle   = 'rgba(0,0,0,0.4)';
     ctx.beginPath();
     ctx.ellipse(x, y + currentRY * 0.35, currentRX * 0.9, currentRY * 0.4, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // Main dirt ellipse
     ctx.globalAlpha = alpha;
     ctx.fillStyle   = color;
     ctx.beginPath();
@@ -1542,156 +2203,151 @@ function renderDirt() {
 }
 
 // ===== LEVEL LOADER =====
+// All positions recalculated for 450x800 portrait canvas
 
-/**
- * Load level-specific content: spawn dirt, objects, etc.
- * @param {object} level Level data object
- */
 function loadLevel(level) {
   if (state.levelIndex === 0) {
-    // Level 1 — spawn mud patches for immediate satisfaction + area coverage
+    // Level 1 -- portrait layout: 450 wide, 800 tall, bot at bottom ~750
+    // No refill point needed (short level, generous tank)
     spawnDirt([
-      // 3 mud patches near bot start for immediate satisfaction (~360-440, 380-420)
-      { id: 1,  x: 370, y: 390, type: 'mud' },
-      { id: 2,  x: 400, y: 405, type: 'mud' },
-      { id: 3,  x: 435, y: 385, type: 'mud' },
-      // 9 more mud patches spread across the arena (200-680, 120-500)
-      { id: 4,  x: 210, y: 130, type: 'mud' },
-      { id: 5,  x: 310, y: 180, type: 'mud' },
-      { id: 6,  x: 550, y: 150, type: 'mud' },
-      { id: 7,  x: 670, y: 220, type: 'mud' },
-      { id: 8,  x: 240, y: 310, type: 'mud' },
-      { id: 9,  x: 490, y: 280, type: 'mud' },
-      { id: 10, x: 640, y: 380, type: 'mud' },
-      { id: 11, x: 280, y: 470, type: 'mud' },
-      { id: 12, x: 580, y: 490, type: 'mud' },
+      // Near bot start for immediate satisfaction
+      { id: 1,  x: 200, y: 580, type: 'mud' },
+      { id: 2,  x: 225, y: 610, type: 'mud' },
+      { id: 3,  x: 260, y: 570, type: 'mud' },
+      // Spread across arena
+      { id: 4,  x: 100, y: 200, type: 'mud' },
+      { id: 5,  x: 180, y: 300, type: 'mud' },
+      { id: 6,  x: 320, y: 250, type: 'mud' },
+      { id: 7,  x: 380, y: 350, type: 'mud' },
+      { id: 8,  x: 120, y: 430, type: 'mud' },
+      { id: 9,  x: 280, y: 400, type: 'mud' },
+      { id: 10, x: 370, y: 520, type: 'mud' },
+      { id: 11, x: 150, y: 660, type: 'mud' },
+      { id: 12, x: 340, y: 680, type: 'mud' },
     ]);
-    // 4 flower pots spread around the arena
+    // 4 flower pots
     spawnObjects([
-      { x: 150, y: 200, type: 'pot' },
-      { x: 650, y: 180, type: 'pot' },
-      { x: 300, y: 400, type: 'pot' },
-      { x: 580, y: 450, type: 'pot' },
+      { x: 80,  y: 300, type: 'pot' },
+      { x: 370, y: 280, type: 'pot' },
+      { x: 160, y: 520, type: 'pot' },
+      { x: 330, y: 620, type: 'pot' },
     ]);
+
   } else if (state.levelIndex === 1) {
-    // Level 2 — Garden Path
+    // Level 2 -- Garden Path (portrait)
+    // 1 refill point
+    state.refillPoints = [
+      { x: 380, y: 450, radius: 35 },
+    ];
+
     spawnDirt([
-      // Near start (bot starts ~400, 420)
-      { id: 'l2_mud1', x: 360, y: 420, type: 'mud', targetTag: 'target_mud' },
-      { id: 'l2_mud2', x: 440, y: 380, type: 'mud', targetTag: 'target_mud' },
-      { id: 'l2_mud3', x: 280, y: 350, type: 'mud', targetTag: 'target_mud' },
-      // Gate-blocking mud (no target tag — these unlock the gate)
-      { id: 'l2_gate_mud1', x: 580, y: 250, type: 'mud' },
-      { id: 'l2_gate_mud2', x: 620, y: 260, type: 'mud' },
-      // More target mud spread around
-      { id: 'l2_mud4', x: 200, y: 200, type: 'mud', targetTag: 'target_mud' },
-      { id: 'l2_mud5', x: 350, y: 150, type: 'mud', targetTag: 'target_mud' },
-      { id: 'l2_mud6', x: 150, y: 400, type: 'mud', targetTag: 'target_mud' },
+      { id: 'l2_mud1', x: 200, y: 600, type: 'mud', targetTag: 'target_mud' },
+      { id: 'l2_mud2', x: 260, y: 540, type: 'mud', targetTag: 'target_mud' },
+      { id: 'l2_mud3', x: 140, y: 500, type: 'mud', targetTag: 'target_mud' },
+      // Gate-blocking mud
+      { id: 'l2_gate_mud1', x: 340, y: 300, type: 'mud' },
+      { id: 'l2_gate_mud2', x: 370, y: 320, type: 'mud' },
+      // More target mud
+      { id: 'l2_mud4', x: 100, y: 300, type: 'mud', targetTag: 'target_mud' },
+      { id: 'l2_mud5', x: 200, y: 220, type: 'mud', targetTag: 'target_mud' },
+      { id: 'l2_mud6', x: 80,  y: 560, type: 'mud', targetTag: 'target_mud' },
       // Behind gate (locked)
-      { id: 'l2_locked_mud1', x: 650, y: 150, type: 'mud', locked: true },
-      { id: 'l2_locked_mud2', x: 700, y: 180, type: 'mud', locked: true },
+      { id: 'l2_locked_mud1', x: 370, y: 160, type: 'mud', locked: true },
+      { id: 'l2_locked_mud2', x: 400, y: 200, type: 'mud', locked: true },
     ]);
-    // Leaves (no target tags, just decoration/cleanup)
     spawnDirt([
-      { x: 180, y: 280, type: 'leaves' },
-      { x: 250, y: 180, type: 'leaves' },
-      { x: 420, y: 200, type: 'leaves' },
-      { x: 500, y: 350, type: 'leaves' },
-      { x: 320, y: 480, type: 'leaves' },
-      { x: 600, y: 400, type: 'leaves' },
-      { x: 130, y: 320, type: 'leaves' },
-      { x: 480, y: 150, type: 'leaves' },
+      { x: 100, y: 380, type: 'leaves' },
+      { x: 140, y: 260, type: 'leaves' },
+      { x: 240, y: 320, type: 'leaves' },
+      { x: 290, y: 460, type: 'leaves' },
+      { x: 170, y: 660, type: 'leaves' },
+      { x: 350, y: 550, type: 'leaves' },
+      { x: 70,  y: 430, type: 'leaves' },
+      { x: 280, y: 200, type: 'leaves' },
     ]);
-    // Objects: 2 benches
     spawnObjects([
-      { id: 'l2_bench1', x: 200, y: 450, type: 'bench' },
-      { id: 'l2_bench2', x: 680, y: 120, type: 'bench', locked: true },
+      { id: 'l2_bench1', x: 120, y: 630, type: 'bench' },
+      { id: 'l2_bench2', x: 390, y: 130, type: 'bench', locked: true },
     ]);
-    // Lock: gate on right side
     spawnLocks([{
       id: 'l2_gate',
-      x: 610, y: 200, width: 60, height: 8,
+      x: 360, y: 250, width: 50, height: 8,
       requiredDirtCleared: ['l2_gate_mud1', 'l2_gate_mud2'],
       unlocksDirt: ['l2_locked_mud1', 'l2_locked_mud2'],
       unlocksObjects: ['l2_bench2'],
     }]);
-    // Power-up: Turbo Spray at 15s elapsed
     spawnPowerUpDefs([{
-      x: 400, y: 280, type: 'turbo',
+      x: 225, y: 400, type: 'turbo',
       spawnAfter: 15, duration: 8,
     }]);
+
   } else if (state.levelIndex === 2) {
-    // Level 3 — Backyard Blitz
+    // Level 3 -- Backyard Blitz (portrait)
+    // 1-2 refill points
+    state.refillPoints = [
+      { x: 80,  y: 350, radius: 35 },
+      { x: 370, y: 600, radius: 30 },
+    ];
+
     spawnDirt([
-      // Main area mud
-      { id: 'l3_mud1', x: 360, y: 400, type: 'mud', areaId: 'main' },
-      { id: 'l3_mud2', x: 200, y: 350, type: 'mud', areaId: 'main' },
-      { id: 'l3_mud3', x: 500, y: 380, type: 'mud', areaId: 'main' },
-      { id: 'l3_mud4', x: 300, y: 250, type: 'mud', areaId: 'main' },
+      { id: 'l3_mud1', x: 200, y: 560, type: 'mud', areaId: 'main' },
+      { id: 'l3_mud2', x: 100, y: 480, type: 'mud', areaId: 'main' },
+      { id: 'l3_mud3', x: 300, y: 520, type: 'mud', areaId: 'main' },
+      { id: 'l3_mud4', x: 170, y: 370, type: 'mud', areaId: 'main' },
       // Gate-blocking mud
-      { id: 'l3_gate1_mud', x: 150, y: 200, type: 'mud', areaId: 'main' },
-      { id: 'l3_gate2_mud1', x: 600, y: 300, type: 'mud', areaId: 'main' },
-      { id: 'l3_gate2_mud2', x: 640, y: 280, type: 'mud', areaId: 'main' },
+      { id: 'l3_gate1_mud', x: 80, y: 280, type: 'mud', areaId: 'main' },
+      { id: 'l3_gate2_mud1', x: 350, y: 380, type: 'mud', areaId: 'main' },
+      { id: 'l3_gate2_mud2', x: 380, y: 360, type: 'mud', areaId: 'main' },
       // Behind gate 1
-      { id: 'l3_locked1_mud', x: 100, y: 120, type: 'mud', areaId: 'main', locked: true },
+      { id: 'l3_locked1_mud', x: 60, y: 180, type: 'mud', areaId: 'main', locked: true },
     ]);
-    // Leaves
     spawnDirt([
-      { x: 250, y: 420, type: 'leaves', areaId: 'main' },
-      { x: 450, y: 200, type: 'leaves', areaId: 'main' },
-      { x: 350, y: 480, type: 'leaves', areaId: 'main' },
-      { x: 550, y: 150, type: 'leaves', areaId: 'main' },
-      { x: 150, y: 450, type: 'leaves', areaId: 'main' },
-      { x: 680, y: 400, type: 'leaves', areaId: 'main' },
+      { x: 140, y: 590, type: 'leaves', areaId: 'main' },
+      { x: 260, y: 310, type: 'leaves', areaId: 'main' },
+      { x: 190, y: 660, type: 'leaves', areaId: 'main' },
+      { x: 320, y: 230, type: 'leaves', areaId: 'main' },
+      { x: 80,  y: 620, type: 'leaves', areaId: 'main' },
+      { x: 390, y: 540, type: 'leaves', areaId: 'main' },
     ]);
-    // Sludge (near bird bath, behind gate 2)
     spawnDirt([
-      { id: 'l3_sludge1', x: 660, y: 150, type: 'sludge', areaId: 'main', locked: true },
-      { id: 'l3_sludge2', x: 700, y: 170, type: 'sludge', areaId: 'main', locked: true },
-      { id: 'l3_sludge3', x: 680, y: 120, type: 'sludge', areaId: 'main', locked: true },
-      { id: 'l3_sludge4', x: 720, y: 140, type: 'sludge', areaId: 'main', locked: true },
+      { id: 'l3_sludge1', x: 380, y: 180, type: 'sludge', areaId: 'main', locked: true },
+      { id: 'l3_sludge2', x: 400, y: 210, type: 'sludge', areaId: 'main', locked: true },
+      { id: 'l3_sludge3', x: 390, y: 150, type: 'sludge', areaId: 'main', locked: true },
+      { id: 'l3_sludge4', x: 410, y: 170, type: 'sludge', areaId: 'main', locked: true },
     ]);
-    // Objects: Bird bath with restore sequence
     spawnObjects([{
-      id: 'birdbath', x: 690, y: 145, type: 'birdbath',
+      id: 'birdbath', x: 395, y: 175, type: 'birdbath',
       hp: 60, locked: true, restoreRequired: true,
     }]);
-    // Locks: 2 gates
     spawnLocks([
       {
         id: 'l3_gate1',
-        x: 130, y: 160, width: 50, height: 8,
+        x: 70, y: 230, width: 45, height: 8,
         requiredDirtCleared: ['l3_gate1_mud'],
         unlocksDirt: ['l3_locked1_mud'],
         unlocksObjects: [],
       },
       {
         id: 'l3_gate2',
-        x: 640, y: 240, width: 60, height: 8,
+        x: 380, y: 280, width: 50, height: 8,
         requiredDirtCleared: ['l3_gate2_mud1', 'l3_gate2_mud2'],
         unlocksDirt: ['l3_sludge1', 'l3_sludge2', 'l3_sludge3', 'l3_sludge4'],
         unlocksObjects: ['birdbath'],
       },
     ]);
-    // Hazard: recontamination vent
     spawnHazards([{
-      x: 250, y: 300, type: 'recontamination_vent',
+      x: 140, y: 420, type: 'recontamination_vent',
       respawnInterval: 4, respawnRadius: 50,
     }]);
-    // Power-ups: both types
     spawnPowerUpDefs([
-      { x: 400, y: 300, type: 'turbo', spawnAfter: 15, duration: 8 },
-      { x: 500, y: 250, type: 'magnet', spawnAfter: 10, duration: 6 },
+      { x: 225, y: 430, type: 'turbo', spawnAfter: 15, duration: 8 },
+      { x: 290, y: 350, type: 'magnet', spawnAfter: 10, duration: 6 },
     ]);
   }
 }
 
 // ===== PARTICLE SYSTEM =====
 
-/**
- * Push a new particle into state.particles.
- * @param {object} props Particle properties
- */
 function spawnParticle(props) {
   const maxLife = props.life || 0.5;
   state.particles.push({
@@ -1703,7 +2359,7 @@ function spawnParticle(props) {
     maxLife: maxLife,
     size:    props.size    !== undefined ? props.size : 3,
     color:   props.color   || COL_SPRAY,
-    type:    props.type    || 'dot',      // 'dot' | 'ring' | 'text'
+    type:    props.type    || 'dot',
     text:    props.text    || '',
     shrink:  props.shrink  !== undefined ? props.shrink : true,
     gravity: props.gravity !== undefined ? props.gravity : 0,
@@ -1711,21 +2367,12 @@ function spawnParticle(props) {
   });
 }
 
-/**
- * Spawn a spray particle from bot toward a dirt node.
- * @param {number} fromX Bot x
- * @param {number} fromY Bot y
- * @param {number} toX  Dirt x
- * @param {number} toY  Dirt y
- * @param {string} dirtType Dirt type string
- */
 function spawnSprayParticle(fromX, fromY, toX, toY, dirtType) {
   const baseAngle = Math.atan2(toY - fromY, toX - fromX);
   const spread    = (Math.random() - 0.5) * 1.0;
   const angle     = baseAngle + spread;
   const speed     = randRange(60, 120);
 
-  // Spawn position: 15px from bot toward dirt
   const spawnX = fromX + Math.cos(baseAngle) * 15;
   const spawnY = fromY + Math.sin(baseAngle) * 15;
 
@@ -1752,11 +2399,6 @@ function spawnSprayParticle(fromX, fromY, toX, toY, dirtType) {
   });
 }
 
-/**
- * Spawn a reveal pulse ring at a position and play a clear-pop sound.
- * @param {number} x
- * @param {number} y
- */
 function spawnRevealPulse(x, y) {
   spawnParticle({
     x:      x,
@@ -1770,11 +2412,6 @@ function spawnRevealPulse(x, y) {
   playDirtClearPop();
 }
 
-/**
- * Spawn a radial sparkle burst at a position.
- * @param {number} x
- * @param {number} y
- */
 function spawnSparkleBurst(x, y) {
   for (let i = 0; i < 12; i++) {
     const angle = (i / 12) * Math.PI * 2 + (Math.random() - 0.5) * 0.5;
@@ -1797,50 +2434,32 @@ function spawnSparkleBurst(x, y) {
   }
 }
 
-/**
- * Spawn collect effect for a power-up.
- * @param {number} x
- * @param {number} y
- * @param {string} type 'turbo' | 'magnet'
- */
 function spawnPowerUpCollectEffect(x, y, type) {
   const isTurbo = type === 'turbo';
   const ringColor = isTurbo ? 'rgba(68,170,255,0.9)' : 'rgba(255,150,50,0.9)';
   const dotColor  = isTurbo ? 'rgba(68,170,255,0.8)' : 'rgba(255,150,50,0.8)';
 
-  // Ring particle
   spawnParticle({
-    x:      x,
-    y:      y,
-    life:   0.6,
-    size:   10,
-    color:  ringColor,
-    type:   'ring',
-    shrink: false,
+    x: x, y: y,
+    life: 0.6, size: 10,
+    color: ringColor, type: 'ring', shrink: false,
   });
 
-  // 16 radial dot particles
   for (let i = 0; i < 16; i++) {
     const angle = (i / 16) * Math.PI * 2;
     const speed = randRange(50, 110);
     spawnParticle({
-      x:       x,
-      y:       y,
-      vx:      Math.cos(angle) * speed,
-      vy:      Math.sin(angle) * speed,
-      life:    randRange(0.4, 0.7),
-      size:    randRange(2, 5),
-      color:   dotColor,
-      type:    'dot',
-      gravity: 60,
-      friction: 0.9,
+      x: x, y: y,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+      life: randRange(0.4, 0.7),
+      size: randRange(2, 5),
+      color: dotColor, type: 'dot',
+      gravity: 60, friction: 0.9,
     });
   }
 }
 
-/**
- * Register a clean event for the combo counter.
- */
 function onCleanForCombo() {
   if (state.comboTimer > 0) {
     state.comboCount++;
@@ -1868,14 +2487,8 @@ function onCleanForCombo() {
   }
 }
 
-// playTargetChime, playWinJingle, playFailSound are defined in the Audio Engine section below
-
 // ===== LOCK SYSTEM =====
 
-/**
- * Spawn lock definitions into state.locks.
- * @param {Array} defs Array of lock definition objects
- */
 function spawnLocks(defs) {
   defs.forEach((def, i) => {
     const lock = {
@@ -1894,19 +2507,13 @@ function spawnLocks(defs) {
   });
 }
 
-/**
- * Update lock states each frame.
- * @param {number} dt Delta time in seconds
- */
 function updateLocks(dt) {
   if (state.paused) return;
 
   state.locks.forEach(lock => {
     if (lock.open) {
-      // Advance dissolve progress
       lock.dissolveProgress = Math.min(1, lock.dissolveProgress + dt * 2);
     } else {
-      // Check if all required dirt IDs are cleared
       const allCleared = lock.requiredDirtCleared.every(dirtId => {
         const dirt = state.dirtNodes.find(d => d.id === dirtId);
         return dirt && !dirt.alive;
@@ -1915,13 +2522,11 @@ function updateLocks(dt) {
       if (allCleared && lock.requiredDirtCleared.length > 0) {
         lock.open = true;
 
-        // Unlock referenced dirt nodes
         lock.unlocksDirt.forEach(dirtId => {
           const dirt = state.dirtNodes.find(d => d.id === dirtId);
           if (dirt) dirt.locked = false;
         });
 
-        // Unlock referenced objects
         lock.unlocksObjects.forEach(objId => {
           const obj = state.objects.find(o => o.id === objId);
           if (obj) obj.locked = false;
@@ -1934,9 +2539,6 @@ function updateLocks(dt) {
   });
 }
 
-/**
- * Render all lock gates.
- */
 function renderLocks() {
   state.locks.forEach(lock => {
     if (lock.dissolveProgress >= 1) return;
@@ -1950,16 +2552,13 @@ function renderLocks() {
     ctx.save();
     ctx.globalAlpha = alpha;
 
-    // Wooden rectangle (gate body)
     ctx.fillStyle = '#8a6430';
     ctx.fillRect(x, y, w, h);
 
-    // Darker border
     ctx.strokeStyle = '#5a3c18';
     ctx.lineWidth   = 1.5;
     ctx.strokeRect(x, y, w, h);
 
-    // Picket posts every 12px
     ctx.fillStyle = '#a07840';
     const postW   = 6;
     const postH   = h + 8;
@@ -1968,13 +2567,12 @@ function renderLocks() {
       ctx.fillRect(px, postY, postW, postH);
     }
 
-    // Lock icon when not yet open
     if (!lock.open) {
       ctx.font        = '14px sans-serif';
       ctx.textAlign   = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillStyle   = '#ffffff';
-      ctx.fillText('🔒', lock.x, lock.y);
+      ctx.fillText('\u{1F512}', lock.x, lock.y);
     }
 
     ctx.restore();
@@ -1983,18 +2581,14 @@ function renderLocks() {
 
 // ===== POWER-UP SYSTEM =====
 
-/**
- * Spawn power-up definitions into state.powerUps.
- * @param {Array} defs Array of power-up definition objects
- */
 function spawnPowerUpDefs(defs) {
   defs.forEach((def, i) => {
     const pu = {
       id:         def.id !== undefined ? def.id : (state.powerUps.length + i),
       x:          def.x,
       y:          def.y,
-      type:       def.type || 'turbo',    // 'turbo' | 'magnet'
-      spawnAfter: def.spawnAfter || 0,    // seconds elapsed before appearing
+      type:       def.type || 'turbo',
+      spawnAfter: def.spawnAfter || 0,
       duration:   def.duration   || 8,
       visible:    false,
       collected:  false,
@@ -2004,14 +2598,9 @@ function spawnPowerUpDefs(defs) {
   });
 }
 
-/**
- * Update power-up spawning, collection, and active power-up ticking.
- * @param {number} dt Delta time in seconds
- */
 function updatePowerUps(dt) {
   if (state.paused) return;
 
-  // Spawn check
   state.powerUps.forEach(pu => {
     if (pu.visible || pu.collected) return;
     if (state.timerElapsed >= pu.spawnAfter) {
@@ -2020,7 +2609,6 @@ function updatePowerUps(dt) {
     }
   });
 
-  // Collection check — splash point collects power-ups
   const aimX = state.aimX;
   const aimY = state.aimY;
   state.powerUps.forEach(pu => {
@@ -2035,7 +2623,6 @@ function updatePowerUps(dt) {
     }
   });
 
-  // Tick active power-ups
   for (let i = state.activePowerUps.length - 1; i >= 0; i--) {
     state.activePowerUps[i].remaining -= dt;
     if (state.activePowerUps[i].remaining <= 0) {
@@ -2043,7 +2630,6 @@ function updatePowerUps(dt) {
     }
   }
 
-  // Update power-up HUD
   const hudEl = document.getElementById('powerup-hud');
   if (!hudEl) return;
 
@@ -2055,7 +2641,7 @@ function updatePowerUps(dt) {
     state.activePowerUps.forEach(ap => {
       const indicator = document.createElement('div');
       indicator.className = 'powerup-indicator';
-      const icon = ap.type === 'turbo' ? '⚡' : '🧲';
+      const icon = ap.type === 'turbo' ? '\u26A1' : '\u{1F9F2}';
       const label = ap.type === 'turbo' ? 'Turbo' : 'Magnet';
       const secsLeft = Math.ceil(ap.remaining);
       indicator.innerHTML =
@@ -2066,9 +2652,6 @@ function updatePowerUps(dt) {
   }
 }
 
-/**
- * Render all visible, non-collected power-ups.
- */
 function renderPowerUps() {
   const now = Date.now();
   state.powerUps.forEach(pu => {
@@ -2081,31 +2664,27 @@ function renderPowerUps() {
     const isTurbo  = pu.type === 'turbo';
     const glowColor = isTurbo ? 'rgba(68,170,255,0.2)' : 'rgba(255,150,50,0.2)';
     const orbColor  = isTurbo ? '#44aaff'               : '#ff9632';
-    const icon      = isTurbo ? '⚡'                    : '🧲';
+    const icon      = isTurbo ? '\u26A1'                : '\u{1F9F2}';
 
     ctx.save();
 
-    // Outer glow circle
     ctx.globalAlpha = 0.2;
     ctx.fillStyle   = glowColor;
     ctx.beginPath();
     ctx.arc(x, y, 22, 0, Math.PI * 2);
     ctx.fill();
 
-    // Inner orb
     ctx.globalAlpha = 1;
     ctx.fillStyle   = orbColor;
     ctx.beginPath();
     ctx.arc(x, y, 10, 0, Math.PI * 2);
     ctx.fill();
 
-    // White stroke border
     ctx.strokeStyle = '#ffffff';
     ctx.lineWidth   = 1.5;
     ctx.globalAlpha = 0.8;
     ctx.stroke();
 
-    // Icon text
     ctx.globalAlpha    = 1;
     ctx.font           = '10px sans-serif';
     ctx.textAlign      = 'center';
@@ -2119,10 +2698,6 @@ function renderPowerUps() {
 
 // ===== HAZARD SYSTEM =====
 
-/**
- * Spawn hazard definitions into state.hazards.
- * @param {Array} defs Array of hazard definition objects
- */
 function spawnHazards(defs) {
   defs.forEach((def, i) => {
     const hazard = {
@@ -2139,10 +2714,6 @@ function spawnHazards(defs) {
   });
 }
 
-/**
- * Update hazard timers and respawn dirt each frame.
- * @param {number} dt Delta time in seconds
- */
 function updateHazards(dt) {
   if (state.paused) return;
 
@@ -2158,13 +2729,11 @@ function updateHazards(dt) {
       hazard.respawnTimer = hazard.respawnInterval;
       hazard.puffTimer    = 0.5;
 
-      // Spawn a mud patch at a random angle and distance
       const angle    = Math.random() * Math.PI * 2;
       const distance = Math.random() * hazard.respawnRadius;
       const spawnX   = hazard.x + Math.cos(angle) * distance;
       const spawnY   = hazard.y + Math.sin(angle) * distance;
 
-      // Only spawn if inside arena bounds (with margin)
       if (
         spawnX >= margin && spawnX <= CANVAS_W - margin &&
         spawnY >= margin && spawnY <= CANVAS_H - margin
@@ -2183,11 +2752,7 @@ function updateHazards(dt) {
   });
 }
 
-/**
- * Render all hazard vents.
- */
 function renderHazards() {
-  const now = Date.now();
   state.hazards.forEach(hazard => {
     if (hazard.type !== 'recontamination_vent') return;
 
@@ -2196,13 +2761,11 @@ function renderHazards() {
 
     ctx.save();
 
-    // Dark elliptical vent grate
     ctx.fillStyle = '#2a2a2a';
     ctx.beginPath();
     ctx.ellipse(x, y, 18, 10, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // Grate lines (vertical strokes)
     ctx.strokeStyle = '#1a1a1a';
     ctx.lineWidth   = 1.5;
     for (let gx = x - 12; gx <= x + 12; gx += 6) {
@@ -2212,7 +2775,6 @@ function renderHazards() {
       ctx.stroke();
     }
 
-    // Puff animation when puffTimer > 0
     if (hazard.puffTimer > 0) {
       const progress = 1 - hazard.puffTimer / 0.5;
       const puffRadius = 8 + progress * 20;
@@ -2224,12 +2786,11 @@ function renderHazards() {
       ctx.fill();
     }
 
-    // Warning icon above vent
     ctx.globalAlpha    = 1;
     ctx.font           = '12px sans-serif';
     ctx.textAlign      = 'center';
     ctx.textBaseline   = 'bottom';
-    ctx.fillText('⚠️', x, y - 12);
+    ctx.fillText('\u26A0\uFE0F', x, y - 12);
 
     ctx.restore();
   });
@@ -2237,7 +2798,6 @@ function renderHazards() {
 
 // ===== AUDIO ENGINE =====
 
-/** Lazy-init AudioContext, resume if suspended */
 function getAudioCtx() {
   try {
     if (!state.audioCtx) {
@@ -2252,13 +2812,6 @@ function getAudioCtx() {
   }
 }
 
-/**
- * Play a synthesized tone.
- * @param {number} freq     Frequency in Hz
- * @param {number} duration Duration in seconds
- * @param {string} type     OscillatorType (default 'sine')
- * @param {number} volume   Gain level (default 0.15)
- */
 function playTone(freq, duration, type, volume) {
   type   = type   || 'sine';
   volume = volume !== undefined ? volume : 0.15;
@@ -2278,18 +2831,12 @@ function playTone(freq, duration, type, volume) {
   } catch (e) {}
 }
 
-/**
- * Play a dirt-clear pop sound (varies with combo).
- */
 function playDirtClearPop() {
   const baseFreq = 600 + state.comboCount * 40;
   playTone(baseFreq,          0.12, 'sine',   0.12);
   playTone(baseFreq * 1.5,    0.08, 'sine',   0.08);
 }
 
-/**
- * Play a target-complete chime (two ascending notes).
- */
 function playTargetChime() {
   playTone(880,  0.15, 'sine', 0.18);
   try {
@@ -2299,9 +2846,6 @@ function playTargetChime() {
   } catch (e) {}
 }
 
-/**
- * Play a power-up collect sweep (400 → 1200 Hz).
- */
 function playPowerUpCollect() {
   try {
     const actx = getAudioCtx();
@@ -2320,16 +2864,10 @@ function playPowerUpCollect() {
   } catch (e) {}
 }
 
-/**
- * Play a combo sound (single triangle tone, scales with combo count).
- */
 function playComboSound() {
   playTone(500 + state.comboCount * 60, 0.1, 'triangle', 0.14);
 }
 
-/**
- * Play the win jingle (four ascending notes).
- */
 function playWinJingle() {
   const notes = [523, 659, 784, 1047];
   notes.forEach((freq, i) => {
@@ -2337,38 +2875,27 @@ function playWinJingle() {
   });
 }
 
-/**
- * Play the fail sound (two descending tones).
- */
 function playFailSound() {
   playTone(400, 0.3, 'sawtooth', 0.15);
   setTimeout(() => playTone(300, 0.4, 'sawtooth', 0.15), 150);
 }
 
-/**
- * Play a short timer-tick sound.
- */
 function playTimerTick() {
   playTone(800, 0.05, 'square', 0.06);
 }
 
-// Track last timer tick second
 let _lastTickSecond = -1;
 
-/**
- * Update spray sound — create/maintain white noise bandpass when cleaning.
- */
 function updateSpraySound() {
   try {
     const actx = getAudioCtx();
     if (!actx) return;
 
     const isGameplay = state.screen === 'gameplay' && !state.paused;
-    const shouldPlay = isGameplay && state.isCleaning;
+    const shouldPlay = isGameplay && state.isCleaning && state.waterCurrent > 0;
 
     if (shouldPlay) {
       if (!state.sprayNode) {
-        // Create white noise buffer (2 seconds, looped)
         const bufferSize   = actx.sampleRate * 2;
         const noiseBuffer  = actx.createBuffer(1, bufferSize, actx.sampleRate);
         const output       = noiseBuffer.getChannelData(0);
@@ -2379,7 +2906,6 @@ function updateSpraySound() {
         noiseSource.buffer = noiseBuffer;
         noiseSource.loop   = true;
 
-        // Bandpass filter centred at 3000 Hz
         const filter       = actx.createBiquadFilter();
         filter.type        = 'bandpass';
         filter.frequency.value = 3000;
@@ -2395,20 +2921,15 @@ function updateSpraySound() {
 
         state.sprayNode = { source: noiseSource, gain: gainNode };
       }
-      // Fade gain up
       state.sprayNode.gain.gain.setTargetAtTime(0.04, actx.currentTime, 0.05);
     } else {
       if (state.sprayNode) {
-        // Fade gain down
         state.sprayNode.gain.gain.setTargetAtTime(0, actx.currentTime, 0.08);
       }
     }
   } catch (e) {}
 }
 
-/**
- * Update timer tick sound — plays each second when timer <= 10s.
- */
 function updateTimerTick() {
   if (state.timer > 10) {
     _lastTickSecond = -1;
@@ -2421,7 +2942,6 @@ function updateTimerTick() {
   }
 }
 
-// Auto-init AudioContext on first user interaction
 (function () {
   const initAudio = () => { getAudioCtx(); };
   document.addEventListener('click',      initAudio, { once: true });
@@ -2430,10 +2950,6 @@ function updateTimerTick() {
 
 // ===== COMBO UPDATE =====
 
-/**
- * Tick combo timer; reset comboCount when it expires.
- * @param {number} dt Delta time in seconds
- */
 function updateCombo(dt) {
   if (state.comboTimer > 0) {
     state.comboTimer -= dt;
@@ -2446,10 +2962,6 @@ function updateCombo(dt) {
 
 // ===== PARTICLE UPDATE =====
 
-/**
- * Update all active particles (physics + lifetime).
- * @param {number} dt Delta time in seconds
- */
 function updateParticles(dt) {
   for (let i = state.particles.length - 1; i >= 0; i--) {
     const p = state.particles[i];
@@ -2458,12 +2970,9 @@ function updateParticles(dt) {
       state.particles.splice(i, 1);
       continue;
     }
-    // Apply friction
     p.vx *= p.friction;
     p.vy *= p.friction;
-    // Apply gravity
     p.vy += p.gravity * dt;
-    // Move
     p.x += p.vx * dt;
     p.y += p.vy * dt;
   }
@@ -2471,9 +2980,6 @@ function updateParticles(dt) {
 
 // ===== PARTICLE RENDERER =====
 
-/**
- * Render all active particles.
- */
 function renderParticles() {
   state.particles.forEach(p => {
     const lifeRatio = p.life / p.maxLife;
@@ -2481,23 +2987,19 @@ function renderParticles() {
     ctx.globalAlpha = lifeRatio;
 
     if (p.type === 'ring') {
-      // Expanding ring: radius grows as life drops
       const radius = p.size + (1 - lifeRatio) * 40;
       ctx.strokeStyle = p.color;
       ctx.lineWidth   = 2 * lifeRatio;
       ctx.beginPath();
       ctx.arc(p.x, p.y, radius, 0, Math.PI * 2);
       ctx.stroke();
-
     } else if (p.type === 'text') {
       ctx.font        = 'bold ' + p.size + 'px system-ui';
       ctx.textAlign   = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillStyle   = p.color;
       ctx.fillText(p.text, p.x, p.y);
-
     } else {
-      // dot
       const radius = p.shrink ? p.size * lifeRatio : p.size;
       ctx.fillStyle = p.color;
       ctx.beginPath();
@@ -2509,15 +3011,17 @@ function renderParticles() {
   });
 }
 
+// ===== PROPS RENDERER =====
+
 function renderProps() {
-  // Stepping stones (small gray ellipses)
+  // Stepping stones adapted for portrait
   const stones = [
-    {x:100,y:500}, {x:160,y:480}, {x:220,y:500},
-    {x:700,y:500}, {x:730,y:470},
+    {x:60, y:700}, {x:110, y:680}, {x:160, y:700},
+    {x:380, y:700}, {x:400, y:670},
   ];
   for (const s of stones) {
     ctx.beginPath();
-    ctx.ellipse(s.x, s.y, 14, 8, 0, 0, Math.PI*2);
+    ctx.ellipse(s.x, s.y, 12, 7, 0, 0, Math.PI*2);
     ctx.fillStyle = '#6a7a6a';
     ctx.fill();
     ctx.strokeStyle = '#5a6a5a';
@@ -2527,24 +3031,24 @@ function renderProps() {
 
   // Corner bushes
   const bushes = [
-    {x:30,y:30}, {x:CANVAS_W-30,y:30},
-    {x:30,y:CANVAS_H-30}, {x:CANVAS_W-30,y:CANVAS_H-30},
+    {x:25, y:25}, {x:CANVAS_W-25, y:25},
+    {x:25, y:CANVAS_H-25}, {x:CANVAS_W-25, y:CANVAS_H-25},
   ];
   for (const b of bushes) {
     ctx.beginPath();
-    ctx.ellipse(b.x, b.y, 25, 18, 0, 0, Math.PI*2);
+    ctx.ellipse(b.x, b.y, 22, 16, 0, 0, Math.PI*2);
     ctx.fillStyle = '#2a5a1a';
     ctx.fill();
     ctx.beginPath();
-    ctx.ellipse(b.x+8, b.y-5, 18, 12, 0, 0, Math.PI*2);
+    ctx.ellipse(b.x+6, b.y-4, 16, 10, 0, 0, Math.PI*2);
     ctx.fillStyle = '#3a6a2a';
     ctx.fill();
   }
 
-  // Decorative garden hose
+  // Garden hose
   ctx.beginPath();
-  ctx.moveTo(50, CANVAS_H-50);
-  ctx.bezierCurveTo(80, CANVAS_H-100, 120, CANVAS_H-80, 100, CANVAS_H-60);
+  ctx.moveTo(35, CANVAS_H-40);
+  ctx.bezierCurveTo(55, CANVAS_H-80, 85, CANVAS_H-65, 70, CANVAS_H-50);
   ctx.strokeStyle = '#2a8a4a';
   ctx.lineWidth = 4;
   ctx.stroke();
@@ -2553,10 +3057,6 @@ function renderProps() {
 
 // ===== OBJECTS SYSTEM =====
 
-/**
- * Spawn object definitions into state.objects.
- * @param {Array} defs Array of object definition objects
- */
 function spawnObjects(defs) {
   defs.forEach((def, i) => {
     const obj = {
@@ -2578,15 +3078,10 @@ function spawnObjects(defs) {
   });
 }
 
-/**
- * Update object cleaning each frame.
- * @param {number} dt Delta time in seconds
- */
 function updateObjects(dt) {
   if (state.paused) return;
-
-  // Only clean when player is actively aiming
   if (!state.inputActive) return;
+  if (state.waterCurrent <= 0) return; // No water = no cleaning
 
   const aimX = state.aimX;
   const aimY = state.aimY;
@@ -2595,17 +3090,21 @@ function updateObjects(dt) {
   const powerMult = hasTurbo ? TURBO_POWER_MULT : 1.0;
   const radiusMult = hasTurbo ? TURBO_RADIUS_MULT : 1.0;
 
+  const effectiveCleanPower = getEffectiveCleanPower();
+  const effectiveCRX = getEffectiveCleanRadiusX();
+  const effectiveCRY = getEffectiveCleanRadiusY();
+
   state.objects.forEach(obj => {
     if (obj.cleaned || obj.locked) return;
     if (obj.restoreRequired && !obj.restoreReady) return;
 
-    const crX = CLEAN_RADIUS_X * radiusMult;
-    const crY = CLEAN_RADIUS_Y * radiusMult;
+    const crX = effectiveCRX * radiusMult;
+    const crY = effectiveCRY * radiusMult;
 
     const ed = ellipseDist(obj.x - aimX, obj.y - aimY, crX, crY);
     if (ed > 1) return;
 
-    obj.hp -= CLEAN_POWER * powerMult * dt;
+    obj.hp -= effectiveCleanPower * powerMult * dt;
     state.isCleaning = true;
 
     if (obj.hp <= 0) {
@@ -2619,10 +3118,6 @@ function updateObjects(dt) {
   });
 }
 
-/**
- * Called when an object is fully cleaned.
- * @param {object} obj The cleaned object
- */
 function onObjectCleaned(obj) {
   spawnSparkleBurst(obj.x, obj.y);
   triggerShake(2);
@@ -2644,15 +3139,9 @@ function onObjectCleaned(obj) {
   checkWinCondition();
 }
 
-/**
- * Called when a target makes progress.
- * @param {object} target The target that progressed
- */
 function onTargetProgress(target) {
-  // Schedule a HUD bounce for this target icon
   _hudBouncing.add(target.icon);
 
-  // Check if target is now complete
   let complete = false;
   if (target.type === 'restore_object') {
     complete = (target.current || 0) >= 1;
@@ -2668,14 +3157,10 @@ function onTargetProgress(target) {
   }
 }
 
-// Track which target icons are currently mid-bounce animation
 const _hudBouncing = new Set();
 
-/**
- * Update the HUD DOM each frame.
- */
 function updateHUD() {
-  // --- Timer ---
+  // Timer
   const timerEl = document.getElementById('hud-timer');
   if (timerEl) {
     const t   = Math.max(0, state.timer);
@@ -2689,7 +3174,7 @@ function updateHUD() {
     }
   }
 
-  // --- Targets ---
+  // Targets
   const targetsEl = document.getElementById('hud-targets');
   if (!targetsEl) return;
 
@@ -2710,14 +3195,13 @@ function updateHUD() {
       const thresh = Math.round((target.threshold || 0) * 100);
       progressText = pct + '%/' + thresh + '%';
     } else if (target.type === 'restore_object') {
-      progressText = (target.current || 0) >= 1 ? '✓' : '○';
+      progressText = (target.current || 0) >= 1 ? '\u2713' : '\u25CB';
     }
 
     card.innerHTML =
       '<span class="hud-target-icon">' + target.icon + '</span>' +
       '<span class="hud-target-count">' + progressText + '</span>';
 
-    // Clean up bounce flag after animation ends
     if (isBouncing) {
       card.addEventListener('animationend', () => {
         _hudBouncing.delete(target.icon);
@@ -2728,10 +3212,6 @@ function updateHUD() {
   });
 }
 
-/**
- * Decrement the timer; trigger fail when it reaches zero.
- * @param {number} dt Delta time in seconds
- */
 function updateTimer(dt) {
   if (state.paused) return;
   state.timer        -= dt;
@@ -2742,9 +3222,6 @@ function updateTimer(dt) {
   }
 }
 
-/**
- * Check whether all targets are complete and trigger win.
- */
 function checkWinCondition() {
   if (state.won || state.paused) return;
   if (state.screen !== 'gameplay') return;
@@ -2755,9 +3232,24 @@ function checkWinCondition() {
   }
 }
 
-/**
- * Handle level win.
- */
+// ===== COIN REWARD CALCULATION =====
+
+function calculateLevelReward() {
+  const levelNum = LEVELS[state.levelIndex] ? LEVELS[state.levelIndex].levelNumber : 1;
+  let baseReward;
+  if (levelNum <= 10) baseReward = 60;
+  else if (levelNum <= 25) baseReward = 85;
+  else if (levelNum <= 50) baseReward = 110;
+  else if (levelNum <= 80) baseReward = 140;
+  else baseReward = 175;
+
+  let bonus = 0;
+  if (!state.usedContinue) bonus += 15;
+  if (state.timeLeft >= 20) bonus += 10;
+
+  return baseReward + bonus;
+}
+
 function onLevelWin() {
   if (state.won) return;
   state.won      = true;
@@ -2768,30 +3260,32 @@ function onLevelWin() {
   else if (t >=  5) state.stars = 2;
   else              state.stars = 1;
 
+  // Award coins
+  const reward = calculateLevelReward();
+  state.coinsEarnedThisLevel = reward;
+  progression.washCoins += reward;
+
+  // Update campaign progress
+  const levelNum = LEVELS[state.levelIndex] ? LEVELS[state.levelIndex].levelNumber : 1;
+  if (levelNum > progression.campaignLevel) {
+    progression.campaignLevel = levelNum;
+  }
+
   playWinJingle();
   showScreen('result');
 }
 
-/**
- * Handle level fail.
- */
 function onLevelFail() {
   if (state.won) return;
   if (state.screen !== 'gameplay') return;
   state.won = false;
+  state.coinsEarnedThisLevel = 0;
   playFailSound();
   showScreen('result');
 }
 
 // ===== COLOR UTILITY =====
 
-/**
- * Linear interpolate between two hex color strings.
- * @param {string} c1 Hex color #rrggbb
- * @param {string} c2 Hex color #rrggbb
- * @param {number} t  0..1
- * @returns {string} Hex color string
- */
 function lerpColor(c1, c2, t) {
   const r1 = parseInt(c1.slice(1, 3), 16);
   const g1 = parseInt(c1.slice(3, 5), 16);
@@ -2810,9 +3304,6 @@ function lerpColor(c1, c2, t) {
 
 // ===== OBJECTS RENDERER =====
 
-/**
- * Render all objects (pots, benches, birdbaths) with depth and cleaning animation.
- */
 function renderObjects() {
   state.objects.forEach(obj => {
     const cleanRatio = 1 - (obj.hp / obj.maxHP);
@@ -2827,12 +3318,10 @@ function renderObjects() {
   });
 }
 
-/** Render a flower pot object */
 function renderPot(obj, cleanRatio) {
   const x = obj.x;
   const y = obj.y;
 
-  // Shadow
   ctx.save();
   ctx.globalAlpha = 0.3;
   ctx.fillStyle   = 'rgba(0,0,0,0.5)';
@@ -2841,33 +3330,29 @@ function renderPot(obj, cleanRatio) {
   ctx.fill();
   ctx.restore();
 
-  // Pot body — trapezoidal: wider at top, narrower at bottom
   const dirtyPot   = '#7a5238';
   const cleanPot   = '#c46a2a';
   const potColor   = lerpColor(dirtyPot, cleanPot, cleanRatio);
   const potDarkColor = lerpColor('#5a3a20', '#a04e18', cleanRatio);
 
-  // Front face (slightly darker)
   ctx.fillStyle = potDarkColor;
   ctx.beginPath();
-  ctx.moveTo(x - 14, y + 6);   // top-left
-  ctx.lineTo(x + 14, y + 6);   // top-right
-  ctx.lineTo(x + 10, y + 22);  // bottom-right
-  ctx.lineTo(x - 10, y + 22);  // bottom-left
+  ctx.moveTo(x - 14, y + 6);
+  ctx.lineTo(x + 14, y + 6);
+  ctx.lineTo(x + 10, y + 22);
+  ctx.lineTo(x - 10, y + 22);
   ctx.closePath();
   ctx.fill();
 
-  // Top face (main pot color, slightly brighter)
   ctx.fillStyle = potColor;
   ctx.beginPath();
-  ctx.moveTo(x - 14, y + 6);   // top-left (same as front face top)
-  ctx.lineTo(x + 14, y + 6);   // top-right
-  ctx.lineTo(x + 12, y - 6);   // back-right
-  ctx.lineTo(x - 12, y - 6);   // back-left
+  ctx.moveTo(x - 14, y + 6);
+  ctx.lineTo(x + 14, y + 6);
+  ctx.lineTo(x + 12, y - 6);
+  ctx.lineTo(x - 12, y - 6);
   ctx.closePath();
   ctx.fill();
 
-  // Rim (narrow band at the top edge)
   ctx.fillStyle = lerpColor('#8a6248', '#d47a3a', cleanRatio);
   ctx.beginPath();
   ctx.moveTo(x - 14, y + 6);
@@ -2877,28 +3362,23 @@ function renderPot(obj, cleanRatio) {
   ctx.closePath();
   ctx.fill();
 
-  // Plant foliage (appears as cleaning progresses)
   if (cleanRatio > 0) {
     ctx.save();
     ctx.globalAlpha = cleanRatio;
     const leafColor = lerpColor('#3a5a1a', '#5a9a2a', cleanRatio);
-    // Central leaf cluster
     ctx.fillStyle = leafColor;
     ctx.beginPath();
     ctx.ellipse(x, y - 10, 11 * cleanRatio, 9 * cleanRatio, 0, 0, Math.PI * 2);
     ctx.fill();
-    // Left leaf
     ctx.beginPath();
     ctx.ellipse(x - 9, y - 7, 8 * cleanRatio, 6 * cleanRatio, -0.4, 0, Math.PI * 2);
     ctx.fill();
-    // Right leaf
     ctx.beginPath();
     ctx.ellipse(x + 9, y - 7, 8 * cleanRatio, 6 * cleanRatio, 0.4, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
   }
 
-  // Sparkle dot when fully cleaned
   if (obj.cleaned) {
     const pulse = 0.6 + 0.4 * Math.sin(Date.now() * 0.006);
     ctx.save();
@@ -2910,7 +3390,6 @@ function renderPot(obj, cleanRatio) {
     ctx.restore();
   }
 
-  // Dirty overlay (brown tint that fades as cleaned)
   if (!obj.cleaned) {
     const dirtyAlpha = (1 - cleanRatio) * 0.55;
     ctx.save();
@@ -2923,12 +3402,10 @@ function renderPot(obj, cleanRatio) {
   }
 }
 
-/** Render a bench object */
 function renderBench(obj, cleanRatio) {
   const x = obj.x;
   const y = obj.y;
 
-  // Shadow
   ctx.save();
   ctx.globalAlpha = 0.3;
   ctx.fillStyle   = 'rgba(0,0,0,0.4)';
@@ -2942,20 +3419,16 @@ function renderBench(obj, cleanRatio) {
   const woodColor  = lerpColor(dirtyWood, cleanWood, cleanRatio);
   const darkWood   = lerpColor('#2a1810', '#8a5428', cleanRatio);
 
-  // Two legs (front face)
   ctx.fillStyle = darkWood;
   ctx.fillRect(x - 22, y + 6,  5, 14);
   ctx.fillRect(x + 17, y + 6,  5, 14);
 
-  // Seat top face
   ctx.fillStyle = woodColor;
   ctx.fillRect(x - 24, y - 2, 48, 8);
 
-  // Seat front face (slightly darker)
   ctx.fillStyle = darkWood;
   ctx.fillRect(x - 24, y + 6,  48, 4);
 
-  // Dirty overlay
   if (!obj.cleaned) {
     const dirtyAlpha = (1 - cleanRatio) * 0.5;
     ctx.save();
@@ -2968,12 +3441,10 @@ function renderBench(obj, cleanRatio) {
   }
 }
 
-/** Render a bird bath object */
 function renderBirdbath(obj, cleanRatio) {
   const x = obj.x;
   const y = obj.y;
 
-  // Shadow
   ctx.save();
   ctx.globalAlpha = 0.3;
   ctx.fillStyle   = 'rgba(0,0,0,0.4)';
@@ -2987,23 +3458,19 @@ function renderBirdbath(obj, cleanRatio) {
   const stoneColor  = lerpColor(dirtyStone, cleanStone, cleanRatio);
   const darkStone   = lerpColor('#3a3a2a', '#808070', cleanRatio);
 
-  // Pedestal
   ctx.fillStyle = darkStone;
   ctx.fillRect(x - 5, y + 4, 10, 20);
 
-  // Basin (elliptical)
   ctx.fillStyle = stoneColor;
   ctx.beginPath();
   ctx.ellipse(x, y, 18, 10, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  // Basin rim
   ctx.fillStyle = darkStone;
   ctx.beginPath();
   ctx.ellipse(x, y, 18, 10, 0, 0, Math.PI * 2);
   ctx.stroke();
 
-  // Animated water when restored
   if (obj.restored) {
     const wave = Math.sin(Date.now() * 0.004) * 2;
     ctx.save();
@@ -3020,7 +3487,6 @@ function renderBirdbath(obj, cleanRatio) {
     ctx.restore();
   }
 
-  // Dirty overlay
   if (!obj.cleaned) {
     const dirtyAlpha = (1 - cleanRatio) * 0.5;
     ctx.save();
@@ -3032,9 +3498,6 @@ function renderBirdbath(obj, cleanRatio) {
     ctx.restore();
   }
 }
-
-// ===== WIN / FAIL GUARD (prevent double-fire) =====
-// Note: onLevelFail won't re-trigger if already won, and vice-versa.
 
 </script>
 </body>
