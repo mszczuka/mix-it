@@ -3080,7 +3080,7 @@ function loadStats() {
       if (state.stats.trophies === undefined) state.stats.trophies = 0;
       if (state.stats.arenaFloor === undefined) state.stats.arenaFloor = 0;
       if (!state.stats.powerUpInventory) state.stats.powerUpInventory = { extraBottle: 3, flashPour: 3, swap: 0, clearBottle: 0 };
-      if (state.stats.gold === undefined) state.stats.gold = 0;
+      if (state.stats.gold === undefined || state.stats.gold === 50) state.stats.gold = 0;
       if (state.stats.tutorialDone === undefined) state.stats.tutorialDone = false;
       if (state.stats.venueHintShown === undefined) state.stats.venueHintShown = false;
       if (!state.stats.venue) state.stats.venue = {};
