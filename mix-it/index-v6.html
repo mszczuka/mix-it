@@ -3082,6 +3082,7 @@ function loadStats() {
       if (!state.stats.powerUpInventory) state.stats.powerUpInventory = { extraBottle: 3, flashPour: 3, swap: 0, clearBottle: 0 };
       if (state.stats.gold === undefined) state.stats.gold = 50;
       if (state.stats.tutorialDone === undefined) state.stats.tutorialDone = false;
+      if (state.stats.venueHintShown === undefined) state.stats.venueHintShown = false;
       if (!state.stats.venue) state.stats.venue = {};
       // v6.3 fields
       if (!state.stats.promotedArenas) state.stats.promotedArenas = [0];
@@ -3403,6 +3404,15 @@ function renderVenueMap(container, arenaId, interactive) {
             renderHomeVenuePreview();
             if (result.buildingReward) showVenueRewardPopup('Building Complete!', '\u{1F3D7}', result.buildingReward, 0);
             if (result.venueReward) showVenueRewardPopup('Venue Complete!', '\u{1F389}', result.venueReward, result.venueGold);
+            // First upgrade hint
+            if (!state.stats.venueHintShown) {
+              state.stats.venueHintShown = true;
+              saveStats();
+              setTimeout(() => {
+                showVenueRewardPopup('Upgrade Your Venue!', '\u{1F3D7}', [],  0,
+                  'Build all 5 venues to earn boosters!\nEach completed building rewards you with powerful boosters for your matches.');
+              }, result.buildingReward ? 1500 : 300);
+            }
           }
         }
       });
@@ -3417,6 +3427,23 @@ function renderVenueMap(container, arenaId, interactive) {
     }
 
     container.appendChild(el);
+
+    // Show bouncing hint arrow on first affordable + button (only once, only on venue tab)
+    if (interactive && !state.stats.venueHintShown && !done && canAfford && !container._hintShown) {
+      container._hintShown = true;
+      const hint = document.createElement('div');
+      hint.style.cssText = 'position:absolute;z-index:10;font-size:24px;pointer-events:none;animation:tutorialBounce 1s ease-in-out infinite;';
+      hint.style.left = (parseFloat(pos.x) + 8) + '%';
+      hint.style.top = (parseFloat(pos.y) - 8) + '%';
+      hint.textContent = '\u{1F447}';
+      container.appendChild(hint);
+      const label = document.createElement('div');
+      label.style.cssText = 'position:absolute;z-index:10;font-family:Nunito,sans-serif;font-size:11px;font-weight:900;color:#ffc700;text-shadow:0 1px 2px rgba(0,0,0,0.7);pointer-events:none;animation:tutorialBounce 1s ease-in-out infinite;white-space:nowrap;';
+      label.style.left = (parseFloat(pos.x) - 2) + '%';
+      label.style.top = (parseFloat(pos.y) - 14) + '%';
+      label.textContent = 'Tap to upgrade!';
+      container.appendChild(label);
+    }
   }
 }
 
@@ -3507,7 +3534,7 @@ function renderBoostersTab() {
 }
 
 // ===== VENUE REWARD POPUP =====
-function showVenueRewardPopup(title, emoji, boosterTypes, goldAmount) {
+function showVenueRewardPopup(title, emoji, boosterTypes, goldAmount, customText) {
   const overlay = document.createElement('div');
   overlay.className = 'venue-reward-popup';
   const card = document.createElement('div');
@@ -3533,6 +3560,13 @@ function showVenueRewardPopup(title, emoji, boosterTypes, goldAmount) {
     gold.className = 'venue-reward-gold';
     gold.textContent = '\u{1FA99} +' + goldAmount + ' Gold';
     card.appendChild(gold);
+  }
+  // Custom text
+  if (customText) {
+    const txt = document.createElement('div');
+    txt.style.cssText = 'font-family:Nunito,sans-serif;font-size:13px;font-weight:700;color:rgba(255,255,255,0.8);text-align:center;line-height:1.5;white-space:pre-line;';
+    txt.textContent = customText;
+    card.appendChild(txt);
   }
   // OK button
   const btn = document.createElement('button');
