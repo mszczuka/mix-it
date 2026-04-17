@@ -3407,14 +3407,11 @@ function renderVenueMap(container, arenaId, interactive) {
             // First upgrade hint — give a free booster as welcome reward
             if (!state.stats.venueHintShown) {
               state.stats.venueHintShown = true;
-              // Grant a free Extra Bottle
               const bonusType = 'extraBottle';
               state.stats.powerUpInventory[bonusType] = (state.stats.powerUpInventory[bonusType] || 0) + 1;
               saveStats();
-              setTimeout(() => {
-                showVenueRewardPopup('Upgrade Your Venue!', '\u{1F3D7}', [bonusType], 0,
-                  'Build all 5 venues to earn boosters!\nEach completed building rewards you with powerful boosters for your matches.\n\nHere\'s a free booster to get you started!');
-              }, result.buildingReward ? 1500 : 300);
+              showVenueRewardPopup('Upgrade Your Venue!', '\u{1F3D7}', [bonusType], 0,
+                'Build all 5 venues to earn boosters!\nEach completed building rewards you with powerful boosters for your matches.\n\nHere\'s a free booster to get you started!');
             }
           }
         }
