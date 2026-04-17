@@ -3312,7 +3312,7 @@ function renderVenue() {
 // ===== VENUE VISUAL MAP =====
 const VENUE_ICONS = ['\u{1F37A}', '\u{1FA91}', '\u{1F6A9}', '\u{1F4A1}', '\u{1F9CB}'];
 const VENUE_POSITIONS = [
-  {x:'10%',y:'10%'}, {x:'55%',y:'8%'}, {x:'25%',y:'40%'}, {x:'60%',y:'45%'}, {x:'15%',y:'72%'}
+  {x:'8%',y:'5%'}, {x:'52%',y:'5%'}, {x:'8%',y:'35%'}, {x:'52%',y:'35%'}, {x:'25%',y:'65%'}
 ];
 
 function renderVenueMap(container, arenaId, interactive) {
@@ -3344,7 +3344,7 @@ function renderVenueMap(container, arenaId, interactive) {
     const icon = document.createElement('div');
     icon.className = 'venue-building-icon';
     icon.style.transform = 'scale(' + scale + ')';
-    icon.style.opacity = level === 0 ? '0.4' : '1';
+    icon.style.opacity = level === 0 ? '0.6' : '1';
     icon.textContent = VENUE_ICONS[i];
     el.appendChild(icon);
 
