@@ -3237,7 +3237,7 @@ function renderVenue() {
   if (progEl) progEl.textContent = totalUpgrades + ' / 25 upgrades';
 
   // Visual map with tappable green upgrade buttons (same component as Home)
-  renderVenueMap(document.getElementById('venue-map-preview'), arenaId, true);
+  try { renderVenueMap(document.getElementById('venue-map-preview'), arenaId, true); } catch(e) { console.error('venue map error:', e); }
 
   // Building list (inside overlay)
   const buildingsEl = document.getElementById('venue-buildings');
@@ -3589,6 +3589,7 @@ document.addEventListener('click', (e) => {
 
 // Venue list overlay toggle
 document.getElementById('btn-venue-list').addEventListener('click', () => {
+  renderVenue(); // re-render building list before showing
   document.getElementById('venue-list-overlay').classList.remove('hidden');
 });
 document.getElementById('btn-venue-list-close').addEventListener('click', () => {
