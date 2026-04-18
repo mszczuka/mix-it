@@ -2083,19 +2083,7 @@ function populateResultScreen() {
     addSummaryRow(summaryEl, 'Total Gold', progression.washCoins.toString() + ' \u{1FA99}');
   } else if (win) {
     addSummaryRow(summaryEl, 'Stars', '\u2605'.repeat(stars));
-    const bk = state.lastRewardBreakdown;
-    if (bk) {
-      // v6b: explicit reward breakdown
-      if (bk.inLevel > 0)   addSummaryRow(summaryEl, 'In-Level Gold',      '+' + bk.inLevel   + ' \u{1FA99}');
-      if (bk.base > 0)      addSummaryRow(summaryEl, 'Base Reward',        '+' + bk.base      + ' \u{1FA99}');
-      if (bk.noContinue > 0)addSummaryRow(summaryEl, 'No-Continue Bonus',  '+' + bk.noContinue+ ' \u{1FA99}');
-      if (bk.time > 0)      addSummaryRow(summaryEl, 'Time Bonus (20s+)',  '+' + bk.time      + ' \u{1FA99}');
-      if (bk.perfect > 0)   addSummaryRow(summaryEl, 'Perfect Bonus',      '+' + bk.perfect   + ' \u{1FA99}');
-      if (bk.relief > 0)    addSummaryRow(summaryEl, 'Relief Bonus',       '+' + bk.relief    + ' \u{1FA99}');
-      addSummaryRow(summaryEl, 'Total Earned', '+' + bk.total + ' \u{1FA99}');
-    } else {
-      addSummaryRow(summaryEl, 'Gold Earned', '+' + state.coinsEarnedThisLevel + ' \u{1FA99}');
-    }
+    addSummaryRow(summaryEl, 'Gold Earned', '+' + state.coinsEarnedThisLevel + ' \u{1FA99}');
     addSummaryRow(summaryEl, 'Total Gold', progression.washCoins.toString() + ' \u{1FA99}');
   } else {
     state.targets.forEach(t => {
