@@ -2929,9 +2929,10 @@ requestAnimationFrame((t) => { lastTime = t; gameLoop(t); });
 
 function spawnDirt(defs) {
   const typeDefaults = {
-    sludge: { radiusX: 28, radiusY: 18, maxHP: 100 },
-    leaves: { radiusX: 18, radiusY: 12, maxHP: 30  },
-    mud:    { radiusX: 24, radiusY: 16, maxHP: 60  },
+    sludge:     { radiusX: 28, radiusY: 18, maxHP: 100 },
+    leaves:     { radiusX: 18, radiusY: 12, maxHP: 30  },
+    mud:        { radiusX: 24, radiusY: 16, maxHP: 60  },
+    grass_tuft: { radiusX: 10, radiusY: 8,  maxHP: 8   }, // tiny, fast, +2 gold
   };
 
   defs.forEach((def, i) => {
@@ -3019,14 +3020,14 @@ function onDirtCleared(dirt) {
   spawnRevealPulse(dirt.x, dirt.y);
   spawnMudChunkBurst(dirt.x, dirt.y, dirt.type);
 
-  // Award gold for dirt clearing (+1, batched every 0.5s to avoid clutter)
+  // Gold reward: grass tufts give +2 (always with floating text), other dirt +1 (batched)
+  const goldAmount = dirt.type === 'grass_tuft' ? 2 : 1;
   const now = Date.now();
-  if (now - state.lastDirtGoldTime >= 500) {
+  if (dirt.type === 'grass_tuft' || now - state.lastDirtGoldTime >= 500) {
     state.lastDirtGoldTime = now;
-    awardLevelGold(1, dirt.x, dirt.y);
+    awardLevelGold(goldAmount, dirt.x, dirt.y);
   } else {
-    // Still award the gold, just skip the floating text
-    state.levelGold += 1;
+    state.levelGold += goldAmount;
     updateGoldHUD();
   }
 
@@ -3104,10 +3105,11 @@ function renderDirt() {
 
     let color;
     switch (dirt.type) {
-      case 'mud':    color = COL_MUD;    break;
-      case 'leaves': color = COL_LEAVES; break;
-      case 'sludge': color = COL_SLUDGE; break;
-      default:       color = COL_MUD;
+      case 'mud':        color = COL_MUD;    break;
+      case 'leaves':     color = COL_LEAVES; break;
+      case 'sludge':     color = COL_SLUDGE; break;
+      case 'grass_tuft': color = '#3a7a2a';  break;
+      default:           color = COL_MUD;
     }
 
     ctx.save();
@@ -3151,6 +3153,45 @@ function renderDirt() {
         ctx.fillText('\u{1F342}', x - currentRX * 0.55, y + currentRY * 0.25);
         ctx.fillText('\u{1F342}', x + currentRX * 0.55, y - currentRY * 0.25);
       }
+    }
+
+    // Grass tuft blades — little spikes sticking up
+    if (dirt.type === 'grass_tuft') {
+      ctx.globalAlpha = alpha;
+      ctx.strokeStyle = '#5ab54a';
+      ctx.lineWidth   = 1.5;
+      ctx.lineCap     = 'round';
+      for (let bi = 0; bi < 5; bi++) {
+        const bx = x + (bi - 2) * (currentRX * 0.35);
+        ctx.beginPath();
+        ctx.moveTo(bx, y + currentRY * 0.5);
+        ctx.lineTo(bx + (bi - 2) * 0.5, y - currentRY * 0.9);
+        ctx.stroke();
+      }
+    }
+
+    // Goal indicator — pulsing golden ring around targeted dirt nodes
+    if (dirt.targetTag && !dirt.locked) {
+      const t = Date.now() / 1000;
+      const pulse = 0.5 + 0.5 * Math.sin(t * 3.5 + (dirt.id * 0.7));
+      const ringR = Math.max(currentRX, currentRY) + 6 + pulse * 4;
+      ctx.globalAlpha = 0.75 + pulse * 0.2;
+      ctx.strokeStyle = '#ffd84a';
+      ctx.lineWidth   = 2.5;
+      ctx.setLineDash([5, 4]);
+      ctx.lineDashOffset = -t * 15;
+      ctx.beginPath();
+      ctx.ellipse(x, y, ringR, ringR * (currentRY / Math.max(1, currentRX)), 0, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Small target chevron above
+      ctx.globalAlpha = 0.9;
+      ctx.fillStyle   = '#fff2a0';
+      ctx.font = 'bold 11px system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'bottom';
+      ctx.fillText('\u25BC', x, y - Math.max(currentRY, 8) - 4 - pulse * 2);
     }
 
     ctx.restore();
@@ -3945,6 +3986,44 @@ function loadLevel(level) {
   if (layout.locks) spawnLocks(layout.locks);
   if (layout.hazards) spawnHazards(layout.hazards);
   if (layout.powerUps) spawnPowerUpDefs(layout.powerUps);
+
+  // Auto-spawn small grass tufts (destroyable +2 gold pickups) across the arena.
+  // Avoids overlap with existing dirt/objects/locks so they can't fool goals.
+  spawnRandomGrassTufts(14);
+}
+
+function spawnRandomGrassTufts(count) {
+  const minGap = 26;        // min distance from any dirt/object/lock
+  const margin = 40;
+  const tufts = [];
+  let attempts = 0;
+  const placed = [];
+
+  const existing = [];
+  state.dirtNodes.forEach(d => existing.push({ x: d.x, y: d.y, r: Math.max(d.radiusX, d.radiusY) + minGap }));
+  state.objects.forEach(o  => existing.push({ x: o.x, y: o.y, r: Math.max(o.radiusX, o.radiusY) + minGap }));
+  state.locks.forEach(l    => existing.push({ x: l.x, y: l.y, r: Math.max(l.width, l.height) + minGap }));
+
+  while (tufts.length < count && attempts < count * 20) {
+    attempts++;
+    const x = margin + Math.random() * (CANVAS_W - margin * 2);
+    const y = margin + Math.random() * (CANVAS_H - margin * 2 - 80); // leave bottom clear for hose
+    let ok = true;
+    for (const e of existing) {
+      const dx = x - e.x, dy = y - e.y;
+      if (dx * dx + dy * dy < e.r * e.r) { ok = false; break; }
+    }
+    if (!ok) continue;
+    for (const p of placed) {
+      const dx = x - p.x, dy = y - p.y;
+      if (dx * dx + dy * dy < 34 * 34) { ok = false; break; }
+    }
+    if (!ok) continue;
+    placed.push({ x, y });
+    tufts.push({ x, y, type: 'grass_tuft' });
+  }
+
+  if (tufts.length > 0) spawnDirt(tufts);
 }
 
 // ===== PARTICLE SYSTEM =====
@@ -4007,15 +4086,18 @@ function spawnSprayParticle(fromX, fromY, toX, toY, dirtType, intensity) {
     spawnDirtSplatter(toX, toY, 'mud', intensity);
   } else if (dirtType === 'leaves') {
     spawnDirtSplatter(toX, toY, 'leaves', intensity);
+  } else if (dirtType === 'grass_tuft') {
+    spawnDirtSplatter(toX, toY, 'grass_tuft', intensity);
   }
 }
 
 function spawnDirtSplatter(x, y, dirtType, intensity) {
   if (intensity === undefined) intensity = 1;
   let baseCount;
-  if      (dirtType === 'sludge') baseCount = 11;
-  else if (dirtType === 'mud')    baseCount = 7;
-  else                            baseCount = 4;
+  if      (dirtType === 'sludge')     baseCount = 11;
+  else if (dirtType === 'mud')        baseCount = 7;
+  else if (dirtType === 'grass_tuft') baseCount = 6;
+  else                                baseCount = 4;
   const count = Math.max(1, Math.round(baseCount * intensity));
 
   for (let i = 0; i < count; i++) {
@@ -4031,6 +4113,11 @@ function spawnDirtSplatter(x, y, dirtType, intensity) {
       const r = randInt(85, 140);
       const g = randInt(55, 95);
       const b = randInt(30, 60);
+      color = 'rgba(' + r + ',' + g + ',' + b + ',0.95)';
+    } else if (dirtType === 'grass_tuft') {
+      const r = randInt(60, 110);
+      const g = randInt(150, 210);
+      const b = randInt(50, 90);
       color = 'rgba(' + r + ',' + g + ',' + b + ',0.95)';
     } else {
       const r = randInt(90, 150);
@@ -4071,6 +4158,11 @@ function spawnMudChunkBurst(x, y, dirtType) {
       const g = randInt(130, 180);
       const b = randInt(40, 80);
       color = 'rgba(' + r + ',' + g + ',' + b + ',0.95)';
+    } else if (dirtType === 'grass_tuft') {
+      const r = randInt(70, 120);
+      const g = randInt(160, 220);
+      const b = randInt(60, 100);
+      color = 'rgba(' + r + ',' + g + ',' + b + ',0.95)';
     } else {
       const r = randInt(40, 70);
       const g = randInt(40, 60);
@@ -4091,8 +4183,10 @@ function spawnMudChunkBurst(x, y, dirtType) {
     });
   }
 
-  // Golden celebration sparkles — marks the 100% clear moment
-  spawnGoldenCompletionBurst(x, y);
+  // Celebration sparkles on full clear — skip for tiny grass tufts (too much drama)
+  if (dirtType !== 'grass_tuft') {
+    spawnGoldenCompletionBurst(x, y);
+  }
 }
 
 function spawnGoldenCompletionBurst(x, y) {
