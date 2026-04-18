@@ -449,7 +449,7 @@ body {
 /* ===== POWERUP HUD ===== */
 #powerup-hud {
   position: absolute;
-  bottom: 48px;
+  top: 64px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 5;
@@ -580,19 +580,115 @@ body {
 /* ===== RESULT SCREEN ===== */
 #screen-result {
   gap: 0;
+  overflow: hidden;
+}
+
+#result-confetti {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.confetti-piece {
+  position: absolute;
+  top: -20px;
+  width: 10px;
+  height: 14px;
+  opacity: 0;
+  will-change: transform, opacity;
+  animation: confettiFall linear forwards;
+}
+
+@keyframes confettiFall {
+  0%   { transform: translate3d(0,-40px,0) rotate(0deg);   opacity: 0; }
+  8%   { opacity: 1; }
+  100% { transform: translate3d(var(--drift, 0px), 100vh, 0) rotate(var(--spin, 540deg)); opacity: 1; }
+}
+
+#result-popup {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  background: linear-gradient(180deg, rgba(24,42,28,0.95) 0%, rgba(16,30,20,0.96) 100%);
+  border: 2px solid rgba(68,170,136,0.35);
+  border-radius: 22px;
+  padding: 28px 26px 22px;
+  box-shadow: 0 18px 48px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.04) inset;
+  max-width: 360px;
+  width: 88%;
+  animation: resultPopIn 0.55s cubic-bezier(0.18, 1.3, 0.45, 1) both;
+}
+
+#result-popup.fail {
+  border-color: rgba(221, 80, 80, 0.45);
+  background: linear-gradient(180deg, rgba(42,22,22,0.95) 0%, rgba(30,14,14,0.96) 100%);
+}
+
+@keyframes resultPopIn {
+  0%   { opacity: 0; transform: scale(0.55) translateY(40px); }
+  60%  { opacity: 1; transform: scale(1.06) translateY(-4px); }
+  80%  { transform: scale(0.98) translateY(1px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+#result-banner {
+  font-size: 42px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  margin-bottom: 8px;
+  text-align: center;
+  text-shadow: 0 3px 0 rgba(0,0,0,0.35), 0 0 24px currentColor;
+  animation: bannerPulse 0.6s 0.15s ease-out both;
+}
+#result-banner.win  { color: #44ee88; }
+#result-banner.fail { color: #ff6a6a; }
+
+@keyframes bannerPulse {
+  0%   { transform: scale(0.4) rotate(-6deg); opacity: 0; }
+  55%  { transform: scale(1.25) rotate(2deg); opacity: 1; }
+  80%  { transform: scale(0.95) rotate(-1deg); }
+  100% { transform: scale(1) rotate(0deg); }
 }
 
 #result-icon {
   font-size: 56px;
   line-height: 1;
   margin-bottom: 10px;
+  animation: iconBounce 0.6s 0.3s cubic-bezier(0.2, 1.4, 0.5, 1) both;
+}
+
+@keyframes iconBounce {
+  0%   { transform: scale(0) rotate(-20deg); opacity: 0; }
+  100% { transform: scale(1) rotate(0); opacity: 1; }
 }
 
 #result-title {
-  font-size: 28px;
+  font-size: 22px;
   font-weight: 900;
   letter-spacing: 0.01em;
   margin-bottom: 6px;
+  opacity: 0;
+  animation: resultFadeUp 0.4s 0.45s ease-out both;
+}
+
+#result-stars, #result-summary, #result-actions {
+  opacity: 0;
+  animation: resultFadeUp 0.4s ease-out both;
+}
+#result-stars   { animation-delay: 0.55s; }
+#result-summary { animation-delay: 0.7s; }
+#result-actions { animation-delay: 0.85s; }
+
+@keyframes resultFadeUp {
+  0%   { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
 }
 
 #result-title.win  { color: #44dd88; }
@@ -837,6 +933,128 @@ body {
   min-width: 70px;
 }
 
+/* ===== HOSES SCREEN ===== */
+#screen-hoses {
+  justify-content: flex-start;
+  padding-top: 40px;
+  padding-bottom: 90px;
+  overflow-y: auto;
+}
+
+#hoses-header {
+  text-align: center;
+  margin-bottom: 18px;
+}
+
+#hoses-title {
+  font-size: 24px;
+  font-weight: 900;
+  color: #fff;
+  margin-bottom: 2px;
+}
+
+#hoses-subtitle {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: #88aa88;
+}
+
+#hoses-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  width: 100%;
+  max-width: 380px;
+}
+
+.hose-card {
+  position: relative;
+  background: rgba(255,255,255,0.05);
+  border: 1.5px solid rgba(255,255,255,0.12);
+  border-radius: 12px;
+  padding: 10px 6px 8px;
+  text-align: center;
+  aspect-ratio: 1 / 1.25;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.15s, border-color 0.15s;
+}
+.hose-card:hover { transform: translateY(-2px); }
+.hose-card.rarity-1 { border-color: rgba(170,200,170,0.4); }
+.hose-card.rarity-2 { border-color: rgba(100,200,255,0.5); background: rgba(100,200,255,0.06); }
+.hose-card.rarity-3 { border-color: rgba(180,120,255,0.55); background: rgba(180,120,255,0.08); }
+.hose-card.rarity-4 { border-color: rgba(255,140,80,0.6);  background: rgba(255,140,80,0.09);
+  box-shadow: 0 0 14px rgba(255,140,80,0.15) inset; }
+.hose-card.rarity-5 { border-color: rgba(255,210,80,0.75); background: rgba(255,210,80,0.1);
+  box-shadow: 0 0 18px rgba(255,210,80,0.25) inset, 0 0 10px rgba(255,210,80,0.2); }
+
+.hose-card-silhouette {
+  font-size: 30px;
+  line-height: 1;
+  margin-top: 4px;
+  filter: grayscale(0.6) brightness(0.85);
+}
+.hose-card.rarity-5 .hose-card-silhouette { filter: none; }
+
+.hose-card-name {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #cceecc;
+  line-height: 1.1;
+  margin-top: 2px;
+}
+
+.hose-card-stars {
+  font-size: 9px;
+  color: #ffcc44;
+  letter-spacing: 0.05em;
+}
+
+.hose-card-lock {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  font-size: 11px;
+  color: #99aaaa;
+}
+
+.hose-card-cs {
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #779977;
+}
+
+#hoses-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(5,10,8,0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  padding: 20px;
+}
+#hoses-modal.hidden { display: none; }
+#hoses-modal-card {
+  background: linear-gradient(180deg, rgba(24,42,28,0.97) 0%, rgba(16,30,20,0.97) 100%);
+  border: 2px solid rgba(68,170,136,0.45);
+  border-radius: 16px;
+  padding: 22px 22px 18px;
+  max-width: 280px;
+  text-align: center;
+  animation: resultPopIn 0.45s cubic-bezier(0.18,1.3,0.45,1) both;
+}
+#hoses-modal-title { font-size: 18px; font-weight: 900; color: #fff; margin-bottom: 6px; }
+#hoses-modal-body  { font-size: 12px; color: #aaccaa; margin-bottom: 14px; line-height: 1.5; }
+
 /* ===== BOTTOM NAV ===== */
 #bottom-nav {
   position: absolute;
@@ -979,15 +1197,19 @@ body {
 
   <!-- Result screen -->
   <div id="screen-result" class="screen hidden">
-    <div id="result-icon">&#x1F3C6;</div>
-    <div id="result-title" class="win">Level Complete!</div>
-    <div id="result-stars">
-      <span class="star lit" id="star-1">&#x2605;</span>
-      <span class="star lit" id="star-2">&#x2605;</span>
-      <span class="star lit" id="star-3">&#x2605;</span>
+    <div id="result-confetti"></div>
+    <div id="result-popup">
+      <div id="result-banner" class="win">SUCCESS!</div>
+      <div id="result-icon">&#x1F3C6;</div>
+      <div id="result-title" class="win">Level Complete!</div>
+      <div id="result-stars">
+        <span class="star lit" id="star-1">&#x2605;</span>
+        <span class="star lit" id="star-2">&#x2605;</span>
+        <span class="star lit" id="star-3">&#x2605;</span>
+      </div>
+      <div id="result-summary"></div>
+      <div id="result-actions"></div>
     </div>
-    <div id="result-summary"></div>
-    <div id="result-actions"></div>
   </div>
 
   <!-- Upgrades screen -->
@@ -999,13 +1221,25 @@ body {
     <div id="upgrade-lanes"></div>
   </div>
 
+  <!-- Hoses screen -->
+  <div id="screen-hoses" class="screen hidden">
+    <div id="hoses-header">
+      <div id="hoses-title">Hoses</div>
+      <div id="hoses-subtitle">Coming Soon</div>
+    </div>
+    <div id="hoses-grid"></div>
+  </div>
+
   <!-- Bottom navigation -->
   <div id="bottom-nav" class="hidden">
+    <button class="nav-tab" data-tab="upgrades">
+      <span class="nav-tab-icon">&#x2B06;&#xFE0F;</span>Upgrades
+    </button>
     <button class="nav-tab active" data-tab="home">
       <span class="nav-tab-icon">&#x1F3E0;</span>Home
     </button>
-    <button class="nav-tab" data-tab="upgrades">
-      <span class="nav-tab-icon">&#x2B06;&#xFE0F;</span>Upgrades
+    <button class="nav-tab" data-tab="hoses">
+      <span class="nav-tab-icon">&#x1F9F5;</span>Hoses
     </button>
   </div>
 
@@ -1040,6 +1274,9 @@ const WATER_REGEN_RATE_BASE = 22;   // per second while idle (not spraying)
 const WATER_LOCKED_REGEN_RATE_BASE = 30;  // per second during locked recharge
 const WATER_RESERVE_THRESHOLD_PCT = 0.20; // 20% of capacity
 const WATER_LOW_WARNING_PCT = 0.30;       // 30% low-water warning
+
+// Visual-only scale for map elements (hitboxes & logic untouched)
+const VISUAL_SCALE = 1.2;
 
 // Colors
 const COL_GRASS       = '#4a7a3a';
@@ -1221,7 +1458,7 @@ const LEVELS = [
     worldName: 'Backyard Chaos', levelName: 'Garden Path', levelNumber: 2,
     timer: 55, startX: 225, startY: 600,
     targets: [
-      { type: 'clean_dirt', dirtTag: 'target_mud', amount: 4, icon: '\u{1F4A7}', label: 'Mud Patches' },
+      { type: 'clean_dirt', dirtTag: 'target_mud', amount: 4, icon: '\u{1F7E4}', label: 'Mud Patches' },
       { type: 'clean_object', objectType: 'bench', amount: 1, icon: '\u{1FA91}', label: 'Bench' },
     ],
   },
@@ -1245,14 +1482,14 @@ const LEVELS = [
     timer: 55, startX: 225, startY: 600,
     targets: [
       { type: 'clean_object', objectType: 'bench', amount: 1, icon: '\u{1FA91}', label: 'Bench' },
-      { type: 'clean_dirt', dirtTag: 'target_mud', amount: 4, icon: '\u{1F4A7}', label: 'Mud Patches' },
+      { type: 'clean_dirt', dirtTag: 'target_mud', amount: 4, icon: '\u{1F7E4}', label: 'Mud Patches' },
     ],
   },
   {
     worldName: 'Backyard Chaos', levelName: 'Gate Mud', levelNumber: 6,
     timer: 60, startX: 225, startY: 600,
     targets: [
-      { type: 'clean_dirt', dirtTag: 'target_mud', amount: 6, icon: '\u{1F4A7}', label: 'Mud Patches' },
+      { type: 'clean_dirt', dirtTag: 'target_mud', amount: 6, icon: '\u{1F7E4}', label: 'Mud Patches' },
     ],
   },
   {
@@ -1275,7 +1512,7 @@ const LEVELS = [
     worldName: 'Backyard Chaos', levelName: 'Garden Path', levelNumber: 9,
     timer: 65, startX: 225, startY: 600,
     targets: [
-      { type: 'clean_dirt', dirtTag: 'target_mud', amount: 5, icon: '\u{1F4A7}', label: 'Mud Patches' },
+      { type: 'clean_dirt', dirtTag: 'target_mud', amount: 5, icon: '\u{1F7E4}', label: 'Mud Patches' },
       { type: 'clean_object', objectType: 'bench', amount: 2, icon: '\u{1FA91}', label: 'Bench' },
     ],
   },
@@ -1291,7 +1528,7 @@ const LEVELS = [
     timer: 65, startX: 225, startY: 600,
     targets: [
       { type: 'clean_dirt', dirtTag: 'target_sludge', amount: 4, icon: '\u{1F7E4}', label: 'Sludge' },
-      { type: 'clean_dirt', dirtTag: 'target_mud', amount: 3, icon: '\u{1F4A7}', label: 'Mud Patches' },
+      { type: 'clean_dirt', dirtTag: 'target_mud', amount: 3, icon: '\u{1F7E4}', label: 'Mud Patches' },
     ],
   },
   {
@@ -1315,7 +1552,7 @@ const LEVELS = [
     worldName: 'Backyard Chaos', levelName: 'Mud Spiral', levelNumber: 14,
     timer: 70, startX: 225, startY: 600,
     targets: [
-      { type: 'clean_dirt', dirtTag: 'target_mud', amount: 8, icon: '\u{1F4A7}', label: 'Mud Patches' },
+      { type: 'clean_dirt', dirtTag: 'target_mud', amount: 8, icon: '\u{1F7E4}', label: 'Mud Patches' },
     ],
   },
   {
@@ -1323,7 +1560,7 @@ const LEVELS = [
     timer: 75, startX: 225, startY: 600,
     targets: [
       { type: 'restore_object', objectId: 'sprinkler', icon: '\u{1F4A6}', label: 'Restore Sprinkler' },
-      { type: 'clean_dirt', dirtTag: 'target_mud', amount: 5, icon: '\u{1F4A7}', label: 'Mud Patches' },
+      { type: 'clean_dirt', dirtTag: 'target_mud', amount: 5, icon: '\u{1F7E4}', label: 'Mud Patches' },
     ],
   },
   {
@@ -1346,7 +1583,7 @@ const LEVELS = [
     worldName: 'Backyard Chaos', levelName: 'Fence Unlock', levelNumber: 18,
     timer: 80, startX: 225, startY: 600,
     targets: [
-      { type: 'clean_dirt', dirtTag: 'target_mud', amount: 4, icon: '\u{1F4A7}', label: 'Mud Patches' },
+      { type: 'clean_dirt', dirtTag: 'target_mud', amount: 4, icon: '\u{1F7E4}', label: 'Mud Patches' },
       { type: 'restore_object', objectId: 'birdbath', icon: '\u{1F426}', label: 'Restore Birdbath' },
     ],
   },
@@ -1371,7 +1608,7 @@ const LEVELS = [
     worldName: 'Backyard Chaos', levelName: 'Fountain Access', levelNumber: 21,
     timer: 80, startX: 225, startY: 600,
     targets: [
-      { type: 'clean_dirt', dirtTag: 'target_mud', amount: 5, icon: '\u{1F4A7}', label: 'Mud Patches' },
+      { type: 'clean_dirt', dirtTag: 'target_mud', amount: 5, icon: '\u{1F7E4}', label: 'Mud Patches' },
       { type: 'restore_object', objectId: 'fountain', icon: '\u26F2', label: 'Restore Fountain' },
     ],
   },
@@ -1489,6 +1726,7 @@ function showScreen(name) {
   const result     = document.getElementById('screen-result');
   const powerupHud = document.getElementById('powerup-hud');
   const upgrades   = document.getElementById('screen-upgrades');
+  const hoses      = document.getElementById('screen-hoses');
   const bottomNav  = document.getElementById('bottom-nav');
   const waterTankBar = document.getElementById('water-tank-bar');
 
@@ -1499,6 +1737,7 @@ function showScreen(name) {
   result.classList.add('hidden');
   powerupHud.classList.add('hidden');
   upgrades.classList.add('hidden');
+  if (hoses) hoses.classList.add('hidden');
   bottomNav.classList.add('hidden');
   waterTankBar.classList.add('hidden');
 
@@ -1512,6 +1751,11 @@ function showScreen(name) {
     bottomNav.classList.remove('hidden');
     populateUpgradesScreen();
     updateNavTabs('upgrades');
+  } else if (name === 'hoses') {
+    if (hoses) hoses.classList.remove('hidden');
+    bottomNav.classList.remove('hidden');
+    populateHosesScreen();
+    updateNavTabs('hoses');
   } else if (name === 'intro') {
     intro.classList.remove('hidden');
     populateIntroScreen();
@@ -1633,6 +1877,68 @@ function populateUpgradesScreen() {
   });
 }
 
+// ===== HOSES SCREEN (teaser collection) =====
+
+const HOSE_TEASER_ITEMS = [
+  { id: 'h01', name: 'Starter Blue',   rarity: 1, locked: true },
+  { id: 'h02', name: 'Garden Mint',    rarity: 1, locked: true },
+  { id: 'h03', name: 'Patio Orange',   rarity: 1, locked: true },
+  { id: 'h04', name: 'Neon Twist',     rarity: 2, locked: true },
+  { id: 'h05', name: 'Carbon Coil',    rarity: 2, locked: true },
+  { id: 'h06', name: 'Sunset Flex',    rarity: 2, locked: true },
+  { id: 'h07', name: 'Hydro Chrome',   rarity: 3, locked: true },
+  { id: 'h08', name: 'Toxic Lime',     rarity: 3, locked: true },
+  { id: 'h09', name: 'Midnight Pipe',  rarity: 3, locked: true },
+  { id: 'h10', name: 'Rose Gold Jet',  rarity: 4, locked: true },
+  { id: 'h11', name: 'Prism Spiral',   rarity: 4, locked: true },
+  { id: 'h12', name: 'Royal Pressure', rarity: 5, locked: true },
+];
+
+function populateHosesScreen() {
+  const grid = document.getElementById('hoses-grid');
+  if (!grid) return;
+  grid.innerHTML = '';
+
+  HOSE_TEASER_ITEMS.forEach(hose => {
+    const card = document.createElement('div');
+    card.className = 'hose-card rarity-' + hose.rarity;
+
+    const stars = '\u2605'.repeat(hose.rarity);
+
+    card.innerHTML =
+      '<div class="hose-card-lock">\u{1F512}</div>' +
+      '<div class="hose-card-silhouette">\u{1F9F5}</div>' +
+      '<div class="hose-card-name">' + hose.name + '</div>' +
+      '<div class="hose-card-stars">' + stars + '</div>' +
+      '<div class="hose-card-cs">Coming Soon</div>';
+
+    card.addEventListener('click', () => openHoseModal(hose));
+    grid.appendChild(card);
+  });
+}
+
+function openHoseModal(hose) {
+  let modal = document.getElementById('hoses-modal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'hoses-modal';
+    modal.className = 'hidden';
+    modal.innerHTML =
+      '<div id="hoses-modal-card">' +
+      '  <div id="hoses-modal-title">Coming Soon</div>' +
+      '  <div id="hoses-modal-body">Hose collections and rarities will unlock in a future update.</div>' +
+      '  <button class="btn-primary" id="hoses-modal-close">OK</button>' +
+      '</div>';
+    document.body.appendChild(modal);
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal || e.target.id === 'hoses-modal-close') {
+        modal.classList.add('hidden');
+      }
+    });
+  }
+  modal.classList.remove('hidden');
+}
+
 // ===== INTRO SCREEN =====
 
 function populateIntroScreen() {
@@ -1717,11 +2023,18 @@ function populateResultScreen() {
   const level   = LEVELS[state.levelIndex];
   const isLast  = state.levelIndex >= LEVELS.length - 1;
 
+  const popupEl   = document.getElementById('result-popup');
+  const bannerEl  = document.getElementById('result-banner');
   const iconEl    = document.getElementById('result-icon');
   const titleEl   = document.getElementById('result-title');
   const starsEl   = document.getElementById('result-stars');
   const summaryEl = document.getElementById('result-summary');
   const actionsEl = document.getElementById('result-actions');
+
+  // Banner: SUCCESS! / FAILED!
+  bannerEl.textContent = win ? 'SUCCESS!' : 'FAILED!';
+  bannerEl.className   = win ? 'win' : 'fail';
+  popupEl.classList.toggle('fail', !win);
 
   // Icon & title
   if (win && isLast) {
@@ -1737,6 +2050,12 @@ function populateResultScreen() {
     titleEl.textContent = 'Level Failed';
     titleEl.className   = 'fail';
   }
+
+  // Replay entrance animations (clone nodes' CSS animations by re-adding class)
+  restartResultAnimations();
+
+  // Fanfare confetti
+  spawnResultConfetti(win);
 
   // Stars
   starsEl.innerHTML = '';
@@ -1763,10 +2082,20 @@ function populateResultScreen() {
     addSummaryRow(summaryEl, 'Gold Earned', '+' + state.coinsEarnedThisLevel + ' \u{1FA99}');
     addSummaryRow(summaryEl, 'Total Gold', progression.washCoins.toString() + ' \u{1FA99}');
   } else if (win) {
-    const timeBonus = Math.max(0, Math.round(state.timeLeft));
-    addSummaryRow(summaryEl, 'Time Bonus', '+' + timeBonus + 's');
     addSummaryRow(summaryEl, 'Stars', '\u2605'.repeat(stars));
-    addSummaryRow(summaryEl, 'Gold Earned', '+' + state.coinsEarnedThisLevel + ' \u{1FA99}');
+    const bk = state.lastRewardBreakdown;
+    if (bk) {
+      // v6b: explicit reward breakdown
+      if (bk.inLevel > 0)   addSummaryRow(summaryEl, 'In-Level Gold',      '+' + bk.inLevel   + ' \u{1FA99}');
+      if (bk.base > 0)      addSummaryRow(summaryEl, 'Base Reward',        '+' + bk.base      + ' \u{1FA99}');
+      if (bk.noContinue > 0)addSummaryRow(summaryEl, 'No-Continue Bonus',  '+' + bk.noContinue+ ' \u{1FA99}');
+      if (bk.time > 0)      addSummaryRow(summaryEl, 'Time Bonus (20s+)',  '+' + bk.time      + ' \u{1FA99}');
+      if (bk.perfect > 0)   addSummaryRow(summaryEl, 'Perfect Bonus',      '+' + bk.perfect   + ' \u{1FA99}');
+      if (bk.relief > 0)    addSummaryRow(summaryEl, 'Relief Bonus',       '+' + bk.relief    + ' \u{1FA99}');
+      addSummaryRow(summaryEl, 'Total Earned', '+' + bk.total + ' \u{1FA99}');
+    } else {
+      addSummaryRow(summaryEl, 'Gold Earned', '+' + state.coinsEarnedThisLevel + ' \u{1FA99}');
+    }
     addSummaryRow(summaryEl, 'Total Gold', progression.washCoins.toString() + ' \u{1FA99}');
   } else {
     state.targets.forEach(t => {
@@ -1782,7 +2111,11 @@ function populateResultScreen() {
     });
     addSummaryRow(summaryEl, 'Status', "Time's up!");
     if (state.coinsEarnedThisLevel > 0) {
-      addSummaryRow(summaryEl, 'Gold Kept (50%)', '+' + state.coinsEarnedThisLevel + ' \u{1FA99}');
+      const bk = state.lastRewardBreakdown;
+      const pctLabel = bk && bk.failRetention
+        ? 'Gold Kept (' + Math.round(bk.failRetention * 100) + '%)'
+        : 'Gold Kept';
+      addSummaryRow(summaryEl, pctLabel, '+' + state.coinsEarnedThisLevel + ' \u{1FA99}');
     }
   }
 
@@ -1835,6 +2168,57 @@ function addSummaryRow(container, label, value) {
     '<span>' + label + '</span>' +
     '<span class="summary-val">' + value + '</span>';
   container.appendChild(row);
+}
+
+// Re-trigger the result popup's entrance CSS animations on each show
+function restartResultAnimations() {
+  const ids = ['result-popup', 'result-banner', 'result-icon', 'result-title',
+               'result-stars', 'result-summary', 'result-actions'];
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.style.animation = 'none';
+    // force reflow so next animation restart fires
+    void el.offsetWidth;
+    el.style.animation = '';
+  });
+}
+
+function spawnResultConfetti(isWin) {
+  const host = document.getElementById('result-confetti');
+  if (!host) return;
+  host.innerHTML = '';
+
+  const winColors  = ['#44ee88', '#ffcc44', '#44aaff', '#ff8844', '#ff55aa', '#ffffff', '#aaffcc'];
+  const failColors = ['#555555', '#888888', '#aa5555', '#773333', '#333333'];
+  const colors = isWin ? winColors : failColors;
+  const count  = isWin ? 70 : 28;
+
+  for (let i = 0; i < count; i++) {
+    const piece = document.createElement('div');
+    piece.className = 'confetti-piece';
+    const left  = Math.random() * 100;
+    const drift = (Math.random() - 0.5) * 240;
+    const spin  = 360 + Math.random() * 720;
+    const dur   = 1.6 + Math.random() * 1.8;
+    const delay = Math.random() * 0.35;
+    const w     = 6  + Math.random() * 8;
+    const h     = 10 + Math.random() * 10;
+    const color = colors[Math.floor(Math.random() * colors.length)];
+    piece.style.left  = left + '%';
+    piece.style.width  = w + 'px';
+    piece.style.height = h + 'px';
+    piece.style.background = color;
+    piece.style.borderRadius = (Math.random() < 0.3 ? '50%' : '2px');
+    piece.style.animationDuration = dur + 's';
+    piece.style.animationDelay    = delay + 's';
+    piece.style.setProperty('--drift', drift + 'px');
+    piece.style.setProperty('--spin', spin + 'deg');
+    host.appendChild(piece);
+  }
+
+  // Clear confetti after the longest piece finishes to avoid DOM bloat
+  setTimeout(() => { if (host) host.innerHTML = ''; }, 4200);
 }
 
 // ===== BOT CONTROLLER =====
@@ -2343,6 +2727,7 @@ function gameLoop(timestamp) {
     updateShake(dt);
     updateDirt(dt);
     updateObjects(dt);
+    updateGrassSpray(dt);
     updateLocks(dt);
     updatePowerUps(dt);
     updateHazards(dt);
@@ -2513,6 +2898,7 @@ document.querySelectorAll('.nav-tab').forEach(tab => {
     const target = tab.getAttribute('data-tab');
     if (target === 'home') showScreen('home');
     else if (target === 'upgrades') showScreen('upgrades');
+    else if (target === 'hoses') showScreen('hoses');
   });
 });
 
@@ -2615,8 +3001,10 @@ function updateDirt(dt) {
     dirt.hp -= cleanAmount;
     state.isCleaning = true;
 
-    if (Math.random() < 0.3) {
-      spawnSprayParticle(aimX, aimY, dirt.x, dirt.y, dirt.type);
+    const dirtRatio = Math.max(0, dirt.hp / dirt.maxHP);
+    const emitChance = 0.2 + 0.5 * dirtRatio; // more particles while dirty, fewer as cleaned
+    if (Math.random() < emitChance) {
+      spawnSprayParticle(aimX, aimY, dirt.x, dirt.y, dirt.type, dirtRatio);
     }
 
     if (dirt.hp <= 0) {
@@ -2629,6 +3017,7 @@ function updateDirt(dt) {
 
 function onDirtCleared(dirt) {
   spawnRevealPulse(dirt.x, dirt.y);
+  spawnMudChunkBurst(dirt.x, dirt.y, dirt.type);
 
   // Award gold for dirt clearing (+1, batched every 0.5s to avoid clutter)
   const now = Date.now();
@@ -2722,6 +3111,9 @@ function renderDirt() {
     }
 
     ctx.save();
+    ctx.translate(x, y);
+    ctx.scale(VISUAL_SCALE, VISUAL_SCALE);
+    ctx.translate(-x, -y);
 
     if (ratio < 0.8) {
       ctx.globalAlpha = (1 - ratio / 0.8) * 0.6;
@@ -2743,6 +3135,24 @@ function renderDirt() {
     ctx.ellipse(x, y, currentRX, currentRY, 0, 0, Math.PI * 2);
     ctx.fill();
 
+    // Leaf icons overlay for readability on 'leaves' dirt
+    if (dirt.type === 'leaves') {
+      ctx.globalAlpha = alpha;
+      const iconSize = Math.max(8, Math.min(currentRX, currentRY) * 0.95);
+      ctx.font = iconSize + 'px system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      // Main leaf icon in center
+      ctx.fillText('\u{1F342}', x, y);
+      // Small scattered leaves if the dirt circle is big enough
+      if (currentRX > 12) {
+        ctx.globalAlpha = alpha * 0.85;
+        ctx.font = (iconSize * 0.6) + 'px system-ui, sans-serif';
+        ctx.fillText('\u{1F342}', x - currentRX * 0.55, y + currentRY * 0.25);
+        ctx.fillText('\u{1F342}', x + currentRX * 0.55, y - currentRY * 0.25);
+      }
+    }
+
     ctx.restore();
   });
 }
@@ -2760,11 +3170,20 @@ const LEVEL_LAYOUTS = {
       { id: 4, x: 320, y: 350, type: 'mud' },
       { id: 5, x: 180, y: 250, type: 'mud' },
       { id: 6, x: 350, y: 500, type: 'mud' },
+      // extra scenic mud
+      { x: 80, y: 620, type: 'mud' },
+      { x: 230, y: 470, type: 'mud' },
+      { x: 60, y: 300, type: 'mud' },
+      { x: 400, y: 620, type: 'mud' },
+      { x: 270, y: 180, type: 'mud' },
     ],
     objects: [
       { x: 300, y: 580, type: 'pot' },
       { x: 100, y: 350, type: 'pot' },
       { x: 350, y: 220, type: 'pot' },
+    ],
+    powerUps: [
+      { x: 225, y: 450, type: 'turbo', spawnAfter: 18, duration: 8 },
     ],
   },
   // --- Level 2: Garden Path ---
@@ -2779,9 +3198,18 @@ const LEVEL_LAYOUTS = {
       { x: 250, y: 380, type: 'leaves' },
       { x: 350, y: 480, type: 'leaves' },
       { x: 160, y: 250, type: 'leaves' },
+      // scenic mud (destroyable environment)
+      { x: 70, y: 620, type: 'mud' },
+      { x: 380, y: 600, type: 'mud' },
+      { x: 60, y: 200, type: 'mud' },
+      { x: 390, y: 180, type: 'mud' },
+      { x: 230, y: 470, type: 'mud' },
     ],
     objects: [
       { id: 'l2_bench1', x: 225, y: 200, type: 'bench' },
+    ],
+    powerUps: [
+      { x: 350, y: 400, type: 'turbo', spawnAfter: 20, duration: 8 },
     ],
   },
   // --- Level 3: Backyard Blitz ---
@@ -2793,6 +3221,13 @@ const LEVEL_LAYOUTS = {
       { id: 'l3_mud2', x: 320, y: 530, type: 'mud' },
       { id: 'l3_sludge1', x: 200, y: 200, type: 'sludge', locked: true },
       { id: 'l3_sludge2', x: 260, y: 220, type: 'sludge', locked: true },
+      // scenic mud
+      { x: 80, y: 620, type: 'mud' },
+      { x: 380, y: 600, type: 'mud' },
+      { x: 60, y: 480, type: 'mud' },
+      { x: 390, y: 450, type: 'mud' },
+      { x: 100, y: 280, type: 'leaves' },
+      { x: 360, y: 300, type: 'leaves' },
     ],
     objects: [{
       id: 'birdbath', x: 225, y: 180, type: 'birdbath',
@@ -2816,12 +3251,23 @@ const LEVEL_LAYOUTS = {
       { x: 100, y: 420, type: 'leaves' },
       { x: 340, y: 380, type: 'leaves' },
       { x: 200, y: 300, type: 'mud' },
+      // scenic mud
+      { x: 60, y: 650, type: 'mud' },
+      { x: 400, y: 620, type: 'mud' },
+      { x: 230, y: 500, type: 'mud' },
+      { x: 60, y: 350, type: 'mud' },
+      { x: 380, y: 250, type: 'mud' },
+      { x: 220, y: 180, type: 'mud' },
+      { x: 150, y: 250, type: 'leaves' },
     ],
     objects: [
       { x: 250, y: 600, type: 'pot' },
       { x: 130, y: 480, type: 'pot' },
       { x: 350, y: 300, type: 'pot' },
       { x: 90, y: 200, type: 'pot' },
+    ],
+    powerUps: [
+      { x: 100, y: 550, type: 'turbo', spawnAfter: 18, duration: 8 },
     ],
   },
   // --- Level 5: Bench Wipe ---
@@ -2834,9 +3280,19 @@ const LEVEL_LAYOUTS = {
       // scenic
       { x: 220, y: 450, type: 'leaves' },
       { x: 380, y: 500, type: 'leaves' },
+      // scenic mud
+      { x: 70, y: 620, type: 'mud' },
+      { x: 390, y: 650, type: 'mud' },
+      { x: 60, y: 500, type: 'mud' },
+      { x: 230, y: 550, type: 'mud' },
+      { x: 220, y: 180, type: 'mud' },
+      { x: 70, y: 250, type: 'leaves' },
     ],
     objects: [
       { id: 'l5_bench1', x: 225, y: 300, type: 'bench' },
+    ],
+    powerUps: [
+      { x: 390, y: 400, type: 'turbo', spawnAfter: 22, duration: 8 },
     ],
   },
   // --- Level 6: Gate Mud (first lock) ---
@@ -2852,6 +3308,14 @@ const LEVEL_LAYOUTS = {
       // locked mud behind gate
       { id: 'l6_mud5', x: 180, y: 220, type: 'mud', targetTag: 'target_mud', locked: true },
       { id: 'l6_mud6', x: 280, y: 200, type: 'mud', targetTag: 'target_mud', locked: true },
+      // scenic destroyable mud
+      { x: 70, y: 630, type: 'mud' },
+      { x: 380, y: 620, type: 'mud' },
+      { x: 60, y: 500, type: 'mud' },
+      { x: 390, y: 490, type: 'mud' },
+      { x: 240, y: 500, type: 'mud' },
+      { x: 70, y: 170, type: 'leaves' },
+      { x: 380, y: 150, type: 'leaves' },
     ],
     locks: [{
       id: 'l6_gate', x: 225, y: 310, width: 80, height: 8,
@@ -2859,6 +3323,9 @@ const LEVEL_LAYOUTS = {
       unlocksDirt: ['l6_mud5', 'l6_mud6'],
       unlocksObjects: [],
     }],
+    powerUps: [
+      { x: 100, y: 550, type: 'turbo', spawnAfter: 20, duration: 8 },
+    ],
   },
   // --- Level 7: Birdbath Prep (restore refresher) ---
   6: {
@@ -2871,6 +3338,13 @@ const LEVEL_LAYOUTS = {
       // sludge near birdbath (behind lock)
       { id: 'l7_sludge1', x: 200, y: 200, type: 'sludge', locked: true },
       { id: 'l7_sludge2', x: 260, y: 210, type: 'sludge', locked: true },
+      // scenic mud/leaves
+      { x: 80, y: 620, type: 'mud' },
+      { x: 380, y: 600, type: 'mud' },
+      { x: 100, y: 480, type: 'mud' },
+      { x: 370, y: 470, type: 'mud' },
+      { x: 140, y: 310, type: 'leaves' },
+      { x: 320, y: 310, type: 'leaves' },
     ],
     objects: [{
       id: 'birdbath', x: 225, y: 170, type: 'birdbath',
@@ -2882,6 +3356,9 @@ const LEVEL_LAYOUTS = {
       unlocksDirt: ['l7_sludge1', 'l7_sludge2'],
       unlocksObjects: ['birdbath'],
     }],
+    powerUps: [
+      { x: 390, y: 500, type: 'magnet', spawnAfter: 25, duration: 8 },
+    ],
   },
   // --- Level 8: Leaf Sweep ---
   7: {
@@ -2898,10 +3375,19 @@ const LEVEL_LAYOUTS = {
       // scenic mud
       { x: 250, y: 420, type: 'mud' },
       { x: 180, y: 300, type: 'mud' },
+      { x: 60, y: 620, type: 'mud' },
+      { x: 390, y: 620, type: 'mud' },
+      { x: 60, y: 450, type: 'mud' },
+      { x: 400, y: 400, type: 'mud' },
+      { x: 245, y: 540, type: 'mud' },
+      { x: 240, y: 260, type: 'mud' },
     ],
     objects: [
       { x: 100, y: 600, type: 'pot' },
       { x: 370, y: 200, type: 'pot' },
+    ],
+    powerUps: [
+      { x: 225, y: 480, type: 'turbo', spawnAfter: 18, duration: 8 },
     ],
   },
   // --- Level 9: Garden Path (broader route) ---
@@ -2917,10 +3403,23 @@ const LEVEL_LAYOUTS = {
       { x: 225, y: 550, type: 'leaves' },
       { x: 225, y: 350, type: 'leaves' },
       { x: 225, y: 180, type: 'leaves' },
+      // extra scenic mud
+      { x: 50, y: 650, type: 'mud' },
+      { x: 400, y: 650, type: 'mud' },
+      { x: 180, y: 620, type: 'mud' },
+      { x: 280, y: 600, type: 'mud' },
+      { x: 160, y: 460, type: 'mud' },
+      { x: 290, y: 440, type: 'mud' },
+      { x: 170, y: 280, type: 'mud' },
+      { x: 290, y: 260, type: 'mud' },
     ],
     objects: [
       { id: 'l9_bench1', x: 100, y: 150, type: 'bench' },
       { id: 'l9_bench2', x: 350, y: 150, type: 'bench' },
+    ],
+    powerUps: [
+      { x: 225, y: 450, type: 'turbo', spawnAfter: 20, duration: 8 },
+      { x: 225, y: 250, type: 'magnet', spawnAfter: 40, duration: 8 },
     ],
   },
   // --- Level 10: Quick Cleanup (relief level) ---
@@ -2930,6 +3429,14 @@ const LEVEL_LAYOUTS = {
       { x: 200, y: 560, type: 'mud' },
       { x: 260, y: 530, type: 'leaves' },
       { x: 180, y: 380, type: 'mud' },
+      // extra scenic mud
+      { x: 80, y: 620, type: 'mud' },
+      { x: 380, y: 620, type: 'mud' },
+      { x: 110, y: 420, type: 'mud' },
+      { x: 370, y: 400, type: 'mud' },
+      { x: 230, y: 230, type: 'mud' },
+      { x: 100, y: 230, type: 'leaves' },
+      { x: 350, y: 230, type: 'leaves' },
     ],
     objects: [
       // 5 pots in dense cluster
@@ -2938,6 +3445,9 @@ const LEVEL_LAYOUTS = {
       { x: 290, y: 490, type: 'pot' },
       { x: 180, y: 350, type: 'pot' },
       { x: 280, y: 300, type: 'pot' },
+    ],
+    powerUps: [
+      { x: 225, y: 440, type: 'turbo', spawnAfter: 15, duration: 8 },
     ],
   },
   // --- Level 11: Compost Route ---
@@ -2955,6 +3465,18 @@ const LEVEL_LAYOUTS = {
       // scenic leaves
       { x: 100, y: 500, type: 'leaves' },
       { x: 380, y: 380, type: 'leaves' },
+      // scenic mud
+      { x: 60, y: 620, type: 'mud' },
+      { x: 390, y: 630, type: 'mud' },
+      { x: 230, y: 500, type: 'mud' },
+      { x: 60, y: 400, type: 'mud' },
+      { x: 70, y: 220, type: 'mud' },
+      { x: 240, y: 260, type: 'mud' },
+      { x: 220, y: 150, type: 'leaves' },
+    ],
+    powerUps: [
+      { x: 225, y: 350, type: 'magnet', spawnAfter: 20, duration: 10 },
+      { x: 150, y: 620, type: 'turbo', spawnAfter: 45, duration: 8 },
     ],
   },
   // --- Level 12: Patio Area (first static area target) ---
@@ -2971,9 +3493,19 @@ const LEVEL_LAYOUTS = {
       { x: 340, y: 260, type: 'mud', areaId: 'main' },
       { x: 100, y: 200, type: 'mud', areaId: 'main' },
       { x: 280, y: 160, type: 'leaves', areaId: 'main' },
+      // scenic mud (not in area) around border
+      { x: 60, y: 650, type: 'mud' },
+      { x: 400, y: 640, type: 'mud' },
+      { x: 400, y: 150, type: 'mud' },
+      { x: 60, y: 120, type: 'mud' },
+      { x: 240, y: 550, type: 'mud' },
+      { x: 60, y: 380, type: 'mud' },
     ],
     objects: [
       { id: 'l12_bench1', x: 225, y: 300, type: 'bench' },
+    ],
+    powerUps: [
+      { x: 225, y: 500, type: 'turbo', spawnAfter: 25, duration: 8 },
     ],
   },
   // --- Level 13: Lamp Restore ---
@@ -2992,6 +3524,14 @@ const LEVEL_LAYOUTS = {
       // sludge near lamp (behind lock)
       { id: 'l13_sludge1', x: 210, y: 130, type: 'sludge', locked: true },
       { id: 'l13_sludge2', x: 250, y: 120, type: 'sludge', locked: true },
+      // scenic mud
+      { x: 60, y: 630, type: 'mud' },
+      { x: 400, y: 620, type: 'mud' },
+      { x: 230, y: 510, type: 'mud' },
+      { x: 60, y: 440, type: 'mud' },
+      { x: 250, y: 400, type: 'mud' },
+      { x: 80, y: 270, type: 'mud' },
+      { x: 370, y: 230, type: 'mud' },
     ],
     objects: [{
       id: 'lamp', x: 225, y: 100, type: 'lamp',
@@ -3003,6 +3543,10 @@ const LEVEL_LAYOUTS = {
       unlocksDirt: ['l13_sludge1', 'l13_sludge2'],
       unlocksObjects: ['lamp'],
     }],
+    powerUps: [
+      { x: 100, y: 620, type: 'turbo', spawnAfter: 20, duration: 8 },
+      { x: 390, y: 450, type: 'turbo', spawnAfter: 45, duration: 8 },
+    ],
   },
   // --- Level 14: Mud Spiral ---
   13: {
@@ -3019,6 +3563,20 @@ const LEVEL_LAYOUTS = {
       // scenic
       { x: 300, y: 650, type: 'leaves' },
       { x: 150, y: 150, type: 'leaves' },
+      // scenic mud filling the spiral
+      { x: 150, y: 620, type: 'mud' },
+      { x: 300, y: 550, type: 'mud' },
+      { x: 340, y: 430, type: 'mud' },
+      { x: 240, y: 300, type: 'mud' },
+      { x: 130, y: 330, type: 'mud' },
+      { x: 120, y: 450, type: 'mud' },
+      { x: 170, y: 550, type: 'mud' },
+      { x: 170, y: 200, type: 'mud' },
+      { x: 285, y: 200, type: 'mud' },
+    ],
+    powerUps: [
+      { x: 225, y: 400, type: 'turbo', spawnAfter: 20, duration: 10 },
+      { x: 380, y: 630, type: 'magnet', spawnAfter: 50, duration: 8 },
     ],
   },
   // --- Level 15: Sprinkler Leak (first soft hazard) ---
@@ -3036,6 +3594,14 @@ const LEVEL_LAYOUTS = {
       // sludge near sprinkler (behind lock)
       { id: 'l15_sludge1', x: 200, y: 130, type: 'sludge', locked: true },
       { id: 'l15_sludge2', x: 260, y: 120, type: 'sludge', locked: true },
+      // scenic mud
+      { x: 60, y: 630, type: 'mud' },
+      { x: 390, y: 640, type: 'mud' },
+      { x: 60, y: 470, type: 'mud' },
+      { x: 250, y: 480, type: 'mud' },
+      { x: 80, y: 330, type: 'mud' },
+      { x: 300, y: 290, type: 'mud' },
+      { x: 240, y: 180, type: 'leaves' },
     ],
     objects: [{
       id: 'sprinkler', x: 230, y: 100, type: 'sprinkler',
@@ -3051,6 +3617,10 @@ const LEVEL_LAYOUTS = {
       // soft hazard away from main target area (bottom-right corner)
       { x: 390, y: 650, type: 'recontamination_vent', respawnInterval: 12, respawnRadius: 35 },
     ],
+    powerUps: [
+      { x: 100, y: 500, type: 'turbo', spawnAfter: 20, duration: 8 },
+      { x: 390, y: 250, type: 'magnet', spawnAfter: 45, duration: 8 },
+    ],
   },
   // --- Level 16: Garden Cart (first 3-target) ---
   15: {
@@ -3064,11 +3634,23 @@ const LEVEL_LAYOUTS = {
       { x: 225, y: 650, type: 'mud' },
       { x: 200, y: 450, type: 'leaves' },
       { x: 300, y: 380, type: 'mud' },
+      // extra scenic mud
+      { x: 60, y: 620, type: 'mud' },
+      { x: 400, y: 620, type: 'mud' },
+      { x: 60, y: 450, type: 'mud' },
+      { x: 250, y: 530, type: 'mud' },
+      { x: 180, y: 250, type: 'mud' },
+      { x: 80, y: 200, type: 'mud' },
+      { x: 380, y: 370, type: 'leaves' },
     ],
     objects: [
       { x: 225, y: 300, type: 'cart' },
       { x: 150, y: 600, type: 'pot' },
       { x: 380, y: 180, type: 'pot' },
+    ],
+    powerUps: [
+      { x: 225, y: 500, type: 'magnet', spawnAfter: 18, duration: 10 },
+      { x: 400, y: 400, type: 'turbo', spawnAfter: 45, duration: 8 },
     ],
   },
   // --- Level 17: Side Yard Clean (second area target) ---
@@ -3086,6 +3668,17 @@ const LEVEL_LAYOUTS = {
       { x: 300, y: 160, type: 'sludge', areaId: 'main' },
       { x: 120, y: 130, type: 'leaves', areaId: 'main' },
       { x: 400, y: 100, type: 'mud', areaId: 'main' },
+      // scenic mud (not counted)
+      { x: 225, y: 650, type: 'mud' },
+      { x: 225, y: 550, type: 'mud' },
+      { x: 225, y: 370, type: 'mud' },
+      { x: 60, y: 640, type: 'mud' },
+      { x: 400, y: 640, type: 'mud' },
+      { x: 225, y: 100, type: 'mud' },
+    ],
+    powerUps: [
+      { x: 225, y: 480, type: 'turbo', spawnAfter: 20, duration: 10 },
+      { x: 60, y: 180, type: 'magnet', spawnAfter: 55, duration: 8 },
     ],
   },
   // --- Level 18: Fence Unlock ---
@@ -3105,6 +3698,13 @@ const LEVEL_LAYOUTS = {
       // scenic
       { x: 380, y: 300, type: 'leaves' },
       { x: 100, y: 250, type: 'leaves', locked: true },
+      // extra scenic mud
+      { x: 60, y: 630, type: 'mud' },
+      { x: 400, y: 640, type: 'mud' },
+      { x: 60, y: 440, type: 'mud' },
+      { x: 240, y: 500, type: 'mud' },
+      { x: 260, y: 280, type: 'mud' },
+      { x: 80, y: 340, type: 'mud' },
     ],
     objects: [{
       id: 'birdbath', x: 225, y: 150, type: 'birdbath',
@@ -3118,6 +3718,7 @@ const LEVEL_LAYOUTS = {
     }],
     powerUps: [
       { x: 350, y: 550, type: 'turbo', spawnAfter: 20, duration: 8 },
+      { x: 100, y: 550, type: 'magnet', spawnAfter: 45, duration: 8 },
     ],
   },
   // --- Level 19: Back Corner ---
@@ -3138,6 +3739,20 @@ const LEVEL_LAYOUTS = {
       { id: 'l19_l6', x: 80, y: 280, type: 'leaves', targetTag: 'target_leaves' },
       { id: 'l19_l7', x: 350, y: 200, type: 'leaves', targetTag: 'target_leaves' },
       { id: 'l19_l8', x: 120, y: 120, type: 'leaves', targetTag: 'target_leaves' },
+      // scenic mud filling between targets
+      { x: 60, y: 650, type: 'mud' },
+      { x: 400, y: 650, type: 'mud' },
+      { x: 240, y: 570, type: 'mud' },
+      { x: 240, y: 400, type: 'mud' },
+      { x: 140, y: 440, type: 'mud' },
+      { x: 330, y: 430, type: 'mud' },
+      { x: 220, y: 270, type: 'mud' },
+      { x: 400, y: 110, type: 'mud' },
+      { x: 250, y: 150, type: 'mud' },
+    ],
+    powerUps: [
+      { x: 225, y: 350, type: 'magnet', spawnAfter: 15, duration: 10 },
+      { x: 225, y: 500, type: 'turbo', spawnAfter: 40, duration: 8 },
     ],
   },
   // --- Level 20: Coin Rinse (relief level) ---
@@ -3147,6 +3762,13 @@ const LEVEL_LAYOUTS = {
       { x: 270, y: 530, type: 'leaves' },
       { x: 150, y: 380, type: 'mud' },
       { x: 310, y: 350, type: 'leaves' },
+      // extra scenic mud
+      { x: 60, y: 640, type: 'mud' },
+      { x: 400, y: 640, type: 'mud' },
+      { x: 60, y: 400, type: 'mud' },
+      { x: 400, y: 400, type: 'mud' },
+      { x: 225, y: 300, type: 'mud' },
+      { x: 230, y: 130, type: 'mud' },
     ],
     objects: [
       { x: 200, y: 620, type: 'pot' },
@@ -3157,6 +3779,9 @@ const LEVEL_LAYOUTS = {
       { x: 370, y: 250, type: 'pot' },
       { id: 'l20_bench1', x: 225, y: 200, type: 'bench' },
       { id: 'l20_bench2', x: 225, y: 400, type: 'bench' },
+    ],
+    powerUps: [
+      { x: 225, y: 500, type: 'turbo', spawnAfter: 12, duration: 8 },
     ],
   },
   // --- Level 21: Fountain Access ---
@@ -3175,6 +3800,15 @@ const LEVEL_LAYOUTS = {
       { id: 'l21_sludge1', x: 200, y: 130, type: 'sludge', locked: true },
       { id: 'l21_sludge2', x: 260, y: 120, type: 'sludge', locked: true },
       { id: 'l21_sludge3', x: 230, y: 100, type: 'sludge', locked: true },
+      // scenic mud
+      { x: 60, y: 640, type: 'mud' },
+      { x: 400, y: 640, type: 'mud' },
+      { x: 250, y: 540, type: 'mud' },
+      { x: 60, y: 380, type: 'mud' },
+      { x: 400, y: 450, type: 'mud' },
+      { x: 250, y: 400, type: 'mud' },
+      { x: 80, y: 280, type: 'leaves' },
+      { x: 380, y: 300, type: 'leaves' },
     ],
     objects: [{
       id: 'fountain', x: 225, y: 80, type: 'fountain',
@@ -3188,6 +3822,7 @@ const LEVEL_LAYOUTS = {
     }],
     powerUps: [
       { x: 100, y: 550, type: 'turbo', spawnAfter: 25, duration: 8 },
+      { x: 380, y: 550, type: 'magnet', spawnAfter: 50, duration: 8 },
     ],
   },
   // --- Level 22: Light the Yard ---
@@ -3213,6 +3848,15 @@ const LEVEL_LAYOUTS = {
       // sludge near lights (behind locks)
       { id: 'l22_sludge1', x: 100, y: 120, type: 'sludge', locked: true },
       { id: 'l22_sludge2', x: 350, y: 90, type: 'sludge', locked: true },
+      // scenic mud
+      { x: 220, y: 660, type: 'mud' },
+      { x: 60, y: 560, type: 'mud' },
+      { x: 400, y: 580, type: 'mud' },
+      { x: 230, y: 480, type: 'mud' },
+      { x: 60, y: 330, type: 'mud' },
+      { x: 400, y: 380, type: 'mud' },
+      { x: 230, y: 340, type: 'mud' },
+      { x: 230, y: 90, type: 'mud' },
     ],
     objects: [
       { id: 'lights1', x: 100, y: 80, type: 'lights', hp: 50, locked: true, restoreRequired: true },
@@ -3231,6 +3875,10 @@ const LEVEL_LAYOUTS = {
         unlocksDirt: ['l22_sludge2'],
         unlocksObjects: ['lights2'],
       },
+    ],
+    powerUps: [
+      { x: 225, y: 450, type: 'turbo', spawnAfter: 20, duration: 10 },
+      { x: 225, y: 600, type: 'magnet', spawnAfter: 50, duration: 8 },
     ],
   },
   // --- Level 23: Backyard Reborn (world mini-finale) ---
@@ -3255,6 +3903,14 @@ const LEVEL_LAYOUTS = {
       // sludge near fountain + lights (behind lock)
       { id: 'l23_sludge1', x: 180, y: 110, type: 'sludge', locked: true, areaId: 'main' },
       { id: 'l23_sludge2', x: 260, y: 100, type: 'sludge', locked: true, areaId: 'main' },
+      // extra scenic mud (outside area count)
+      { x: 225, y: 680, type: 'mud' },
+      { x: 400, y: 590, type: 'mud' },
+      { x: 60, y: 470, type: 'mud' },
+      { x: 240, y: 470, type: 'mud' },
+      { x: 400, y: 340, type: 'mud' },
+      { x: 60, y: 170, type: 'mud' },
+      { x: 400, y: 150, type: 'mud' },
     ],
     objects: [
       { id: 'fountain', x: 225, y: 80, type: 'fountain', hp: 80, radiusX: 24, radiusY: 18, locked: true, restoreRequired: true },
@@ -3271,7 +3927,9 @@ const LEVEL_LAYOUTS = {
       { x: 400, y: 680, type: 'recontamination_vent', respawnInterval: 14, respawnRadius: 30 },
     ],
     powerUps: [
-      { x: 225, y: 450, type: 'turbo', spawnAfter: 30, duration: 10 },
+      { x: 225, y: 450, type: 'turbo', spawnAfter: 20, duration: 10 },
+      { x: 100, y: 600, type: 'magnet', spawnAfter: 45, duration: 10 },
+      { x: 350, y: 550, type: 'turbo', spawnAfter: 70, duration: 8 },
     ],
   },
 };
@@ -3310,7 +3968,8 @@ function spawnParticle(props) {
   });
 }
 
-function spawnSprayParticle(fromX, fromY, toX, toY, dirtType) {
+function spawnSprayParticle(fromX, fromY, toX, toY, dirtType, intensity) {
+  if (intensity === undefined) intensity = 1;
   const baseAngle = Math.atan2(toY - fromY, toX - fromX);
   const spread    = (Math.random() - 0.5) * 1.0;
   const angle     = baseAngle + spread;
@@ -3340,6 +3999,166 @@ function spawnSprayParticle(fromX, fromY, toX, toY, dirtType) {
     type: 'dot',
     friction: 0.85,
   });
+
+  // Satisfying debris splatter around the dirt node itself
+  if (dirtType === 'sludge') {
+    spawnDirtSplatter(toX, toY, 'sludge', intensity);
+  } else if (dirtType === 'mud') {
+    spawnDirtSplatter(toX, toY, 'mud', intensity);
+  } else if (dirtType === 'leaves') {
+    spawnDirtSplatter(toX, toY, 'leaves', intensity);
+  }
+}
+
+function spawnDirtSplatter(x, y, dirtType, intensity) {
+  if (intensity === undefined) intensity = 1;
+  let baseCount;
+  if      (dirtType === 'sludge') baseCount = 11;
+  else if (dirtType === 'mud')    baseCount = 7;
+  else                            baseCount = 4;
+  const count = Math.max(1, Math.round(baseCount * intensity));
+
+  for (let i = 0; i < count; i++) {
+    const a = Math.random() * Math.PI * 2;
+    const sp = randRange(40, 150);
+    let color;
+    if (dirtType === 'sludge') {
+      const r = randInt(30, 70);
+      const g = randInt(25, 55);
+      const b = randInt(15, 40);
+      color = 'rgba(' + r + ',' + g + ',' + b + ',0.95)';
+    } else if (dirtType === 'mud') {
+      const r = randInt(85, 140);
+      const g = randInt(55, 95);
+      const b = randInt(30, 60);
+      color = 'rgba(' + r + ',' + g + ',' + b + ',0.95)';
+    } else {
+      const r = randInt(90, 150);
+      const g = randInt(110, 170);
+      const b = randInt(35, 75);
+      color = 'rgba(' + r + ',' + g + ',' + b + ',0.9)';
+    }
+    const isSludge = dirtType === 'sludge';
+    spawnParticle({
+      x: x + Math.cos(a) * 4,
+      y: y + Math.sin(a) * 4,
+      vx: Math.cos(a) * sp,
+      vy: Math.sin(a) * sp - randRange(20, 70),
+      life: randRange(0.45, isSludge ? 1.0 : 0.85),
+      size: randRange(isSludge ? 3 : 2.5, isSludge ? 7 : 6),
+      color: color,
+      type: 'dot',
+      gravity: 240,
+      friction: 0.9,
+    });
+  }
+}
+
+function spawnMudChunkBurst(x, y, dirtType) {
+  // Chunk debris — scaled up in count and spread
+  const count = 24;
+  for (let i = 0; i < count; i++) {
+    const a = Math.random() * Math.PI * 2;
+    const sp = randRange(100, 260);
+    let color;
+    if (dirtType === 'mud') {
+      const r = randInt(95, 140);
+      const g = randInt(70, 95);
+      const b = randInt(35, 60);
+      color = 'rgba(' + r + ',' + g + ',' + b + ',0.95)';
+    } else if (dirtType === 'leaves') {
+      const r = randInt(100, 160);
+      const g = randInt(130, 180);
+      const b = randInt(40, 80);
+      color = 'rgba(' + r + ',' + g + ',' + b + ',0.95)';
+    } else {
+      const r = randInt(40, 70);
+      const g = randInt(40, 60);
+      const b = randInt(25, 40);
+      color = 'rgba(' + r + ',' + g + ',' + b + ',0.95)';
+    }
+    spawnParticle({
+      x: x,
+      y: y,
+      vx: Math.cos(a) * sp,
+      vy: Math.sin(a) * sp - randRange(40, 110),
+      life: randRange(0.6, 1.1),
+      size: randRange(3, 7),
+      color: color,
+      type: 'dot',
+      gravity: 240,
+      friction: 0.9,
+    });
+  }
+
+  // Golden celebration sparkles — marks the 100% clear moment
+  spawnGoldenCompletionBurst(x, y);
+}
+
+function spawnGoldenCompletionBurst(x, y) {
+  // Big expanding cyan ring
+  spawnParticle({
+    x: x, y: y,
+    life: 0.6, size: 8,
+    color: 'rgba(120, 210, 255, 0.95)',
+    type: 'ring', shrink: false,
+  });
+  // Second wider white ring for extra pop
+  spawnParticle({
+    x: x, y: y,
+    life: 0.75, size: 14,
+    color: 'rgba(255, 255, 255, 0.75)',
+    type: 'ring', shrink: false,
+  });
+
+  // Blue + white particle fan-out — larger radius and more particles
+  const count = 28;
+  for (let i = 0; i < count; i++) {
+    const angle = (i / count) * Math.PI * 2 + (Math.random() - 0.5) * 0.4;
+    const speed = randRange(90, 220);
+    // Mix of blue and white particles
+    const isWhite = Math.random() < 0.4;
+    let color;
+    if (isWhite) {
+      const v = randInt(230, 255);
+      color = 'rgba(' + v + ',' + v + ',255,0.95)';
+    } else {
+      const r = randInt(80, 160);
+      const g = randInt(170, 220);
+      const b = 255;
+      color = 'rgba(' + r + ',' + g + ',' + b + ',0.95)';
+    }
+    spawnParticle({
+      x: x,
+      y: y,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed - randRange(10, 40),
+      life: randRange(0.6, 1.1),
+      size: randRange(3, 6.5),
+      color: color,
+      type: 'dot',
+      gravity: 90,
+      friction: 0.93,
+    });
+  }
+
+  // Scattered twinkle dots for a "stardust" feel — soft white
+  for (let i = 0; i < 16; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const speed = randRange(20, 140);
+    spawnParticle({
+      x: x + (Math.random() - 0.5) * 10,
+      y: y + (Math.random() - 0.5) * 10,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed - randRange(0, 60),
+      life: randRange(0.4, 0.9),
+      size: randRange(1.5, 3),
+      color: 'rgba(235, 248, 255, 0.95)',
+      type: 'dot',
+      gravity: 40,
+      friction: 0.95,
+    });
+  }
 }
 
 function spawnRevealPulse(x, y) {
@@ -3356,25 +4175,8 @@ function spawnRevealPulse(x, y) {
 }
 
 function spawnSparkleBurst(x, y) {
-  for (let i = 0; i < 12; i++) {
-    const angle = (i / 12) * Math.PI * 2 + (Math.random() - 0.5) * 0.5;
-    const speed = randRange(40, 100);
-    const r = 255;
-    const g = randInt(200, 255);
-    const b = randInt(50, 150);
-    spawnParticle({
-      x:       x,
-      y:       y,
-      vx:      Math.cos(angle) * speed,
-      vy:      Math.sin(angle) * speed,
-      life:    randRange(0.4, 0.8),
-      size:    randRange(2, 5),
-      color:   'rgba(' + r + ',' + g + ',' + b + ',0.9)',
-      type:    'dot',
-      gravity: 80,
-      friction: 0.92,
-    });
-  }
+  // Share the same grand golden burst used for dirt 100% completion
+  spawnGoldenCompletionBurst(x, y);
 }
 
 function spawnPowerUpCollectEffect(x, y, type) {
@@ -3493,6 +4295,9 @@ function renderLocks() {
     const h     = lock.height;
 
     ctx.save();
+    ctx.translate(lock.x, lock.y);
+    ctx.scale(VISUAL_SCALE, VISUAL_SCALE);
+    ctx.translate(-lock.x, -lock.y);
     ctx.globalAlpha = alpha;
 
     ctx.fillStyle = '#8a6430';
@@ -3610,6 +4415,9 @@ function renderPowerUps() {
     const icon      = isTurbo ? '\u26A1'                : '\u{1F9F2}';
 
     ctx.save();
+    ctx.translate(x, y);
+    ctx.scale(VISUAL_SCALE, VISUAL_SCALE);
+    ctx.translate(-x, -y);
 
     ctx.globalAlpha = 0.2;
     ctx.fillStyle   = glowColor;
@@ -3703,6 +4511,9 @@ function renderHazards() {
     const y = hazard.y;
 
     ctx.save();
+    ctx.translate(x, y);
+    ctx.scale(VISUAL_SCALE, VISUAL_SCALE);
+    ctx.translate(-x, -y);
 
     ctx.fillStyle = '#2a2a2a';
     ctx.beginPath();
@@ -3927,6 +4738,9 @@ function renderParticles() {
   state.particles.forEach(p => {
     const lifeRatio = p.life / p.maxLife;
     ctx.save();
+    ctx.translate(p.x, p.y);
+    ctx.scale(VISUAL_SCALE, VISUAL_SCALE);
+    ctx.translate(-p.x, -p.y);
     ctx.globalAlpha = lifeRatio;
 
     if (p.type === 'ring') {
@@ -3963,6 +4777,10 @@ function renderProps() {
     {x:380, y:700}, {x:400, y:670},
   ];
   for (const s of stones) {
+    ctx.save();
+    ctx.translate(s.x, s.y);
+    ctx.scale(VISUAL_SCALE, VISUAL_SCALE);
+    ctx.translate(-s.x, -s.y);
     ctx.beginPath();
     ctx.ellipse(s.x, s.y, 12, 7, 0, 0, Math.PI*2);
     ctx.fillStyle = '#6a7a6a';
@@ -3970,6 +4788,7 @@ function renderProps() {
     ctx.strokeStyle = '#5a6a5a';
     ctx.lineWidth = 1;
     ctx.stroke();
+    ctx.restore();
   }
 
   // Corner bushes
@@ -3978,6 +4797,10 @@ function renderProps() {
     {x:25, y:CANVAS_H-25}, {x:CANVAS_W-25, y:CANVAS_H-25},
   ];
   for (const b of bushes) {
+    ctx.save();
+    ctx.translate(b.x, b.y);
+    ctx.scale(VISUAL_SCALE, VISUAL_SCALE);
+    ctx.translate(-b.x, -b.y);
     ctx.beginPath();
     ctx.ellipse(b.x, b.y, 22, 16, 0, 0, Math.PI*2);
     ctx.fillStyle = '#2a5a1a';
@@ -3986,15 +4809,22 @@ function renderProps() {
     ctx.ellipse(b.x+6, b.y-4, 16, 10, 0, 0, Math.PI*2);
     ctx.fillStyle = '#3a6a2a';
     ctx.fill();
+    ctx.restore();
   }
 
   // Garden hose
+  ctx.save();
+  const hoseCX = 55, hoseCY = CANVAS_H - 60;
+  ctx.translate(hoseCX, hoseCY);
+  ctx.scale(VISUAL_SCALE, VISUAL_SCALE);
+  ctx.translate(-hoseCX, -hoseCY);
   ctx.beginPath();
   ctx.moveTo(35, CANVAS_H-40);
   ctx.bezierCurveTo(55, CANVAS_H-80, 85, CANVAS_H-65, 70, CANVAS_H-50);
   ctx.strokeStyle = '#2a8a4a';
   ctx.lineWidth = 4;
   ctx.stroke();
+  ctx.restore();
 }
 
 
@@ -4050,6 +4880,13 @@ function updateObjects(dt) {
     obj.hp -= effectiveCleanPower * powerMult * dt;
     state.isCleaning = true;
 
+    // Dirty splatter while cleaning objects — fades as the object gets cleaner
+    const objRatio = Math.max(0, obj.hp / obj.maxHP);
+    const emitChance = 0.2 + 0.55 * objRatio;
+    if (Math.random() < emitChance) {
+      spawnSprayParticle(aimX, aimY, obj.x, obj.y, 'mud', objRatio);
+    }
+
     if (obj.hp <= 0) {
       obj.hp      = 0;
       obj.cleaned = true;
@@ -4059,6 +4896,60 @@ function updateObjects(dt) {
       onObjectCleaned(obj);
     }
   });
+}
+
+// Spray landing on grass — light water droplets + faint green chips.
+// Runs whenever the player is actively spraying with water available,
+// regardless of whether a dirt/object is also being cleaned; dirt splatter
+// uses brown/sludge colors, so the two effects layer naturally.
+function updateGrassSpray(dt) {
+  if (state.paused) return;
+  if (!state.inputActive) return;
+  if (state.waterCurrent <= 0 || state.isLockedRecharge) return;
+
+  const aimX = state.aimX;
+  const aimY = state.aimY;
+  const baseAngle = Math.atan2(aimY - state.botY, aimX - state.botX);
+
+  // Water mist droplets fanning out from the aim point (every frame)
+  const dropletCount = 2 + (Math.random() < 0.4 ? 1 : 0);
+  for (let i = 0; i < dropletCount; i++) {
+    const a  = baseAngle + (Math.random() - 0.5) * 1.2;
+    const sp = randRange(40, 110);
+    spawnParticle({
+      x: aimX + (Math.random() - 0.5) * 6,
+      y: aimY + (Math.random() - 0.5) * 6,
+      vx: Math.cos(a) * sp,
+      vy: Math.sin(a) * sp + randRange(-10, 20),
+      life: randRange(0.2, 0.45),
+      size: randRange(1.5, 3),
+      color: 'rgba(180,230,255,0.8)',
+      type: 'dot',
+      gravity: 140,
+      friction: 0.88,
+    });
+  }
+
+  // Occasional green grass chip when nothing else is being cleaned here
+  if (!state.isCleaning && Math.random() < 0.5) {
+    const a  = Math.random() * Math.PI * 2;
+    const sp = randRange(20, 60);
+    const r = randInt(70, 120);
+    const g = randInt(130, 180);
+    const b = randInt(55, 90);
+    spawnParticle({
+      x: aimX,
+      y: aimY,
+      vx: Math.cos(a) * sp,
+      vy: Math.sin(a) * sp - randRange(10, 30),
+      life: randRange(0.3, 0.55),
+      size: randRange(1.5, 3),
+      color: 'rgba(' + r + ',' + g + ',' + b + ',0.85)',
+      type: 'dot',
+      gravity: 180,
+      friction: 0.9,
+    });
+  }
 }
 
 function onObjectCleaned(obj) {
@@ -4224,10 +5115,30 @@ function updateGoldHUD() {
 }
 
 // ===== COIN REWARD CALCULATION =====
+// v6b patch: base reward curve + bonuses
+
+function getBaseRewardForLevel(levelNum) {
+  if (levelNum <= 5)  return 70;
+  if (levelNum <= 10) return 85;
+  if (levelNum <= 15) return 105;
+  if (levelNum <= 20) return 125;
+  if (levelNum <= 23) return 150;
+  if (levelNum <= 28) return 165;
+  if (levelNum <= 33) return 185;
+  if (levelNum <= 38) return 210;
+  return 240;
+}
+
+function isReliefLevel(levelNum) {
+  return levelNum === 10 || levelNum === 20 || levelNum === 30 || levelNum === 40;
+}
+
+function getFailRetentionPct(levelNum) {
+  return levelNum <= 20 ? 0.60 : 0.70;
+}
 
 function calculateLevelReward() {
-  // In v3, the in-level gold IS the reward
-  return state.levelGold;
+  return state.levelGold + (state.lastRewardBreakdown ? state.lastRewardBreakdown.total : 0);
 }
 
 function onLevelWin() {
@@ -4240,12 +5151,31 @@ function onLevelWin() {
   else if (t >=  5) state.stars = 2;
   else              state.stars = 1;
 
-  // In v3: the in-level gold IS the reward
-  state.coinsEarnedThisLevel = state.levelGold;
-  progression.washCoins += state.levelGold;
+  const levelNum = LEVELS[state.levelIndex] ? LEVELS[state.levelIndex].levelNumber : 1;
+
+  // Reward breakdown (v6b economy)
+  const base = getBaseRewardForLevel(levelNum);
+  const noContinueBonus = state.usedContinue ? 0 : 20;
+  const timeBonus = t >= 20 ? 15 : 0;
+  const perfectBonus = state.stars >= 3 ? 15 : 0;
+  const reliefBonus  = isReliefLevel(levelNum) ? 20 : 0;
+
+  const breakdown = {
+    inLevel:        state.levelGold,
+    base:           base,
+    noContinue:     noContinueBonus,
+    time:           timeBonus,
+    perfect:        perfectBonus,
+    relief:         reliefBonus,
+  };
+  breakdown.total = breakdown.inLevel + breakdown.base + breakdown.noContinue +
+                    breakdown.time + breakdown.perfect + breakdown.relief;
+
+  state.lastRewardBreakdown = breakdown;
+  state.coinsEarnedThisLevel = breakdown.total;
+  progression.washCoins += breakdown.total;
 
   // Update campaign progress
-  const levelNum = LEVELS[state.levelIndex] ? LEVELS[state.levelIndex].levelNumber : 1;
   if (levelNum > progression.campaignLevel) {
     progression.campaignLevel = levelNum;
   }
@@ -4258,8 +5188,15 @@ function onLevelFail() {
   if (state.won) return;
   if (state.screen !== 'gameplay') return;
   state.won = false;
-  // On fail, player keeps some gold earned (half, rounded down)
-  const partialGold = Math.floor(state.levelGold * 0.5);
+
+  const levelNum = LEVELS[state.levelIndex] ? LEVELS[state.levelIndex].levelNumber : 1;
+  const retention = getFailRetentionPct(levelNum);
+  const partialGold = Math.floor(state.levelGold * retention);
+
+  state.lastRewardBreakdown = {
+    inLevel: partialGold, base: 0, noContinue: 0, time: 0, perfect: 0, relief: 0,
+    total: partialGold, failRetention: retention,
+  };
   state.coinsEarnedThisLevel = partialGold;
   progression.washCoins += partialGold;
   playFailSound();
@@ -4290,6 +5227,11 @@ function renderObjects() {
   state.objects.forEach(obj => {
     const cleanRatio = 1 - (obj.hp / obj.maxHP);
 
+    ctx.save();
+    ctx.translate(obj.x, obj.y);
+    ctx.scale(VISUAL_SCALE, VISUAL_SCALE);
+    ctx.translate(-obj.x, -obj.y);
+
     if (obj.type === 'pot') {
       renderPot(obj, cleanRatio);
     } else if (obj.type === 'bench') {
@@ -4307,6 +5249,8 @@ function renderObjects() {
     } else if (obj.type === 'lights') {
       renderLights(obj, cleanRatio);
     }
+
+    ctx.restore();
   });
 }
 

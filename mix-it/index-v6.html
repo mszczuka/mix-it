@@ -337,14 +337,15 @@ html, body {
 
 /* ===== MATCH BOTTOM BAR ===== */
 .match-bottom-bar {
-  height: 64px;
+  height: 86px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 16px;
+  padding: 0 20px;
   flex-shrink: 0;
-  background: rgba(0,0,0,0.3);
-  border-top: 1px solid rgba(255,255,255,0.06);
+  background: linear-gradient(180deg, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.55) 100%);
+  border-top: 1px solid rgba(255,215,0,0.12);
+  box-shadow: 0 -6px 18px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.05);
 }
 .match-bottom-bar .powerup-inventory {
   height: auto;
@@ -1130,28 +1131,31 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 14px;
 }
 .powerup-slot {
-  width: 42px;
-  height: 42px;
-  border: 2px dashed rgba(255,255,255,0.15);
-  border-radius: 10px;
+  width: 58px;
+  height: 58px;
+  border: 2px dashed rgba(255,255,255,0.18);
+  border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 20px;
+  font-size: 28px;
   cursor: pointer;
   transition: all 0.2s;
+  background: rgba(255,255,255,0.03);
 }
 .powerup-slot.filled {
   border-style: solid;
-  border-color: rgba(255,215,0,0.4);
-  background: rgba(255,215,0,0.1);
+  border-color: rgba(255,215,0,0.55);
+  background: radial-gradient(circle at 30% 25%, rgba(255,215,0,0.25), rgba(255,215,0,0.08) 70%);
+  box-shadow: 0 4px 12px rgba(255,215,0,0.18), inset 0 1px 0 rgba(255,255,255,0.15);
 }
 .powerup-slot.filled:hover {
   border-color: #FFD700;
-  transform: scale(1.1);
+  transform: translateY(-2px) scale(1.08);
+  box-shadow: 0 6px 16px rgba(255,215,0,0.35), inset 0 1px 0 rgba(255,255,255,0.2);
 }
 
 /* Player Board */
@@ -1173,13 +1177,13 @@ html, body {
   width: 100%;
 }
 .undo-btn {
-  width: 44px;
-  height: 44px;
-  border: 2px solid rgba(255,255,255,0.2);
+  width: 60px;
+  height: 60px;
+  border: 2px solid rgba(255,255,255,0.22);
   border-radius: 50%;
-  background: rgba(255,255,255,0.06);
-  color: rgba(255,255,255,0.5);
-  font-size: 20px;
+  background: radial-gradient(circle at 30% 25%, rgba(255,255,255,0.12), rgba(255,255,255,0.04) 70%);
+  color: rgba(255,255,255,0.72);
+  font-size: 26px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1187,43 +1191,50 @@ html, body {
   transition: all 0.2s;
   flex-shrink: 0;
   position: relative;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1);
 }
 .undo-btn:hover {
-  border-color: rgba(255,255,255,0.4);
+  border-color: rgba(255,255,255,0.5);
   color: #fff;
-  background: rgba(255,255,255,0.1);
+  background: radial-gradient(circle at 30% 25%, rgba(255,255,255,0.2), rgba(255,255,255,0.08) 70%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.2);
 }
 .undo-btn.disabled {
   opacity: 0.25;
   cursor: default;
 }
 .undo-btn.disabled:hover {
-  border-color: rgba(255,255,255,0.2);
-  color: rgba(255,255,255,0.5);
-  background: rgba(255,255,255,0.06);
+  border-color: rgba(255,255,255,0.22);
+  color: rgba(255,255,255,0.72);
+  background: radial-gradient(circle at 30% 25%, rgba(255,255,255,0.12), rgba(255,255,255,0.04) 70%);
+  transform: none;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1);
 }
 .undo-count {
-  font-size: 11px;
-  font-weight: 700;
+  font-size: 12px;
+  font-weight: 800;
   position: absolute;
-  top: -2px;
-  right: -2px;
-  background: rgba(255,215,0,0.9);
+  top: -3px;
+  right: -3px;
+  background: linear-gradient(180deg, #FFE066, #FFB300);
   color: #1a1a2e;
-  width: 16px;
-  height: 16px;
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   line-height: 1;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+  border: 1.5px solid rgba(0,0,0,0.25);
 }
 .spawn-btn {
-  width: 52px;
-  height: 52px;
+  width: 70px;
+  height: 70px;
   border: none;
   border-radius: 50%;
-  background: rgba(255,215,0,0.1);
+  background: radial-gradient(circle at 30% 25%, rgba(255,215,0,0.35), rgba(255,165,0,0.12) 70%);
   cursor: pointer;
   transition: all 0.2s;
   z-index: 5;
@@ -1232,18 +1243,23 @@ html, body {
   justify-content: center;
   flex-shrink: 0;
   position: relative;
+  box-shadow: 0 6px 18px rgba(255,165,0,0.3), inset 0 1px 0 rgba(255,255,255,0.25);
 }
-.spawn-btn:hover { background: rgba(255,215,0,0.2); }
+.spawn-btn:hover {
+  background: radial-gradient(circle at 30% 25%, rgba(255,215,0,0.5), rgba(255,165,0,0.2) 70%);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px rgba(255,165,0,0.45), inset 0 1px 0 rgba(255,255,255,0.3);
+}
 .spawn-btn.disabled { opacity: 0.3; cursor: default; }
 .spawn-ring {
   position: absolute;
-  width: 52px;
-  height: 52px;
+  width: 70px;
+  height: 70px;
   transform: rotate(-90deg);
 }
 .spawn-ring-bg {
   fill: none;
-  stroke: rgba(255,255,255,0.1);
+  stroke: rgba(255,255,255,0.12);
   stroke-width: 3;
 }
 .spawn-ring-fill {
@@ -1254,13 +1270,15 @@ html, body {
   stroke-dashoffset: 100.5;
   stroke-linecap: round;
   transition: stroke-dashoffset 0.1s linear;
+  filter: drop-shadow(0 0 3px rgba(255,215,0,0.6));
 }
 .spawn-label {
   position: relative;
   z-index: 1;
-  font-size: 16px;
-  font-weight: 700;
+  font-size: 20px;
+  font-weight: 800;
   color: #FFD700;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.5);
   pointer-events: none;
 }
 
@@ -1341,9 +1359,30 @@ html, body {
   box-shadow: inset -4px 0 6px rgba(0,0,0,0.2), inset 4px 0 6px rgba(255,255,255,0.1);
 }
 
-/* Serveable pulse */
+/* Serveable pulse — strong "ready to serve" signal */
 .glass.serveable {
-  animation: serveablePulse 1.2s ease-in-out infinite;
+  animation: serveableGlassPulse 0.9s ease-in-out infinite;
+  border-color: #FFE066 !important;
+  border-width: 2px;
+  outline: 2px solid rgba(255,215,0,0.75);
+  outline-offset: 2px;
+}
+.glass.serveable .glass-layer {
+  animation: serveableLayerShine 0.9s ease-in-out infinite;
+}
+@keyframes serveableGlassPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(255,215,0,0), 0 0 18px 3px rgba(255,215,0,0.4), inset 0 0 14px rgba(255,215,0,0.22);
+    outline-color: rgba(255,215,0,0.55);
+  }
+  50% {
+    box-shadow: 0 0 0 5px rgba(255,215,0,0.25), 0 0 42px 14px rgba(255,215,0,0.85), inset 0 0 24px rgba(255,215,0,0.45);
+    outline-color: rgba(255,235,120,1);
+  }
+}
+@keyframes serveableLayerShine {
+  0%, 100% { filter: saturate(1.15) brightness(1.08); }
+  50%      { filter: saturate(1.4) brightness(1.28); }
 }
 
 /* ===== COUNTDOWN OVERLAY ===== */
@@ -2018,13 +2057,33 @@ html, body {
   box-shadow: 0 0 12px rgba(255,215,0,0.3);
 }
 @keyframes pourFill {
-  0% { transform: scaleY(0); opacity: 0.5; }
-  70% { transform: scaleY(1.06); opacity: 1; }
-  100% { transform: scaleY(1); opacity: 1; }
+  0%   { transform: scaleY(0) scaleX(1.05); opacity: 0.4; filter: brightness(1.35); }
+  25%  { transform: scaleY(0.45) scaleX(1.04); opacity: 0.85; filter: brightness(1.25); }
+  55%  { transform: scaleY(0.95) scaleX(1.01); opacity: 1; filter: brightness(1.15); }
+  72%  { transform: scaleY(1.08) scaleX(0.99); filter: brightness(1.08); }
+  86%  { transform: scaleY(0.97) scaleX(1.005); filter: brightness(1.02); }
+  100% { transform: scaleY(1) scaleX(1); opacity: 1; filter: brightness(1); }
 }
 .glass-layer.pour-new {
   transform-origin: bottom center;
-  animation: pourFill 0.35s ease-out both;
+  animation: pourFill 0.48s cubic-bezier(0.22, 0.8, 0.35, 1) both;
+}
+
+/* Pouring droplets */
+.pour-droplet {
+  position: fixed;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 400;
+  box-shadow: inset -1px -1px 2px rgba(0,0,0,0.25), 0 0 4px rgba(255,255,255,0.35);
+  will-change: transform, opacity;
+  animation: pourDroplet 0.65s cubic-bezier(0.33, 0.1, 0.4, 1) forwards;
+}
+@keyframes pourDroplet {
+  0%   { transform: translate(0, 0) scale(0.55); opacity: 0; }
+  18%  { opacity: 1; }
+  45%  { transform: translate(var(--dx, 0), var(--dy, -14px)) scale(1); opacity: 1; }
+  100% { transform: translate(calc(var(--dx, 0) * 1.4), var(--fy, 34px)) scale(0.4); opacity: 0; }
 }
 /* Customer served checkmark */
 .customer-served-check {
@@ -2690,8 +2749,49 @@ let state = {
 // Undo history
 let undoHistory = [];
 let pourAnimTarget = null;
+let tutorialPourTarget = null;
 let matchDrinksServed = 0;
 let matchBestCombo = 0;
+
+// ===== POUR PARTICLES =====
+function spawnPourParticles(glassEl, colorHex, count, pouredCount) {
+  if (!glassEl) return;
+  const rect = glassEl.getBoundingClientRect();
+  if (rect.width === 0) return;
+  // Spawn at the top of the liquid AFTER the pour — the top layer's final resting Y.
+  // Use offsetTop (not getBoundingClientRect) because the fresh layer is mid-scaleY animation.
+  const layers = glassEl.querySelectorAll('.glass-layer');
+  let surfaceY;
+  if (layers.length > 0) {
+    const topLayer = layers[layers.length - 1];
+    surfaceY = rect.top + topLayer.offsetTop;
+  } else {
+    surfaceY = rect.bottom - 2;
+  }
+  const originX = rect.left + rect.width / 2;
+  const originY = surfaceY;
+  const splashRoom = Math.max(6, rect.bottom - surfaceY - 6);
+  const n = count || 7;
+  for (let i = 0; i < n; i++) {
+    const d = document.createElement('div');
+    d.className = 'pour-droplet';
+    d.style.backgroundColor = colorHex;
+    const size = 3 + Math.random() * 4;
+    d.style.width = size + 'px';
+    d.style.height = size + 'px';
+    d.style.left = (originX - size / 2) + 'px';
+    d.style.top = (originY - size / 2) + 'px';
+    const dx = (Math.random() - 0.5) * rect.width * 0.9;
+    const dy = -4 - Math.random() * 12;
+    const fy = Math.random() * Math.min(14, splashRoom);
+    d.style.setProperty('--dx', dx + 'px');
+    d.style.setProperty('--dy', dy + 'px');
+    d.style.setProperty('--fy', fy + 'px');
+    d.style.animationDelay = (Math.random() * 90) + 'ms';
+    document.body.appendChild(d);
+    setTimeout(() => { if (d.parentNode) d.remove(); }, 850);
+  }
+}
 
 // ===== SEEDED RNG =====
 function createRNG(seed) {
@@ -2933,6 +3033,17 @@ function renderPlayerBoard() {
   state.playerGlasses.forEach((glass, i) => {
     container.appendChild(renderGlass(glass, i, true));
   });
+  if (pourAnimTarget) {
+    const idx = pourAnimTarget.glassIndex;
+    const poured = pourAnimTarget.layerCount;
+    const glass = state.playerGlasses[idx];
+    const glassEl = container.children[idx];
+    if (glass && glassEl && glass.layers.length > 0) {
+      const topColor = glass.layers[glass.layers.length - 1];
+      const hex = COLOR_HEX[topColor] || '#888';
+      requestAnimationFrame(() => spawnPourParticles(glassEl, hex, 6 + (poured - 1) * 2, poured));
+    }
+  }
   pourAnimTarget = null;
 }
 
@@ -5693,6 +5804,7 @@ function tutorialUseSpawn() {
   for (let i = 0; i < tutorialGlasses.length; i++) {
     if (tutorialGlasses[i].layers.length < CFG.GLASS_CAPACITY) {
       tutorialGlasses[i].layers.push(tutorialSpawnColor);
+      tutorialPourTarget = { glassIndex: i, layerCount: 1 };
       renderTutorialBoard();
       return;
     }
@@ -5736,18 +5848,38 @@ function renderTutorialBoard() {
     const isServeable = isPure && glass.layers[0] === tutorialCustomerColor;
     if (isServeable) el.classList.add('serveable');
 
+    const animStart = (tutorialPourTarget && tutorialPourTarget.glassIndex === i)
+      ? glass.layers.length - tutorialPourTarget.layerCount : -1;
     for (let j = 0; j < glass.layers.length; j++) {
       const layer = document.createElement('div');
       layer.className = 'glass-layer';
       layer.style.height = layerHeight + 'px';
       layer.style.backgroundColor = COLOR_HEX[glass.layers[j]] || '#888';
       if (j === 0) layer.style.borderRadius = '0 0 4px 4px';
+      if (j >= animStart && animStart >= 0) {
+        layer.classList.add('pour-new');
+        layer.style.animationDelay = ((j - animStart) * 0.08) + 's';
+      }
       el.appendChild(layer);
     }
 
     el.dataset.index = i;
     el.addEventListener('click', () => handleTutorialTap(i));
     container.appendChild(el);
+  }
+
+  if (tutorialPourTarget) {
+    const idx = tutorialPourTarget.glassIndex;
+    const poured = tutorialPourTarget.layerCount;
+    const glass = tutorialGlasses[idx];
+    const glassEl = container.children[idx];
+    if (glass && glassEl && glass.layers.length > 0) {
+      const topColor = glass.layers[glass.layers.length - 1];
+      const hex = COLOR_HEX[topColor] || '#888';
+      const count = 6 + (poured - 1) * 2;
+      requestAnimationFrame(() => spawnPourParticles(glassEl, hex, count, poured));
+    }
+    tutorialPourTarget = null;
   }
 }
 
@@ -5823,7 +5955,8 @@ function handleTutorialTap(index) {
   } else {
     // Try pour
     if (canPourRaw(tutorialGlasses, tutorialSelectedGlass, index)) {
-      doPourRaw(tutorialGlasses, tutorialSelectedGlass, index);
+      const moved = doPourRaw(tutorialGlasses, tutorialSelectedGlass, index);
+      tutorialPourTarget = { glassIndex: index, layerCount: moved };
       tutorialSelectedGlass = null;
       renderTutorialBoard();
     } else {
