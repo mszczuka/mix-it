@@ -491,19 +491,96 @@ html, body {
   cursor: pointer;
   transition: transform 0.2s;
   overflow: visible;
+  z-index: 2;
 }
-.venue-building-visual:hover { transform: scale(1.05); }
+.venue-building-visual:hover { transform: scale(1.06); }
 .venue-building-icon {
-  font-size: 42px;
-  filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5));
+  width: 58px;
+  height: 42px;
+  position: relative;
+  filter: drop-shadow(0 2px 0 rgba(0,0,0,0.5));
+  transition: filter 0.2s, opacity 0.2s;
+}
+/* Per-level visual differentiation (flat, no glow animation) */
+.venue-building-visual.vb-lvl-0 .venue-building-icon {
+  opacity: 0.55;
+  filter: grayscale(0.85) brightness(0.6) drop-shadow(0 2px 0 rgba(0,0,0,0.4));
+}
+.venue-building-visual.vb-lvl-4 .venue-building-icon {
+  filter: drop-shadow(0 2px 0 rgba(0,0,0,0.5)) drop-shadow(0 0 2px rgba(255,215,0,0.55));
+}
+.venue-building-visual.vb-lvl-5 .venue-building-icon {
+  filter: drop-shadow(0 2px 0 rgba(0,0,0,0.5)) drop-shadow(0 0 3px rgba(255,215,0,0.85));
+}
+
+/* ===== BAR ZONE SHAPES (flat, clean-sweep style) ===== */
+.vz { position: absolute; }
+.vz-dark { background: #2a1408; }
+.vz-wood { background: #6e4420; border: 2px solid #2a1408; }
+.vz-wood-top { background: #a06a34; border: 2px solid #2a1408; }
+
+/* Main Counter — wooden bar with bottles */
+.vz-counter .bar-body { left: 2px; right: 2px; bottom: 4px; height: 20px; background: #6e4420; border: 2px solid #2a1408; border-radius: 2px; }
+.vz-counter .bar-top  { left: -2px; right: -2px; top: 18px; height: 6px; background: #a06a34; border: 2px solid #2a1408; border-radius: 2px; }
+.vz-counter .btl      { top: 2px; width: 6px; height: 16px; background: #3a7a44; border: 1.5px solid #1a2a0a; border-radius: 1px 1px 0 0; }
+.vz-counter .btl.b1   { left: 10px; }
+.vz-counter .btl.b2   { left: 22px; background: #8a2a30; border-color: #2a0a0a; }
+.vz-counter .btl.b3   { left: 34px; background: #c08a30; border-color: #2a1a0a; }
+.vz-counter .btl.b4   { left: 46px; background: #2a5a7a; border-color: #0a1a2a; }
+
+/* Seating Area — bar stools */
+.vz-stools .stool { bottom: 4px; width: 14px; height: 22px; }
+.vz-stools .stool.s1 { left: 4px; }
+.vz-stools .stool.s2 { left: 22px; }
+.vz-stools .stool.s3 { left: 40px; }
+.vz-stools .stool .leg  { position: absolute; left: 5px; bottom: 0; width: 4px; height: 14px; background: #2a1408; }
+.vz-stools .stool .seat { position: absolute; left: 0; bottom: 10px; width: 14px; height: 10px; background: #b03040; border: 1.5px solid #2a1408; border-radius: 50% / 60%; }
+
+/* Signage — neon sign */
+.vz-sign .wire  { left: 50%; top: 0; width: 2px; height: 6px; background: #2a1408; transform: translateX(-50%); }
+.vz-sign .board { left: 4px; right: 4px; top: 6px; bottom: 6px; background: linear-gradient(180deg, #ff4688, #d01a60); border: 2px solid #2a1408; border-radius: 4px; box-shadow: 0 0 6px rgba(255,70,136,0.75), inset 0 0 6px rgba(255,200,220,0.35); }
+.vz-sign .bar   { left: 10px; right: 10px; top: 14px; height: 3px; background: rgba(255,230,240,0.85); border-radius: 1px; }
+.vz-sign .bar2  { left: 14px; right: 14px; top: 22px; height: 3px; background: rgba(255,230,240,0.85); border-radius: 1px; }
+
+/* Decor — disco ball */
+.vz-disco .chain { left: 50%; top: 0; width: 2px; height: 4px; background: #888; transform: translateX(-50%); }
+.vz-disco .ball  {
+  left: 50%; top: 4px; width: 28px; height: 28px; margin-left: -14px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 30% 25%, #ffffff 0%, rgba(255,255,255,0) 26%),
+    repeating-linear-gradient(45deg, rgba(255,255,255,0.25) 0 2px, rgba(0,0,0,0.12) 2px 5px),
+    linear-gradient(135deg, #c4e0f0 0%, #5a7a90 100%);
+  border: 1.5px solid #1a2830;
+  box-shadow: 0 0 6px rgba(180,220,240,0.4);
+}
+
+/* Service Station — bar counter + shaker + cocktail glass */
+.vz-service .counter { left: 2px; right: 2px; bottom: 2px; height: 14px; background: #6e4420; border: 2px solid #2a1408; border-radius: 2px; }
+.vz-service .shaker  { left: 6px; bottom: 14px; width: 10px; height: 18px; background: linear-gradient(180deg, #d4d4dc 0%, #808088 100%); border: 1.5px solid #2a1408; border-radius: 2px 2px 1px 1px; }
+.vz-service .shaker::before { content: ''; position: absolute; left: 1px; right: 1px; top: -3px; height: 3px; background: #8a8a94; border: 1.5px solid #2a1408; border-bottom: none; border-radius: 2px 2px 0 0; }
+.vz-service .glass   { left: 24px; bottom: 22px; width: 0; height: 0; border-left: 9px solid transparent; border-right: 9px solid transparent; border-top: 11px solid #ff7050; filter: drop-shadow(0 -1px 0 #2a1408) drop-shadow(1px 0 0 #2a1408) drop-shadow(-1px 0 0 #2a1408); }
+.vz-service .stem    { left: 31px; bottom: 17px; width: 2px; height: 6px; background: #d4d4dc; border: 1px solid #2a1408; }
+.vz-service .base    { left: 26px; bottom: 14px; width: 12px; height: 3px; background: #d4d4dc; border: 1.5px solid #2a1408; border-radius: 1px; }
+.vz-service .cherry  { left: 30px; bottom: 27px; width: 4px; height: 4px; background: #c42028; border: 1px solid #2a0808; border-radius: 50%; }
+.venue-building-crown {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 16px;
+  filter: drop-shadow(0 1px 0 rgba(0,0,0,0.5));
+  pointer-events: none;
+  z-index: 3;
 }
 .venue-building-label {
   font-size: 9px;
   font-weight: 800;
   color: #fff;
-  text-shadow: 0 1px 2px rgba(0,0,0,0.7);
+  text-shadow: 0 1px 2px rgba(0,0,0,0.75);
   text-align: center;
-  max-width: 60px;
+  max-width: 66px;
+  margin-top: 1px;
 }
 .venue-upgrade-pip {
   width: 26px;
@@ -559,19 +636,43 @@ html, body {
   font-size: 10px;
   color: rgba(255,255,255,0.6);
 }
-/* Home venue preview (smaller version) */
+/* Home venue preview — warm wooden bar floor (bar/club theme) */
 .home-venue-preview {
   width: 100%;
   flex: 1;
-  min-height: 140px;
+  min-height: 150px;
   position: relative;
   overflow: hidden;
-  border-radius: 14px;
-  background: linear-gradient(180deg, #1a6030 0%, #2a8040 40%, #8B7355 70%, #6B5B40 100%);
-  box-shadow: inset 0 0 20px rgba(0,0,0,0.3);
+  border-radius: 10px;
+  background: linear-gradient(180deg, #2a140a 0%, #4a2a16 50%, #6a3f22 100%);
+  border: 6px solid #3a1e10;
+  box-shadow: inset 0 0 0 2px #d4a03a, inset 0 0 0 3px #3a1e10;
   pointer-events: none;
-  opacity: 0.9;
+  opacity: 1;
 }
+/* Wooden plank lines — horizontal seams */
+.home-venue-preview::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(0deg,
+    transparent 0 22px,
+    rgba(0,0,0,0.28) 22px 24px);
+  pointer-events: none;
+  z-index: 0;
+}
+/* Brass studs along top & bottom (bar-trim) */
+.home-venue-preview::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0; top: 0; bottom: 0;
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(90deg, transparent 0 18px, #e5b94a 18px 22px, #8a6420 22px 26px, transparent 26px 44px) top/100% 5px no-repeat,
+    repeating-linear-gradient(90deg, transparent 0 18px, #e5b94a 18px 22px, #8a6420 22px 26px, transparent 26px 44px) bottom/100% 5px no-repeat;
+  z-index: 0;
+}
+
 /* Venue list overlay */
 .venue-list-overlay {
   position: absolute;
@@ -1280,7 +1381,12 @@ html, body {
   color: #FFD700;
   text-shadow: 0 2px 4px rgba(0,0,0,0.5);
   pointer-events: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+  letter-spacing: -1px;
 }
+.spawn-label #spawn-count { margin-left: -6px; }
 
 /* ===== GLASS STYLES ===== */
 /* ===== BOTTLE STYLES (3/4 view) ===== */
@@ -2372,7 +2478,7 @@ html, body {
       </button>
       <button class="home-nav-btn" id="nav-venue" data-tab="venue">
         <span class="nav-icon">&#x1F3D7;</span>
-        <span class="nav-label">Venue</span>
+        <span class="nav-label">Your Bar</span>
       </button>
       <button class="home-nav-btn active" id="nav-home" data-tab="home">
         <span class="nav-icon">&#x1F3E0;</span>
@@ -2469,7 +2575,7 @@ html, body {
     <div class="match-bottom-bar">
       <button class="spawn-btn" id="btn-spawn" title="Spawn color layer (G)">
         <svg class="spawn-ring" viewBox="0 0 36 36"><circle class="spawn-ring-bg" cx="18" cy="18" r="16"/><circle class="spawn-ring-fill" id="spawn-ring-fill" cx="18" cy="18" r="16"/></svg>
-        <span class="spawn-label">🍹 <span id="spawn-count">1</span></span>
+        <span class="spawn-label">🍹<span id="spawn-count">1</span></span>
       </button>
       <div class="powerup-inventory">
         <div class="powerup-slot" id="powerup-slot-0"></div>
@@ -3383,7 +3489,7 @@ function renderVenue() {
             renderVenue();
             renderHomeStats();
             if (result.buildingReward) showVenueRewardPopup('Building Complete!', '\u{1F3D7}', result.buildingReward, 0);
-            if (result.venueReward) showVenueRewardPopup('Venue Complete!', '\u{1F389}', result.venueReward, result.venueGold);
+            if (result.venueReward) showVenueRewardPopup('Your Bar Complete!', '\u{1F389}', result.venueReward, result.venueGold);
           }
         });
       }
@@ -3421,10 +3527,38 @@ function renderVenue() {
 }
 
 // ===== VENUE VISUAL MAP =====
-const VENUE_ICONS = ['\u{1F37A}', '\u{1FA91}', '\u{1F6A9}', '\u{1F4A1}', '\u{1F9CB}'];
+// Bar zones: 0 Main Counter, 1 Seating Area, 2 Signage, 3 Decor, 4 Service Station.
+// Rendered as composed flat CSS shapes (not emoji) — see .vz-* styles.
+const VENUE_ICONS = ['\u{1F37B}', '\u{1FA91}', '\u{1FAA7}', '\u{1FAA9}', '\u{1F379}'];
 const VENUE_POSITIONS = [
   {x:'10%',y:'10%'}, {x:'55%',y:'8%'}, {x:'25%',y:'40%'}, {x:'60%',y:'45%'}, {x:'15%',y:'72%'}
 ];
+
+function zoneShapeHtml(zoneIndex) {
+  switch (zoneIndex) {
+    case 0: // Main Counter
+      return '<div class="vz bar-body"></div><div class="vz bar-top"></div>' +
+             '<div class="vz btl b1"></div><div class="vz btl b2"></div>' +
+             '<div class="vz btl b3"></div><div class="vz btl b4"></div>';
+    case 1: // Seating Area (stools)
+      return '<div class="vz stool s1"><span class="leg"></span><span class="seat"></span></div>' +
+             '<div class="vz stool s2"><span class="leg"></span><span class="seat"></span></div>' +
+             '<div class="vz stool s3"><span class="leg"></span><span class="seat"></span></div>';
+    case 2: // Signage (neon sign)
+      return '<div class="vz wire"></div><div class="vz board"></div>' +
+             '<div class="vz bar"></div><div class="vz bar2"></div>';
+    case 3: // Decor (disco ball)
+      return '<div class="vz chain"></div><div class="vz ball"></div>';
+    case 4: // Service Station (shaker + cocktail)
+      return '<div class="vz counter"></div><div class="vz shaker"></div>' +
+             '<div class="vz glass"></div><div class="vz stem"></div>' +
+             '<div class="vz base"></div><div class="vz cherry"></div>';
+    default:
+      return '';
+  }
+}
+
+const ZONE_CLASS = ['vz-counter', 'vz-stools', 'vz-sign', 'vz-disco', 'vz-service'];
 
 function renderVenueMap(container, arenaId, interactive) {
   if (!container) return;
@@ -3433,31 +3567,29 @@ function renderVenueMap(container, arenaId, interactive) {
   const costs = VENUE_COSTS[arenaId] || VENUE_COSTS[0];
   const gold = state.stats.gold || 0;
 
-  // Path/road winding through venue
-  const road = document.createElement('div');
-  road.style.cssText = 'position:absolute;top:5%;left:15%;width:70%;height:90%;border-radius:40%;background:rgba(160,130,90,0.25);transform:rotate(-5deg);';
-  container.appendChild(road);
-  const road2 = document.createElement('div');
-  road2.style.cssText = 'position:absolute;top:20%;left:35%;width:30%;height:60%;border-radius:50%;background:rgba(180,150,100,0.15);transform:rotate(10deg);';
-  container.appendChild(road2);
-
   for (let i = 0; i < 5; i++) {
     const level = venueState[i];
     const done = level >= 5;
     const pos = VENUE_POSITIONS[i];
     const el = document.createElement('div');
-    el.className = 'venue-building-visual';
+    el.className = 'venue-building-visual vb-lvl-' + level;
     el.style.left = pos.x;
     el.style.top = pos.y;
 
-    // Building icon - scale with level
-    const scale = 0.7 + (level * 0.12);
+    // Simple level-based scale (flat, no depth math)
+    const scale = 0.85 + (level * 0.07);
     const icon = document.createElement('div');
-    icon.className = 'venue-building-icon';
-    icon.style.transform = 'scale(' + scale + ')';
-    icon.style.opacity = level === 0 ? '0.4' : '1';
-    icon.textContent = VENUE_ICONS[i];
+    icon.className = 'venue-building-icon ' + (ZONE_CLASS[i] || '');
+    icon.style.transform = 'scale(' + scale.toFixed(2) + ')';
+    icon.innerHTML = zoneShapeHtml(i);
     el.appendChild(icon);
+
+    if (done) {
+      const crown = document.createElement('div');
+      crown.className = 'venue-building-crown';
+      crown.textContent = '\u{1F451}';
+      el.appendChild(crown);
+    }
 
     const label = document.createElement('div');
     label.className = 'venue-building-label';
@@ -3514,13 +3646,13 @@ function renderVenueMap(container, arenaId, interactive) {
             renderHomeStats();
             renderHomeVenuePreview();
             if (result.buildingReward) showVenueRewardPopup('Building Complete!', '\u{1F3D7}', result.buildingReward, 0);
-            if (result.venueReward) showVenueRewardPopup('Venue Complete!', '\u{1F389}', result.venueReward, result.venueGold);
+            if (result.venueReward) showVenueRewardPopup('Your Bar Complete!', '\u{1F389}', result.venueReward, result.venueGold);
             // First upgrade hint
             if (!state.stats.venueHintShown) {
               state.stats.venueHintShown = true;
               saveStats();
               setTimeout(() => {
-                showVenueRewardPopup('Upgrade Your Venue!', '\u{1F3D7}', [],  0,
+                showVenueRewardPopup('Upgrade Your Bar!', '\u{1F3D7}', [],  0,
                   'Build all 5 venues to earn boosters!\nEach completed building rewards you with powerful boosters for your matches.');
               }, result.buildingReward ? 1500 : 300);
             }
