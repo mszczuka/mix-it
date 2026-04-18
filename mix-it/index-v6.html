@@ -4456,12 +4456,16 @@ function updateSpawns(dt) {
       state.aiSpawnRechargeTimer = CFG.SPAWN_RECHARGE_TIME;
     }
   }
-  // AI decides when to spawn (strategic — not instant)
+  // AI decides when to spawn — only when workspace is comfortable
   if (state.aiSpawnCharges > 0) {
     const totalLayers = state.opponentGlasses.reduce((sum, g) => sum + g.layers.length, 0);
+    const emptyCount = state.opponentGlasses.filter(g => g.layers.length === 0).length;
     const hasEmptySpace = state.opponentGlasses.some(g => g.layers.length < CFG.GLASS_CAPACITY);
     const chargesFull = state.aiSpawnCharges >= CFG.SPAWN_MAX_CHARGES;
-    if (hasEmptySpace && (chargesFull || totalLayers < 20 || Math.random() < 0.5)) {
+    // Don't pile more colors on when the board is tight — gives AI a chance to unclog.
+    const boardTight = emptyCount <= 1;
+    const canSpawn = hasEmptySpace && !boardTight;
+    if (canSpawn && (chargesFull || totalLayers < 16 || Math.random() < 0.25)) {
       aiUseSpawn();
     }
   }
@@ -5522,8 +5526,9 @@ function aiMakePour(diff) {
     }
   }
 
-  // Skip if no good move found or best move is very bad
-  if (bestMove && bestScore > -5) {
+  // Take any legal move that isn't a hard-block (-100). Better to keep pouring
+  // than to freeze — prevents AI from deadlocking itself on a tight board.
+  if (bestMove && bestScore > -50) {
     doPourRaw(glasses, bestMove[0], bestMove[1]);
     renderOpponentBoard();
   }
@@ -5553,6 +5558,8 @@ function evaluateAIPour(glasses, from, to, targetColors) {
 
   // +3 if pour fully empties the source glass (creates workspace!)
   if (src.layers.length === 0) score += 3;
+  // Extra bonus when workspace is tight — emptying a glass is gold
+  if (src.layers.length === 0 && emptyBefore <= 1) score += 3;
 
   // +2 if pour increases same-color stack toward a target color
   if (targetColors.includes(srcColor)) {
@@ -5577,8 +5584,16 @@ function evaluateAIPour(glasses, from, to, targetColors) {
   // -1 if pouring to a non-target color glass when targets are available
   if (targetColors.length > 0 && !targetColors.includes(srcColor)) score -= 0.5;
 
-  // -1 if pouring onto a different color (creating a mixed stack)
-  if (glasses[to].layers.length > 0 && glasses[to].layers[glasses[to].layers.length - 1] !== srcColor) score -= 2;
+  // Pouring onto a different color (creating a mixed stack) is risky —
+  // penalty scales with how tight workspace is.
+  const destTopDifferent = glasses[to].layers.length > 0 &&
+                           glasses[to].layers[glasses[to].layers.length - 1] !== srcColor;
+  if (destTopDifferent) {
+    let mixedPenalty = 2;
+    if (emptyBefore <= 1) mixedPenalty = 6;      // already tight — really avoid mixing
+    else if (emptyBefore <= 2) mixedPenalty = 3; // getting tight — avoid more
+    score -= mixedPenalty;
+  }
 
   return score;
 }
@@ -5656,7 +5671,15 @@ function updatePowerUps(dt) {
         shouldUse = nearServes >= 1 && elapsed > 8;
         break;
       }
-      case 'clearBottle': shouldUse = emptyCount === 0 && !state.opponentGlasses.some(g => isGlassPure(g) && g.layers.length > 0); break;
+      case 'clearBottle': {
+        // Rescue when clogged (0 empties) OR when stuck at 1 empty with no pure route toward a customer.
+        const hasPureRoute = state.opponentGlasses.some(g =>
+          isGlassPure(g) && g.layers.length > 0 &&
+          state.customers.some(c => !c.servedByOpponent && c.color === g.layers[0]));
+        shouldUse = (emptyCount === 0 && !hasPureRoute) ||
+                    (emptyCount <= 1 && !hasPureRoute && elapsed > 15);
+        break;
+      }
     }
     if (shouldUse && Math.random() < 0.3) { // 30% chance per tick to act on condition
       aiUsePowerUp(i);
