@@ -2154,13 +2154,9 @@ html, body {
   z-index: 20;
   pointer-events: none;
 }
-/* Flash pour glow on player board */
-.flash-pour-active {
-  box-shadow: inset 0 0 30px rgba(255,255,0,0.08);
-}
-.glass.swap-highlight {
-  border-color: #FFD700 !important;
-  box-shadow: 0 0 12px rgba(255,215,0,0.3);
+/* v6.6.1: Auto Serve glow on player board */
+.auto-serve-active {
+  box-shadow: inset 0 0 32px rgba(120,200,255,0.18);
 }
 @keyframes pourFill {
   0%   { transform: scaleY(0) scaleX(1.05); opacity: 0.4; filter: brightness(1.35); }
@@ -2283,6 +2279,16 @@ html, body {
   flex-direction: column;
   height: 100%;
   background: linear-gradient(180deg, #144985 0%, #0d3460 100%);
+}
+/* Color Splash target highlight (tutorial + match) */
+.glass.color-splash-target {
+  border-color: #ff66cc !important;
+  box-shadow: 0 0 14px rgba(255,102,204,0.5), inset 0 0 18px rgba(255,102,204,0.2);
+  animation: splashPulse 0.9s ease-in-out infinite;
+}
+@keyframes splashPulse {
+  0%,100% { box-shadow: 0 0 14px rgba(255,102,204,0.35), inset 0 0 18px rgba(255,102,204,0.12); }
+  50%     { box-shadow: 0 0 26px rgba(255,102,204,0.8), inset 0 0 26px rgba(255,102,204,0.3); }
 }
 .tutorial-header {
   text-align: center;
@@ -2700,8 +2706,10 @@ const CFG = {
   POWERUP_LINGER: 6,
   MAX_HELD_POWERUPS: 2,
   EXTRA_BOTTLE_PERMANENT: true,
-  FLASH_POUR_DURATION: 8,
-  POWERUP_WEIGHTS: { extraBottle: 30, flashPour: 30, swap: 20, clearBottle: 20 },
+  AUTO_SERVE_DURATION: 30,
+  AUTO_SERVE_DELAY: 0.3,
+  COLOR_SPLASH_MAX_LAYERS: 2,
+  POWERUP_WEIGHTS: { extraBottle: 30, colorSplash: 30, autoServe: 20, clearBottle: 20 },
   AI_POWERUP_GRAB_DELAY_MIN: 2,
   AI_POWERUP_GRAB_DELAY_MAX: 4,
   AI_POWERUP_USE_DELAY_MIN: 3,
@@ -2713,12 +2721,12 @@ const CFG = {
   SPAWN_CUSTOMER_WEIGHT: 0.6,
   // Arena system
   ARENAS: [
-    { id: 0, name: 'Juice Stand',     emoji: '\u{1F9C3}', min: 0,    max: 199,   colors: 3, sourceGlasses: 3, emptyGlasses: 2, powerUps: ['extraBottle','flashPour'],                          bg: ['#5c3210','#3d1a08'], goldWin: 35, goldLose: 20, goldDraw: 25, firstWinBonus: 20, promoReward: null },
-    { id: 1, name: 'Beach Bar',       emoji: '\u{1F3D6}\uFE0F', min: 200,  max: 499,   colors: 5, sourceGlasses: 4, emptyGlasses: 3, powerUps: ['extraBottle','flashPour','swap'],               bg: ['#003d5c','#002940'], goldWin: 40, goldLose: 22, goldDraw: 30, firstWinBonus: 25, promoReward: { boosters: [{type:'swap',count:2}], gold: 40 } },
-    { id: 2, name: 'Cocktail Lounge', emoji: '\u{1F378}', min: 500,  max: 999,   colors: 7, sourceGlasses: 5, emptyGlasses: 3, powerUps: ['extraBottle','flashPour','swap','clearBottle'],  bg: ['#2D1B69','#1a1a2e'], goldWin: 50, goldLose: 25, goldDraw: 35, firstWinBonus: 30, promoReward: { boosters: [{type:'clearBottle',count:2}], gold: 60 } },
-    { id: 3, name: 'Speakeasy',       emoji: '\u{1F943}', min: 1000, max: 1499,  colors: 7, sourceGlasses: 6, emptyGlasses: 4, powerUps: ['extraBottle','flashPour','swap','clearBottle'],  bg: ['#1B4D2E','#0D2818'], goldWin: 60, goldLose: 30, goldDraw: 40, firstWinBonus: 35, promoReward: { boosters: [], gold: 100 } },
-    { id: 4, name: 'Rooftop Terrace', emoji: '\u{1F306}', min: 1500, max: 2499,  colors: 7, sourceGlasses: 7, emptyGlasses: 5, powerUps: ['extraBottle','flashPour','swap','clearBottle'],  bg: ['#5c1a1a','#3d2800'], goldWin: 70, goldLose: 35, goldDraw: 45, firstWinBonus: 40, promoReward: { boosters: [], gold: 125 } },
-    { id: 5, name: 'Grand Hotel',     emoji: '\u{1F3E8}', min: 2500, max: 99999, colors: 7, sourceGlasses: 8, emptyGlasses: 5, powerUps: ['extraBottle','flashPour','swap','clearBottle'],  bg: ['#1a1a1a','#2D2D00'], goldWin: 80, goldLose: 40, goldDraw: 50, firstWinBonus: 50, promoReward: { boosters: [], gold: 150 } },
+    { id: 0, name: 'Juice Stand',     emoji: '\u{1F9C3}', min: 0,    max: 199,   colors: 3, sourceGlasses: 3, emptyGlasses: 2, powerUps: ['extraBottle','colorSplash'],                            bg: ['#5c3210','#3d1a08'], goldWin: 35, goldLose: 20, goldDraw: 25, firstWinBonus: 20, promoReward: null },
+    { id: 1, name: 'Beach Bar',       emoji: '\u{1F3D6}\uFE0F', min: 200,  max: 499,   colors: 5, sourceGlasses: 4, emptyGlasses: 3, powerUps: ['extraBottle','colorSplash','autoServe'],              bg: ['#003d5c','#002940'], goldWin: 40, goldLose: 22, goldDraw: 30, firstWinBonus: 25, promoReward: { boosters: [{type:'autoServe',count:1}], gold: 30 } },
+    { id: 2, name: 'Cocktail Lounge', emoji: '\u{1F378}', min: 500,  max: 999,   colors: 7, sourceGlasses: 5, emptyGlasses: 3, powerUps: ['extraBottle','colorSplash','autoServe','clearBottle'], bg: ['#2D1B69','#1a1a2e'], goldWin: 50, goldLose: 25, goldDraw: 35, firstWinBonus: 30, promoReward: { boosters: [{type:'clearBottle',count:1}], gold: 40 } },
+    { id: 3, name: 'Speakeasy',       emoji: '\u{1F943}', min: 1000, max: 1499,  colors: 7, sourceGlasses: 6, emptyGlasses: 4, powerUps: ['extraBottle','colorSplash','autoServe','clearBottle'], bg: ['#1B4D2E','#0D2818'], goldWin: 60, goldLose: 30, goldDraw: 40, firstWinBonus: 35, promoReward: { boosters: [], gold: 60 } },
+    { id: 4, name: 'Rooftop Terrace', emoji: '\u{1F306}', min: 1500, max: 2499,  colors: 7, sourceGlasses: 7, emptyGlasses: 5, powerUps: ['extraBottle','colorSplash','autoServe','clearBottle'], bg: ['#5c1a1a','#3d2800'], goldWin: 70, goldLose: 35, goldDraw: 45, firstWinBonus: 40, promoReward: { boosters: [], gold: 80 } },
+    { id: 5, name: 'Grand Hotel',     emoji: '\u{1F3E8}', min: 2500, max: 99999, colors: 7, sourceGlasses: 8, emptyGlasses: 5, powerUps: ['extraBottle','colorSplash','autoServe','clearBottle'], bg: ['#1a1a1a','#2D2D00'], goldWin: 80, goldLose: 40, goldDraw: 50, firstWinBonus: 50, promoReward: { boosters: [], gold: 100 } },
   ],
   ALL_COLORS: ['#FF4444', '#4488FF', '#FFCC00', '#44CC44', '#AA44FF', '#FF8800', '#FF66AA', '#00CCBB'],
   ALL_COLOR_NAMES: ['Red', 'Blue', 'Yellow', 'Green', 'Purple', 'Orange', 'Pink', 'Teal'],
@@ -2734,26 +2742,26 @@ const CFG = {
   TROPHY_LOSE_BASE: 15, TROPHY_LOSE_PER_150: 3, TROPHY_LOSE_CAP: 25,
   TROPHY_DRAW: 5,
   MATCHMAKING_SEARCH_MIN: 2, MATCHMAKING_SEARCH_MAX: 4, MATCHMAKING_SHOW_OPPONENT: 2,
-  // v6.3: Promotion rewards (one-time per arena)
+  // v6.6.1: Promotion rewards (one-time per arena)
   PROMOTION_REWARDS: [
-    { arenaId: 0, rewards: [] }, // Juice Stand: starter inventory already granted
-    { arenaId: 1, rewards: [{ type: 'swap', count: 3 }] },
-    { arenaId: 2, rewards: [{ type: 'clearBottle', count: 3 }] },
-    { arenaId: 3, rewards: [{ type: 'flashPour', count: 2 }, { type: 'extraBottle', count: 2 }] },
-    { arenaId: 4, rewards: [{ type: 'flashPour', count: 2 }, { type: 'bonusPick', count: 1 }] },
-    { arenaId: 5, rewards: [{ type: 'clearBottle', count: 2 }, { type: 'elitePick', count: 1 }] },
+    { arenaId: 0, rewards: [] },
+    { arenaId: 1, rewards: [{ type: 'autoServe', count: 1 }] },
+    { arenaId: 2, rewards: [{ type: 'clearBottle', count: 1 }] },
+    { arenaId: 3, rewards: [] },
+    { arenaId: 4, rewards: [] },
+    { arenaId: 5, rewards: [] },
   ],
-  // v6.3: Reward weights by arena tier (early=0-1, mid=2-3, late=4-5)
+  // v6.6.1: Reward weights by arena tier (early=0-1, mid=2-3, late=4-5)
   REWARD_WEIGHTS_BY_TIER: {
-    early: { extraBottle: 30, flashPour: 30, swap: 25, clearBottle: 15 },
-    mid:   { extraBottle: 27, flashPour: 29, swap: 26, clearBottle: 18 },
-    late:  { extraBottle: 24, flashPour: 28, swap: 26, clearBottle: 22 },
+    early: { extraBottle: 30, colorSplash: 30, autoServe: 25, clearBottle: 15 },
+    mid:   { extraBottle: 27, colorSplash: 29, autoServe: 26, clearBottle: 18 },
+    late:  { extraBottle: 24, colorSplash: 28, autoServe: 26, clearBottle: 22 },
   },
-  // v6.3: Booster mastery goals
+  // v6.6.1: Booster mastery goals
   MASTERY_GOALS: {
     extraBottle: { goal: 20, desc: 'Play 20 matches with Extra Bottle equipped' },
-    flashPour:   { goal: 30, desc: 'Serve 30 drinks within 5s of Flash Pour activation' },
-    swap:        { goal: 20, desc: 'Use Swap to create 20 serveable glasses' },
+    colorSplash: { goal: 20, desc: 'Use Color Splash to create 20 serveable glasses' },
+    autoServe:   { goal: 30, desc: 'Serve 30 drinks during Auto Serve windows' },
     clearBottle: { goal: 15, desc: 'Recover from 0 empty bottles 15 times' },
   },
 };
@@ -2831,25 +2839,29 @@ let state = {
   playerPowerUps: [null, null],
   opponentPowerUps: [null, null],
   activeEffects: {
-    playerFlashPours: 0,
-    opponentFlashPours: 0,
+    playerAutoServeEndTime: 0,
+    opponentAutoServeEndTime: 0,
+    playerNextAutoServeAt: 0,
+    opponentNextAutoServeAt: 0,
   },
   clearBottleMode: false,
+  colorSplashMode: false,
+  aiColorSplashPending: false,
   ai: { nextPourTime: 0, nextServeCheck: 0, thinkingTarget: null },
   countdownTimer: CFG.COUNTDOWN_DURATION,
   matchSeed: 0,
   difficulty: 'medium',
   stats: { matchesPlayed: 0, wins: 0, losses: 0, draws: 0, bestScore: 0, totalDrinksServed: 0, trophies: 0, arenaFloor: 0,
-    powerUpInventory: { extraBottle: 2, flashPour: 2, swap: 0, clearBottle: 0 },
-    gold: 0, lastPlayDate: null, firstWinToday: false,
+    powerUpInventory: { extraBottle: 2, colorSplash: 2, autoServe: 0, clearBottle: 0 },
+    gold: 50, lastPlayDate: null, firstWinToday: false,
     venue: {},
     promotedArenas: [0], // arenas already promoted to (0 = starter)
-    boosterMastery: { extraBottle: 0, flashPour: 0, swap: 0, clearBottle: 0 } },
+    boosterMastery: { extraBottle: 0, colorSplash: 0, autoServe: 0, clearBottle: 0 } },
   loadout: [null, null],
   currentArena: null,
   currentOpponent: null,
-  // v6.3: per-match mastery tracking
-  matchMastery: { flashPourServes: 0, swapServeables: 0, clearBottleRescues: 0 },
+  // v6.6.1: per-match mastery tracking (new booster roster)
+  matchMastery: { colorSplashServeables: 0, autoServeServes: 0, clearBottleRescues: 0 },
 };
 
 // Undo history
@@ -2961,7 +2973,6 @@ function doPour(fromIdx, toIdx) {
   undoHistory.push(deepCloneGlasses(state.playerGlasses));
   const moved = doPourRaw(state.playerGlasses, fromIdx, toIdx);
   pourAnimTarget = { glassIndex: toIdx, layerCount: moved };
-  consumeFlashPour('player');
   // Check if destination is now serveable
   checkServeable();
   return true;
@@ -3107,6 +3118,10 @@ function renderGlass(glass, index, isPlayer) {
   if (isPlayer && state.clearBottleMode && glass.layers.length > 0) {
     el.classList.add('clear-target');
   }
+  // Highlight color-splash targets
+  if (isPlayer && state.colorSplashMode && glass.layers.length > 0) {
+    el.classList.add('color-splash-target');
+  }
 
   // Render layers bottom to top
   const animStart = (isPlayer && pourAnimTarget && pourAnimTarget.glassIndex === index)
@@ -3179,23 +3194,9 @@ function handleGlassTap(index) {
     return;
   }
 
-  // Swap mode: select two player glasses to swap contents
-  if (state.swapMode) {
-    if (state.swapFirst === null) {
-      state.swapFirst = index;
-      state.selectedGlass = index;
-      renderPlayerBoard();
-    } else if (state.swapFirst === index) {
-      // Tapped same glass — cancel selection, pick again
-      state.swapFirst = null;
-      state.selectedGlass = null;
-      renderPlayerBoard();
-    } else {
-      executeSwap(state.swapFirst, index);
-      state.selectedGlass = null;
-      renderPlayerBoard();
-      renderOpponentBoard();
-    }
+  // Color Splash mode: tap a bottle to recolor its top 1-2 layers to a visible customer color
+  if (state.colorSplashMode) {
+    executeColorSplash(index);
     return;
   }
 
@@ -3296,13 +3297,30 @@ function loadStats() {
       // Ensure new fields exist for older saves
       if (state.stats.trophies === undefined) state.stats.trophies = 0;
       if (state.stats.arenaFloor === undefined) state.stats.arenaFloor = 0;
-      if (!state.stats.powerUpInventory) state.stats.powerUpInventory = { extraBottle: 3, flashPour: 3, swap: 0, clearBottle: 0 };
+      if (!state.stats.powerUpInventory) state.stats.powerUpInventory = { extraBottle: 2, colorSplash: 2, autoServe: 0, clearBottle: 0 };
       if (state.stats.gold === undefined) state.stats.gold = 0;
       if (state.stats.tutorialDone === undefined) state.stats.tutorialDone = false;
       if (state.stats.venueHintShown === undefined) state.stats.venueHintShown = false;
       if (!state.stats.venue) state.stats.venue = {};
       // v6.3 fields
       if (!state.stats.promotedArenas) state.stats.promotedArenas = [0];
+      // v6.6.1 migration: retire flashPour/swap, convert to colorSplash/autoServe
+      {
+        const inv = state.stats.powerUpInventory;
+        if (inv.flashPour) { inv.colorSplash = (inv.colorSplash || 0) + inv.flashPour; delete inv.flashPour; }
+        if (inv.swap)      { inv.autoServe   = (inv.autoServe   || 0) + inv.swap;      delete inv.swap; }
+        if (inv.colorSplash === undefined) inv.colorSplash = 0;
+        if (inv.autoServe === undefined)   inv.autoServe   = 0;
+        if (inv.extraBottle === undefined) inv.extraBottle = 0;
+        if (inv.clearBottle === undefined) inv.clearBottle = 0;
+        if (state.stats.boosterMastery) {
+          const bm = state.stats.boosterMastery;
+          if (bm.flashPour !== undefined) { bm.colorSplash = Math.max(bm.colorSplash || 0, bm.flashPour); delete bm.flashPour; }
+          if (bm.swap !== undefined)      { bm.autoServe   = Math.max(bm.autoServe   || 0, bm.swap);      delete bm.swap; }
+          if (bm.colorSplash === undefined) bm.colorSplash = 0;
+          if (bm.autoServe === undefined)   bm.autoServe   = 0;
+        }
+      }
       // Daily reset for first win bonus and free claim
       const today = new Date().toDateString();
       if (state.stats.lastPlayDate !== today) {
@@ -3349,8 +3367,8 @@ function renderHomeInventory(arena) {
   const grid = document.getElementById('home-inventory-grid');
   if (!grid) return;
   grid.innerHTML = '';
-  const allBoosters = ['extraBottle', 'flashPour', 'swap', 'clearBottle'];
-  const names = { extraBottle: 'Extra', flashPour: 'Flash', swap: 'Swap', clearBottle: 'Clear' };
+  const allBoosters = ['extraBottle', 'colorSplash', 'autoServe', 'clearBottle'];
+  const names = { extraBottle: 'Extra', colorSplash: 'Splash', autoServe: 'Auto', clearBottle: 'Clear' };
   const inv = state.stats.powerUpInventory || {};
   for (const type of allBoosters) {
     const unlocked = arena.powerUps.includes(type);
@@ -3408,7 +3426,7 @@ function upgradeBuilding(arenaId, buildingIdx) {
   // Building completion reward (5/5)
   if (v[buildingIdx] === 5) {
     const arena = CFG.ARENAS[arenaId];
-    const unlocked = arena ? arena.powerUps : ['extraBottle','flashPour'];
+    const unlocked = arena ? arena.powerUps : ['extraBottle','colorSplash'];
     result.buildingReward = [];
     for (let i = 0; i < 2; i++) {
       const type = unlocked[Math.floor(Math.random() * unlocked.length)];
@@ -3417,17 +3435,26 @@ function upgradeBuilding(arenaId, buildingIdx) {
     }
   }
 
-  // Full venue completion (25/25)
+  // Full venue completion (25/25) — v6.6.1 uses explicit bundle when available
   const total = getVenueTotalUpgrades(arenaId);
   if (total === 25) {
-    const cr = VENUE_COMPLETION_REWARDS[arenaId] || { boosters: 3, gold: 0 };
+    const cr = VENUE_COMPLETION_REWARDS[arenaId] || { bundle: null, boosters: 3, gold: 0 };
     result.venueReward = [];
-    const arena = CFG.ARENAS[arenaId];
-    const unlocked = arena ? arena.powerUps : ['extraBottle','flashPour'];
-    for (let i = 0; i < cr.boosters; i++) {
-      const type = unlocked[Math.floor(Math.random() * unlocked.length)];
-      state.stats.powerUpInventory[type] = (state.stats.powerUpInventory[type] || 0) + 1;
-      result.venueReward.push(type);
+    if (cr.bundle && cr.bundle.length) {
+      for (const entry of cr.bundle) {
+        for (let i = 0; i < entry.count; i++) {
+          state.stats.powerUpInventory[entry.type] = (state.stats.powerUpInventory[entry.type] || 0) + 1;
+          result.venueReward.push(entry.type);
+        }
+      }
+    } else {
+      const arena = CFG.ARENAS[arenaId];
+      const unlocked = arena ? arena.powerUps : ['extraBottle','colorSplash'];
+      for (let i = 0; i < (cr.boosters || 0); i++) {
+        const type = unlocked[Math.floor(Math.random() * unlocked.length)];
+        state.stats.powerUpInventory[type] = (state.stats.powerUpInventory[type] || 0) + 1;
+        result.venueReward.push(type);
+      }
     }
     if (cr.gold > 0) state.stats.gold += cr.gold;
     result.venueGold = cr.gold;
@@ -3706,7 +3733,7 @@ function renderBoostersTab() {
   if (grid) {
     grid.innerHTML = '';
     const names = BOOSTER_NAMES;
-    for (const type of ['extraBottle','flashPour','swap','clearBottle']) {
+    for (const type of ['extraBottle','colorSplash','autoServe','clearBottle']) {
       const count = inv[type] || 0;
       const isLocked = !unlocked.includes(type);
       const el = document.createElement('div');
@@ -3724,7 +3751,7 @@ function renderBoostersTab() {
   const shopEl = document.getElementById('booster-shop-items');
   if (shopEl) {
     shopEl.innerHTML = '';
-    const SHOP_PRICES = { extraBottle: 20, flashPour: 25, swap: 35, clearBottle: 45 };
+    const SHOP_PRICES = { extraBottle: 20, colorSplash: 28, autoServe: 35, clearBottle: 45 };
     for (const type of unlocked) {
       const price = SHOP_PRICES[type];
       const canAfford = gold >= price;
@@ -3850,7 +3877,7 @@ function renderArenaSaga() {
   if (!list) return;
   list.innerHTML = '';
   const currentArena = getArena(state.stats.trophies);
-  const names = { extraBottle: 'Extra Bottle', flashPour: 'Flash Pour', swap: 'Swap', clearBottle: 'Clear Bottle', bonusPick: 'Bonus Pick', elitePick: 'Elite Pick' };
+  const names = { extraBottle: 'Extra Bottle', colorSplash: 'Color Splash', autoServe: 'Auto Serve', clearBottle: 'Clear Bottle', bonusPick: 'Bonus Pick', elitePick: 'Elite Pick' };
 
   for (const arena of CFG.ARENAS) {
     const isUnlocked = state.stats.trophies >= arena.min || (state.stats.promotedArenas && state.stats.promotedArenas.includes(arena.id));
@@ -3944,7 +3971,7 @@ function renderHomeMastery() {
   if (!hasAny) return;
 
   el.innerHTML = '<div class="mastery-section-title">Booster Mastery</div>';
-  const names = { extraBottle: 'Extra Bottle', flashPour: 'Flash Pour', swap: 'Swap', clearBottle: 'Clear Bottle' };
+  const names = { extraBottle: 'Extra Bottle', colorSplash: 'Color Splash', autoServe: 'Auto Serve', clearBottle: 'Clear Bottle' };
   for (const [type, progress] of Object.entries(mastery)) {
     const goal = CFG.MASTERY_GOALS[type]?.goal || 20;
     const pct = Math.min(100, (progress / goal) * 100);
@@ -4121,12 +4148,11 @@ function updateBoosterMastery() {
         // +1 mastery for equipping it this match
         earned = 1;
         break;
-      case 'flashPour':
-        // Count fast serves tracked during match
-        earned = state.matchMastery.flashPourServes || 0;
+      case 'colorSplash':
+        earned = state.matchMastery.colorSplashServeables || 0;
         break;
-      case 'swap':
-        earned = state.matchMastery.swapServeables || 0;
+      case 'autoServe':
+        earned = state.matchMastery.autoServeServes || 0;
         break;
       case 'clearBottle':
         earned = state.matchMastery.clearBottleRescues || 0;
@@ -4184,7 +4210,7 @@ function showArenaUnlockOverlay(newArena, oldArena, promotionRewards, callback) 
     newFeatures.push('New: ' + newTotal + ' glasses!');
   }
   const newPowerUps = newArena.powerUps.filter(p => !oldArena.powerUps.includes(p));
-  const names = { extraBottle: 'Extra Bottle', flashPour: 'Flash Pour', swap: 'Swap', clearBottle: 'Clear Bottle', bonusPick: 'Bonus Pick', elitePick: 'Elite Pick' };
+  const names = { extraBottle: 'Extra Bottle', colorSplash: 'Color Splash', autoServe: 'Auto Serve', clearBottle: 'Clear Bottle', bonusPick: 'Bonus Pick', elitePick: 'Elite Pick' };
   newPowerUps.forEach(p => {
     newFeatures.push('Unlocked: ' + (names[p] || p) + ' ' + (POWERUP_ICONS[p] || '') + '!');
   });
@@ -4291,12 +4317,14 @@ function startMatch() {
     return { type: t, used: false };
   });
   state.activeEffects = {
-    playerFlashPours: 0,
-    opponentFlashPours: 0,
+    playerAutoServeEndTime: 0,
+    opponentAutoServeEndTime: 0,
+    playerNextAutoServeAt: 0,
+    opponentNextAutoServeAt: 0,
   };
   state.ai = { nextPourTime: 0, nextServeCheck: 0, thinkingTarget: null, undosRemaining: 3, undoPending: false };
-  state.swapMode = false;
-  state.swapFirst = null;
+  state.colorSplashMode = false;
+  state.aiColorSplashPending = false;
   state.clearBottleMode = false;
   state.spawnCharges = CFG.SPAWN_START_CHARGES;
   state.spawnRechargeTimer = CFG.SPAWN_RECHARGE_TIME;
@@ -4306,8 +4334,8 @@ function startMatch() {
   state.undosRemaining = 3;
   matchDrinksServed = 0;
   matchBestCombo = 0;
-  // v6.3: Reset mastery tracking
-  state.matchMastery = { flashPourServes: 0, swapServeables: 0, clearBottleRescues: 0 };
+  // v6.6.1: Reset mastery tracking (new roster)
+  state.matchMastery = { colorSplashServeables: 0, autoServeServes: 0, clearBottleRescues: 0 };
 
   // Generate board with arena-specific sourceGlasses + emptyGlasses
   state.matchSeed = Date.now();
@@ -4648,8 +4676,8 @@ document.getElementById('btn-reset').addEventListener('click', () => {
   confirmBtn.textContent = 'RESET';
   confirmBtn.addEventListener('click', () => {
     state.stats = { matchesPlayed: 0, wins: 0, losses: 0, draws: 0, bestScore: 0, totalDrinksServed: 0, trophies: 0, arenaFloor: 0,
-      powerUpInventory: { extraBottle: 2, flashPour: 2, swap: 0, clearBottle: 0 },
-      gold: 0, lastPlayDate: null, firstWinToday: false,
+      powerUpInventory: { extraBottle: 2, colorSplash: 2, autoServe: 0, clearBottle: 0 },
+      gold: 50, lastPlayDate: null, firstWinToday: false,
       venue: {}, tutorialDone: false, venueHintShown: false,
       promotedArenas: [0] };
     saveStats();
@@ -4804,9 +4832,8 @@ document.addEventListener('keydown', (e) => {
       renderPlayerBoard();
       return;
     }
-    if (state.swapMode) {
-      state.swapMode = false;
-      state.swapFirst = null;
+    if (state.colorSplashMode) {
+      state.colorSplashMode = false;
       state.selectedGlass = null;
       renderPlayerBoard();
       return;
@@ -4822,8 +4849,8 @@ document.addEventListener('keydown', (e) => {
 // ===== POWER-UP TOOLTIPS (long press) =====
 const POWERUP_DESCRIPTIONS = {
   extraBottle: { name: 'Extra Bottle', desc: 'Adds one empty bottle permanently for the rest of the match.' },
-  flashPour: { name: 'Flash Pour', desc: 'Your next 3 pours are instant. Use when you see a clear route!' },
-  swap: { name: 'Swap', desc: 'Tap 2 bottles to swap their entire contents instantly.' },
+  colorSplash: { name: 'Color Splash', desc: 'Tap a bottle to recolor its top 1-2 layers to a visible customer color.' },
+  autoServe:   { name: 'Auto Serve',   desc: 'For 30 seconds, any serveable glass is auto-delivered to a matching customer.' },
   clearBottle: { name: 'Clear Bottle', desc: 'Tap a bottle to discard all its contents. Emergency rescue!' },
 };
 
@@ -4980,16 +5007,22 @@ function startMatchFromLoadout() {
 
 // ===== MATCH REWARDS (v6.4: Gold economy) =====
 
-const BOOSTER_NAMES = { extraBottle: 'Extra Bottle', flashPour: 'Flash Pour', swap: 'Swap', clearBottle: 'Clear Bottle' };
-const UTILITY_CART_PRICES = { extraBottle: 60, flashPour: 70, swap: 95, clearBottle: 120 };
+const BOOSTER_NAMES = { extraBottle: 'Extra Bottle', colorSplash: 'Color Splash', autoServe: 'Auto Serve', clearBottle: 'Clear Bottle' };
+const UTILITY_CART_PRICES = { extraBottle: 60, colorSplash: 75, autoServe: 90, clearBottle: 120 };
 const VENUE_BUILDINGS = ['Main Counter', 'Seating Area', 'Signage', 'Decor', 'Service Station'];
 const VENUE_COSTS = {
   0: [20,25,30,30,35], 1: [25,30,35,40,50], 2: [30,35,45,60,70],
   3: [35,45,55,75,90], 4: [40,55,70,95,120], 5: [50,65,85,120,140],
 };
+// v6.6.1: Explicit per-arena booster bundles (replaces random-from-unlocked).
+// Fallback "boosters" count is used if bundle is missing — keeps legacy code path alive.
 const VENUE_COMPLETION_REWARDS = {
-  0: { boosters: 3, gold: 0 }, 1: { boosters: 3, gold: 25 }, 2: { boosters: 4, gold: 40 },
-  3: { boosters: 4, gold: 60 }, 4: { boosters: 5, gold: 75 }, 5: { boosters: 5, gold: 100 },
+  0: { bundle: [{ type: 'extraBottle', count: 2 }, { type: 'colorSplash', count: 1 }], gold: 0,   boosters: 3 },
+  1: { bundle: [{ type: 'colorSplash', count: 1 }, { type: 'autoServe',   count: 2 }], gold: 25,  boosters: 3 },
+  2: { bundle: [{ type: 'autoServe',   count: 2 }, { type: 'clearBottle', count: 2 }], gold: 40,  boosters: 4 },
+  3: { bundle: [{ type: 'autoServe',   count: 2 }, { type: 'clearBottle', count: 2 }], gold: 60,  boosters: 4 },
+  4: { bundle: [{ type: 'colorSplash', count: 2 }, { type: 'autoServe',   count: 2 }, { type: 'clearBottle', count: 1 }], gold: 75, boosters: 5 },
+  5: { bundle: [{ type: 'autoServe',   count: 2 }, { type: 'clearBottle', count: 2 }, { type: 'extraBottle', count: 1 }], gold: 100, boosters: 5 },
 };
 
 function awardMatchRewards(isWin, isDraw) {
@@ -5373,9 +5406,9 @@ function serveGlass(glassIndex) {
   // Increment drinks served
   matchDrinksServed++;
 
-  // v6.3: Mastery tracking — flash pour serves
-  if (state.activeEffects.playerFlashPours > 0) {
-    state.matchMastery.flashPourServes = (state.matchMastery.flashPourServes || 0) + 1;
+  // v6.6.1: Mastery tracking — auto-serve serves
+  if (isAutoServeActive('player')) {
+    state.matchMastery.autoServeServes = (state.matchMastery.autoServeServes || 0) + 1;
   }
 
   // Show score popup
@@ -5504,7 +5537,6 @@ function aiMakePour(diff) {
   // Skip if no good move found or best move is very bad
   if (bestMove && bestScore > -5) {
     doPourRaw(glasses, bestMove[0], bestMove[1]);
-    consumeFlashPour('opponent');
     renderOpponentBoard();
   }
 }
@@ -5607,8 +5639,8 @@ function aiCheckServe(diff) {
 
 const POWERUP_ICONS = {
   extraBottle: '\u2795',    // plus
-  flashPour:   '\u26A1',    // lightning
-  swap:        '\u{1F504}', // arrows cycle
+  colorSplash: '\u{1F3A8}', // palette
+  autoServe:   '\u{1F916}', // robot
   clearBottle: '\u{1F9FD}', // sponge
 };
 
@@ -5622,15 +5654,20 @@ function updatePowerUps(dt) {
     let shouldUse = false;
     switch (pu.type) {
       case 'extraBottle': shouldUse = elapsed > 5 && elapsed < 15 && emptyCount <= 1; break;
-      case 'flashPour': {
-        // Use when a serve is close (pure glass with 3+ layers matching a customer)
-        const nearServe = state.opponentGlasses.some(g =>
-          isGlassPure(g) && g.layers.length >= 3 &&
-          state.customers.some(c => !c.servedByOpponent && c.color === g.layers[0]));
-        shouldUse = nearServe;
+      case 'colorSplash': {
+        // Use when the top segment of some glass could be recolored to match a customer — close to serve
+        shouldUse = state.opponentGlasses.some(g => g.layers.length >= 2 && aiColorSplashBestTarget(g) !== null) &&
+                    state.customers.some(c => !c.servedByOpponent);
         break;
       }
-      case 'swap': shouldUse = emptyCount === 0; break;
+      case 'autoServe': {
+        // Use when AI expects multiple near-serves within the next 30s (2+ glasses are pure with 2+ layers)
+        const nearServes = state.opponentGlasses.filter(g =>
+          isGlassPure(g) && g.layers.length >= 2 &&
+          state.customers.some(c => !c.servedByOpponent && c.color === g.layers[0])).length;
+        shouldUse = nearServes >= 1 && elapsed > 8;
+        break;
+      }
       case 'clearBottle': shouldUse = emptyCount === 0 && !state.opponentGlasses.some(g => isGlassPure(g) && g.layers.length > 0); break;
     }
     if (shouldUse && Math.random() < 0.3) { // 30% chance per tick to act on condition
@@ -5641,12 +5678,143 @@ function updatePowerUps(dt) {
 }
 
 function updateEffects(dt) {
-  // Flash pour is now pour-count based, not time-based — decremented in doPour/aiMakePour
+  // v6.6.1: Auto Serve polling — every AUTO_SERVE_DELAY seconds, auto-deliver one serveable glass if window is active.
+  const now = performance.now() / 1000;
+  const ae = state.activeEffects;
+
+  // Player side
+  if (ae.playerAutoServeEndTime > now && now >= (ae.playerNextAutoServeAt || 0)) {
+    const idx = findAutoServeTargetForPlayer(state.playerGlasses);
+    if (idx >= 0) {
+      autoServePlayerGlass(idx);
+      ae.playerNextAutoServeAt = now + CFG.AUTO_SERVE_DELAY;
+    }
+  }
+  // Opponent side
+  if (ae.opponentAutoServeEndTime > now && now >= (ae.opponentNextAutoServeAt || 0)) {
+    const idx = findAutoServeTargetForOpponent(state.opponentGlasses);
+    if (idx >= 0) {
+      autoServeOpponentGlass(idx);
+      ae.opponentNextAutoServeAt = now + CFG.AUTO_SERVE_DELAY;
+    }
+  }
 }
 
-function consumeFlashPour(side) {
-  if (side === 'player' && state.activeEffects.playerFlashPours > 0) state.activeEffects.playerFlashPours--;
-  if (side === 'opponent' && state.activeEffects.opponentFlashPours > 0) state.activeEffects.opponentFlashPours--;
+function isAutoServeActive(side) {
+  const now = performance.now() / 1000;
+  return side === 'player'
+    ? state.activeEffects.playerAutoServeEndTime > now
+    : state.activeEffects.opponentAutoServeEndTime > now;
+}
+
+function findAutoServeTargetForPlayer(glasses) {
+  for (let i = 0; i < glasses.length; i++) {
+    const g = glasses[i];
+    if (!isGlassServeable(g)) continue;
+    // must match an unserved customer
+    const match = state.customers.find(c => !c.servedByPlayer && c.color === g.layers[0]);
+    if (match) return i;
+  }
+  return -1;
+}
+function findAutoServeTargetForOpponent(glasses) {
+  for (let i = 0; i < glasses.length; i++) {
+    const g = glasses[i];
+    if (!isGlassServeable(g)) continue;
+    const match = state.customers.find(c => !c.servedByOpponent && c.color === g.layers[0]);
+    if (match) return i;
+  }
+  return -1;
+}
+
+function autoServePlayerGlass(idx) {
+  // Bypass any active mode (clearBottle / colorSplash) — auto-serve should always serve.
+  const glass = state.playerGlasses[idx];
+  if (!glass || !isGlassServeable(glass)) return;
+  if (typeof serveGlass === 'function') {
+    serveGlass(idx);
+  }
+}
+function autoServeOpponentGlass(idx) {
+  const g = state.opponentGlasses[idx];
+  if (!g || !isGlassServeable(g)) return;
+  const color = g.layers[0];
+  let bestCustomer = null;
+  for (const c of state.customers) {
+    if (c.color === color && !c.servedByOpponent && !c.leaving) {
+      if (!bestCustomer || c.patience < bestCustomer.patience) bestCustomer = c;
+    }
+  }
+  if (!bestCustomer) return;
+  const points = g.layers.length * CFG.POINTS_PER_LAYER;
+  let totalPoints = points;
+  if (!bestCustomer.servedByPlayer) totalPoints += CFG.SPEED_BONUS;
+  state.opponentScore += totalPoints;
+  bestCustomer.servedByOpponent = true;
+  bestCustomer.graceTimer = CFG.SERVE_GRACE_WINDOW;
+  g.layers = [];
+  showScorePop(totalPoints, 'opponent');
+  renderOpponentBoard();
+}
+
+// ===== COLOR SPLASH HELPERS =====
+function topContiguousSegment(glass) {
+  if (!glass.layers.length) return { size: 0, color: null };
+  const top = glass.layers[glass.layers.length - 1];
+  let count = 0;
+  for (let i = glass.layers.length - 1; i >= 0 && glass.layers[i] === top; i--) count++;
+  return { size: count, color: top };
+}
+function availableCustomerColors() {
+  const colors = new Set();
+  for (const c of state.customers) {
+    if (!c.servedByPlayer && !c.leaving) colors.add(c.color);
+  }
+  return Array.from(colors);
+}
+function bestColorSplashColorFor(glass, side) {
+  // Pick the visible customer color (not yet served by this side) that makes
+  // the best match — ideally the bottle becomes a serveable glass after recolor.
+  const seg = topContiguousSegment(glass);
+  if (seg.size === 0) return null;
+  const colors = new Set();
+  for (const c of state.customers) {
+    if (side === 'player' ? !c.servedByPlayer : !c.servedByOpponent) {
+      if (!c.leaving) colors.add(c.color);
+    }
+  }
+  if (colors.size === 0) return null;
+  const candidates = Array.from(colors).filter(col => col !== seg.color);
+  if (candidates.length === 0) return null;
+  // Score each candidate: prefer ones that make the glass pure + full
+  const affected = Math.min(seg.size, CFG.COLOR_SPLASH_MAX_LAYERS);
+  let best = null; let bestScore = -1;
+  for (const col of candidates) {
+    const belowIdx = glass.layers.length - seg.size - 1;
+    const belowColor = belowIdx >= 0 ? glass.layers[belowIdx] : null;
+    let score = 0;
+    // If affected == seg.size and below color matches candidate, bottle becomes pure; bonus if full
+    const wouldBePure = (belowColor === col || belowColor === null) && affected === seg.size;
+    if (wouldBePure && glass.layers.length === CFG.GLASS_CAPACITY) score += 100;
+    else if (wouldBePure) score += 40;
+    else score += 10;
+    if (score > bestScore) { bestScore = score; best = col; }
+  }
+  return best;
+}
+function applyColorSplash(glass, targetColor) {
+  const seg = topContiguousSegment(glass);
+  if (seg.size === 0 || !targetColor) return 0;
+  const affected = Math.min(seg.size, CFG.COLOR_SPLASH_MAX_LAYERS);
+  for (let i = glass.layers.length - 1, n = 0; n < affected; i--, n++) {
+    glass.layers[i] = targetColor;
+  }
+  return affected;
+}
+function aiColorSplashBestTarget(glass) {
+  // Returns a target color if color-splashing this glass creates a serveable opportunity, else null.
+  const best = bestColorSplashColorFor(glass, 'opponent');
+  return best;
 }
 
 // --- Power-up Spawning ---
@@ -5662,15 +5830,17 @@ function playerUsePowerUp(slotIndex) {
       state.playerGlasses.push({ layers: [] });
       renderPlayerBoard();
       break;
-    case 'flashPour':
-      state.activeEffects.playerFlashPours = 3; // next 3 pours are instant
+    case 'colorSplash':
+      state.colorSplashMode = true;
       renderPlayerBoard();
       break;
-    case 'swap':
-      state.swapMode = true;
-      state.swapFirst = null;
+    case 'autoServe': {
+      const now = performance.now() / 1000;
+      state.activeEffects.playerAutoServeEndTime = now + CFG.AUTO_SERVE_DURATION;
+      state.activeEffects.playerNextAutoServeAt = now; // fire first serve ASAP
       renderPlayerBoard();
       break;
+    }
     case 'clearBottle': {
       // v6.3: Mastery tracking — check if board had 0 empty bottles before clear
       const emptyBefore = state.playerGlasses.filter(g => g.layers.length === 0).length;
@@ -5685,16 +5855,19 @@ function playerUsePowerUp(slotIndex) {
   pu.used = true;
 }
 
-function executeSwap(idx1, idx2) {
-  const temp = [...state.playerGlasses[idx1].layers];
-  state.playerGlasses[idx1].layers = [...state.playerGlasses[idx2].layers];
-  state.playerGlasses[idx2].layers = temp;
-  state.swapMode = false;
-  state.swapFirst = null;
-  // v6.3: Mastery tracking — check if swap created a serveable glass
-  if (isGlassServeable(state.playerGlasses[idx1]) || isGlassServeable(state.playerGlasses[idx2])) {
-    state.matchMastery.swapServeables = (state.matchMastery.swapServeables || 0) + 1;
+function executeColorSplash(index) {
+  const glass = state.playerGlasses[index];
+  if (!glass) { state.colorSplashMode = false; return; }
+  const color = bestColorSplashColorFor(glass, 'player');
+  state.colorSplashMode = false;
+  if (!color) { renderPlayerBoard(); return; }
+  applyColorSplash(glass, color);
+  // v6.6.1 mastery: count if this created a serveable glass
+  if (isGlassServeable(glass)) {
+    state.matchMastery.colorSplashServeables = (state.matchMastery.colorSplashServeables || 0) + 1;
   }
+  renderPlayerBoard();
+  checkServeable();
 }
 
 // --- Opponent glass tap handler (no longer used for freeze) ---
@@ -5713,12 +5886,15 @@ function aiUsePowerUp(slotIndex) {
       state.opponentGlasses.push({ layers: [] });
       renderOpponentBoard();
       break;
-    case 'flashPour':
-      state.activeEffects.opponentFlashPours = 3;
+    case 'colorSplash':
+      aiExecuteColorSplash();
       break;
-    case 'swap':
-      aiExecuteSwap();
+    case 'autoServe': {
+      const now = performance.now() / 1000;
+      state.activeEffects.opponentAutoServeEndTime = now + CFG.AUTO_SERVE_DURATION;
+      state.activeEffects.opponentNextAutoServeAt = now;
       break;
+    }
     case 'clearBottle':
       aiExecuteClearBottle();
       break;
@@ -5726,18 +5902,23 @@ function aiUsePowerUp(slotIndex) {
   pu.used = true;
 }
 
-function aiExecuteSwap() {
-  const nonEmpty = state.opponentGlasses.map((g, i) => i).filter(i => state.opponentGlasses[i].layers.length > 0);
-  if (nonEmpty.length >= 2) {
-    const i1 = nonEmpty[Math.floor(Math.random() * nonEmpty.length)];
-    let i2 = i1;
-    let safety = 20;
-    while (i2 === i1 && safety-- > 0) i2 = nonEmpty[Math.floor(Math.random() * nonEmpty.length)];
-    if (i2 !== i1) {
-      const temp = [...state.opponentGlasses[i1].layers];
-      state.opponentGlasses[i1].layers = [...state.opponentGlasses[i2].layers];
-      state.opponentGlasses[i2].layers = temp;
-    }
+function aiExecuteColorSplash() {
+  // Find the best opponent glass to color-splash and apply the best candidate color.
+  let bestIdx = -1; let bestColor = null; let bestScore = -1;
+  for (let i = 0; i < state.opponentGlasses.length; i++) {
+    const g = state.opponentGlasses[i];
+    if (g.layers.length < 2) continue;
+    const col = bestColorSplashColorFor(g, 'opponent');
+    if (!col) continue;
+    // Score by how close it gets to a serveable state
+    const clone = { layers: g.layers.slice() };
+    applyColorSplash(clone, col);
+    const score = isGlassServeable(clone) ? 100 : (isGlassPure(clone) ? 40 : 10);
+    if (score > bestScore) { bestScore = score; bestIdx = i; bestColor = col; }
+  }
+  if (bestIdx >= 0 && bestColor) {
+    applyColorSplash(state.opponentGlasses[bestIdx], bestColor);
+    renderOpponentBoard();
   }
 }
 
@@ -5804,25 +5985,27 @@ function renderPowerUps() {
     banner.className = 'mode-banner';
     banner.textContent = '\u{1F9FD} Tap a glass to clear';
     matchScreen.appendChild(banner);
-  } else if (state.swapMode) {
+  } else if (state.colorSplashMode) {
     const banner = document.createElement('div');
     banner.className = 'mode-banner';
-    banner.textContent = state.swapFirst !== null ? '\u{1F504} Tap second glass to swap' : '\u{1F504} Tap a glass to swap';
+    banner.textContent = '\u{1F3A8} Tap a glass to recolor its top';
     matchScreen.appendChild(banner);
-  } else if (state.activeEffects.playerFlashPours > 0) {
+  } else if (isAutoServeActive('player')) {
     const banner = document.createElement('div');
     banner.className = 'mode-banner';
-    banner.textContent = '\u26A1 Flash Pour: ' + state.activeEffects.playerFlashPours + ' pours left';
+    const now = performance.now() / 1000;
+    const remaining = Math.max(0, state.activeEffects.playerAutoServeEndTime - now);
+    banner.textContent = '\u{1F916} Auto Serve: ' + remaining.toFixed(1) + 's left';
     matchScreen.appendChild(banner);
   }
 
-  // 4. Flash pour visual indicator on player board wrapper
+  // 4. Auto-serve visual indicator on player board wrapper
   const wrapper = document.querySelector('.player-board-wrapper');
   if (wrapper) {
-    if (state.activeEffects.playerFlashPours > 0) {
-      wrapper.classList.add('flash-pour-active');
+    if (isAutoServeActive('player')) {
+      wrapper.classList.add('auto-serve-active');
     } else {
-      wrapper.classList.remove('flash-pour-active');
+      wrapper.classList.remove('auto-serve-active');
     }
   }
 }
@@ -5835,6 +6018,8 @@ let tutorialSelectedGlass = null;
 let tutorialCustomerColor = 'red';
 let tutorialLevel = 0;
 let tutorialSpawnColor = null;
+let tutorialSplashMode = false;
+let tutorialSplashUsed = false;
 
 const TUTORIAL_LEVELS = [
   {
@@ -5854,9 +6039,21 @@ const TUTORIAL_LEVELS = [
     glasses: [ { layers: ['blue'] }, { layers: [] } ],
     showSpawn: true,
     spawnColor: 'blue',
+    popupTitle: 'NICE POUR!',
+    popupText: 'Now try your first booster\u2014they can save you when bottles are stuck with the wrong colors!',
+    popupEmoji: '\u{1F525}',
+  },
+  {
+    title: 'USE A BOOSTER!',
+    desc: 'Tap the \u{1F3A8} Color Splash, then tap the bottle to recolor its top layers',
+    color: 'blue',
+    glasses: [ { layers: ['blue', 'blue', 'red', 'red'] }, { layers: [] } ],
+    showSpawn: true,
+    spawnDisabled: true,
+    showSplash: true,
     popupTitle: 'AWESOME!',
     popupText: 'Now race against an opponent!\nBe faster in completing drink orders to win!',
-    popupEmoji: '\u{1F525}',
+    popupEmoji: '\u{1F389}',
   },
 ];
 
@@ -5871,6 +6068,8 @@ function startTutorialLevel() {
   tutorialSelectedGlass = null;
   tutorialCustomerColor = level.color;
   tutorialSpawnColor = level.spawnColor || null;
+  tutorialSplashMode = false;
+  tutorialSplashUsed = false;
   tutorialGlasses = level.glasses.map(g => ({ layers: [...g.layers] }));
 
   // Update header
@@ -5901,31 +6100,102 @@ function startTutorialLevel() {
     spawnBtn.addEventListener('click', tutorialUseSpawn);
     document.getElementById('screen-tutorial').appendChild(spawnBtn);
   }
-  if (spawnBtn) spawnBtn.style.display = level.showSpawn ? 'flex' : 'none';
-
-  // Arrow pointing at spawn button
-  let arrow = document.getElementById('tutorial-arrow');
-  if (!arrow && level.showSpawn) {
-    arrow = document.createElement('div');
-    arrow.id = 'tutorial-arrow';
-    arrow.style.cssText = 'position:absolute;bottom:75px;left:22px;z-index:6;font-size:28px;animation:tutorialBounce 1s ease-in-out infinite;pointer-events:none;';
-    arrow.textContent = '\u{1F447}';
-    const label = document.createElement('div');
-    label.style.cssText = 'position:absolute;bottom:105px;left:8px;z-index:6;font-family:Nunito,sans-serif;font-size:12px;font-weight:900;color:#ffc700;text-shadow:0 1px 2px rgba(0,0,0,0.7);pointer-events:none;white-space:nowrap;animation:tutorialBounce 1s ease-in-out infinite;';
-    label.textContent = 'Tap here to spawn!';
-    label.id = 'tutorial-arrow-label';
-    document.getElementById('screen-tutorial').appendChild(arrow);
-    document.getElementById('screen-tutorial').appendChild(label);
+  if (spawnBtn) {
+    spawnBtn.style.display = level.showSpawn ? 'flex' : 'none';
+    spawnBtn.classList.toggle('disabled', !!level.spawnDisabled);
+    spawnBtn.disabled = !!level.spawnDisabled;
   }
-  if (arrow) arrow.style.display = level.showSpawn ? 'block' : 'none';
-  const arrowLabel = document.getElementById('tutorial-arrow-label');
-  if (arrowLabel) arrowLabel.style.display = level.showSpawn ? 'block' : 'none';
+
+  // Splash booster button (Color Splash) — shown only when level.showSplash
+  let splashBtn = document.getElementById('tutorial-splash');
+  if (!splashBtn && level.showSplash) {
+    splashBtn = document.createElement('button');
+    splashBtn.id = 'tutorial-splash';
+    splashBtn.className = 'powerup-slot filled';
+    splashBtn.style.cssText = 'position:absolute;bottom:22px;left:50%;transform:translateX(-50%);z-index:5;cursor:pointer;';
+    splashBtn.innerHTML = '\u{1F3A8}';
+    splashBtn.addEventListener('click', tutorialUseSplash);
+    document.getElementById('screen-tutorial').appendChild(splashBtn);
+  }
+  if (splashBtn) {
+    splashBtn.style.display = level.showSplash ? 'flex' : 'none';
+    splashBtn.classList.remove('used');
+    splashBtn.classList.add('filled');
+  }
+
+  // Tutorial arrow — points at whichever action the player should take next
+  placeTutorialArrow(level);
 
   renderTutorialCustomer();
   renderTutorialBoard();
 }
 
+function placeTutorialArrow(level) {
+  let arrow = document.getElementById('tutorial-arrow');
+  let arrowLabel = document.getElementById('tutorial-arrow-label');
+  if (!arrow) {
+    arrow = document.createElement('div');
+    arrow.id = 'tutorial-arrow';
+    arrow.style.cssText = 'position:absolute;z-index:6;font-size:28px;pointer-events:none;animation:tutorialBounce 1s ease-in-out infinite;filter:drop-shadow(0 2px 3px rgba(0,0,0,0.5));';
+    arrow.textContent = '\u{1F447}';
+    document.getElementById('screen-tutorial').appendChild(arrow);
+  }
+  if (!arrowLabel) {
+    arrowLabel = document.createElement('div');
+    arrowLabel.id = 'tutorial-arrow-label';
+    arrowLabel.style.cssText = 'position:absolute;z-index:6;font-family:Nunito,sans-serif;font-size:12px;font-weight:900;color:#ffc700;text-shadow:0 1px 2px rgba(0,0,0,0.7);pointer-events:none;white-space:nowrap;animation:tutorialBounce 1s ease-in-out infinite;';
+    document.getElementById('screen-tutorial').appendChild(arrowLabel);
+  }
+
+  // Level 2: arrow on the spawn button (bottom-left)
+  // Level 3: arrow on the splash button (bottom-center), moves to bottle after activation
+  if (level.showSplash && !tutorialSplashUsed && !tutorialSplashMode) {
+    arrow.style.left = 'calc(50% - 14px)';
+    arrow.style.top = 'auto';
+    arrow.style.bottom = '82px';
+    arrowLabel.style.left = 'calc(50% - 62px)';
+    arrowLabel.style.top = 'auto';
+    arrowLabel.style.bottom = '112px';
+    arrowLabel.textContent = 'Tap to activate!';
+    arrow.style.display = 'block';
+    arrowLabel.style.display = 'block';
+  } else if (level.showSplash && tutorialSplashMode) {
+    // After activation — point at the bottle that needs fixing (index 0)
+    setTimeout(() => {
+      const glassEl = document.querySelectorAll('#tutorial-board .glass')[0];
+      const screenEl = document.getElementById('screen-tutorial');
+      if (!glassEl || !screenEl) return;
+      const gr = glassEl.getBoundingClientRect();
+      const sr = screenEl.getBoundingClientRect();
+      arrow.style.left = (gr.left - sr.left + gr.width / 2 - 14) + 'px';
+      arrow.style.top  = (gr.top  - sr.top  - 38) + 'px';
+      arrow.style.bottom = 'auto';
+      arrowLabel.style.left = (gr.left - sr.left + gr.width / 2 - 46) + 'px';
+      arrowLabel.style.top  = (gr.top  - sr.top  - 58) + 'px';
+      arrowLabel.style.bottom = 'auto';
+      arrowLabel.textContent = 'Tap this bottle!';
+      arrow.style.display = 'block';
+      arrowLabel.style.display = 'block';
+    }, 30);
+  } else if (level.showSpawn && !level.spawnDisabled) {
+    arrow.style.left = '22px';
+    arrow.style.top = 'auto';
+    arrow.style.bottom = '75px';
+    arrowLabel.style.left = '8px';
+    arrowLabel.style.top = 'auto';
+    arrowLabel.style.bottom = '105px';
+    arrowLabel.textContent = 'Tap here to spawn!';
+    arrow.style.display = 'block';
+    arrowLabel.style.display = 'block';
+  } else {
+    arrow.style.display = 'none';
+    arrowLabel.style.display = 'none';
+  }
+}
+
 function tutorialUseSpawn() {
+  const level = TUTORIAL_LEVELS[tutorialLevel];
+  if (level && level.spawnDisabled) return;
   if (!tutorialSpawnColor) return;
   // Hide the arrow hint after first use
   const arrow = document.getElementById('tutorial-arrow');
@@ -5941,6 +6211,34 @@ function tutorialUseSpawn() {
       return;
     }
   }
+}
+
+function tutorialUseSplash() {
+  if (tutorialSplashUsed) return;
+  tutorialSplashMode = true;
+  renderTutorialBoard();
+  placeTutorialArrow(TUTORIAL_LEVELS[tutorialLevel]);
+}
+
+function tutorialApplySplash(index) {
+  const glass = tutorialGlasses[index];
+  if (!glass || glass.layers.length === 0) return;
+  const top = glass.layers[glass.layers.length - 1];
+  let segSize = 0;
+  for (let i = glass.layers.length - 1; i >= 0 && glass.layers[i] === top; i--) segSize++;
+  const affected = Math.min(segSize, CFG.COLOR_SPLASH_MAX_LAYERS || 2);
+  for (let i = glass.layers.length - 1, n = 0; n < affected; i--, n++) {
+    glass.layers[i] = tutorialCustomerColor;
+  }
+  tutorialSplashMode = false;
+  tutorialSplashUsed = true;
+  const btn = document.getElementById('tutorial-splash');
+  if (btn) { btn.classList.remove('filled'); btn.classList.add('used'); }
+  const arrow = document.getElementById('tutorial-arrow');
+  const arrowLabel = document.getElementById('tutorial-arrow-label');
+  if (arrow) arrow.style.display = 'none';
+  if (arrowLabel) arrowLabel.style.display = 'none';
+  renderTutorialBoard();
 }
 
 function renderTutorialCustomer() {
@@ -5974,6 +6272,7 @@ function renderTutorialBoard() {
 
     if (glass.layers.length === 0) el.classList.add('empty-glass');
     if (tutorialSelectedGlass === i) el.classList.add('selected');
+    if (tutorialSplashMode && glass.layers.length > 0) el.classList.add('color-splash-target');
 
     // Check if serveable (full + pure + matches customer)
     const isPure = glass.layers.length === CFG.GLASS_CAPACITY && glass.layers.every(l => l === glass.layers[0]);
@@ -6017,6 +6316,14 @@ function renderTutorialBoard() {
 
 function handleTutorialTap(index) {
   const glass = tutorialGlasses[index];
+
+  // Splash mode: tap a bottle to recolor its top 1-2 layers to the customer color
+  if (tutorialSplashMode) {
+    if (glass && glass.layers.length > 0) {
+      tutorialApplySplash(index);
+    }
+    return;
+  }
 
   // If serveable, serve it with fly animation
   const isPure = glass.layers.length === CFG.GLASS_CAPACITY && glass.layers.every(l => l === glass.layers[0]);
