@@ -4402,13 +4402,28 @@ function aiUseSpawn() {
   if (state.aiSpawnCharges <= 0) return;
   const glasses = state.opponentGlasses;
 
-  // Pick a color the AI needs (customer-weighted)
+  // Pick a color the AI needs. Always match a waiting customer when possible;
+  // fall back to a random arena color only when no customers remain to serve.
   const arena = state.currentArena || getArena(state.stats.trophies);
   const colorNames = getArenaColors(arena).names;
   let color;
-  if (Math.random() < 0.8 && state.customers.length > 0) {
-    const cc = state.customers.filter(c => !c.servedByOpponent).map(c => c.color);
-    color = cc.length > 0 ? cc[Math.floor(Math.random() * cc.length)] : colorNames[Math.floor(Math.random() * colorNames.length)];
+  const unservedColors = state.customers
+    .filter(c => !c.servedByOpponent && !c.leaving)
+    .map(c => c.color);
+  if (unservedColors.length > 0) {
+    // Prefer a color that ALREADY has a stack or empty home on the board —
+    // so the spawn builds toward a pure glass instead of creating new mess.
+    let bestColor = null, bestPriority = -1;
+    for (const c of unservedColors) {
+      let priority = 0;
+      for (const g of glasses) {
+        if (g.layers.length >= CFG.GLASS_CAPACITY) continue;
+        if (g.layers.length === 0) priority = Math.max(priority, 1);
+        else if (g.layers[g.layers.length - 1] === c) priority = Math.max(priority, 3);
+      }
+      if (priority > bestPriority) { bestPriority = priority; bestColor = c; }
+    }
+    color = bestColor || unservedColors[Math.floor(Math.random() * unservedColors.length)];
   } else {
     color = colorNames[Math.floor(Math.random() * colorNames.length)];
   }
@@ -5526,9 +5541,14 @@ function aiMakePour(diff) {
     }
   }
 
-  // Take any legal move that isn't a hard-block (-100). Better to keep pouring
-  // than to freeze — prevents AI from deadlocking itself on a tight board.
-  if (bestMove && bestScore > -50) {
+  // Adaptive acceptance: take strong color-matching moves freely; only accept
+  // mediocre/bad moves when the board is tight (escape hatch, not default).
+  const emptyNow = glasses.filter(g => g.layers.length === 0).length;
+  let minAccept;
+  if (emptyNow >= 3)      minAccept = 0;    // open board — only positive-value moves (match colors, consolidate)
+  else if (emptyNow === 2) minAccept = -2;  // getting tight — allow mildly negative
+  else                    minAccept = -50;  // tight — any legal move to avoid freeze
+  if (bestMove && bestScore > minAccept) {
     doPourRaw(glasses, bestMove[0], bestMove[1]);
     renderOpponentBoard();
   }
