@@ -1,0 +1,3636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Mix It — v7.0 Match Masters Refactor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+*::-webkit-scrollbar{width:0;height:0;display:none}
+*{scrollbar-width:none;-ms-overflow-style:none}
+html,body{width:100%;height:100%;overflow:hidden;font-family:'Nunito',system-ui,sans-serif;font-weight:700;background:#0a2a50;color:#fff;user-select:none;-webkit-user-select:none;touch-action:manipulation;display:flex;justify-content:center}
+#game{position:relative;width:420px;max-width:100vw;height:100vh;height:100dvh;margin:0 auto;overflow:hidden;display:flex;flex-direction:column;background:linear-gradient(180deg,#0d3460 0%,#144985 30%,#144985 70%,#0a2a50 100%)}
+
+/* ===== HUD (v6 top bar) ===== */
+#hud{flex-shrink:0;display:flex;align-items:center;gap:6px;padding:0 10px;height:44px;background:#0a2a50;border-bottom:1px solid rgba(255,255,255,0.05);z-index:100}
+#hud.hidden{display:none}
+.hud-profile{display:flex;align-items:center;gap:6px;flex:1;min-width:0}
+.hud-avatar{width:30px;height:30px;border-radius:50%;background:#162040;border:2px solid #3a6dd4;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.hud-name-block{flex:1;min-width:0;overflow:hidden}
+.hud-name-block .title{color:rgba(255,255,255,0.55);font-size:10px;text-transform:uppercase;letter-spacing:0.5px;line-height:1}
+.hud-name-block .trophies{color:#fff;font-weight:900;font-size:12px;line-height:1.1}
+.hud-currencies{display:flex;gap:4px;flex-shrink:0}
+.cur-chip{display:flex;align-items:center;gap:3px;padding:3px 8px;background:rgba(255,255,255,0.06);border-radius:14px;font-size:12px;font-weight:900}
+.cur-chip .ic{font-size:12px}
+.cur-chip.coins{color:#ffb94a}
+.cur-chip.gold{color:#ffd700}
+.cur-chip.stars{color:#9ad4ff}
+
+/* ===== SPLASH ===== */
+#screen-splash{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#0a0a15;z-index:1000;transition:opacity 0.6s ease}
+#screen-splash.fade-out{opacity:0;pointer-events:none}
+#screen-splash img{max-width:100%;max-height:100%;object-fit:contain}
+#splash-progress-wrap{position:absolute;bottom:40px;left:40px;right:40px;height:4px;background:rgba(255,255,255,0.1);border-radius:2px;overflow:hidden}
+#splash-progress{height:100%;width:0%;background:linear-gradient(90deg,#FFD700,#FFA500);border-radius:2px;transition:width 1.8s linear}
+
+/* ===== SCREENS ===== */
+.screen{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;padding-top:44px;padding-bottom:68px}
+.screen.hidden{display:none!important}
+.screen-title{font-family:'Lilita One',cursive;font-size:24px;letter-spacing:2px;text-align:center;padding:14px 0 8px;color:#fff;-webkit-text-stroke:0.5px #000;text-shadow:0 3px 0 #000,2px 2px 0 #000;text-transform:uppercase}
+
+/* ===== BOTTOM NAV (v6 style) ===== */
+#bottom-nav{position:absolute;bottom:0;left:0;right:0;height:64px;display:grid;grid-template-columns:repeat(5,1fr);background:#0a2a50;border-top:1px solid rgba(255,255,255,0.05);z-index:100;padding:6px 6px 8px;gap:6px}
+#bottom-nav.hidden{display:none}
+.nav-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;font-size:10px;color:#046abc;font-weight:900;text-transform:uppercase;letter-spacing:0.3px;border:none;background:transparent;border-radius:10px;transition:all 0.2s}
+.nav-btn .ic{font-size:22px;line-height:1}
+.nav-btn.active{color:#fff;background:rgba(12,162,231,0.15)}
+.nav-btn.home .ic{font-size:24px}
+
+/* ===== HOME (v6 style) ===== */
+#screen-home{align-items:center;gap:12px;padding:52px 20px 80px;justify-content:flex-end}
+
+.home-venue-preview{width:100%;flex:1;min-height:120px;position:relative;overflow:hidden;border-radius:10px;background:linear-gradient(180deg,#2a140a 0%,#4a2a16 50%,#6a3f22 100%);border:6px solid #3a1e10;box-shadow:inset 0 0 0 2px #d4a03a,inset 0 0 0 3px #3a1e10;display:flex;align-items:center;justify-content:center}
+.home-venue-preview::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent 0 22px,rgba(0,0,0,0.28) 22px 24px);pointer-events:none}
+.home-venue-preview::after{content:'';position:absolute;left:0;right:0;top:0;bottom:0;pointer-events:none;background:repeating-linear-gradient(90deg,transparent 0 18px,#e5b94a 18px 22px,#8a6420 22px 26px,transparent 26px 44px) top/100% 5px no-repeat,repeating-linear-gradient(90deg,transparent 0 18px,#e5b94a 18px 22px,#8a6420 22px 26px,transparent 26px 44px) bottom/100% 5px no-repeat}
+.hvp-icon{font-size:80px;filter:drop-shadow(0 4px 12px rgba(255,200,120,0.4));z-index:2;position:relative}
+
+.arena-badge-box{background:rgba(0,0,0,0.15);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:14px 22px;width:300px;max-width:100%;text-align:center;position:relative}
+.arena-badge-name{font-family:'Lilita One',cursive;font-size:20px;margin-bottom:4px;-webkit-text-stroke:0.5px #000;text-shadow:0 2px 0 #000;letter-spacing:1px}
+.arena-trophy-count{font-size:16px;font-weight:900;color:#FFD700;margin-bottom:8px}
+.arena-progress-bar{width:100%;height:8px;background:rgba(255,255,255,0.08);border-radius:4px;overflow:hidden;margin-bottom:4px}
+.arena-progress-fill{height:100%;background:linear-gradient(90deg,#FF9800,#E65100);border-radius:4px;transition:width 0.3s}
+.arena-progress-label{font-size:11px;color:rgba(255,255,255,0.5)}
+.arena-switch{position:absolute;top:8px;right:8px;width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);color:#fff;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+
+.home-action-row{display:flex;gap:10px;align-items:center;width:300px;max-width:100%}
+.star-meter-wrap{flex:1;background:rgba(0,0,0,0.25);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:8px 12px}
+.star-meter-wrap .sm-label{font-size:10px;color:rgba(255,255,255,0.55);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
+.star-meter{height:10px;background:rgba(0,0,0,0.4);border-radius:5px;overflow:hidden;position:relative}
+.star-meter .fill{height:100%;background:linear-gradient(90deg,#4db8ff,#9ad4ff);border-radius:5px;transition:width 0.3s}
+.star-meter .sm-num{position:absolute;right:4px;top:-1px;font-size:9px;font-weight:900;color:#fff;text-shadow:0 1px 2px #000}
+.luckybox-btn{padding:10px 14px;background:linear-gradient(180deg,#e88cff,#a54fff);border:none;border-radius:12px;color:#fff;font-weight:900;font-size:11px;cursor:pointer;box-shadow:0 3px 0 #5c2d99;text-transform:uppercase;letter-spacing:0.5px;flex-shrink:0}
+.luckybox-btn:disabled{background:#3a1f5c;box-shadow:none;opacity:0.7;cursor:not-allowed}
+.starchest-btn{padding:10px 14px;background:linear-gradient(180deg,#4db8ff,#2e84c9);border:none;border-radius:12px;color:#fff;font-weight:900;font-size:11px;cursor:pointer;box-shadow:0 3px 0 #1a4d79;text-transform:uppercase;letter-spacing:0.5px;flex-shrink:0;animation:pulse 1.4s infinite}
+@keyframes pulse{50%{box-shadow:0 0 14px rgba(154,212,255,0.7),0 3px 0 #1a4d79}}
+
+.play-btn{width:300px;max-width:100%;padding:16px;border:none;border-radius:12px;background:linear-gradient(180deg,#ffac04 0%,#ffc700 100%);color:#fff;font-family:'Nunito',sans-serif;font-size:22px;font-weight:900;letter-spacing:3px;cursor:pointer;transition:transform 0.15s,box-shadow 0.15s;box-shadow:0 6px 0 #af3c34,0 8px 16px rgba(175,60,52,0.4);text-shadow:0 2px 0 rgba(0,0,0,0.3)}
+.play-btn:hover{transform:translateY(-2px);box-shadow:0 8px 0 #af3c34,0 10px 20px rgba(175,60,52,0.5)}
+.play-btn:active{transform:translateY(3px);box-shadow:0 2px 0 #af3c34}
+.play-btn .sub{display:block;font-size:11px;font-weight:700;letter-spacing:1px;margin-top:3px;opacity:0.9}
+.practice-btn{width:300px;max-width:100%;padding:10px;background:rgba(255,255,255,0.07);border:1px dashed rgba(255,255,255,0.25);border-radius:10px;color:rgba(255,255,255,0.75);font-size:12px;font-weight:800;cursor:pointer}
+
+.flash-banner{width:300px;max-width:100%;padding:10px 12px;background:linear-gradient(90deg,#ff4e6b,#ff8e4e);border-radius:12px;display:flex;align-items:center;justify-content:space-between;font-size:11px;color:#fff;font-weight:900;cursor:pointer}
+.flash-banner .f-timer{background:rgba(0,0,0,0.3);padding:3px 8px;border-radius:8px;font-size:10px}
+
+/* ===== Floating Missions Button ===== */
+.missions-fab{position:absolute;top:54px;left:12px;width:44px;height:44px;border-radius:12px;background:linear-gradient(180deg,#4ae35f,#2ab14a);border:none;cursor:pointer;box-shadow:0 3px 0 #1a7a2e;display:flex;align-items:center;justify-content:center;font-size:20px;z-index:50}
+.missions-fab .fab-badge{position:absolute;top:-4px;right:-4px;min-width:18px;height:18px;border-radius:9px;background:#ff3b3b;color:#fff;font-size:10px;font-weight:900;display:flex;align-items:center;justify-content:center;padding:0 4px;border:2px solid #0a2a50}
+
+/* ===== Missions Modal ===== */
+.missions-list{display:flex;flex-direction:column;gap:8px}
+.mission-row{display:flex;align-items:center;gap:10px;font-size:12px;padding:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px}
+.mission-row .mtxt{flex:1;color:rgba(255,255,255,0.9)}
+.mission-row .mprog-wrap{flex:1;display:flex;flex-direction:column;gap:3px}
+.mission-row .mprog{height:8px;background:rgba(0,0,0,0.4);border-radius:4px;overflow:hidden}
+.mission-row .mprog .f{height:100%;background:linear-gradient(90deg,#4ae35f,#7ef88b);border-radius:4px}
+.mission-row .mrew{color:#ffd700;font-size:10px;text-align:right;line-height:1.2}
+.mission-row.done{border-color:#4ae35f;background:rgba(74,227,95,0.08)}
+.mission-row.done .mtxt{color:#4ae35f;text-decoration:line-through;opacity:0.7}
+
+/* ===== SHOP ===== */
+#screen-shop .shop-section{padding:10px 14px}
+.shop-tabs{display:flex;gap:4px;padding:8px 14px;overflow-x:auto}
+.shop-tab{flex-shrink:0;padding:6px 12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:14px;font-size:11px;color:rgba(255,255,255,0.65);cursor:pointer;white-space:nowrap}
+.shop-tab.active{background:rgba(255,215,0,0.15);border-color:#ffd700;color:#ffd700}
+.shop-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:10px 14px}
+.shop-card{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:6px}
+.shop-card.tier-bronze{border-color:#c98a4e}
+.shop-card.tier-silver{border-color:#c0c6d4}
+.shop-card.tier-gold{border-color:#ffd700}
+.shop-card .sc-ic{font-size:30px;text-align:center}
+.shop-card .sc-name{font-size:12px;font-weight:900;text-align:center}
+.shop-card .sc-desc{font-size:10px;color:rgba(255,255,255,0.6);min-height:28px;line-height:1.25}
+.shop-card .sc-owned{font-size:10px;color:rgba(255,255,255,0.45);text-align:center}
+.shop-card .sc-buy{padding:6px;background:linear-gradient(180deg,#ffac04,#ffc700);border:none;border-radius:8px;color:#fff;font-weight:900;font-size:11px;cursor:pointer;box-shadow:0 3px 0 #af3c34}
+.shop-card .sc-buy:disabled{opacity:0.5;cursor:not-allowed;background:#444;box-shadow:none}
+.shop-card .sc-buy.gold{background:linear-gradient(180deg,#ffd700,#ffb500);box-shadow:0 3px 0 #8b6b00}
+.shop-card .sc-buy.dollar{background:linear-gradient(180deg,#4db8ff,#2e84c9);box-shadow:0 3px 0 #1a4d79}
+
+/* ===== TROPHY ROAD TAB ===== */
+#screen-trophyroad .tr-list{display:flex;flex-direction:column;gap:8px;padding:10px 14px}
+.tr-row{display:flex;align-items:center;gap:10px;padding:10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:10px}
+.tr-row.claimable{border-color:#ffd700;background:rgba(255,215,0,0.1)}
+.tr-row.claimed{opacity:0.5}
+.tr-row.locked{opacity:0.55}
+.tr-row .tr-n{font-family:'Lilita One',cursive;font-size:20px;color:#ffd700;min-width:32px;text-align:center}
+.tr-row .tr-body{flex:1}
+.tr-row .tr-threshold{font-size:12px;color:#ffd700;font-weight:900}
+.tr-row .tr-reward-text{font-size:11px;color:rgba(255,255,255,0.8);line-height:1.3;margin-top:2px}
+.tr-row .tr-btn{padding:7px 12px;border:none;border-radius:8px;background:linear-gradient(180deg,#ffac04,#ffc700);color:#fff;font-weight:900;font-size:11px;cursor:pointer;box-shadow:0 3px 0 #af3c34}
+.tr-row .tr-btn:disabled{opacity:0.5;cursor:not-allowed;background:#333;box-shadow:none}
+
+/* ===== PACK REVEAL MODAL ===== */
+.pack-reveal-overlay{position:absolute;inset:0;background:rgba(0,0,0,0.85);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:550;padding:20px;backdrop-filter:blur(6px)}
+.pack-reveal-overlay.hidden{display:none}
+.pack-reveal-title{font-family:'Lilita One',cursive;font-size:26px;color:#ffd700;letter-spacing:1px;margin-bottom:14px;-webkit-text-stroke:0.5px #000;text-shadow:0 2px 0 #000}
+.pack-reveal-progress{font-size:11px;color:rgba(255,255,255,0.7);margin-bottom:14px;letter-spacing:1px}
+.pack-card{width:200px;height:260px;perspective:1000px;margin-bottom:16px}
+.pack-card-inner{width:100%;height:100%;position:relative;transform-style:preserve-3d;transition:transform 0.6s cubic-bezier(0.4,0,0.2,1)}
+.pack-card.flipped .pack-card-inner{transform:rotateY(180deg)}
+.pack-card-face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;border:3px solid rgba(255,255,255,0.2);box-shadow:0 12px 40px rgba(0,0,0,0.4)}
+.pack-card-back{background:linear-gradient(135deg,#4a3b99,#1a1a40);color:#ffd700;font-size:80px}
+.pack-card-back::before{content:'?';font-family:'Lilita One',cursive;font-size:100px;filter:drop-shadow(0 4px 8px rgba(0,0,0,0.5))}
+.pack-card-front{transform:rotateY(180deg);background:rgba(30,30,50,0.9)}
+.pack-card-front.white{border-color:#e6e6e6;background:radial-gradient(circle at 30% 25%,rgba(230,230,230,0.2),rgba(30,30,50,0.9))}
+.pack-card-front.silver{border-color:#c0c6d4;background:radial-gradient(circle at 30% 25%,rgba(192,198,212,0.25),rgba(30,30,50,0.9));box-shadow:0 12px 40px rgba(192,198,212,0.4)}
+.pack-card-front.gold{border-color:#ffd700;background:radial-gradient(circle at 30% 25%,rgba(255,215,0,0.3),rgba(30,30,50,0.9));box-shadow:0 12px 40px rgba(255,215,0,0.5)}
+.pack-card-front.diamond{border-color:#4dfff0;background:radial-gradient(circle at 30% 25%,rgba(77,255,240,0.35),rgba(30,30,50,0.9));box-shadow:0 12px 40px rgba(77,255,240,0.6)}
+.pack-card-front .pcf-sticker{font-size:90px;margin-bottom:12px;filter:drop-shadow(0 4px 8px rgba(0,0,0,0.5))}
+.pack-card-front .pcf-name{font-size:16px;font-weight:900;color:#fff;text-align:center;margin-bottom:4px}
+.pack-card-front .pcf-album{font-size:10px;color:rgba(255,255,255,0.55);text-transform:uppercase;letter-spacing:1px}
+.pack-card-front .pcf-ribbon{position:absolute;top:12px;right:-8px;padding:3px 12px;font-size:10px;font-weight:900;letter-spacing:1px;text-transform:uppercase;transform:rotate(8deg);box-shadow:0 3px 8px rgba(0,0,0,0.4)}
+.pack-card-front .pcf-ribbon.new{background:linear-gradient(180deg,#4ae35f,#2ab14a);color:#fff}
+.pack-card-front .pcf-ribbon.dup{background:linear-gradient(180deg,#808090,#4a4a55);color:#fff}
+.pack-card-front .pcf-ribbon.token{background:linear-gradient(180deg,#ffd700,#ffb500);color:#222}
+.pack-reveal-btn{padding:12px 28px;background:linear-gradient(180deg,#ffac04,#ffc700);border:none;border-radius:12px;color:#fff;font-family:'Lilita One',cursive;font-size:18px;letter-spacing:1px;cursor:pointer;box-shadow:0 5px 0 #af3c34}
+.pack-reveal-btn.skip{background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.8);box-shadow:none;border:1px solid rgba(255,255,255,0.2);font-family:'Nunito',sans-serif;font-size:13px;margin-top:8px;padding:8px 20px}
+.pack-reveal-summary{background:rgba(0,0,0,0.4);border-radius:12px;padding:14px 20px;color:#fff;font-size:13px;text-align:center;margin-bottom:16px;max-width:300px}
+.pack-reveal-summary b{color:#ffd700;font-size:16px}
+
+/* ===== STARTER PACK OVERLAY ===== */
+.starter-overlay{position:absolute;inset:0;background:rgba(0,0,0,0.75);display:flex;align-items:center;justify-content:center;z-index:450;padding:20px;backdrop-filter:blur(6px)}
+.starter-overlay.hidden{display:none}
+.starter-card{background:linear-gradient(180deg,#1a5a9e,#0d3460);border:2px solid #ffd700;border-radius:20px;padding:20px;width:100%;max-width:340px;text-align:center;box-shadow:0 12px 40px rgba(0,0,0,0.5),inset 0 1px 0 rgba(255,255,255,0.12);position:relative}
+.starter-card .sp-dismiss{position:absolute;top:8px;right:8px;width:28px;height:28px;border-radius:50%;background:rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.12);color:#fff;cursor:pointer;font-weight:900;font-size:14px}
+.starter-card h2{font-family:'Lilita One',cursive;font-size:24px;color:#ffd700;letter-spacing:1px;-webkit-text-stroke:0.5px #000;text-shadow:0 2px 0 #000;margin-bottom:4px}
+.starter-card .sp-sub{font-size:11px;color:rgba(255,255,255,0.6);margin-bottom:12px;text-transform:uppercase;letter-spacing:1px}
+.starter-card .sp-timer{font-size:11px;color:#ffac04;font-weight:900;margin-bottom:10px}
+.starter-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:10px 0}
+.sp-item{background:rgba(255,215,0,0.1);border:1px solid rgba(255,215,0,0.3);border-radius:10px;padding:8px 4px;font-size:10px}
+.sp-item .sp-ic{font-size:22px;display:block;margin-bottom:2px}
+.sp-item .sp-label{color:rgba(255,255,255,0.85);font-weight:900}
+.sp-buy-btn{width:100%;padding:14px;margin-top:10px;background:linear-gradient(180deg,#4db8ff,#2e84c9);border:none;border-radius:12px;color:#fff;font-family:'Lilita One',cursive;font-size:20px;letter-spacing:1px;cursor:pointer;box-shadow:0 5px 0 #1a4d79}
+.sp-footer{font-size:10px;color:rgba(255,255,255,0.45);margin-top:6px}
+
+/* ===== BAR PASS ===== */
+.bp-header{padding:10px 14px 8px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.bp-header .bp-tier-info{font-size:12px;color:rgba(255,255,255,0.7)}
+.bp-header .bp-tier-info b{color:#ffd700;font-size:16px}
+.bp-header .bp-progress{flex:1;min-width:140px;height:8px;background:rgba(0,0,0,0.4);border-radius:4px;overflow:hidden}
+.bp-header .bp-progress .f{height:100%;background:linear-gradient(90deg,#ffd700,#ff9a4f)}
+.bp-premium-btn{padding:8px 14px;background:linear-gradient(180deg,#4db8ff,#2e84c9);border:none;border-radius:10px;color:#fff;font-weight:900;font-size:11px;cursor:pointer;box-shadow:0 3px 0 #1a4d79}
+.bp-premium-btn.owned{background:linear-gradient(180deg,#4ae35f,#2ab14a);box-shadow:0 3px 0 #1a7a2e;cursor:default}
+.bp-strip{display:flex;gap:8px;overflow-x:auto;padding:8px 14px 14px}
+.bp-tile{flex-shrink:0;width:118px;display:flex;flex-direction:column;gap:4px;border-radius:10px;padding:6px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08)}
+.bp-tile.locked{opacity:0.55}
+.bp-tile .bp-n{font-family:'Lilita One',cursive;font-size:14px;color:#ffd700;text-align:center;letter-spacing:1px}
+.bp-reward-box{background:rgba(0,0,0,0.3);border-radius:8px;padding:6px;min-height:74px;display:flex;flex-direction:column;gap:3px}
+.bp-reward-box.free{border-left:3px solid #9ad4ff}
+.bp-reward-box.premium{border-left:3px solid #ffd700;background:rgba(255,215,0,0.06)}
+.bp-reward-box.premium.locked-premium{opacity:0.4}
+.bp-reward-box .bp-tag{font-size:8px;text-transform:uppercase;letter-spacing:0.5px;color:rgba(255,255,255,0.55);font-weight:900}
+.bp-reward-box.premium .bp-tag{color:#ffd700}
+.bp-reward-text{font-size:10px;color:rgba(255,255,255,0.85);line-height:1.2;flex:1}
+.bp-claim{padding:4px 6px;border:none;border-radius:6px;background:linear-gradient(180deg,#ffac04,#ffc700);color:#fff;font-weight:900;font-size:9px;cursor:pointer;box-shadow:0 2px 0 #af3c34}
+.bp-claim:disabled{background:#333;opacity:0.5;box-shadow:none;cursor:not-allowed}
+.bp-claim.claimed{background:#2a7a3a;box-shadow:0 2px 0 #175024;cursor:default}
+
+/* ===== ALBUMS ===== */
+.albums-header{display:flex;justify-content:space-between;align-items:center;padding:0 14px 8px;font-size:11px;color:rgba(255,255,255,0.7)}
+.albums-header .tokens-chip{padding:4px 10px;background:rgba(255,215,0,0.15);border:1px solid rgba(255,215,0,0.3);border-radius:12px;color:#ffd700;font-weight:900;font-size:12px}
+.album-tiles{display:flex;flex-direction:column;gap:10px;padding:0 14px}
+.album-tile{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:12px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:all 0.2s}
+.album-tile:active{transform:scale(0.98)}
+.album-tile.seasonal{border-color:rgba(255,159,64,0.5);background:rgba(255,159,64,0.08)}
+.album-tile.locked{opacity:0.5;cursor:not-allowed}
+.album-tile .at-ic{font-size:40px}
+.album-tile .at-info{flex:1;min-width:0}
+.album-tile .at-name{font-size:14px;font-weight:900}
+.album-tile .at-theme{font-size:10px;color:rgba(255,255,255,0.55);margin-top:2px}
+.album-tile .at-prog{font-size:11px;color:#ffd700;margin-top:4px}
+.album-tile .at-prog-bar{height:6px;background:rgba(0,0,0,0.4);border-radius:3px;margin-top:4px;overflow:hidden}
+.album-tile .at-prog-bar .f{height:100%;background:linear-gradient(90deg,#ffb94a,#ffd700)}
+.album-tile .at-rarities{display:flex;gap:2px;margin-top:4px}
+.album-tile .rar-pip{width:6px;height:6px;border-radius:50%}
+.album-tile .rar-pip.white{background:#e6e6e6}
+.album-tile .rar-pip.silver{background:#c0c6d4}
+.album-tile .rar-pip.gold{background:#ffd700}
+.album-tile .rar-pip.diamond{background:linear-gradient(45deg,#4dfff0,#a5ffee)}
+.album-tile .rar-pip.owned{box-shadow:0 0 0 1px #fff}
+
+/* Album detail */
+.album-detail{padding:0 14px}
+.album-back{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;background:rgba(255,255,255,0.08);border:none;border-radius:8px;color:#fff;font-weight:800;font-size:12px;cursor:pointer;margin-bottom:10px}
+.album-page{margin-bottom:14px}
+.album-page-hdr{display:flex;justify-content:space-between;align-items:center;font-size:11px;color:rgba(255,255,255,0.6);margin-bottom:6px;text-transform:uppercase;letter-spacing:1px}
+.album-page-hdr .page-claim{padding:4px 10px;background:linear-gradient(180deg,#ffac04,#ffc700);border:none;border-radius:8px;color:#fff;font-weight:900;font-size:10px;cursor:pointer;box-shadow:0 2px 0 #af3c34}
+.album-page-hdr .page-claim:disabled{opacity:0.5;background:#333;box-shadow:none;cursor:not-allowed}
+.album-page-hdr .page-claim.claimed{background:#2a7a3a;box-shadow:0 2px 0 #175024}
+.album-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.sticker-slot{aspect-ratio:1;border-radius:8px;background:rgba(0,0,0,0.35);border:2px solid rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center;font-size:22px;position:relative;cursor:pointer}
+.sticker-slot.owned{background:rgba(255,255,255,0.06)}
+.sticker-slot.white.owned{border-color:#e6e6e6}
+.sticker-slot.silver.owned{border-color:#c0c6d4}
+.sticker-slot.gold.owned{border-color:#ffd700;box-shadow:0 0 6px rgba(255,215,0,0.4)}
+.sticker-slot.diamond.owned{border-color:#4dfff0;box-shadow:0 0 8px rgba(77,255,240,0.5)}
+.sticker-slot.locked{color:rgba(255,255,255,0.15)}
+.sticker-slot .s-rarity{position:absolute;bottom:1px;right:2px;width:8px;height:8px;border-radius:50%}
+.sticker-slot .s-rarity.white{background:#e6e6e6}
+.sticker-slot .s-rarity.silver{background:#c0c6d4}
+.sticker-slot .s-rarity.gold{background:#ffd700}
+.sticker-slot .s-rarity.diamond{background:linear-gradient(45deg,#4dfff0,#a5ffee)}
+.sticker-slot .s-dupe-count{position:absolute;top:1px;left:2px;font-size:8px;font-weight:900;color:#ffd700;background:rgba(0,0,0,0.6);border-radius:4px;padding:0 3px}
+
+.sticker-modal-ic{font-size:60px;text-align:center;margin:10px 0}
+.sticker-modal-row{display:flex;justify-content:space-between;padding:6px 0;font-size:12px;border-bottom:1px solid rgba(255,255,255,0.06)}
+.sticker-modal-row .lab{color:rgba(255,255,255,0.6)}
+.sticker-modal-row .val{color:#fff;font-weight:900}
+.sticker-modal-actions{display:flex;gap:8px;margin-top:12px}
+.sticker-modal-actions button{flex:1;padding:10px;border:none;border-radius:10px;font-weight:900;font-size:12px;cursor:pointer;color:#fff}
+.sticker-modal-actions .btn-token{background:linear-gradient(180deg,#ffd700,#ffb500);box-shadow:0 3px 0 #8b6b00}
+.sticker-modal-actions .btn-token:disabled{opacity:0.5;background:#333;box-shadow:none;cursor:not-allowed}
+
+/* ===== VENUE ===== */
+.venue-header{display:flex;justify-content:space-between;align-items:center;padding:0 14px 10px;font-size:11px;color:rgba(255,255,255,0.7)}
+.venue-header .vt-chip{padding:5px 12px;background:linear-gradient(180deg,#4a3b99,#7b5cff);border:1px solid rgba(255,255,255,0.15);border-radius:14px;color:#fff;font-weight:900;font-size:12px}
+.venue-pills{display:flex;gap:6px;padding:0 14px 10px;overflow-x:auto}
+.venue-pill{flex-shrink:0;padding:6px 11px;background:rgba(0,0,0,0.25);border:1px solid rgba(255,255,255,0.1);border-radius:16px;font-size:11px;color:rgba(255,255,255,0.7);cursor:pointer;white-space:nowrap}
+.venue-pill.active{background:rgba(255,215,0,0.15);border-color:#ffd700;color:#ffd700}
+.venue-pill.locked{opacity:0.4;cursor:not-allowed}
+
+.venue-scene{margin:0 14px 14px;border-radius:12px;padding:16px;min-height:120px;position:relative;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,#2a140a,#4a2a16);border:4px solid #3a1e10;box-shadow:inset 0 0 0 2px #d4a03a}
+.venue-scene .scene-ic{font-size:80px;filter:drop-shadow(0 4px 10px rgba(255,200,120,0.4))}
+.venue-scene .scene-label{position:absolute;top:8px;left:12px;font-size:11px;text-transform:uppercase;color:rgba(255,255,255,0.7);letter-spacing:1px;font-weight:900}
+.venue-scene .scene-level-badges{position:absolute;top:8px;right:12px;display:flex;gap:2px}
+.venue-scene .lvl-dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.15)}
+.venue-scene .lvl-dot.filled{background:#ffd700}
+
+.buildings-list{display:flex;flex-direction:column;gap:8px;padding:0 14px}
+.building-row{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:10px 12px;display:flex;align-items:center;gap:10px}
+.building-row.locked{opacity:0.5}
+.building-row.legendary{border-color:#ffd700;background:rgba(255,215,0,0.06)}
+.building-row .b-ic{font-size:28px;width:40px;text-align:center}
+.building-row .b-info{flex:1;min-width:0}
+.building-row .b-name{font-size:12px;font-weight:900}
+.building-row .b-type{font-size:9px;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.5px}
+.building-row .b-lvl{display:flex;gap:2px;margin-top:4px}
+.building-row .b-lvl .dot{width:12px;height:6px;border-radius:3px;background:rgba(255,255,255,0.15)}
+.building-row .b-lvl .dot.f1{background:#c98a4e}
+.building-row .b-lvl .dot.f2{background:#c0c6d4}
+.building-row .b-lvl .dot.f3{background:#ffd700}
+.building-row .b-effect{font-size:10px;color:rgba(255,255,255,0.65);margin-top:2px;line-height:1.25}
+.building-row .b-btn{padding:8px 10px;border:none;border-radius:10px;color:#fff;font-weight:900;font-size:10px;cursor:pointer;white-space:nowrap;line-height:1.1}
+.building-row .b-btn.can{background:linear-gradient(180deg,#7b5cff,#4a3b99);box-shadow:0 3px 0 #2a1f66}
+.building-row .b-btn.cant{background:#333;opacity:0.6;cursor:not-allowed}
+.building-row .b-btn.max{background:#2a7a3a;cursor:default}
+
+/* ===== stubs ===== */
+.stub-screen{padding:30px 20px;text-align:center;color:rgba(255,255,255,0.7)}
+.stub-screen h2{font-family:'Lilita One',cursive;font-size:24px;color:#ffd700;margin-bottom:12px}
+.stub-screen p{font-size:13px;line-height:1.5;margin-bottom:10px}
+.stub-screen .stub-ic{font-size:60px;margin-bottom:14px}
+
+/* ===== MATCHMAKING ===== */
+#screen-matchmaking{padding:0;justify-content:center;align-items:center;gap:20px}
+.mm-card{background:rgba(0,0,0,0.45);border:2px solid rgba(255,215,0,0.3);border-radius:18px;padding:24px;text-align:center;width:280px}
+.mm-vs{font-family:'Lilita One',cursive;font-size:32px;color:#ffd700;margin:10px 0}
+.mm-avatar{font-size:64px;margin-bottom:10px}
+.mm-name{font-size:18px;font-weight:900}
+.mm-tagline{font-size:11px;color:rgba(255,255,255,0.7);margin-top:4px;font-style:italic}
+.mm-trophies{color:#ffd700;font-size:13px;margin-top:6px}
+.mm-bet{margin-top:12px;padding:8px 12px;background:rgba(0,0,0,0.4);border-radius:10px;font-size:11px}
+.mm-bet .mm-bet-label{color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:1px;font-size:9px}
+.mm-bet .mm-bet-val{color:#ffd700;font-size:14px;margin-top:2px}
+.mm-spin{font-size:11px;color:rgba(255,255,255,0.5);margin-top:18px}
+
+/* ===== LOADOUT ===== */
+#screen-loadout{padding:68px 18px;gap:14px}
+.loadout-header{text-align:center;font-family:'Lilita One',cursive;font-size:22px;color:#fff;-webkit-text-stroke:0.5px #000;text-shadow:0 2px 0 #000;letter-spacing:1px}
+.stakes-box{background:rgba(0,0,0,0.4);border:1px solid rgba(255,215,0,0.25);border-radius:12px;padding:12px;font-size:12px}
+.stakes-box .sb-row{display:flex;justify-content:space-between;margin:2px 0}
+.stakes-box .sb-label{color:rgba(255,255,255,0.6)}
+.stakes-box .sb-val{color:#ffd700;font-weight:900}
+.slot-section h4{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:rgba(255,255,255,0.5);margin-bottom:8px}
+.bet-slot,.perk-slot{padding:14px;background:rgba(255,255,255,0.05);border:2px dashed rgba(255,255,255,0.2);border-radius:12px;text-align:center;cursor:pointer;min-height:66px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
+.bet-slot.filled{border-style:solid;border-color:#ffd700;background:rgba(255,215,0,0.08)}
+.perk-slot.filled{border-style:solid;border-color:#9ad4ff;background:rgba(154,212,255,0.08)}
+.bet-slot.filled.tier-bronze{border-color:#c98a4e}
+.bet-slot.filled.tier-silver{border-color:#c0c6d4}
+.bet-slot.filled.tier-gold{border-color:#ffd700}
+.slot-ic{font-size:26px}
+.slot-name{font-size:12px;font-weight:900}
+.slot-hint{font-size:10px;color:rgba(255,255,255,0.5)}
+.perks-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.loadout-confirm{padding:14px;background:linear-gradient(180deg,#4ae35f,#2ab14a);border:none;border-radius:14px;color:#fff;font-family:'Lilita One',cursive;font-size:20px;letter-spacing:2px;cursor:pointer;box-shadow:0 6px 0 #1a7a2e}
+.loadout-confirm:active{transform:translateY(2px);box-shadow:0 4px 0 #1a7a2e}
+
+/* Picker modal */
+.modal-overlay{position:absolute;inset:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:500;padding:20px}
+.modal-overlay.hidden{display:none}
+.modal{background:#111729;border:1px solid rgba(255,255,255,0.12);border-radius:14px;padding:16px;width:100%;max-height:80%;overflow-y:auto}
+.modal h3{font-family:'Lilita One',cursive;font-size:18px;color:#ffd700;text-align:center;margin-bottom:12px}
+.modal .picker-list{display:flex;flex-direction:column;gap:8px}
+.picker-item{display:flex;align-items:center;gap:10px;padding:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;cursor:pointer}
+.picker-item.tier-bronze{border-left:4px solid #c98a4e}
+.picker-item.tier-silver{border-left:4px solid #c0c6d4}
+.picker-item.tier-gold{border-left:4px solid #ffd700}
+.picker-item.disabled{opacity:0.4;cursor:not-allowed}
+.picker-item .pi-ic{font-size:24px}
+.picker-item .pi-info{flex:1}
+.picker-item .pi-name{font-size:13px;font-weight:900}
+.picker-item .pi-desc{font-size:10px;color:rgba(255,255,255,0.6);line-height:1.2}
+.picker-item .pi-qty{color:#ffd700;font-size:11px;font-weight:900}
+.modal-close{padding:10px;background:rgba(255,255,255,0.08);border:none;border-radius:10px;color:#fff;font-weight:800;cursor:pointer;width:100%;margin-top:10px}
+.picker-empty-opt{padding:10px;background:rgba(255,255,255,0.04);border:1px dashed rgba(255,255,255,0.2);border-radius:10px;text-align:center;font-size:12px;color:rgba(255,255,255,0.6);cursor:pointer}
+
+/* ===== MATCH (v6 port — 1:1 gameplay) ===== */
+#screen-match{display:flex;flex-direction:column;height:100%;padding:0}
+.score-bar{height:50px;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:space-between;padding:0 16px;flex-shrink:0;z-index:10}
+.score-player,.score-opponent{display:flex;align-items:center;gap:8px}
+.score-label{font-size:11px;font-weight:800;color:rgba(255,255,255,0.5);text-transform:uppercase}
+.score-value{font-size:22px;font-weight:900;min-width:40px;text-shadow:0 2px 0 #000}
+.score-player .score-value{color:#FFD700}
+.score-opponent .score-value{color:#FF4444}
+.opp-match-avatar{font-size:18px}
+.timer-display{font-size:28px;font-weight:900;font-variant-numeric:tabular-nums;text-shadow:0 2px 0 #000;color:#fff}
+.timer-display.timer-warning{color:#FF4444;animation:timerPulse 0.5s ease-in-out infinite}
+.pause-btn{width:32px;height:32px;border:none;border-radius:8px;background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.7);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.pause-btn:hover{background:rgba(255,255,255,0.2);color:#fff}
+.opponent-board{flex:1;min-height:60px;display:flex;flex-wrap:wrap;align-items:center;align-content:center;justify-content:center;gap:6px;padding:8px 16px;opacity:0.8;background:rgba(0,0,0,0.15);position:relative}
+.opponent-inventory{position:absolute;right:8px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:3px}
+.opp-powerup-dot{width:10px;height:10px;border-radius:3px;border:1px solid rgba(255,255,255,0.15);background:transparent}
+.opp-powerup-dot.filled{background:rgba(255,165,0,0.5);border-color:rgba(255,165,0,0.6)}
+.customer-zone{height:110px;background:rgba(255,255,255,0.05);display:flex;align-items:center;justify-content:center;gap:12px;padding:8px 16px;flex-shrink:0;position:relative;border-top:1px solid rgba(255,255,255,0.06);border-bottom:1px solid rgba(255,255,255,0.06)}
+.customer-slot{width:110px;height:92px;background:rgba(255,255,255,0.12);border:2px solid rgba(255,255,255,0.25);border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;position:relative;flex-shrink:0}
+.customer-slot.empty-slot{opacity:0.3}
+.customer-emoji{font-size:28px}
+.customer-drink-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px}
+.patience-bar{position:absolute;bottom:4px;left:8px;right:8px;height:4px;background:rgba(0,0,0,0.3);border-radius:2px;overflow:hidden}
+.patience-fill{height:100%;border-radius:2px;transition:width 0.3s linear,background-color 0.3s}
+.player-board-wrapper{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 16px 4px;min-height:100px}
+.player-board{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:center;gap:8px;width:100%}
+.match-bottom-bar{height:86px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;flex-shrink:0;background:linear-gradient(180deg,rgba(0,0,0,0.35),rgba(0,0,0,0.55));border-top:1px solid rgba(255,215,0,0.12)}
+.powerup-inventory{display:flex;align-items:center;justify-content:center;gap:14px}
+.powerup-slot{width:58px;height:58px;border:2px dashed rgba(255,255,255,0.18);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:28px;cursor:pointer;transition:all 0.2s;background:rgba(255,255,255,0.03)}
+.powerup-slot.filled{border-style:solid;border-color:rgba(255,215,0,0.55);background:radial-gradient(circle at 30% 25%,rgba(255,215,0,0.25),rgba(255,215,0,0.08) 70%);box-shadow:0 4px 12px rgba(255,215,0,0.18)}
+.powerup-slot.used{border-style:solid;border-color:rgba(255,255,255,0.08);background:rgba(0,0,0,0.15);opacity:0.35;cursor:default}
+.spawn-btn{width:70px;height:70px;border:none;border-radius:50%;background:radial-gradient(circle at 30% 25%,rgba(255,215,0,0.35),rgba(255,165,0,0.12) 70%);cursor:pointer;z-index:5;display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative;box-shadow:0 6px 18px rgba(255,165,0,0.3)}
+.spawn-btn.disabled{opacity:0.3;cursor:default}
+.spawn-ring{position:absolute;width:70px;height:70px;transform:rotate(-90deg)}
+.spawn-ring-bg{fill:none;stroke:rgba(255,255,255,0.12);stroke-width:3}
+.spawn-ring-fill{fill:none;stroke:#FFD700;stroke-width:3;stroke-dasharray:100.5;stroke-dashoffset:100.5;stroke-linecap:round;transition:stroke-dashoffset 0.1s linear;filter:drop-shadow(0 0 3px rgba(255,215,0,0.6))}
+.spawn-label{position:relative;z-index:1;font-size:20px;font-weight:800;color:#FFD700;text-shadow:0 2px 4px rgba(0,0,0,0.5);pointer-events:none;display:inline-flex;letter-spacing:-1px}
+.spawn-label #spawn-count{margin-left:-6px}
+.undo-btn{width:60px;height:60px;border:2px solid rgba(255,255,255,0.22);border-radius:50%;background:radial-gradient(circle at 30% 25%,rgba(255,255,255,0.12),rgba(255,255,255,0.04) 70%);color:rgba(255,255,255,0.72);font-size:26px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;position:relative}
+.undo-btn.disabled{opacity:0.25;cursor:default}
+.undo-count{font-size:12px;font-weight:800;position:absolute;top:-3px;right:-3px;background:linear-gradient(180deg,#FFE066,#FFB300);color:#1a1a2e;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:1.5px solid rgba(0,0,0,0.25)}
+
+/* Glass */
+.glass{display:flex;flex-direction:column-reverse;border:2px solid rgba(255,255,255,0.3);border-radius:4px 4px 12px 12px;border-top:none;background:rgba(255,255,255,0.08);position:relative;cursor:pointer;transition:transform 0.2s,border-color 0.2s,box-shadow 0.2s;overflow:hidden;box-shadow:inset -4px 0 8px rgba(0,0,0,0.15),inset 4px 0 8px rgba(255,255,255,0.05),0 4px 8px rgba(0,0,0,0.2)}
+.glass::before{content:'';position:absolute;top:-6px;left:20%;right:20%;height:8px;background:rgba(255,255,255,0.15);border:2px solid rgba(255,255,255,0.3);border-bottom:none;border-radius:4px 4px 0 0;z-index:2}
+.glass::after{content:'';position:absolute;top:8px;left:3px;width:3px;bottom:8px;background:linear-gradient(180deg,rgba(255,255,255,0.25),rgba(255,255,255,0.05));border-radius:2px;z-index:2;pointer-events:none}
+.glass.player-glass{width:60px}
+.glass.opponent-glass{width:35px}
+.glass.opponent-glass::before{top:-4px;height:6px}
+.glass.opponent-glass::after{width:2px;left:2px;top:5px}
+.glass.empty-glass{background:rgba(255,255,255,0.03);border-color:rgba(255,255,255,0.12)}
+.glass.selected{border-color:#FFD700;transform:translateY(-8px);box-shadow:inset -4px 0 8px rgba(0,0,0,0.15),0 12px 20px rgba(255,215,0,0.3)}
+.glass.clear-target{border-color:rgba(255,100,100,0.5);box-shadow:0 0 8px rgba(255,100,100,0.2);cursor:crosshair}
+.glass.color-splash-target{border-color:#ff66cc!important;box-shadow:0 0 14px rgba(255,102,204,0.5),inset 0 0 18px rgba(255,102,204,0.2);animation:splashPulse 0.9s ease-in-out infinite}
+.glass.pour-read-from{border-color:#9ad4ff!important;box-shadow:0 0 14px rgba(154,212,255,0.6);animation:splashPulse 0.9s ease-in-out infinite}
+.glass.pour-read-to{border-color:#4ae35f!important;box-shadow:0 0 14px rgba(74,227,95,0.6);animation:splashPulse 0.9s ease-in-out infinite}
+@keyframes splashPulse{0%,100%{box-shadow:0 0 14px rgba(255,102,204,0.35)}50%{box-shadow:0 0 26px rgba(255,102,204,0.8)}}
+.glass-layer{width:100%;transition:height 0.4s ease,opacity 0.4s ease;box-shadow:inset -4px 0 6px rgba(0,0,0,0.2),inset 4px 0 6px rgba(255,255,255,0.1)}
+.glass.serveable{animation:serveableGlassPulse 0.9s ease-in-out infinite;border-color:#FFE066!important;border-width:2px;outline:2px solid rgba(255,215,0,0.75);outline-offset:2px}
+.glass.serveable .glass-layer{animation:serveableLayerShine 0.9s ease-in-out infinite}
+@keyframes serveableGlassPulse{0%,100%{box-shadow:0 0 0 0 rgba(255,215,0,0),0 0 18px 3px rgba(255,215,0,0.4);outline-color:rgba(255,215,0,0.55)}50%{box-shadow:0 0 0 5px rgba(255,215,0,0.25),0 0 42px 14px rgba(255,215,0,0.85);outline-color:rgba(255,235,120,1)}}
+@keyframes serveableLayerShine{0%,100%{filter:saturate(1.15) brightness(1.08)}50%{filter:saturate(1.4) brightness(1.28)}}
+
+/* Countdown + pause */
+#countdown-overlay{position:absolute;inset:0;background:rgba(0,0,0,0.75);display:flex;align-items:center;justify-content:center;z-index:100;backdrop-filter:blur(4px)}
+#countdown-overlay.hidden{display:none!important}
+.countdown-number{font-family:'Lilita One',cursive;font-size:120px;color:#ffc700;-webkit-text-stroke:3px #000;text-shadow:0 6px 0 #000;animation:countdownPop 1s ease-out}
+#pause-overlay{position:absolute;inset:0;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;z-index:150;backdrop-filter:blur(6px)}
+#pause-overlay.hidden{display:none!important}
+.pause-panel{display:flex;flex-direction:column;align-items:center;gap:16px;padding:32px 48px;background:linear-gradient(180deg,#144985,#0d3460);border-radius:20px;border:2px solid rgba(255,255,255,0.1)}
+.pause-title{font-family:'Lilita One',cursive;font-size:36px;color:#fff;-webkit-text-stroke:0.7px #000;text-shadow:0 3px 0 #000;letter-spacing:3px}
+.pause-menu-btn{width:180px;padding:12px;border:none;border-radius:12px;font-size:16px;font-weight:900;cursor:pointer;letter-spacing:1px}
+.pause-menu-btn.resume-btn{background:linear-gradient(180deg,#ffac04,#ffc700);color:#fff;box-shadow:0 5px 0 #af3c34}
+.pause-menu-btn.quit-btn{background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.7);border:1px solid rgba(255,255,255,0.15)}
+
+/* animations */
+@keyframes timerPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.7;transform:scale(1.08)}}
+@keyframes scorePop{0%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-40px) scale(1.3)}}
+@keyframes countdownPop{0%{opacity:0;transform:scale(2)}30%{opacity:1;transform:scale(0.9)}50%{transform:scale(1.05)}100%{opacity:1;transform:scale(1)}}
+@keyframes illegalShake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+.shake{animation:illegalShake 0.3s ease-in-out}
+@keyframes pourFill{0%{transform:scaleY(0) scaleX(1.05);opacity:0.4;filter:brightness(1.35)}55%{transform:scaleY(0.95) scaleX(1.01);opacity:1;filter:brightness(1.15)}100%{transform:scaleY(1) scaleX(1);opacity:1;filter:brightness(1)}}
+.glass-layer.pour-new{transform-origin:bottom center;animation:pourFill 0.48s cubic-bezier(0.22,0.8,0.35,1) both}
+.score-pop{position:absolute;font-size:18px;font-weight:800;color:#FFD700;pointer-events:none;animation:scorePop 0.6s ease-out forwards;z-index:50}
+@keyframes customerServed{0%{transform:scale(1)}40%{transform:scale(1.12);box-shadow:0 0 20px rgba(68,204,68,0.5)}100%{transform:scale(1)}}
+.customer-slot.served-anim{animation:customerServed 0.4s ease-out}
+.customer-served-check{position:absolute;inset:0;background:rgba(68,204,68,0.2);border-radius:12px;display:flex;align-items:center;justify-content:center;animation:customerCheckPop 0.5s ease-out;pointer-events:none}
+.customer-served-check span{font-size:36px}
+@keyframes customerCheckPop{0%{transform:scale(0);opacity:0}50%{transform:scale(1.3);opacity:1}100%{transform:scale(1);opacity:1}}
+.customer-served-check.no-anim{animation:none}
+.mode-banner{position:absolute;top:0;left:0;right:0;background:rgba(255,215,0,0.15);color:#FFD700;text-align:center;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:3px 0;z-index:20;pointer-events:none}
+.auto-serve-active{box-shadow:inset 0 0 32px rgba(120,200,255,0.18)}
+.pour-droplet{position:fixed;border-radius:50%;pointer-events:none;z-index:400;animation:pourDroplet 0.65s cubic-bezier(0.33,0.1,0.4,1) forwards}
+@keyframes pourDroplet{0%{transform:translate(0,0) scale(0.55);opacity:0}18%{opacity:1}45%{transform:translate(var(--dx,0),var(--dy,-14px)) scale(1);opacity:1}100%{transform:translate(calc(var(--dx,0)*1.4),var(--fy,34px)) scale(0.4);opacity:0}}
+
+/* ===== TUTORIAL ===== */
+@keyframes tutorialBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+#screen-tutorial{display:flex;flex-direction:column;height:100%;padding:0;background:linear-gradient(180deg,#144985 0%,#0d3460 100%)}
+.tutorial-header{text-align:center;padding:16px}
+.tutorial-header h2{font-family:'Lilita One',cursive;font-size:22px;color:#ffc700;-webkit-text-stroke:0.5px #000;text-shadow:0 2px 0 #000}
+.tutorial-header p{font-size:13px;color:rgba(255,255,255,0.6);margin-top:4px}
+.tutorial-customer{display:flex;justify-content:center;padding:12px}
+.tutorial-board{flex:1;display:flex;align-items:center;justify-content:center;gap:12px;padding:16px}
+.tutorial-popup{position:absolute;inset:0;background:rgba(0,0,0,0.7);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:200;backdrop-filter:blur(6px)}
+.tutorial-popup.hidden{display:none!important}
+.tutorial-popup-card{display:flex;flex-direction:column;align-items:center;gap:16px;background:linear-gradient(180deg,#1a5a9e,#0d3460);border:2px solid rgba(255,215,0,0.3);border-radius:24px;padding:32px 28px;margin:20px;max-width:320px}
+.tutorial-popup-emoji{font-size:56px;animation:countdownPop 0.6s ease-out}
+.tutorial-popup-title{font-family:'Lilita One',cursive;font-size:36px;color:#ffc700;-webkit-text-stroke:0.7px #000;text-shadow:0 3px 0 #000;text-align:center}
+.tutorial-popup-text{font-size:15px;font-weight:800;color:rgba(255,255,255,0.85);text-align:center;line-height:1.5}
+
+/* ===== RESULT ===== */
+#screen-result{padding:68px 18px;gap:14px;text-align:center;align-items:stretch}
+.result-header{font-family:'Lilita One',cursive;font-size:30px;letter-spacing:1px;-webkit-text-stroke:0.5px #000;text-shadow:0 2px 0 #000}
+.result-header.win{color:#4ae35f}
+.result-header.loss{color:#ff6b6b}
+.result-header.draw{color:#ffd700}
+.result-subheader{font-size:13px;color:rgba(255,255,255,0.7);margin-top:-8px}
+.result-rewards{background:rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:12px;text-align:left;font-size:12px}
+.result-rewards .rr-row{display:flex;justify-content:space-between;padding:3px 0;opacity:0;animation:rewardRevealRow 0.3s ease-out forwards}
+.result-notes .rn{opacity:0;animation:rewardRevealRow 0.4s ease-out forwards}
+@keyframes rewardRevealRow{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.result-rewards .rr-label{color:rgba(255,255,255,0.65)}
+.result-rewards .rr-val{font-weight:900}
+.result-rewards .rr-val.pos{color:#4ae35f}
+.result-rewards .rr-val.neg{color:#ff6b6b}
+.result-rewards .rr-val.gold{color:#ffd700}
+.result-notes{display:flex;flex-direction:column;gap:6px;font-size:11px;text-align:left;color:rgba(255,255,255,0.8)}
+.result-notes .rn{padding:6px 10px;background:rgba(255,255,255,0.04);border-left:3px solid #ffd700;border-radius:6px}
+.result-btns{display:flex;gap:8px;margin-top:6px}
+.result-btns button{flex:1;padding:12px;border:none;border-radius:10px;color:#fff;font-weight:900;font-size:13px;cursor:pointer}
+.result-btns .btn-rematch{background:linear-gradient(180deg,#ffac04,#ffc700);box-shadow:0 4px 0 #af3c34}
+.result-btns .btn-home{background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.18)}
+
+/* ===== TOAST ===== */
+#toast{position:absolute;bottom:90px;left:50%;transform:translateX(-50%);padding:10px 18px;background:rgba(0,0,0,0.85);border:1px solid rgba(255,215,0,0.4);border-radius:10px;color:#fff;font-size:12px;font-weight:800;z-index:600;opacity:0;transition:opacity 0.3s;pointer-events:none}
+#toast.show{opacity:1}
+
+/* Misc */
+.pill{display:inline-block;padding:2px 7px;border-radius:10px;font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:0.5px}
+.pill.bronze{background:#c98a4e;color:#fff}
+.pill.silver{background:#c0c6d4;color:#222}
+.pill.gold{background:#ffd700;color:#222}
+</style>
+</head>
+<body>
+<div id="game">
+
+  <!-- SPLASH -->
+  <div id="screen-splash">
+    <img src="Assets/mix-it-splash.png" alt="Mix It">
+    <div id="splash-progress-wrap"><div id="splash-progress"></div></div>
+  </div>
+
+  <!-- HUD -->
+  <div id="hud">
+    <div class="hud-profile">
+      <div class="hud-avatar" id="hud-avatar">🧑‍🍳</div>
+      <div class="hud-name-block">
+        <div class="title" id="hud-title">Newcomer</div>
+        <div class="trophies">🏆 <span id="hud-trophies">0</span></div>
+      </div>
+    </div>
+    <div class="hud-currencies">
+      <div class="cur-chip coins"><span class="ic">🪙</span><span id="hud-coins">0</span></div>
+      <div class="cur-chip gold"><span class="ic">💰</span><span id="hud-gold">0</span></div>
+      <div class="cur-chip stars"><span class="ic">⭐</span><span id="hud-stars">0</span></div>
+    </div>
+  </div>
+
+  <!-- HOME -->
+  <div id="screen-home" class="screen">
+    <button class="missions-fab" id="missions-fab" title="Daily Missions">
+      🎯
+      <span class="fab-badge" id="missions-badge">0</span>
+    </button>
+
+    <div class="home-venue-preview"><div class="hvp-icon" id="hvp-icon">🍹</div></div>
+
+    <div class="arena-badge-box">
+      <button class="arena-switch" id="arena-switch" title="Change arena">⇆</button>
+      <div class="arena-badge-name" id="arena-badge-name">Juice Stand</div>
+      <div class="arena-trophy-count">🏆 <span id="arena-trophy-count">0</span></div>
+      <div class="arena-progress-bar"><div class="arena-progress-fill" id="arena-progress-fill" style="width:0%"></div></div>
+      <div class="arena-progress-label" id="arena-progress-label">0 / 200</div>
+    </div>
+
+    <div class="home-action-row">
+      <div class="star-meter-wrap">
+        <div class="sm-label">Star Meter <span id="star-meter-num" style="float:right;color:#9ad4ff">0/25</span></div>
+        <div class="star-meter"><div class="fill" id="star-meter-fill" style="width:0%"></div></div>
+      </div>
+      <button class="starchest-btn" id="starchest-btn" style="display:none">🎁⭐</button>
+      <button class="luckybox-btn" id="luckybox-btn">🎁</button>
+    </div>
+
+    <div id="flash-banner-slot"></div>
+
+    <button class="play-btn" id="play-btn">
+      PLAY <span class="sub" id="play-btn-sub">Wager 10 Gold</span>
+    </button>
+    <button class="practice-btn" id="practice-btn" style="display:none">Practice (no rewards)</button>
+  </div>
+
+  <!-- MATCHMAKING -->
+  <div id="screen-matchmaking" class="screen hidden">
+    <div class="mm-card">
+      <div class="mm-avatar" id="mm-avatar">🍹</div>
+      <div class="mm-name" id="mm-name">Sandy Pete</div>
+      <div class="mm-tagline" id="mm-tagline">"The beach never sleeps."</div>
+      <div class="mm-trophies">🏆 <span id="mm-trophies">0</span></div>
+      <div class="mm-vs">VS</div>
+      <div class="mm-bet">
+        <div class="mm-bet-label">Their Bet</div>
+        <div class="mm-bet-val" id="mm-bet">None</div>
+      </div>
+      <div class="mm-spin">Matchmaking…</div>
+    </div>
+  </div>
+
+  <!-- LOADOUT -->
+  <div id="screen-loadout" class="screen hidden">
+    <div class="loadout-header">CHOOSE YOUR LOADOUT</div>
+    <div class="stakes-box">
+      <div class="sb-row"><span class="sb-label">Arena</span><span class="sb-val" id="lo-arena">Juice Stand</span></div>
+      <div class="sb-row"><span class="sb-label">Ante</span><span class="sb-val" id="lo-ante">10 💰 (pot 20)</span></div>
+      <div class="sb-row"><span class="sb-label">Bet</span><span class="sb-val" id="lo-bet-summary">None</span></div>
+    </div>
+    <div class="slot-section">
+      <h4>Bet Slot — stake 1 booster</h4>
+      <div class="bet-slot" id="bet-slot" onclick="openBetPicker()">
+        <div class="slot-ic">➕</div>
+        <div class="slot-name">Empty</div>
+        <div class="slot-hint">Tap to stake (optional)</div>
+      </div>
+    </div>
+    <div class="slot-section">
+      <h4>Perks — up to 2, no stake</h4>
+      <div class="perks-row">
+        <div class="perk-slot" id="perk-slot-1" onclick="openPerkPicker(0)">
+          <div class="slot-ic">➕</div>
+          <div class="slot-name">Empty</div>
+        </div>
+        <div class="perk-slot" id="perk-slot-2" onclick="openPerkPicker(1)">
+          <div class="slot-ic">➕</div>
+          <div class="slot-name">Empty</div>
+        </div>
+      </div>
+    </div>
+    <button class="loadout-confirm" onclick="startMatch()">FIGHT</button>
+  </div>
+
+  <!-- MATCH (v6 port — 1:1 water-sort gameplay) -->
+  <div id="screen-match" class="screen hidden">
+    <div class="score-bar">
+      <button class="pause-btn" id="btn-pause">&#x23F8;</button>
+      <div class="score-player">
+        <span class="score-label">YOU</span>
+        <span class="score-value" id="player-score">0</span>
+      </div>
+      <div class="timer-display" id="timer-display">1:30</div>
+      <div class="score-opponent">
+        <span class="score-value" id="opponent-score">0</span>
+        <span class="opp-match-avatar" id="opp-match-avatar">🤖</span>
+        <span class="score-label" id="opp-match-name">OPP</span>
+      </div>
+    </div>
+    <div class="opponent-board" id="opponent-board">
+      <div class="opponent-inventory" id="opponent-inventory">
+        <div class="opp-powerup-dot" id="opp-pu-dot-0"></div>
+        <div class="opp-powerup-dot" id="opp-pu-dot-1"></div>
+      </div>
+    </div>
+    <div class="customer-zone" id="customer-zone">
+      <div class="customer-slot empty-slot"><span style="color:rgba(255,255,255,0.2)">?</span></div>
+      <div class="customer-slot empty-slot"><span style="color:rgba(255,255,255,0.2)">?</span></div>
+      <div class="customer-slot empty-slot"><span style="color:rgba(255,255,255,0.2)">?</span></div>
+    </div>
+    <div class="player-board-wrapper">
+      <div class="player-board" id="player-board"></div>
+    </div>
+    <div class="match-bottom-bar">
+      <button class="spawn-btn" id="btn-spawn" title="Spawn color layer">
+        <svg class="spawn-ring" viewBox="0 0 36 36"><circle class="spawn-ring-bg" cx="18" cy="18" r="16"/><circle class="spawn-ring-fill" id="spawn-ring-fill" cx="18" cy="18" r="16"/></svg>
+        <span class="spawn-label">🍹<span id="spawn-count">5</span></span>
+      </button>
+      <div class="powerup-inventory">
+        <div class="powerup-slot" id="powerup-slot-0"></div>
+        <div class="powerup-slot" id="powerup-slot-1"></div>
+      </div>
+      <button class="undo-btn" id="btn-undo" title="Undo">↩</button>
+    </div>
+    <div id="countdown-overlay" class="hidden">
+      <div class="countdown-number" id="countdown-text">3</div>
+    </div>
+    <div id="pause-overlay" class="hidden">
+      <div class="pause-panel">
+        <div class="pause-title">PAUSED</div>
+        <button class="pause-menu-btn resume-btn" id="btn-resume">RESUME</button>
+        <button class="pause-menu-btn quit-btn" id="btn-quit-home">HOME</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TUTORIAL (v6 port) -->
+  <div id="screen-tutorial" class="screen hidden">
+    <div class="tutorial-header">
+      <h2>SORT THE COLORS!</h2>
+      <p>Pour colors into bottles to fill a pure drink, then tap to serve</p>
+    </div>
+    <div class="tutorial-customer" id="tutorial-customer"></div>
+    <div class="tutorial-board" id="tutorial-board"></div>
+    <div class="tutorial-popup hidden" id="tutorial-popup">
+      <div class="tutorial-popup-card">
+        <div class="tutorial-popup-emoji">🎉</div>
+        <div class="tutorial-popup-title">GREAT JOB!</div>
+        <div class="tutorial-popup-text">You sorted and served a drink!</div>
+        <button class="play-btn" id="btn-tutorial-done" style="width:220px;margin-top:8px">NEXT</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESULT -->
+  <div id="screen-result" class="screen hidden">
+    <div class="result-header" id="r-header">VICTORY</div>
+    <div class="result-subheader" id="r-sub">vs. Sandy Pete</div>
+    <div class="result-rewards" id="r-rewards"></div>
+    <div class="result-notes" id="r-notes"></div>
+    <div class="result-btns">
+      <button class="btn-rematch" onclick="rematch()">REMATCH</button>
+      <button class="btn-home" onclick="goHome()">HOME</button>
+    </div>
+  </div>
+
+  <!-- SHOP -->
+  <div id="screen-shop" class="screen hidden">
+    <div class="screen-title">SHOP</div>
+    <div class="shop-tabs" id="shop-tabs"></div>
+    <div id="shop-body"></div>
+  </div>
+
+  <!-- TROPHY ROAD tab -->
+  <div id="screen-trophyroad" class="screen hidden">
+    <div class="screen-title">TROPHY ROAD</div>
+    <div class="tr-list" id="tr-list"></div>
+  </div>
+
+  <!-- VENUE -->
+  <div id="screen-venue" class="screen hidden">
+    <div class="screen-title">THE VENUE</div>
+    <div id="venue-body"></div>
+  </div>
+
+  <!-- ALBUMS -->
+  <div id="screen-albums" class="screen hidden">
+    <div class="screen-title">ALBUMS</div>
+    <div id="albums-body"></div>
+  </div>
+
+  <!-- STICKER MODAL -->
+  <div class="modal-overlay hidden" id="sticker-modal">
+    <div class="modal">
+      <h3 id="sticker-modal-title">Sticker</h3>
+      <div class="sticker-modal-ic" id="sticker-modal-ic">❓</div>
+      <div class="sticker-modal-row"><span class="lab">Name</span><span class="val" id="sticker-modal-name">—</span></div>
+      <div class="sticker-modal-row"><span class="lab">Album</span><span class="val" id="sticker-modal-album">—</span></div>
+      <div class="sticker-modal-row"><span class="lab">Rarity</span><span class="val" id="sticker-modal-rarity">—</span></div>
+      <div class="sticker-modal-row"><span class="lab">Owned</span><span class="val" id="sticker-modal-owned">—</span></div>
+      <div class="sticker-modal-actions" id="sticker-modal-actions"></div>
+      <button class="modal-close" onclick="closeStickerModal()">Close</button>
+    </div>
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <nav id="bottom-nav">
+    <button class="nav-btn" data-screen="shop"><span class="ic">🛒</span>Shop</button>
+    <button class="nav-btn" data-screen="trophyroad"><span class="ic">🏆</span>Road</button>
+    <button class="nav-btn home active" data-screen="home"><span class="ic">🏠</span>Home</button>
+    <button class="nav-btn" data-screen="venue"><span class="ic">🏝️</span>Venue</button>
+    <button class="nav-btn" data-screen="albums"><span class="ic">📗</span>Albums</button>
+  </nav>
+
+  <!-- PACK REVEAL OVERLAY -->
+  <div class="pack-reveal-overlay hidden" id="pack-reveal">
+    <div class="pack-reveal-title" id="pack-reveal-title">STICKER PACK</div>
+    <div class="pack-reveal-progress" id="pack-reveal-progress">1 of 5</div>
+    <div class="pack-card" id="pack-card">
+      <div class="pack-card-inner">
+        <div class="pack-card-face pack-card-back"></div>
+        <div class="pack-card-face pack-card-front" id="pack-card-front"></div>
+      </div>
+    </div>
+    <button class="pack-reveal-btn" id="pack-reveal-btn">TAP TO REVEAL</button>
+  </div>
+
+  <!-- STARTER PACK OVERLAY -->
+  <div class="starter-overlay hidden" id="starter-overlay">
+    <div class="starter-card">
+      <button class="sp-dismiss" onclick="dismissStarterPack()">✕</button>
+      <h2>STARTER PACK</h2>
+      <div class="sp-sub">One-time offer</div>
+      <div class="sp-timer" id="sp-timer">Expires in 48:00:00</div>
+      <div class="starter-grid">
+        <div class="sp-item"><span class="sp-ic">💰</span><span class="sp-label">1000</span></div>
+        <div class="sp-item"><span class="sp-ic">🪙</span><span class="sp-label">500</span></div>
+        <div class="sp-item"><span class="sp-ic">⚡</span><span class="sp-label">10 Boosters</span></div>
+        <div class="sp-item"><span class="sp-ic">🎨</span><span class="sp-label">5 Stickers</span></div>
+        <div class="sp-item"><span class="sp-ic">🎟️</span><span class="sp-label">1 Token</span></div>
+        <div class="sp-item"><span class="sp-ic">🖼️</span><span class="sp-label">Founder Frame</span></div>
+        <div class="sp-item"><span class="sp-ic">🎁</span><span class="sp-label">Star Chest</span></div>
+        <div class="sp-item"><span class="sp-ic">⭐</span><span class="sp-label">Exclusive</span></div>
+      </div>
+      <button class="sp-buy-btn" onclick="buyStarterPack()">$2.99</button>
+      <div class="sp-footer">One-time purchase — expires after 48h</div>
+    </div>
+  </div>
+
+  <!-- PICKER MODAL -->
+  <div class="modal-overlay hidden" id="picker-modal">
+    <div class="modal">
+      <h3 id="picker-title">Pick</h3>
+      <div class="picker-list" id="picker-list"></div>
+      <button class="modal-close" onclick="closePicker()">Cancel</button>
+    </div>
+  </div>
+
+  <!-- MISSIONS MODAL -->
+  <div class="modal-overlay hidden" id="missions-modal">
+    <div class="modal">
+      <h3>Daily Missions</h3>
+      <div class="missions-list" id="missions-list"></div>
+      <button class="modal-close" onclick="closeMissions()">Close</button>
+    </div>
+  </div>
+
+  <!-- ARENA SWITCHER MODAL -->
+  <div class="modal-overlay hidden" id="arena-modal">
+    <div class="modal">
+      <h3>Choose Arena</h3>
+      <div class="picker-list" id="arena-modal-list"></div>
+      <button class="modal-close" onclick="closeArenaModal()">Close</button>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div id="toast"></div>
+</div>
+
+<script>
+/* =========================================================================
+   DATA TABLES — §3, §5, §7, §9
+   ========================================================================= */
+
+const BOOSTERS = {
+  // Bronze
+  extraBottle:  {tier:'bronze', ic:'🧪', name:'Extra Bottle',  desc:'+1 empty bottle for the match',             price:50},
+  firstPour:    {tier:'bronze', ic:'💧', name:'First Pour',    desc:'Start with 2 free instant pours',          price:50},
+  spawnPlus3:   {tier:'bronze', ic:'✨', name:'Spawn+3',       desc:'Start with +3 Color Spawn charges',        price:50},
+  // Silver
+  colorSplash:  {tier:'silver', ic:'🎨', name:'Color Splash',  desc:'Recolor top ≤2 layers to customer color',  price:150},
+  swap:         {tier:'silver', ic:'🔄', name:'Swap',          desc:'Select 2 bottles; full swap',              price:150},
+  customerLock: {tier:'silver', ic:'🔒', name:'Customer Lock', desc:'Freeze a customer patience bar 8s',        price:150},
+  // Gold
+  clearBottle:  {tier:'gold',   ic:'🗑️', name:'Clear Bottle',  desc:'Discard all contents of 1 bottle',         price:400},
+  autoServe:    {tier:'gold',   ic:'⚡', name:'Auto Serve',    desc:'20s: serveable glasses auto-serve',        price:400},
+  doubleServe:  {tier:'gold',   ic:'💥', name:'Double Serve',  desc:'Next serve counts 2×',                     price:400}
+};
+
+const PERKS = {
+  secondLook: {ic:'👁️', name:'Second Look', desc:'1 extra Undo hint (×2)',                  uses:2},
+  steadyHand: {ic:'✋',  name:'Steady Hand', desc:'Next pour immune to opp lock/auto (×2)', uses:2},
+  pourRead:   {ic:'🎯',  name:'Pour Read',   desc:'Highlight best pour (×1)',                uses:1}
+};
+
+const COIN_PAYOUT = {
+  none:   {win:15,  loss:8,  draw:10},
+  bronze: {win:30,  loss:15, draw:20},
+  silver: {win:60,  loss:25, draw:40},
+  gold:   {win:120, loss:40, draw:70}
+};
+
+const ARENAS = [
+  {id:'juice',    name:'Juice Stand',      min:0,    ante:10,  trophyBase:25, icon:'🍹'},
+  {id:'beach',    name:'Beach Bar',        min:200,  ante:25,  trophyBase:28, icon:'🏝️'},
+  {id:'cocktail', name:'Cocktail Lounge',  min:500,  ante:60,  trophyBase:30, icon:'🍸'},
+  {id:'speak',    name:'Speakeasy',        min:1000, ante:140, trophyBase:32, icon:'🥃'},
+  {id:'rooftop',  name:'Rooftop Terrace',  min:1500, ante:280, trophyBase:34, icon:'🌃'},
+  {id:'grand',    name:'Grand Hotel',      min:2000, ante:550, trophyBase:38, icon:'🏨'}
+];
+
+const ARENA_BOOSTER_UNLOCKS = {
+  juice:    ['extraBottle','firstPour','spawnPlus3'],
+  beach:    ['extraBottle','firstPour','spawnPlus3','colorSplash','swap','customerLock'],
+  cocktail: ['extraBottle','firstPour','spawnPlus3','colorSplash','swap','customerLock','clearBottle','autoServe'],
+  speak:    Object.keys(BOOSTERS),
+  rooftop:  Object.keys(BOOSTERS),
+  grand:    Object.keys(BOOSTERS)
+};
+
+const TROPHY_ROAD = [
+  {n:1,  trophies:50,   reward:'30 💰 + 50 🪙',                  rewardFn:()=>{s.gold+=30;s.coins+=50}},
+  {n:2,  trophies:100,  reward:'2× Bronze + Bronze Frame',         rewardFn:()=>{grantBoosters(['extraBottle','firstPour']);s.profile.unlockedFrames.push('bronze')}},
+  {n:3,  trophies:150,  reward:'50 💰',                            rewardFn:()=>{s.gold+=50}},
+  {n:4,  trophies:200,  reward:'Beach Bar + 2 Silver + 100 🪙',     rewardFn:()=>{unlockArena('beach');grantBoosters(['colorSplash','swap']);s.coins+=100}},
+  {n:5,  trophies:300,  reward:'1 Silver + Title: Regular',        rewardFn:()=>{grantBoosters(['customerLock']);s.profile.unlockedTitles.push('Regular')}},
+  {n:6,  trophies:400,  reward:'80 💰 + 150 🪙',                    rewardFn:()=>{s.gold+=80;s.coins+=150}},
+  {n:7,  trophies:500,  reward:'Cocktail Lounge + 1 Gold + 200 🪙', rewardFn:()=>{unlockArena('cocktail');grantBoosters(['clearBottle']);s.coins+=200}},
+  {n:8,  trophies:650,  reward:'150 💰 + Avatar 2 + 1 Token',       rewardFn:()=>{s.gold+=150;s.profile.unlockedAvatars.push('a2');s.stickerTokens++}},
+  {n:9,  trophies:800,  reward:'2 Silver + 200 🪙',                 rewardFn:()=>{grantBoosters(['colorSplash','swap']);s.coins+=200}},
+  {n:10, trophies:1000, reward:'Speakeasy + 2 Gold + 300 🪙',       rewardFn:()=>{unlockArena('speak');grantBoosters(['autoServe','doubleServe']);s.coins+=300}},
+  {n:11, trophies:1200, reward:'250 💰 + Silver Frame',             rewardFn:()=>{s.gold+=250;s.profile.unlockedFrames.push('silver')}},
+  {n:12, trophies:1400, reward:'1 Gold + Title: Pro Bartender',    rewardFn:()=>{grantBoosters(['clearBottle']);s.profile.unlockedTitles.push('Pro Bartender')}},
+  {n:13, trophies:1600, reward:'300 🪙',                            rewardFn:()=>{s.coins+=300}},
+  {n:14, trophies:1800, reward:'300 💰 + Avatar 3 + 1 Token',       rewardFn:()=>{s.gold+=300;s.profile.unlockedAvatars.push('a3');s.stickerTokens++}},
+  {n:15, trophies:2000, reward:'Rooftop + 2 Gold + 500 🪙',         rewardFn:()=>{unlockArena('rooftop');grantBoosters(['autoServe','doubleServe']);s.coins+=500}},
+  {n:16, trophies:2400, reward:'500 💰 + Gold Frame',               rewardFn:()=>{s.gold+=500;s.profile.unlockedFrames.push('gold')}},
+  {n:17, trophies:2800, reward:'2 Gold + Title: Mixologist',       rewardFn:()=>{grantBoosters(['autoServe','doubleServe']);s.profile.unlockedTitles.push('Mixologist')}},
+  {n:18, trophies:3200, reward:'700 💰 + Avatar 4',                 rewardFn:()=>{s.gold+=700;s.profile.unlockedAvatars.push('a4')}},
+  {n:19, trophies:3500, reward:'Grand Hotel + 3 Gold + 750 🪙',     rewardFn:()=>{unlockArena('grand');grantBoosters(['clearBottle','autoServe','doubleServe']);s.coins+=750}},
+  {n:20, trophies:4000, reward:'1000 💰 + 1000 🪙 + Legend + 2 Tokens', rewardFn:()=>{s.gold+=1000;s.coins+=1000;s.profile.unlockedFrames.push('diamond');s.profile.unlockedTitles.push('Legend');s.profile.unlockedAvatars.push('a5');s.stickerTokens+=2}}
+];
+
+const AI_PERSONAS = {
+  juice: [
+    {name:'Sunny Sam',   ic:'🌞', tag:'"Fresh squeezed wins."'},
+    {name:'Lemon Liz',   ic:'🍋', tag:'"Tart but fair."'},
+    {name:'Pulpy Pete',  ic:'🥭', tag:'"More pulp, more power."'}
+  ],
+  beach: [
+    {name:'Sandy Pete',  ic:'🏖️', tag:'"The beach never sleeps."'},
+    {name:'Tiki Tom',    ic:'🗿', tag:'"Coconut first, questions later."'},
+    {name:'Wave Wendy',  ic:'🌊', tag:'"Surf\'s up, pours down."'}
+  ],
+  cocktail: [
+    {name:'Velvet Viv',  ic:'🍸', tag:'"Shaken and stirred."'},
+    {name:'Olive Otto',  ic:'🫒', tag:'"Three olives, never two."'},
+    {name:'Ruby Rose',   ic:'🌹', tag:'"A splash of drama."'}
+  ],
+  speak: [
+    {name:'Whiskey Wes', ic:'🥃', tag:'"Password: rye."'},
+    {name:'Midnight Mo', ic:'🎩', tag:'"The clock always strikes."'},
+    {name:'Gin Jack',    ic:'🎭', tag:'"You didn\'t see me here."'}
+  ],
+  rooftop: [
+    {name:'Skylar Sky',  ic:'🌃', tag:'"Above the clouds."'},
+    {name:'Neon Nia',    ic:'🌆', tag:'"City lights, city nights."'},
+    {name:'Penthouse Pablo',ic:'🏙️', tag:'"The view is extra."'}
+  ],
+  grand: [
+    {name:'Maestro Max', ic:'🎼', tag:'"Every pour is a symphony."'},
+    {name:'Duchess Dee', ic:'👑', tag:'"Pedigreed pours only."'},
+    {name:'Baron Bo',    ic:'🎖️', tag:'"I collect victories."'}
+  ]
+};
+
+// 4 pages × 5 stickers = 20 per album
+// Per-album rarity mix: 10 White / 6 Silver / 3 Gold / 1 Diamond
+const ALBUM_RARITY_MIX = ['white','white','white','white','white','white','white','white','white','white','silver','silver','silver','silver','silver','silver','gold','gold','gold','diamond'];
+
+const ALBUMS = {
+  barClassics: {id:'barClassics', name:'Bar Classics', theme:'Timeless bar memorabilia', ic:'📗', unlockAt:200, seasonal:false,
+    stickers:[
+      {i:'🍺',n:'Classic Pint'},{i:'🥃',n:'Rocks Glass'},{i:'🍷',n:'House Red'},{i:'🍹',n:'Tropical #1'},{i:'🥂',n:'Cheers'},
+      {i:'🍸',n:'Martini Dry'},{i:'🧊',n:'Rocks'},{i:'🍋',n:'Twist'},{i:'🍊',n:'Slice'},{i:'🍒',n:'Cherry'},
+      {i:'🫒',n:'Olive'},{i:'🥒',n:'Cucumber'},{i:'🌿',n:'Mint Sprig'},{i:'☕',n:'Irish Coffee'},{i:'🍪',n:'Bar Snack'},
+      {i:'🎱',n:'Pool Cue'},{i:'🎯',n:'Darts'},{i:'📻',n:'Jukebox'},{i:'💡',n:'Neon'},{i:'💎',n:'Golden Skull'}
+    ]},
+  cityNights: {id:'cityNights', name:'City Nights', theme:'Cocktail / urban / speakeasy', ic:'🌃', unlockAt:1000, seasonal:false,
+    stickers:[
+      {i:'🥃',n:'Rye Neat'},{i:'🚕',n:'Yellow Cab'},{i:'🏙️',n:'Skyline'},{i:'🚇',n:'Subway Rush'},{i:'🎷',n:'Jazz Sax'},
+      {i:'🎹',n:'Lounge Keys'},{i:'🌆',n:'Dusk Bar'},{i:'🎩',n:'Top Hat'},{i:'🕴️',n:'Smooth Walk'},{i:'🥂',n:'Champagne Flute'},
+      {i:'🍾',n:'Popped Cork'},{i:'🎰',n:'Lucky Spin'},{i:'🗝️',n:'Password'},{i:'📜',n:'Prohibition'},{i:'🕶️',n:'Shades'},
+      {i:'🌉',n:'Bridge Lights'},{i:'🪩',n:'Disco Ball'},{i:'🎤',n:'Open Mic'},{i:'💼',n:'Leather Case'},{i:'🍸',n:'Midnight Martini'}
+    ]},
+  grandHotel: {id:'grandHotel', name:'Grand Hotel', theme:'Luxury / Legendary flex', ic:'🏨', unlockAt:2500, seasonal:false,
+    stickers:[
+      {i:'🛎️',n:'Bellhop'},{i:'🗝️',n:'Suite Key'},{i:'🎻',n:'String Quartet'},{i:'🍽️',n:'Fine Dining'},{i:'🥩',n:'Aged Steak'},
+      {i:'🦞',n:'Lobster'},{i:'🧈',n:'Gold Leaf Butter'},{i:'🍯',n:'Rare Honey'},{i:'🍇',n:'Estate Grapes'},{i:'🍾',n:'Vintage Bubbly'},
+      {i:'🕯️',n:'Candelabra'},{i:'👑',n:'Crown Suite'},{i:'💎',n:'House Diamond'},{i:'🎩',n:'Concierge'},{i:'🌹',n:'Rose Petal'},
+      {i:'🖼️',n:'Old Master'},{i:'🎼',n:'Gala Score'},{i:'🏆',n:'Legacy Cup'},{i:'⚜️',n:'Fleur-de-lis'},{i:'🧿',n:'Charm'}
+    ]},
+  seasonSummerRooftop: {id:'seasonSummerRooftop', name:'Summer Rooftop', theme:'Season 1 — rotating', ic:'☀️', unlockAt:200, seasonal:true,
+    stickers:[
+      {i:'☀️',n:'Sun Blast'},{i:'🌴',n:'Palm'},{i:'🌺',n:'Hibiscus'},{i:'🥥',n:'Fresh Coconut'},{i:'🍍',n:'Pineapple'},
+      {i:'🏄',n:'Surfer'},{i:'🩴',n:'Flip Flops'},{i:'🕶️',n:'Aviators'},{i:'🍉',n:'Watermelon'},{i:'🧴',n:'SPF 50'},
+      {i:'🎵',n:'Beach Beats'},{i:'🌊',n:'Big Wave'},{i:'🐬',n:'Dolphin'},{i:'🐚',n:'Conch Shell'},{i:'🦀',n:'Sand Crab'},
+      {i:'🏖️',n:'Lounge Chair'},{i:'🎣',n:'Pier'},{i:'🌅',n:'Sunset'},{i:'🔥',n:'Bonfire'},{i:'💎',n:'Gilded Seashell'}
+    ]}
+};
+
+const ALBUM_ORDER = ['barClassics','cityNights','grandHotel','seasonSummerRooftop'];
+
+// ===== BAR PASS (§13.6) — 30 tiers, 50 BPP/tier =====
+const BAR_PASS_TIERS = [
+  {n:1,  free:{gold:30},                        premium:{gold:100,boosters:2}},
+  {n:2,  free:{boosters:1},                     premium:{coins:200,boosters:2}},
+  {n:3,  free:{gold:50},                        premium:{silverBooster:1}},
+  {n:4,  free:{coins:100},                      premium:{gold:120,boosters:1}},
+  {n:5,  free:{boosters:2},                     premium:{frame:'Seasonal Frame',tokens:1}},
+  {n:6,  free:{gold:60},                        premium:{coins:250,boosters:2}},
+  {n:7,  free:{boosters:1},                     premium:{gold:180}},
+  {n:8,  free:{coins:120},                      premium:{silverBooster:1,coins:100}},
+  {n:9,  free:{gold:80},                        premium:{boosters:3}},
+  {n:10, free:{silverBooster:1},                premium:{starChest:1,avatar:'Exclusive Avatar'}},
+  {n:11, free:{coins:150},                      premium:{gold:220,boosters:1}},
+  {n:12, free:{gold:100},                       premium:{coins:300,tokens:1}},
+  {n:13, free:{boosters:2},                     premium:{silverBooster:1,gold:150}},
+  {n:14, free:{gold:120},                       premium:{goldBooster:1}},
+  {n:15, free:{gold:100,coins:100},             premium:{boosters:3,coins:500,bigPacks:3,tokens:1}},
+  {n:16, free:{coins:200},                      premium:{gold:300}},
+  {n:17, free:{gold:150},                       premium:{boosters:3,coins:200}},
+  {n:18, free:{silverBooster:1},                premium:{goldBooster:1,gold:250}},
+  {n:19, free:{coins:250},                      premium:{bigPacks:2,tokens:1}},
+  {n:20, free:{goldBooster:1},                  premium:{title:'Seasonal Title',gold:500,venueToken:1}},
+  {n:21, free:{gold:200},                       premium:{coins:400,boosters:3}},
+  {n:22, free:{coins:250},                      premium:{silverBooster:1,gold:300}},
+  {n:23, free:{boosters:3},                     premium:{goldBooster:1,coins:300}},
+  {n:24, free:{gold:250},                       premium:{bigPacks:2,gold:200}},
+  {n:25, free:{silverBooster:2},                premium:{boosters:10,starChest:2}},
+  {n:26, free:{coins:300},                      premium:{gold:400,tokens:1}},
+  {n:27, free:{gold:300},                       premium:{goldBooster:1,boosters:3}},
+  {n:28, free:{boosters:3},                     premium:{silverBooster:2,gold:350}},
+  {n:29, free:{coins:400},                      premium:{bigPacks:3,venueToken:1}},
+  {n:30, free:{gold:200},                       premium:{gold:1000,coins:1000,avatar:'Exclusive Seasonal Avatar',tokens:2,diamondSticker:1}}
+];
+
+// ===== VENUE BUILDINGS (§11.11–17) =====
+// 29 total: 4 + 4 + 5 + 5 + 5 + 6, each 3 levels, cost 2/5/10 VT
+const BUILDING_COSTS = [0, 2, 5, 10]; // index = target level
+const BUILDINGS_BY_ARENA = {
+  juice: [
+    {id:'j_stand',      ic:'🍹', name:'Juice Stand',       type:'cosmetic', effect:'Fresh neon juice stand'},
+    {id:'j_shop',       ic:'📦', name:'Sticker Kiosk',     type:'functional', effect:'+Arena-themed pack in Shop F'},
+    {id:'j_tavern',     ic:'💰', name:'Ante Tavern',       type:'functional', effect:'Ante -5% at L3'},
+    {id:'j_palm',       ic:'🌴', name:'Palm Marquee',      type:'cosmetic', effect:'Lit palms along the bar'}
+  ],
+  beach: [
+    {id:'b_bar',        ic:'🏖️', name:'Beach Bar',         type:'cosmetic', effect:'Boardwalk tiki bar'},
+    {id:'b_shop',       ic:'📦', name:'Surf Kiosk',        type:'functional', effect:'+Arena-themed pack in Shop F'},
+    {id:'b_office',     ic:'🎁', name:'Chest Office',      type:'functional', effect:'-10% Star Chest gold shortcut'},
+    {id:'b_fountain',   ic:'⛲', name:'Coral Fountain',    type:'cosmetic', effect:'Glowing fountain'}
+  ],
+  cocktail: [
+    {id:'c_lounge',     ic:'🍸', name:'Cocktail Lounge',   type:'cosmetic', effect:'Velvet-seat lounge'},
+    {id:'c_shop',       ic:'📦', name:'Mixer Kiosk',       type:'functional', effect:'+Arena-themed pack in Shop F'},
+    {id:'c_recruit',    ic:'📋', name:"Recruiter's Booth", type:'functional', effect:'+1 Daily Mission slot at L3'},
+    {id:'c_neon',       ic:'💡', name:'Neon Fountain',     type:'cosmetic', effect:'Neon pink fountain'},
+    {id:'c_statue',     ic:'🗿', name:'Bartender Statue',  type:'cosmetic', effect:'Bronze bartender statue'}
+  ],
+  speak: [
+    {id:'s_bar',        ic:'🥃', name:'Speakeasy Bar',     type:'cosmetic', effect:'Hidden door, brass fittings'},
+    {id:'s_shop',       ic:'📦', name:'Hidden Kiosk',      type:'functional', effect:'+Arena-themed pack in Shop F'},
+    {id:'s_office',     ic:'🎁', name:'Secret Chest Vault',type:'functional', effect:'-10% Star Chest gold shortcut'},
+    {id:'s_tavern',     ic:'💰', name:'Ledger Tavern',     type:'functional', effect:'Ante -5% at L3'},
+    {id:'s_piano',      ic:'🎹', name:'Jazz Piano',        type:'cosmetic', effect:'Live piano on loop'}
+  ],
+  rooftop: [
+    {id:'r_bar',        ic:'🌃', name:'Rooftop Terrace',   type:'cosmetic', effect:'Skyline panorama'},
+    {id:'r_shop',       ic:'📦', name:'Sky Kiosk',         type:'functional', effect:'+Arena-themed pack in Shop F'},
+    {id:'r_office',     ic:'🎁', name:'Observatory Office',type:'functional', effect:'-10% Star Chest gold shortcut'},
+    {id:'r_lights',     ic:'✨', name:'Rooftop Lights',    type:'cosmetic', effect:'Strung festival lights'},
+    {id:'r_pool',       ic:'🏊', name:'Infinity Pool',     type:'cosmetic', effect:'Mirror-still infinity pool'}
+  ],
+  grand: [
+    {id:'g_bar',        ic:'🏨', name:'Grand Hotel Bar',   type:'cosmetic', effect:'Marble + crystal bar'},
+    {id:'g_shop',       ic:'📦', name:'Concierge Kiosk',   type:'functional', effect:'+Arena-themed pack in Shop F'},
+    {id:'g_office',     ic:'🎁', name:'Grand Chest Salon', type:'functional', effect:'-10% Star Chest gold shortcut'},
+    {id:'g_tavern',     ic:'💰', name:'Gilded Tavern',     type:'functional', effect:'Ante -5% at L3'},
+    {id:'g_chandelier', ic:'💎', name:'Chandelier',        type:'cosmetic', effect:'Thousand-crystal chandelier'},
+    {id:'g_statue',     ic:'🏆', name:'Legacy Statue',     type:'cosmetic', effect:'Patron-of-the-year statue'}
+  ]
+};
+
+function stickerKey(albumId, idx){ return albumId+':'+idx; }
+
+const MISSION_POOL = [
+  {id:'win_3',        text:'Win 3 matches',              target:3, reward:{gold:40,coins:100}},
+  {id:'use_5_bets',   text:'Equip a Bet in 5 matches',   target:5, reward:{gold:30,coins:100}},
+  {id:'play_5',       text:'Play 5 matches',             target:5, reward:{gold:40,coins:100}},
+  {id:'earn_200_coins',text:'Earn 200 Coins',            target:200,reward:{gold:50,coins:100}},
+  {id:'lucky_box_2',  text:'Claim Lucky Box twice',      target:2, reward:{gold:30,bronzeBooster:1}},
+  {id:'3_star_match', text:'Win with bet surviving',     target:1, reward:{gold:60,goldBooster:1}},
+  {id:'play_2_arenas',text:'Play in 2 different arenas', target:2, reward:{gold:50,coins:150}}
+];
+
+/* =========================================================================
+   STATE + SAVE
+   ========================================================================= */
+
+const SAVE_KEY = 'mixit_save_v7';
+
+function defaultSave(){
+  return {
+    version:7,
+    trophies:0,
+    currentPlayingArena:'juice',
+    maxUnlockedArena:'juice',
+    gold:50, coins:100, stars:0, starsMeter:0,
+    boosters:{
+      extraBottle:3, firstPour:2, spawnPlus3:0,
+      colorSplash:1, swap:1, customerLock:0,
+      clearBottle:0, autoServe:0, doubleServe:0
+    },
+    perks:{ secondLook:true, steadyHand:true, pourRead:true },
+    loadout:{ betId:null, perk1Id:null, perk2Id:null },
+    onFireStreak:0, onFireActive:false, consecWins:0,
+    luckyBox:{ nextAvailableAt: Date.now() },
+    starChestPending:false,
+    trophyRoad:{ highestTrophiesReached:0, claimedMilestones:[] },
+    dailyMissions:{ dateIso:'', missions:[], dailyChestClaimed:false, arenasPlayedToday:[] },
+    stickers:{},
+    stickerTokens:1,
+    claimedPageRewards:[], claimedAlbumRewards:[], unlockedAlbums:['barClassics'],
+    venue:{ venueBuildingTokens:0, buildings:{}, venuesUnlocked:['juice'] },
+    profile:{
+      unlockedAvatars:['a1'], unlockedFrames:['default'], unlockedTitles:['Newcomer'],
+      activeAvatar:'a1', activeFrame:'default', activeTitle:'Newcomer'
+    },
+    barPass:{
+      seasonStartAt:Date.now(), seasonEndAt:Date.now()+30*86400000,
+      bpp:0, currentTier:0, premiumUnlocked:false,
+      claimedFreeTiers:[], claimedPremiumTiers:[]
+    },
+    starterPack:{ shownAt:Date.now(), purchased:false, dismissedAt:null },
+    activeFlashOffer:null,
+    lossStreak:0,
+    achievements:{},
+    stats:{ matches:0, wins:0, bestCombo:0 },
+    tutorialDone:false
+  };
+}
+
+let s = defaultSave();
+
+function loadSave(){
+  // §16.1: strip legacy v6 save + migration residue
+  try{ localStorage.removeItem('barclash_stats'); }catch(e){}
+  try{
+    const raw = localStorage.getItem(SAVE_KEY);
+    if(raw){
+      const parsed = JSON.parse(raw);
+      if(parsed && parsed.version === 7){
+        s = Object.assign(defaultSave(), parsed);
+        // dateIso rollover
+        const today = new Date().toISOString().slice(0,10);
+        if(s.dailyMissions.dateIso !== today){ rerollDailies(); }
+        return;
+      }
+    }
+  }catch(e){ console.warn('save load fail',e); }
+  s = defaultSave();
+  rerollDailies();
+  saveSave();
+}
+
+function saveSave(){
+  try{ localStorage.setItem(SAVE_KEY, JSON.stringify(s)); }catch(e){}
+}
+
+/* =========================================================================
+   HELPERS
+   ========================================================================= */
+
+const $ = id => document.getElementById(id);
+
+function toast(msg){
+  const t = $('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._tid);
+  t._tid = setTimeout(()=>t.classList.remove('show'),1800);
+}
+
+function arenaById(id){ return ARENAS.find(a=>a.id===id); }
+function arenaIndex(id){ return ARENAS.findIndex(a=>a.id===id); }
+function maxUnlockedArenaIdx(){ return arenaIndex(s.maxUnlockedArena); }
+function currentArena(){ return arenaById(s.currentPlayingArena); }
+
+function grantBoosters(ids){
+  ids.forEach(id => s.boosters[id] = (s.boosters[id]||0) + 1);
+}
+
+function unlockArena(id){
+  const idx = arenaIndex(id);
+  const wasNew = idx > maxUnlockedArenaIdx();
+  if(wasNew){ s.maxUnlockedArena = id; s.venue.venueBuildingTokens += 5; } // §11.15 +5 VT per arena promo
+  if(!s.venue.venuesUnlocked.includes(id)) s.venue.venuesUnlocked.push(id);
+  // §18 "Venue landmark unlock" — auto-unlock L1 of a cosmetic building in that arena
+  const blds = BUILDINGS_BY_ARENA[id] || [];
+  const unearnedCosmetic = blds.find(b => b.type === 'cosmetic' && (!s.venue.buildings[b.id]));
+  if(unearnedCosmetic){ s.venue.buildings[unearnedCosmetic.id] = 1; }
+}
+
+function rerollDailies(){
+  const pool = [...MISSION_POOL].sort(()=>Math.random()-0.5);
+  const picks = pool.slice(0,3).map(m => ({id:m.id, text:m.text, target:m.target, reward:m.reward, progress:0, claimed:false}));
+  s.dailyMissions = {
+    dateIso: new Date().toISOString().slice(0,10),
+    missions: picks,
+    dailyChestClaimed:false,
+    arenasPlayedToday:[]
+  };
+}
+
+function missionProgress(id, amount=1){
+  const m = s.dailyMissions.missions.find(m=>m.id===id && !m.claimed);
+  if(!m) return;
+  m.progress = Math.min(m.target, m.progress + amount);
+  if(m.progress >= m.target && !m.claimed){
+    m.claimed = true;
+    if(m.reward.gold) s.gold += m.reward.gold;
+    if(m.reward.coins) s.coins += m.reward.coins;
+    if(m.reward.bronzeBooster) grantBoosters(['extraBottle']);
+    if(m.reward.goldBooster) grantBoosters(['clearBottle']);
+    toast('✅ Mission: '+m.text);
+  }
+  // all done → daily chest
+  if(!s.dailyMissions.dailyChestClaimed && s.dailyMissions.missions.every(mm=>mm.claimed)){
+    s.dailyMissions.dailyChestClaimed = true;
+    s.gold += 150; s.coins += 300;
+    grantBoosters(['extraBottle','colorSplash','clearBottle']);
+    s.venue.venueBuildingTokens++;
+    // §10.1: 2 stickers + 15% sticker token chance
+    addStickerByRarity(rarityRoll('diamond', false));
+    addStickerByRarity(rarityRoll('diamond', false));
+    if(Math.random() < 0.15) s.stickerTokens++;
+    toast('🎉 Daily Chest: 150g + 300c + boosters + 2 stickers + 1 VT');
+    // Refill flash trigger (§13.8)
+    if(s.gold < 100) triggerFlashOffer('refill');
+  }
+}
+
+function addBPP(n){
+  s.barPass.bpp += n;
+  const newTier = Math.min(30, Math.floor(s.barPass.bpp / 50));
+  if(newTier > s.barPass.currentTier){
+    s.barPass.currentTier = newTier;
+    toast('📜 Bar Pass Tier '+newTier);
+  }
+}
+
+/* =========================================================================
+   RENDER
+   ========================================================================= */
+
+function renderAll(){
+  renderHUD();
+  renderHome();
+  renderShop();
+  renderTrophyRoad();
+  renderStubCounters();
+  saveSave();
+}
+
+function renderHUD(){
+  $('hud-trophies').textContent = s.trophies;
+  $('hud-title').textContent = s.profile.activeTitle;
+  $('hud-coins').textContent = s.coins;
+  $('hud-gold').textContent = s.gold;
+  $('hud-stars').textContent = s.stars;
+}
+
+function renderHome(){
+  const a = currentArena();
+  // Arena badge
+  $('arena-badge-name').textContent = a.name;
+  $('arena-trophy-count').textContent = s.trophies;
+  $('hvp-icon').textContent = a.icon;
+  // Progress to next arena
+  const myIdx = arenaIndex(a.id);
+  const nextA = ARENAS[myIdx+1];
+  if(nextA){
+    const span = nextA.min - a.min;
+    const prog = Math.max(0, s.trophies - a.min);
+    $('arena-progress-fill').style.width = Math.min(100,(prog/span)*100)+'%';
+    $('arena-progress-label').textContent = `${s.trophies} / ${nextA.min}`;
+  } else {
+    $('arena-progress-fill').style.width = '100%';
+    $('arena-progress-label').textContent = `${s.trophies} (MAX)`;
+  }
+
+  // Star meter
+  $('star-meter-num').textContent = s.starsMeter+'/25';
+  $('star-meter-fill').style.width = Math.min(100,(s.starsMeter/25)*100)+'%';
+  // Pending star chest
+  $('starchest-btn').style.display = s.starChestPending ? 'block' : 'none';
+
+  // Lucky box
+  const lbReady = Date.now() >= s.luckyBox.nextAvailableAt;
+  const lbBtn = $('luckybox-btn');
+  if(lbReady){ lbBtn.textContent = '🎁'; lbBtn.disabled=false; lbBtn.title='Lucky Box ready'; }
+  else{
+    const ms = s.luckyBox.nextAvailableAt - Date.now();
+    const h = Math.floor(ms/3600000), m = Math.floor((ms%3600000)/60000);
+    lbBtn.textContent = `${h}:${m.toString().padStart(2,'0')}`;
+    lbBtn.disabled = true;
+  }
+
+  // Missions badge (count unclaimed with progress, or pending daily chest)
+  const unclaimed = s.dailyMissions.missions.filter(m=>m.claimed).length;
+  const total = s.dailyMissions.missions.length;
+  const badge = $('missions-badge');
+  badge.textContent = `${unclaimed}/${total}`;
+
+  // Play button
+  const ante = a.ante;
+  const canAfford = s.gold >= ante;
+  $('play-btn-sub').textContent = canAfford ? `Wager ${ante} 💰` : `Need ${ante} 💰`;
+  $('practice-btn').style.display = canAfford ? 'none' : 'block';
+
+  // Flash offer banner (active)
+  const fb = $('flash-banner-slot');
+  fb.innerHTML = '';
+  if(s.activeFlashOffer && s.activeFlashOffer.expiresAt > Date.now()){
+    const f = FLASH_OFFERS[s.activeFlashOffer.id];
+    if(f){
+      const remain = s.activeFlashOffer.expiresAt - Date.now();
+      const h = Math.floor(remain/3600000), m = Math.floor((remain%3600000)/60000);
+      const timeStr = h>0 ? `${h}h ${m}m` : `${m}m`;
+      const el = document.createElement('div');
+      el.className = 'flash-banner';
+      el.innerHTML = `<span>🔥 ${f.title} — ${f.desc}</span><span class="f-timer">${f.price} · ${timeStr}</span>`;
+      el.onclick = ()=>toast('Coming soon');
+      fb.appendChild(el);
+    }
+  }
+}
+
+function openMissions(){
+  const ml = $('missions-list');
+  ml.innerHTML = '';
+  s.dailyMissions.missions.forEach(m => {
+    const rewStr = [
+      m.reward.gold?m.reward.gold+'💰':null,
+      m.reward.coins?m.reward.coins+'🪙':null,
+      m.reward.bronzeBooster?'Bronze':null,
+      m.reward.goldBooster?'Gold':null
+    ].filter(Boolean).join(' + ');
+    const div = document.createElement('div');
+    div.className = 'mission-row'+(m.claimed?' done':'');
+    div.innerHTML = `
+      <div class="mprog-wrap">
+        <span class="mtxt">${m.text}</span>
+        <div class="mprog"><div class="f" style="width:${(m.progress/m.target)*100}%"></div></div>
+      </div>
+      <span class="mrew">${m.progress}/${m.target}<br>${rewStr}</span>`;
+    ml.appendChild(div);
+  });
+  $('missions-modal').classList.remove('hidden');
+}
+function closeMissions(){ $('missions-modal').classList.add('hidden'); }
+
+function openArenaModal(){
+  const list = $('arena-modal-list');
+  list.innerHTML = '';
+  ARENAS.forEach((a,i) => {
+    const unlocked = i <= maxUnlockedArenaIdx();
+    const active = a.id === s.currentPlayingArena;
+    const it = document.createElement('div');
+    it.className = 'picker-item'+(unlocked?'':' disabled');
+    it.innerHTML = `<div class="pi-ic">${a.icon}</div><div class="pi-info"><div class="pi-name">${a.name}${active?' ✓':''}</div><div class="pi-desc">🏆 ${a.min}+ · Ante ${a.ante}💰</div></div>`;
+    if(unlocked) it.onclick = ()=>{ s.currentPlayingArena = a.id; closeArenaModal(); renderAll(); };
+    list.appendChild(it);
+  });
+  $('arena-modal').classList.remove('hidden');
+}
+function closeArenaModal(){ $('arena-modal').classList.add('hidden'); }
+
+function renderStubCounters(){}
+
+/* ========== VENUE ========== */
+
+let venueView = {arenaId:null};
+
+function renderVenue(){
+  if(!venueView.arenaId) venueView.arenaId = s.currentPlayingArena;
+  const body = $('venue-body');
+  body.innerHTML = '';
+
+  // Header
+  const hdr = document.createElement('div');
+  hdr.className = 'venue-header';
+  hdr.innerHTML = `<span>Build your venue</span><span class="vt-chip">🛠️ ${s.venue.venueBuildingTokens} VT</span>`;
+  body.appendChild(hdr);
+
+  // District pills
+  const pills = document.createElement('div');
+  pills.className = 'venue-pills';
+  ARENAS.forEach((a,i) => {
+    const unlocked = i <= maxUnlockedArenaIdx();
+    const active = a.id === venueView.arenaId;
+    const p = document.createElement('div');
+    p.className = 'venue-pill'+(active?' active':'')+(unlocked?'':' locked');
+    p.textContent = `${a.icon} ${a.name}`;
+    if(unlocked) p.onclick = ()=>{ venueView.arenaId = a.id; renderVenue(); };
+    pills.appendChild(p);
+  });
+  body.appendChild(pills);
+
+  // Scene
+  const a = arenaById(venueView.arenaId);
+  const blds = BUILDINGS_BY_ARENA[venueView.arenaId] || [];
+  const totalLevels = blds.reduce((acc,b)=>acc+(s.venue.buildings[b.id]||0),0);
+  const maxLevels = blds.length * 3;
+  const scene = document.createElement('div');
+  scene.className = 'venue-scene';
+  const lvlBadges = Array.from({length:3},(_,i)=>`<div class="lvl-dot ${totalLevels > (maxLevels/3)*i ? 'filled':''}"></div>`).join('');
+  scene.innerHTML = `<div class="scene-label">${a.icon} ${a.name}</div><div class="scene-level-badges">${lvlBadges}</div><div class="scene-ic">${a.icon}</div>`;
+  body.appendChild(scene);
+
+  // Buildings
+  const list = document.createElement('div');
+  list.className = 'buildings-list';
+  blds.forEach(b => {
+    const lvl = s.venue.buildings[b.id] || 0;
+    const nextLvl = lvl + 1;
+    const cost = nextLvl<=3 ? BUILDING_COSTS[nextLvl] : 0;
+    const canAfford = s.venue.venueBuildingTokens >= cost;
+    const isMax = lvl >= 3;
+    const row = document.createElement('div');
+    row.className = 'building-row'+(isMax?' legendary':'');
+    const dots = [1,2,3].map(i => `<div class="dot ${lvl>=i?'f'+i:''}"></div>`).join('');
+    row.innerHTML = `
+      <div class="b-ic">${b.ic}</div>
+      <div class="b-info">
+        <div class="b-name">${b.name}</div>
+        <div class="b-type">${b.type} · Level ${lvl}/3</div>
+        <div class="b-lvl">${dots}</div>
+        <div class="b-effect">${b.effect}</div>
+      </div>`;
+    const btn = document.createElement('button');
+    if(isMax){
+      btn.className = 'b-btn max';
+      btn.textContent = 'LEGENDARY';
+    } else if(canAfford){
+      btn.className = 'b-btn can';
+      btn.innerHTML = `${lvl===0?'UNLOCK':'Level '+nextLvl}<br>${cost} 🛠️`;
+      btn.onclick = ()=>upgradeBuilding(b.id);
+    } else {
+      btn.className = 'b-btn cant';
+      btn.innerHTML = `${lvl===0?'UNLOCK':'Level '+nextLvl}<br>${cost} 🛠️`;
+    }
+    row.appendChild(btn);
+    list.appendChild(row);
+  });
+  body.appendChild(list);
+}
+
+function upgradeBuilding(id){
+  const lvl = s.venue.buildings[id] || 0;
+  if(lvl >= 3) return;
+  const cost = BUILDING_COSTS[lvl+1];
+  if(s.venue.venueBuildingTokens < cost){ toast('Not enough Venue Tokens'); return; }
+  s.venue.venueBuildingTokens -= cost;
+  s.venue.buildings[id] = lvl+1;
+  const b = Object.values(BUILDINGS_BY_ARENA).flat().find(x=>x.id===id);
+  toast(`🏗️ ${b.name} → L${lvl+1}`);
+  renderVenue();
+  renderHUD();
+  saveSave();
+}
+
+/* ========== ALBUMS ========== */
+
+let albumView = {mode:'list', albumId:null};
+
+function renderAlbums(){
+  const body = $('albums-body');
+  body.innerHTML = '';
+  if(albumView.mode === 'list'){
+    body.appendChild(renderAlbumTiles());
+  } else {
+    body.appendChild(renderAlbumDetail(albumView.albumId));
+  }
+}
+
+function renderAlbumTiles(){
+  const wrap = document.createElement('div');
+  const hdr = document.createElement('div');
+  hdr.className = 'albums-header';
+  hdr.innerHTML = `<span>Collection</span><span class="tokens-chip">🎟️ ${s.stickerTokens} Tokens</span>`;
+  wrap.appendChild(hdr);
+
+  const tiles = document.createElement('div');
+  tiles.className = 'album-tiles';
+  ALBUM_ORDER.forEach(id => {
+    const alb = ALBUMS[id];
+    const unlocked = s.trophies >= alb.unlockAt;
+    const owned = alb.stickers.reduce((acc,_,idx) => acc + (s.stickers[stickerKey(id,idx)]?1:0), 0);
+    const tile = document.createElement('div');
+    tile.className = 'album-tile'+(alb.seasonal?' seasonal':'')+(unlocked?'':' locked');
+    const pips = ALBUM_RARITY_MIX.map((r,idx) => `<div class="rar-pip ${r}${s.stickers[stickerKey(id,idx)]?' owned':''}"></div>`).join('');
+    tile.innerHTML = `
+      <div class="at-ic">${alb.ic}</div>
+      <div class="at-info">
+        <div class="at-name">${alb.name}${alb.seasonal?' <span class="pill gold" style="font-size:8px">Season</span>':''}</div>
+        <div class="at-theme">${alb.theme}</div>
+        <div class="at-prog">${unlocked? owned+'/20' : '🔒 Unlock at '+alb.unlockAt+' 🏆'}</div>
+        <div class="at-prog-bar"><div class="f" style="width:${unlocked?(owned/20)*100:0}%"></div></div>
+        <div class="at-rarities">${pips}</div>
+      </div>`;
+    if(unlocked) tile.onclick = ()=>{ albumView = {mode:'detail', albumId:id}; renderAlbums(); };
+    tiles.appendChild(tile);
+  });
+  wrap.appendChild(tiles);
+  return wrap;
+}
+
+function renderAlbumDetail(albumId){
+  const alb = ALBUMS[albumId];
+  const wrap = document.createElement('div');
+  wrap.className = 'album-detail';
+
+  const back = document.createElement('button');
+  back.className = 'album-back';
+  back.innerHTML = '← Back';
+  back.onclick = ()=>{ albumView = {mode:'list', albumId:null}; renderAlbums(); };
+  wrap.appendChild(back);
+
+  const owned = alb.stickers.reduce((acc,_,idx) => acc + (s.stickers[stickerKey(albumId,idx)]?1:0), 0);
+  const topInfo = document.createElement('div');
+  topInfo.style.cssText='display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;font-size:12px';
+  topInfo.innerHTML = `<div><b style="font-size:15px">${alb.ic} ${alb.name}</b><br><span style="color:rgba(255,255,255,0.6);font-size:10px">${alb.theme}</span></div><div style="text-align:right"><b style="color:#ffd700;font-size:16px">${owned}/20</b><br><span style="color:rgba(255,255,255,0.5);font-size:10px">🎟️ ${s.stickerTokens}</span></div>`;
+  wrap.appendChild(topInfo);
+
+  // Album completion claim button
+  const albAllOwned = owned >= 20;
+  const albClaimed = s.claimedAlbumRewards.includes(albumId);
+  if(albAllOwned && !albClaimed){
+    const btn = document.createElement('button');
+    btn.className = 'page-claim';
+    btn.style.cssText='width:100%;padding:10px;margin-bottom:12px;font-size:13px';
+    btn.textContent = '🏆 CLAIM ALBUM COMPLETION';
+    btn.onclick = ()=>{ claimAlbumCompletion(albumId); };
+    wrap.appendChild(btn);
+  }
+
+  // 4 pages × 5 stickers
+  for(let p=0;p<4;p++){
+    const page = document.createElement('div');
+    page.className = 'album-page';
+    const pageOwned = [0,1,2,3,4].every(i => s.stickers[stickerKey(albumId,p*5+i)]);
+    const pageClaimed = s.claimedPageRewards.includes(albumId+':'+p);
+    const hdr = document.createElement('div');
+    hdr.className = 'album-page-hdr';
+    hdr.innerHTML = `<span>Page ${p+1}</span>`;
+    const claimBtn = document.createElement('button');
+    claimBtn.className = 'page-claim'+(pageClaimed?' claimed':'');
+    claimBtn.textContent = pageClaimed ? '✓ CLAIMED' : (pageOwned ? 'CLAIM 100💰+100🪙+1 Booster' : `${[0,1,2,3,4].filter(i=>s.stickers[stickerKey(albumId,p*5+i)]).length}/5`);
+    claimBtn.disabled = !pageOwned || pageClaimed;
+    if(pageOwned && !pageClaimed){ claimBtn.onclick = ()=>claimPageReward(albumId, p); }
+    hdr.appendChild(claimBtn);
+    page.appendChild(hdr);
+
+    const grid = document.createElement('div');
+    grid.className = 'album-grid';
+    for(let i=0;i<5;i++){
+      const idx = p*5+i;
+      const stk = alb.stickers[idx];
+      const rar = ALBUM_RARITY_MIX[idx];
+      const cnt = s.stickers[stickerKey(albumId,idx)] || 0;
+      const slot = document.createElement('div');
+      slot.className = 'sticker-slot '+rar+(cnt>0?' owned':' locked');
+      slot.innerHTML = cnt>0
+        ? `${stk.i}${cnt>1?`<span class="s-dupe-count">×${cnt}</span>`:''}<span class="s-rarity ${rar}"></span>`
+        : `<span style="opacity:0.25">?</span><span class="s-rarity ${rar}"></span>`;
+      slot.onclick = ()=>openStickerModal(albumId, idx);
+      grid.appendChild(slot);
+    }
+    page.appendChild(grid);
+    wrap.appendChild(page);
+  }
+  return wrap;
+}
+
+function openStickerModal(albumId, idx){
+  const alb = ALBUMS[albumId];
+  const stk = alb.stickers[idx];
+  const rar = ALBUM_RARITY_MIX[idx];
+  const cnt = s.stickers[stickerKey(albumId,idx)] || 0;
+  $('sticker-modal-title').textContent = cnt>0 ? stk.n : 'Locked';
+  $('sticker-modal-ic').textContent = cnt>0 ? stk.i : '❓';
+  $('sticker-modal-name').textContent = cnt>0 ? stk.n : '—';
+  $('sticker-modal-album').textContent = alb.name;
+  $('sticker-modal-rarity').innerHTML = `<span class="pill ${rar}">${rar}</span>`;
+  $('sticker-modal-owned').textContent = cnt;
+  const actions = $('sticker-modal-actions');
+  actions.innerHTML = '';
+  if(cnt===0){
+    const btn = document.createElement('button');
+    btn.className = 'btn-token';
+    btn.textContent = `Use 1 Token (${s.stickerTokens} left)`;
+    btn.disabled = s.stickerTokens < 1;
+    btn.onclick = ()=>{
+      if(s.stickerTokens < 1) return;
+      s.stickerTokens--;
+      s.stickers[stickerKey(albumId,idx)] = 1;
+      closeStickerModal();
+      renderAll();
+      renderAlbums();
+      toast('🎟️ Unlocked: '+stk.n);
+    };
+    actions.appendChild(btn);
+  }
+  $('sticker-modal').classList.remove('hidden');
+}
+function closeStickerModal(){ $('sticker-modal').classList.add('hidden'); }
+
+function claimPageReward(albumId, pageIdx){
+  const key = albumId+':'+pageIdx;
+  if(s.claimedPageRewards.includes(key)) return;
+  s.claimedPageRewards.push(key);
+  s.gold += 100; s.coins += 100;
+  // Random booster
+  const tier = Math.random()<0.7?'bronze':Math.random()<0.85?'silver':'gold';
+  const pool = Object.keys(BOOSTERS).filter(k=>BOOSTERS[k].tier===tier);
+  grantBoosters([pool[Math.floor(Math.random()*pool.length)]]);
+  toast('📖 Page ' + (pageIdx+1) + ': +100💰 +100🪙 +1 booster');
+  renderAll();
+  renderAlbums();
+}
+
+function claimAlbumCompletion(albumId){
+  if(s.claimedAlbumRewards.includes(albumId)) return;
+  s.claimedAlbumRewards.push(albumId);
+  const alb = ALBUMS[albumId];
+  if(alb.seasonal){
+    s.gold += 2000; s.coins += 2000;
+    grantBoosters(['clearBottle','autoServe','doubleServe','autoServe','clearBottle']);
+    s.stickerTokens += 2;
+    s.profile.unlockedFrames.push('seasonal_'+albumId);
+    s.profile.unlockedTitles.push('Season 1 Champion');
+    s.venue.venueBuildingTokens++;
+    toast('🏆 Seasonal: 2000💰 +2000🪙 +5 Gold +2 Tokens +Frame +Title +1 VT');
+  } else {
+    s.gold += 1000; s.coins += 1000;
+    grantBoosters(['clearBottle','autoServe','doubleServe']);
+    s.stickerTokens++;
+    const titleByAlbum = {barClassics:'Classic Act', cityNights:'Night Owl', grandHotel:'Connoisseur'};
+    if(titleByAlbum[albumId]) s.profile.unlockedTitles.push(titleByAlbum[albumId]);
+    toast('🏆 Album: 1000💰 +1000🪙 +3 Gold +1 Token +Title');
+  }
+  renderAll();
+  renderAlbums();
+}
+
+/* ========== SHOP ========== */
+
+let shopTab = 'A';
+function renderShop(){
+  const tabs = [['A','Boosters'],['B','Star Chest'],['C','Bundles'],['D','Bar Pass'],['F','Stickers']];
+  const tbar = $('shop-tabs');
+  tbar.innerHTML = '';
+  tabs.forEach(([id,label]) => {
+    const b = document.createElement('div');
+    b.className = 'shop-tab'+(shopTab===id?' active':'');
+    b.textContent = label;
+    b.onclick = ()=>{ shopTab = id; renderShop(); };
+    tbar.appendChild(b);
+  });
+  const body = $('shop-body');
+  body.innerHTML = '';
+  if(shopTab==='A') body.appendChild(renderShopA());
+  else if(shopTab==='B') body.appendChild(renderShopB());
+  else if(shopTab==='C') body.appendChild(renderShopC());
+  else if(shopTab==='D') body.appendChild(renderShopD());
+  else if(shopTab==='F') body.appendChild(renderShopF());
+}
+
+function renderShopA(){
+  const grid = document.createElement('div');
+  grid.className = 'shop-grid';
+  const unlocked = ARENA_BOOSTER_UNLOCKS[s.currentPlayingArena];
+  Object.entries(BOOSTERS).forEach(([id,b]) => {
+    if(!unlocked.includes(id)) return;
+    const card = document.createElement('div');
+    card.className = 'shop-card tier-'+b.tier;
+    card.innerHTML = `
+      <div class="sc-ic">${b.ic}</div>
+      <div class="sc-name">${b.name}</div>
+      <span class="pill ${b.tier}">${b.tier}</span>
+      <div class="sc-desc">${b.desc}</div>
+      <div class="sc-owned">Owned: ${s.boosters[id]||0}</div>
+      <button class="sc-buy" ${s.coins<b.price?'disabled':''}>${b.price} 🪙</button>`;
+    card.querySelector('.sc-buy').onclick = ()=>{
+      if(s.coins < b.price){ toast('Not enough Coins'); return; }
+      s.coins -= b.price;
+      s.boosters[id] = (s.boosters[id]||0)+1;
+      toast('+1 '+b.name);
+      renderAll();
+    };
+    grid.appendChild(card);
+  });
+  return grid;
+}
+
+function renderShopB(){
+  const prices = {juice:200,beach:400,cocktail:800,speak:1600,rooftop:3000,grand:5000};
+  const grid = document.createElement('div');
+  grid.className = 'shop-grid';
+  ARENAS.forEach((a,i) => {
+    if(i>maxUnlockedArenaIdx()) return;
+    const price = prices[a.id];
+    const card = document.createElement('div');
+    card.className = 'shop-card';
+    card.innerHTML = `
+      <div class="sc-ic">🎁</div>
+      <div class="sc-name">Star Chest</div>
+      <div class="sc-desc">${a.icon} ${a.name} tier shortcut</div>
+      <div class="sc-owned">Queued: ${s.starChestPending?'1':'0'}</div>
+      <button class="sc-buy gold" ${s.gold<price?'disabled':''}>${price} 💰</button>`;
+    card.querySelector('.sc-buy').onclick = ()=>{
+      if(s.gold<price){ toast('Not enough Gold'); return; }
+      s.gold -= price;
+      rollStarChest(a.id);
+      renderAll();
+    };
+    grid.appendChild(card);
+  });
+  return grid;
+}
+
+function renderShopC(){
+  const bundles = [
+    {name:"Bartender's Starter", desc:'500💰 + 500🪙 + 5 boosters', price:'$1.99'},
+    {name:'Weekend Warrior',     desc:'2000💰 + 2000🪙 + 15 boosters + 1 Star Chest', price:'$4.99'},
+    {name:'Grand Stock',         desc:'8000💰 + 8000🪙 + 40 boosters + 3 Chests + Exclusive Avatar', price:'$19.99'}
+  ];
+  const grid = document.createElement('div');
+  grid.className='shop-grid';
+  bundles.forEach(b=>{
+    const c = document.createElement('div');
+    c.className='shop-card';
+    c.innerHTML = `<div class="sc-ic">💎</div><div class="sc-name">${b.name}</div><div class="sc-desc">${b.desc}</div><div class="sc-owned">&nbsp;</div><button class="sc-buy dollar">${b.price}</button>`;
+    c.querySelector('.sc-buy').onclick = ()=>toast('Coming soon');
+    grid.appendChild(c);
+  });
+  return grid;
+}
+
+function renderShopD(){
+  const wrap = document.createElement('div');
+
+  // Header
+  const hdr = document.createElement('div');
+  hdr.className = 'bp-header';
+  const tier = s.barPass.currentTier;
+  const bpp = s.barPass.bpp;
+  const nextTierBpp = tier >= 30 ? bpp : (tier+1)*50;
+  const curTierBpp = tier*50;
+  const pct = tier>=30 ? 100 : ((bpp-curTierBpp)/(nextTierBpp-curTierBpp))*100;
+  hdr.innerHTML = `
+    <div class="bp-tier-info">Tier <b>${tier}</b> / 30 · ${bpp} BPP${tier<30?` · ${nextTierBpp-bpp} to next`:' · MAX'}</div>
+    <div class="bp-progress"><div class="f" style="width:${Math.max(0,Math.min(100,pct))}%"></div></div>
+    <button class="bp-premium-btn ${s.barPass.premiumUnlocked?'owned':''}">${s.barPass.premiumUnlocked?'✓ Premium':'Unlock Premium — $9.99'}</button>`;
+  const btn = hdr.querySelector('.bp-premium-btn');
+  if(!s.barPass.premiumUnlocked) btn.onclick = ()=>toast('Coming soon');
+  wrap.appendChild(hdr);
+
+  // Info
+  const info = document.createElement('div');
+  info.style.cssText = 'padding:0 14px 8px;font-size:10px;color:rgba(255,255,255,0.55);line-height:1.3';
+  info.textContent = 'Earn BPP from every match played (+5) and won (+10). Premium retroactively claims earned tiers.';
+  wrap.appendChild(info);
+
+  // Strip
+  const strip = document.createElement('div');
+  strip.className = 'bp-strip';
+  BAR_PASS_TIERS.forEach(t => {
+    const tile = document.createElement('div');
+    const reached = s.barPass.currentTier >= t.n;
+    tile.className = 'bp-tile'+(reached?'':' locked');
+    const freeClaimed = s.barPass.claimedFreeTiers.includes(t.n);
+    const premiumClaimed = s.barPass.claimedPremiumTiers.includes(t.n);
+    tile.innerHTML = `
+      <div class="bp-n">Tier ${t.n}</div>
+      <div class="bp-reward-box free">
+        <div class="bp-tag">Free</div>
+        <div class="bp-reward-text">${formatBPReward(t.free)}</div>
+        <button class="bp-claim ${freeClaimed?'claimed':''}" ${!reached||freeClaimed?'disabled':''}>${freeClaimed?'✓ CLAIMED':'CLAIM'}</button>
+      </div>
+      <div class="bp-reward-box premium ${s.barPass.premiumUnlocked?'':'locked-premium'}">
+        <div class="bp-tag">Premium</div>
+        <div class="bp-reward-text">${formatBPReward(t.premium)}</div>
+        <button class="bp-claim ${premiumClaimed?'claimed':''}" ${!reached||premiumClaimed||!s.barPass.premiumUnlocked?'disabled':''}>${premiumClaimed?'✓ CLAIMED':s.barPass.premiumUnlocked?'CLAIM':'🔒'}</button>
+      </div>`;
+    const btns = tile.querySelectorAll('.bp-claim');
+    btns[0].onclick = ()=>{ if(reached && !freeClaimed) claimBarPass(t.n, false); };
+    btns[1].onclick = ()=>{ if(reached && !premiumClaimed && s.barPass.premiumUnlocked) claimBarPass(t.n, true); };
+    strip.appendChild(tile);
+  });
+  wrap.appendChild(strip);
+  return wrap;
+}
+
+function formatBPReward(r){
+  const parts = [];
+  if(r.gold) parts.push(`${r.gold}💰`);
+  if(r.coins) parts.push(`${r.coins}🪙`);
+  if(r.boosters) parts.push(`${r.boosters} boosters`);
+  if(r.silverBooster) parts.push(`${r.silverBooster} Silver`);
+  if(r.goldBooster) parts.push(`${r.goldBooster} Gold`);
+  if(r.starChest) parts.push(`${r.starChest} Star Chest`);
+  if(r.bigPacks) parts.push(`${r.bigPacks} Big Packs`);
+  if(r.tokens) parts.push(`${r.tokens}🎟️`);
+  if(r.venueToken) parts.push(`${r.venueToken}🛠️`);
+  if(r.frame) parts.push(`🖼️ ${r.frame}`);
+  if(r.title) parts.push(`👑 ${r.title}`);
+  if(r.avatar) parts.push(`👤 ${r.avatar}`);
+  if(r.diamondSticker) parts.push(`💎 sticker`);
+  return parts.join(' + ');
+}
+
+function claimBarPass(n, premium){
+  const tier = BAR_PASS_TIERS.find(t => t.n === n);
+  if(!tier) return;
+  const list = premium ? s.barPass.claimedPremiumTiers : s.barPass.claimedFreeTiers;
+  if(list.includes(n)) return;
+  if(s.barPass.currentTier < n) return;
+  if(premium && !s.barPass.premiumUnlocked) return;
+  list.push(n);
+  const r = premium ? tier.premium : tier.free;
+  if(r.gold) s.gold += r.gold;
+  if(r.coins) s.coins += r.coins;
+  if(r.boosters){
+    for(let i=0;i<r.boosters;i++){
+      const tiers = ['bronze','silver','gold'];
+      const t = tiers[Math.floor(Math.random()*2)]; // weighted toward bronze/silver
+      const pool = Object.keys(BOOSTERS).filter(k=>BOOSTERS[k].tier===t);
+      grantBoosters([pool[Math.floor(Math.random()*pool.length)]]);
+    }
+  }
+  if(r.silverBooster) for(let i=0;i<r.silverBooster;i++) grantBoosters(['colorSplash']);
+  if(r.goldBooster) for(let i=0;i<r.goldBooster;i++) grantBoosters(['clearBottle']);
+  if(r.starChest) for(let i=0;i<r.starChest;i++) rollStarChest(s.currentPlayingArena);
+  if(r.bigPacks) for(let i=0;i<r.bigPacks;i++) rollPack({count:10,maxTier:'diamond',guaranteedGold:true});
+  if(r.tokens) s.stickerTokens += r.tokens;
+  if(r.venueToken) s.venue.venueBuildingTokens += r.venueToken;
+  if(r.frame) s.profile.unlockedFrames.push(r.frame);
+  if(r.title) s.profile.unlockedTitles.push(r.title);
+  if(r.avatar) s.profile.unlockedAvatars.push(r.avatar);
+  if(r.diamondSticker){ s.stickerTokens++; } // proxy: give a token to pick any
+  toast('🎁 Tier '+n+(premium?' Premium':' Free')+' claimed');
+  renderAll();
+  renderShop();
+}
+
+function renderShopF(){
+  const packs = [
+    {id:'cheap',   name:'Cheap Pack',    desc:'3 stickers (C/S only)',       gold:100, count:3, maxTier:'silver'},
+    {id:'standard',name:'Standard Pack', desc:'5 stickers (standard roll)',  gold:250, count:5, maxTier:'diamond'},
+    {id:'big',     name:'Big Pack',      desc:'10 stickers (1+ Gold guar.)', gold:600, count:10,maxTier:'diamond',guaranteedGold:true}
+  ];
+  const grid = document.createElement('div');
+  grid.className='shop-grid';
+  packs.forEach(p=>{
+    const c = document.createElement('div');
+    c.className='shop-card';
+    c.innerHTML = `<div class="sc-ic">📦</div><div class="sc-name">${p.name}</div><div class="sc-desc">${p.desc}</div><div class="sc-owned">&nbsp;</div><button class="sc-buy gold" ${s.gold<p.gold?'disabled':''}>${p.gold} 💰</button>`;
+    c.querySelector('.sc-buy').onclick = ()=>{
+      if(s.gold<p.gold){ toast('Not enough Gold'); return; }
+      s.gold -= p.gold;
+      const pulled = rollPack(p);
+      saveSave();
+      showPackReveal(p.name.toUpperCase(), pulled.pulls);
+    };
+    grid.appendChild(c);
+  });
+  return grid;
+}
+
+function unlockedAlbumIds(){
+  const ids = [];
+  Object.values(ALBUMS).forEach(a => { if(s.trophies >= a.unlockAt) ids.push(a.id); });
+  return ids.length ? ids : ['barClassics'];
+}
+
+function addStickerByRarity(rarity){
+  // Pick random unlocked album, find slots of that rarity, prefer unowned
+  const albumPool = unlockedAlbumIds();
+  const albumId = albumPool[Math.floor(Math.random()*albumPool.length)];
+  const slots = [];
+  ALBUM_RARITY_MIX.forEach((r,idx) => { if(r===rarity) slots.push(idx); });
+  if(slots.length===0) return {dup:false, coins:0, rarity};
+  const unowned = slots.filter(idx => !s.stickers[stickerKey(albumId,idx)]);
+  const pickFrom = unowned.length ? unowned : slots;
+  const idx = pickFrom[Math.floor(Math.random()*pickFrom.length)];
+  const key = stickerKey(albumId, idx);
+  if(s.stickers[key]){
+    s.stickers[key]++;
+    const coins = {white:10, silver:40, gold:150, diamond:0}[rarity]||10;
+    s.coins += coins;
+    if(rarity==='diamond') s.stickerTokens++;
+    return {dup:true, coins, rarity, albumId, idx};
+  } else {
+    s.stickers[key] = 1;
+    return {dup:false, coins:0, rarity, albumId, idx};
+  }
+}
+
+function rollPack(p){
+  let newCount=0, dupes=0, dupeCoins=0, gotGoldOrDiamond=false;
+  const pulls = [];
+  for(let i=0;i<p.count;i++){
+    const r = rarityRoll(p.maxTier, p.guaranteedGold && i===0);
+    if(r==='gold' || r==='diamond') gotGoldOrDiamond = true;
+    const res = addStickerByRarity(r);
+    if(res.dup){ dupes++; dupeCoins += res.coins; }
+    else newCount++;
+    pulls.push(res);
+  }
+  // Flash trigger: Sticker Splurge (§13.8) — 3rd pack in session without gold pull, 1/48h cap
+  sessionStickerPacks++;
+  if(gotGoldOrDiamond) sessionGoldStickerPulls++;
+  if(sessionStickerPacks >= 3 && sessionGoldStickerPulls === 0){
+    const lastTrigger = s.achievements.lastStickerSplurgeAt || 0;
+    if(Date.now() - lastTrigger > 48*3600*1000){
+      triggerFlashOffer('sticker');
+      s.achievements.lastStickerSplurgeAt = Date.now();
+    }
+  }
+  return {newCount,dupes,dupeCoins,pulls};
+}
+
+/* ===== Pack Reveal (§11.9 card-flip) ===== */
+let packRevealState = null;
+
+function showPackReveal(packName, pulls){
+  packRevealState = {packName, pulls, idx:0, flipped:false, newCount:0, dupes:0, dupeCoins:0};
+  pulls.forEach(p => {
+    if(p.dup){ packRevealState.dupes++; packRevealState.dupeCoins += p.coins; }
+    else packRevealState.newCount++;
+  });
+  $('pack-reveal-title').textContent = packName;
+  $('pack-reveal').classList.remove('hidden');
+  renderPackReveal();
+}
+
+function renderPackReveal(){
+  const st = packRevealState;
+  if(!st) return;
+  if(st.idx >= st.pulls.length){
+    // Final summary screen
+    $('pack-reveal-title').textContent = 'PACK COMPLETE';
+    $('pack-reveal-progress').innerHTML = `<b style="color:#4ae35f;font-size:14px">${st.newCount} NEW</b> · <span style="color:#808090">${st.dupes} Duplicate</span>${st.dupeCoins>0?` → +${st.dupeCoins}🪙`:''}`;
+    const card = $('pack-card');
+    card.classList.remove('flipped');
+    card.style.display = 'none';
+    let summary = $('pack-reveal-summary-el');
+    if(!summary){
+      summary = document.createElement('div');
+      summary.id = 'pack-reveal-summary-el';
+      summary.className = 'pack-reveal-summary';
+      $('pack-reveal').insertBefore(summary, $('pack-reveal-btn'));
+    }
+    const collected = st.pulls.filter(p=>!p.dup).length;
+    summary.innerHTML = `<b>${collected}/${st.pulls.length}</b> stickers added to your albums`;
+    summary.style.display = 'block';
+    $('pack-reveal-btn').textContent = 'CLOSE';
+    $('pack-reveal-btn').onclick = closePackReveal;
+    return;
+  }
+  const pull = st.pulls[st.idx];
+  const alb = ALBUMS[pull.albumId];
+  const stk = alb?.stickers[pull.idx];
+  $('pack-reveal-progress').textContent = `${st.idx+1} of ${st.pulls.length}`;
+  const card = $('pack-card');
+  const front = $('pack-card-front');
+  // Reset front face
+  card.classList.remove('flipped');
+  front.className = 'pack-card-face pack-card-front ' + pull.rarity;
+  let ribbon;
+  if(pull.dup){
+    ribbon = pull.rarity==='diamond' ? '<div class="pcf-ribbon token">🎟️ TOKEN!</div>' : '<div class="pcf-ribbon dup">DUPLICATE</div>';
+  } else {
+    ribbon = '<div class="pcf-ribbon new">NEW!</div>';
+  }
+  front.innerHTML = ribbon + `
+    <div class="pcf-sticker">${stk?stk.i:'💎'}</div>
+    <div class="pcf-name">${stk?stk.n:'Mystery'}</div>
+    <div class="pcf-album">${alb?alb.name:''} · <span class="pill ${pull.rarity}">${pull.rarity}</span></div>
+    ${pull.dup && pull.rarity!=='diamond' ? `<div style="font-size:11px;color:#ffb94a;margin-top:8px">+${pull.coins}🪙</div>` : ''}`;
+  // Hide summary if coming back
+  const summary = $('pack-reveal-summary-el'); if(summary) summary.style.display = 'none';
+  card.style.display = 'block';
+
+  $('pack-reveal-btn').textContent = st.flipped ? (st.idx === st.pulls.length-1 ? 'FINISH' : 'NEXT') : 'TAP TO REVEAL';
+  $('pack-reveal-btn').onclick = ()=>{
+    if(!packRevealState.flipped){
+      packRevealState.flipped = true;
+      card.classList.add('flipped');
+      $('pack-reveal-btn').textContent = st.idx === st.pulls.length-1 ? 'FINISH' : 'NEXT';
+    } else {
+      packRevealState.idx++;
+      packRevealState.flipped = false;
+      renderPackReveal();
+    }
+  };
+  // Also tap card to flip
+  card.onclick = ()=>{
+    if(!packRevealState.flipped){
+      packRevealState.flipped = true;
+      card.classList.add('flipped');
+      $('pack-reveal-btn').textContent = st.idx === st.pulls.length-1 ? 'FINISH' : 'NEXT';
+    }
+  };
+}
+
+function closePackReveal(){
+  $('pack-reveal').classList.add('hidden');
+  const summary = $('pack-reveal-summary-el'); if(summary) summary.style.display = 'none';
+  packRevealState = null;
+  renderAll();
+}
+
+function rarityRoll(maxTier,forceGold){
+  if(forceGold && Math.random()<0.8) return 'gold';
+  const r = Math.random();
+  if(maxTier==='silver'){ return r<0.7 ? 'white' : 'silver'; }
+  if(r<0.60) return 'white';
+  if(r<0.88) return 'silver';
+  if(r<0.98) return 'gold';
+  return 'diamond';
+}
+
+/* ========== TROPHY ROAD FULL TAB ========== */
+
+function renderTrophyRoad(){
+  const list = $('tr-list');
+  list.innerHTML = '';
+  TROPHY_ROAD.forEach(ms => {
+    const claimed = s.trophyRoad.claimedMilestones.includes(ms.n);
+    const claimable = !claimed && s.trophies >= ms.trophies;
+    const row = document.createElement('div');
+    row.className = 'tr-row'+(claimable?' claimable':claimed?' claimed':' locked');
+    row.innerHTML = `
+      <div class="tr-n">${ms.n}</div>
+      <div class="tr-body">
+        <div class="tr-threshold">🏆 ${ms.trophies}</div>
+        <div class="tr-reward-text">${ms.reward}</div>
+      </div>
+      <button class="tr-btn" ${!claimable?'disabled':''}>${claimed?'✓':claimable?'CLAIM':'—'}</button>`;
+    row.querySelector('.tr-btn').onclick = ()=>{ if(claimable) claimMilestone(ms.n); };
+    list.appendChild(row);
+  });
+}
+
+function claimMilestone(n){
+  if(s.trophyRoad.claimedMilestones.includes(n)) return;
+  const ms = TROPHY_ROAD.find(m=>m.n===n);
+  if(!ms || s.trophies < ms.trophies) return;
+  ms.rewardFn();
+  s.trophyRoad.claimedMilestones.push(n);
+  toast('🏆 Claimed #'+n+': '+ms.reward);
+  renderAll();
+}
+
+/* =========================================================================
+   SCREEN NAV
+   ========================================================================= */
+
+const SCREENS = ['home','matchmaking','loadout','match','result','shop','trophyroad','venue','albums','tutorial'];
+function showScreen(id){
+  SCREENS.forEach(x => $('screen-'+x).classList.add('hidden'));
+  $('screen-'+id).classList.remove('hidden');
+  // nav highlight
+  document.querySelectorAll('.nav-btn').forEach(b=>{
+    b.classList.toggle('active', b.dataset.screen===id);
+  });
+  // Hide nav/hud during match + tutorial
+  const hideNav = ['matchmaking','loadout','match','result','tutorial'].includes(id);
+  $('bottom-nav').classList.toggle('hidden', hideNav);
+  $('hud').classList.toggle('hidden', id==='match' || id==='matchmaking' || id==='tutorial');
+  if(id==='home') renderHome();
+  if(id==='shop') renderShop();
+  if(id==='trophyroad') renderTrophyRoad();
+  if(id==='venue'){ venueView.arenaId = s.currentPlayingArena; renderVenue(); }
+  if(id==='albums'){ albumView = {mode:'list', albumId:null}; renderAlbums(); }
+}
+function goHome(){ showScreen('home'); }
+
+/* =========================================================================
+   LUCKY BOX
+   ========================================================================= */
+
+function claimLuckyBox(){
+  if(Date.now() < s.luckyBox.nextAvailableAt) return;
+  // 4 random boosters (B 70 / S 25 / G 5)
+  const ids = [];
+  for(let i=0;i<4;i++){
+    const r = Math.random();
+    const tier = r<0.70?'bronze':r<0.95?'silver':'gold';
+    const pool = Object.keys(BOOSTERS).filter(k=>BOOSTERS[k].tier===tier);
+    ids.push(pool[Math.floor(Math.random()*pool.length)]);
+  }
+  grantBoosters(ids);
+  s.coins += 50;
+  s.gold += 30;
+  // 1 sticker (common-weighted)
+  addStickerByRarity('white');
+  s.luckyBox.nextAvailableAt = Date.now() + 4*3600*1000;
+  missionProgress('lucky_box_2');
+  toast('🎁 +4 boosters +50🪙 +30💰 +1 sticker');
+  renderAll();
+}
+
+/* =========================================================================
+   STAR CHEST
+   ========================================================================= */
+
+function rollStarChest(arenaId){
+  const tbl = {
+    juice:   {gold:40,  coins:50,  boosters:2, stickers:2, decor:0.25},
+    beach:   {gold:80,  coins:100, boosters:2, stickers:3, decor:0.20},
+    cocktail:{gold:150, coins:200, boosters:3, stickers:3, decor:0.18},
+    speak:   {gold:280, coins:350, boosters:3, stickers:4, decor:0.15},
+    rooftop: {gold:500, coins:600, boosters:4, stickers:4, decor:0.12},
+    grand:   {gold:900, coins:1000,boosters:4, stickers:5, decor:0.10}
+  };
+  const t = tbl[arenaId] || tbl.juice;
+  s.gold += t.gold; s.coins += t.coins;
+  const boosterIds = [];
+  for(let i=0;i<t.boosters;i++){
+    const r = Math.random();
+    const tier = r<0.5?'silver':r<0.85?'bronze':'gold';
+    const pool = Object.keys(BOOSTERS).filter(k=>BOOSTERS[k].tier===tier);
+    boosterIds.push(pool[Math.floor(Math.random()*pool.length)]);
+  }
+  grantBoosters(boosterIds);
+  for(let i=0;i<t.stickers;i++){
+    const r = rarityRoll('diamond', false);
+    addStickerByRarity(r);
+  }
+  // §10.3 Decor roll — only fires if arena has unearned landmarks
+  let decorLine = '';
+  if(Math.random() < t.decor){
+    const blds = BUILDINGS_BY_ARENA[arenaId] || [];
+    const unearned = blds.filter(b => b.type === 'cosmetic' && !s.venue.buildings[b.id]);
+    if(unearned.length > 0){
+      const pick = unearned[Math.floor(Math.random()*unearned.length)];
+      s.venue.buildings[pick.id] = 1;
+      decorLine = ` + 🏛️ ${pick.name}`;
+    }
+  }
+  toast(`🎁 Star Chest: +${t.gold}💰 +${t.coins}🪙 +${t.boosters} boosters${decorLine}`);
+  s.starChestPending = false;
+  missionProgress('open_chest');
+}
+
+/* =========================================================================
+   MATCH FLOW — §5, §6, §7, §14
+   ========================================================================= */
+
+let matchCtx = null;
+
+function onPlayPressed(){
+  const a = currentArena();
+  if(s.gold < a.ante){
+    // Practice
+    enterPractice();
+    return;
+  }
+  // Deduct ante
+  s.gold -= a.ante;
+  matchCtx = {
+    arena: a,
+    practice: false,
+    ante: a.ante,
+    opponent: pickOpponent(a),
+    onFire: s.onFireActive
+  };
+  showMatchmaking();
+}
+
+function enterPractice(){
+  const a = arenaById('juice');
+  matchCtx = {
+    arena: currentArena(),
+    practice: true,
+    ante: 0,
+    opponent: pickOpponent(a),
+    onFire: false
+  };
+  showMatchmaking();
+}
+
+function pickOpponent(a){
+  const pool = AI_PERSONAS[a.id] || AI_PERSONAS.juice;
+  const p = pool[Math.floor(Math.random()*pool.length)];
+  const betRoll = Math.random();
+  let bet='none';
+  if(betRoll<0.3) bet='bronze';
+  else if(betRoll<0.6) bet='silver';
+  else if(betRoll<0.85) bet='gold';
+  else bet='none';
+  const trophiesRange = Math.max(0, s.trophies + Math.floor((Math.random()-0.5)*200));
+  return {name:p.name, ic:p.ic, tag:p.tag, trophies:trophiesRange, betTier:bet};
+}
+
+function showMatchmaking(){
+  showScreen('matchmaking');
+  const o = matchCtx.opponent;
+  $('mm-avatar').textContent = o.ic;
+  $('mm-name').textContent = o.name;
+  $('mm-tagline').textContent = o.tag;
+  $('mm-trophies').textContent = o.trophies;
+  $('mm-bet').firstElementChild.nextElementSibling.textContent = o.betTier==='none'?'None':o.betTier.charAt(0).toUpperCase()+o.betTier.slice(1);
+  setTimeout(showLoadout, 1400);
+}
+
+function showLoadout(){
+  showScreen('loadout');
+  // reset loadout
+  s.loadout = {betId:null, perk1Id:null, perk2Id:null};
+  renderLoadout();
+}
+
+function renderLoadout(){
+  const a = matchCtx.arena;
+  $('lo-arena').textContent = a.icon+' '+a.name;
+  $('lo-ante').textContent = matchCtx.practice ? '— (Practice)' : `${a.ante} 💰 (pot ${a.ante*2})`;
+
+  const betId = s.loadout.betId;
+  const bs = $('bet-slot');
+  bs.className = 'bet-slot';
+  if(betId){
+    const b = BOOSTERS[betId];
+    bs.classList.add('filled','tier-'+b.tier);
+    bs.innerHTML = `<div class="slot-ic">${b.ic}</div><div class="slot-name">${b.name}</div><div class="slot-hint"><span class="pill ${b.tier}">${b.tier}</span></div>`;
+    $('lo-bet-summary').textContent = `${b.name} (${b.tier})`;
+  } else {
+    bs.innerHTML = `<div class="slot-ic">➕</div><div class="slot-name">Empty</div><div class="slot-hint">Tap to stake (optional)</div>`;
+    $('lo-bet-summary').textContent = 'None';
+  }
+
+  [0,1].forEach(i => {
+    const slot = $('perk-slot-'+(i+1));
+    const pid = s.loadout['perk'+(i+1)+'Id'];
+    slot.className='perk-slot';
+    if(pid){
+      const p = PERKS[pid];
+      slot.classList.add('filled');
+      slot.innerHTML = `<div class="slot-ic">${p.ic}</div><div class="slot-name">${p.name}</div>`;
+    } else {
+      slot.innerHTML = `<div class="slot-ic">➕</div><div class="slot-name">Empty</div>`;
+    }
+  });
+}
+
+function openBetPicker(){
+  const owned = Object.entries(s.boosters).filter(([k,v])=>v>0);
+  const arenaUnlocked = ARENA_BOOSTER_UNLOCKS[matchCtx.arena.id];
+  $('picker-title').textContent = 'Pick your Bet';
+  const list = $('picker-list');
+  list.innerHTML = '';
+
+  const emptyOpt = document.createElement('div');
+  emptyOpt.className = 'picker-empty-opt';
+  emptyOpt.textContent = '— No Bet (reduced coin payout) —';
+  emptyOpt.onclick = ()=>{ s.loadout.betId = null; closePicker(); renderLoadout(); };
+  list.appendChild(emptyOpt);
+
+  owned.forEach(([id,qty]) => {
+    const b = BOOSTERS[id];
+    const available = arenaUnlocked.includes(id);
+    const item = document.createElement('div');
+    item.className = 'picker-item tier-'+b.tier+(available?'':' disabled');
+    item.innerHTML = `<div class="pi-ic">${b.ic}</div><div class="pi-info"><div class="pi-name">${b.name} <span class="pill ${b.tier}">${b.tier}</span></div><div class="pi-desc">${b.desc}</div></div><div class="pi-qty">×${qty}</div>`;
+    if(available) item.onclick = ()=>{ s.loadout.betId = id; closePicker(); renderLoadout(); };
+    list.appendChild(item);
+  });
+  $('picker-modal').classList.remove('hidden');
+}
+
+function openPerkPicker(slotIdx){
+  $('picker-title').textContent = 'Pick Perk '+(slotIdx+1);
+  const list = $('picker-list');
+  list.innerHTML = '';
+  const emptyOpt = document.createElement('div');
+  emptyOpt.className = 'picker-empty-opt';
+  emptyOpt.textContent = '— No Perk —';
+  emptyOpt.onclick = ()=>{ s.loadout['perk'+(slotIdx+1)+'Id'] = null; closePicker(); renderLoadout(); };
+  list.appendChild(emptyOpt);
+  Object.entries(PERKS).forEach(([id,p]) => {
+    if(!s.perks[id]) return;
+    const otherSlot = slotIdx===0 ? s.loadout.perk2Id : s.loadout.perk1Id;
+    if(otherSlot===id) return;
+    const item = document.createElement('div');
+    item.className='picker-item';
+    item.innerHTML = `<div class="pi-ic">${p.ic}</div><div class="pi-info"><div class="pi-name">${p.name}</div><div class="pi-desc">${p.desc}</div></div><div class="pi-qty">×${p.uses}</div>`;
+    item.onclick = ()=>{ s.loadout['perk'+(slotIdx+1)+'Id'] = id; closePicker(); renderLoadout(); };
+    list.appendChild(item);
+  });
+  $('picker-modal').classList.remove('hidden');
+}
+
+function closePicker(){ $('picker-modal').classList.add('hidden'); }
+
+/* =========================================================================
+   MATCH CORE — ported 1:1 from index-v6.html
+   ========================================================================= */
+
+const CFG_MATCH = {
+  MATCH_DURATION: 90,
+  COUNTDOWN_DURATION: 3,
+  GLASS_CAPACITY: 4,
+  VISIBLE_CUSTOMERS: 3,
+  CUSTOMER_PATIENCE: 24,
+  SERVE_GRACE_WINDOW: 2,
+  CUSTOMER_LEAVE_PENALTY: -25,
+  POINTS_PER_LAYER: 50,
+  SPEED_BONUS: 50,
+  COMBO_BONUS: 50,
+  COMBO_WINDOW: 10,
+  AUTO_SERVE_DURATION: 30,
+  AUTO_SERVE_DELAY: 0.3,
+  COLOR_SPLASH_MAX_LAYERS: 2,
+  SPAWN_RECHARGE_TIME: 1,
+  SPAWN_MAX_CHARGES: 12,
+  SPAWN_START_CHARGES: 5,
+  SPAWN_CUSTOMER_WEIGHT: 0.6,
+  ALL_COLORS: ['#FF4444','#4488FF','#FFCC00','#44CC44','#AA44FF','#FF8800','#FF66AA','#00CCBB'],
+  ALL_COLOR_NAMES: ['Red','Blue','Yellow','Green','Purple','Orange','Pink','Teal']
+};
+
+const ARENA_V6 = {
+  juice:    {idx:0, colors:3, sourceGlasses:3, emptyGlasses:2, bg:['#5c3210','#3d1a08'], ai:{pourIntervalMin:1.8,pourIntervalMax:3.2,mistakeRate:0.03,serveDelay:0.15}},
+  beach:    {idx:1, colors:5, sourceGlasses:4, emptyGlasses:3, bg:['#003d5c','#002940'], ai:{pourIntervalMin:1.5,pourIntervalMax:2.8,mistakeRate:0.02,serveDelay:0.12}},
+  cocktail: {idx:2, colors:7, sourceGlasses:5, emptyGlasses:3, bg:['#2D1B69','#1a1a2e'], ai:{pourIntervalMin:1.3,pourIntervalMax:2.5,mistakeRate:0.015,serveDelay:0.10}},
+  speak:    {idx:3, colors:7, sourceGlasses:6, emptyGlasses:4, bg:['#1B4D2E','#0D2818'], ai:{pourIntervalMin:1.1,pourIntervalMax:2.2,mistakeRate:0.01,serveDelay:0.08}},
+  rooftop:  {idx:4, colors:7, sourceGlasses:7, emptyGlasses:5, bg:['#5c1a1a','#3d2800'], ai:{pourIntervalMin:1.0,pourIntervalMax:1.8,mistakeRate:0.005,serveDelay:0.06}},
+  grand:    {idx:5, colors:7, sourceGlasses:8, emptyGlasses:5, bg:['#1a1a1a','#2D2D00'], ai:{pourIntervalMin:0.9,pourIntervalMax:1.5,mistakeRate:0.003,serveDelay:0.05}}
+};
+
+const POWERUP_ICONS = {
+  extraBottle: '➕', colorSplash: '🎨', autoServe: '🤖', clearBottle: '🧽',
+  firstPour: '💧', spawnPlus3: '✨', swap: '🔄', customerLock: '🔒', doubleServe: '💥'
+};
+const CUSTOMER_EMOJIS = ['😀','😎','🤠','🥳','🧑‍🎤','👨‍🍳','👩‍💼','🧑‍🎨','🧔','👸','🦸','🧙'];
+
+let COLOR_HEX = {};
+function rebuildColorHex(av){
+  COLOR_HEX = {};
+  for(let i=0;i<av.colors;i++) COLOR_HEX[CFG_MATCH.ALL_COLOR_NAMES[i].toLowerCase()] = CFG_MATCH.ALL_COLORS[i];
+}
+
+function createRNG(seed){
+  return function(){
+    seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+    let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+
+let M = null;
+let matchDrinksServed = 0;
+let matchBestCombo = 0;
+let undoHistory = [];
+// Session-local: tracks pack purchases + gold pulls for Sticker Splurge flash
+let sessionStickerPacks = 0;
+let sessionGoldStickerPulls = 0;
+let pourAnimTarget = null;
+let gameLoopRunning = false;
+let lastFrameTime = 0;
+let countdownInterval = null;
+
+function newMatchState(av, opponent){
+  return {
+    phase:'countdown', arenaV6:av, opponent,
+    timer:CFG_MATCH.MATCH_DURATION, playerScore:0, opponentScore:0,
+    lastServeTime:0, comboCount:0,
+    playerGlasses:[], selectedGlass:null, opponentGlasses:[],
+    customers:[], customerQueue:[],
+    playerPowerUps:[null,null], opponentPowerUps:[null,null],
+    activeEffects:{playerAutoServeEndTime:0,opponentAutoServeEndTime:0,playerNextAutoServeAt:0,opponentNextAutoServeAt:0},
+    clearBottleMode:false, colorSplashMode:false,
+    swapMode:false, swapFirst:null, customerLockMode:false,
+    pourReadHint:null, steadyHandCharges:0, pourReadTimer:0,
+    ai:{nextPourTime:0,nextServeCheck:0,undosRemaining:3,undoPending:false},
+    spawnCharges:CFG_MATCH.SPAWN_START_CHARGES, spawnRechargeTimer:CFG_MATCH.SPAWN_RECHARGE_TIME,
+    aiSpawnCharges:CFG_MATCH.SPAWN_START_CHARGES, aiSpawnRechargeTimer:CFG_MATCH.SPAWN_RECHARGE_TIME,
+    undosRemaining:3, doubleServePending:false
+  };
+}
+
+function canPourRaw(glasses, fi, ti){
+  const f=glasses[fi], t=glasses[ti];
+  if(!f||!t) return false;
+  if(f.layers.length===0) return false;
+  if(t.layers.length>=CFG_MATCH.GLASS_CAPACITY) return false;
+  if(t.layers.length===0) return true;
+  const ft=f.layers[f.layers.length-1], tt=t.layers[t.layers.length-1];
+  if(ft!==tt) return false;
+  return CFG_MATCH.GLASS_CAPACITY - t.layers.length > 0;
+}
+function doPourRaw(glasses, fi, ti){
+  const f=glasses[fi], t=glasses[ti];
+  const top=f.layers[f.layers.length-1];
+  const space=CFG_MATCH.GLASS_CAPACITY-t.layers.length;
+  let moved=0;
+  while(f.layers.length>0 && f.layers[f.layers.length-1]===top && moved<space){
+    f.layers.pop(); t.layers.push(top); moved++;
+  }
+  return moved;
+}
+function deepCloneGlasses(g){ return g.map(x=>({layers:[...x.layers]})); }
+
+function canPour(fi,ti){ if(M.phase!=='playing') return false; return canPourRaw(M.playerGlasses,fi,ti); }
+function doPour(fi,ti){
+  if(!canPour(fi,ti)) return false;
+  undoHistory.push(deepCloneGlasses(M.playerGlasses));
+  const moved = doPourRaw(M.playerGlasses,fi,ti);
+  pourAnimTarget={glassIndex:ti, layerCount:moved};
+  checkServeable();
+  return true;
+}
+function doUndo(){
+  if(undoHistory.length===0 || M.undosRemaining<=0) return;
+  M.playerGlasses = undoHistory.pop();
+  M.selectedGlass = null;
+  M.undosRemaining--;
+  renderPlayerBoard(); updateUndoButton();
+}
+function updateUndoButton(){
+  const b = $('btn-undo'); if(!b) return;
+  b.innerHTML = '↩ <span class="undo-count">'+(M.undosRemaining||0)+'</span>';
+  b.classList.toggle('disabled', M.undosRemaining<=0);
+}
+
+function generateBoard(seed, av){
+  const nC=av.colors, nS=av.sourceGlasses, nE=av.emptyGlasses;
+  const names = CFG_MATCH.ALL_COLOR_NAMES.slice(0,nC).map(x=>x.toLowerCase());
+  const mk = l => ({layers:[...l]});
+  for(let a=0;a<50;a++){
+    const rng = createRNG(seed+a);
+    const total = nS*CFG_MATCH.GLASS_CAPACITY;
+    const per = Math.floor(total/nC), rem = total-per*nC;
+    const pool=[];
+    for(let i=0;i<nC;i++){ const n = per+(i<rem?1:0); for(let j=0;j<n;j++) pool.push(names[i]); }
+    for(let i=pool.length-1;i>0;i--){ const j=Math.floor(rng()*(i+1)); [pool[i],pool[j]]=[pool[j],pool[i]]; }
+    const gl=[];
+    for(let i=0;i<nS;i++) gl.push(mk(pool.slice(i*CFG_MATCH.GLASS_CAPACITY,(i+1)*CFG_MATCH.GLASS_CAPACITY)));
+    for(let i=0;i<nE;i++) gl.push(mk([]));
+    if(!gl.some(g=>g.layers.length===CFG_MATCH.GLASS_CAPACITY && g.layers.every(l=>l===g.layers[0]))) return gl;
+  }
+  return [];
+}
+
+function isGlassPure(g){ return g.layers.length>0 && g.layers.every(l=>l===g.layers[0]); }
+function isGlassServeable(g){
+  if(g.layers.length!==CFG_MATCH.GLASS_CAPACITY) return false;
+  if(!isGlassPure(g)) return false;
+  return M.customers.some(c=>!c.servedByPlayer && !c.leaving && c.color===g.layers[0]);
+}
+function checkServeable(){ renderPlayerBoard(); renderOpponentBoard(); }
+
+function renderGlass(glass, index, isPlayer){
+  const el = document.createElement('div');
+  let lh, w;
+  if(isPlayer){
+    const c=M.playerGlasses.length;
+    lh = c<=6?30:c<=8?26:22; w = c<=6?60:c<=8?50:44;
+  } else {
+    const c=M.opponentGlasses.length;
+    lh = c<=7?17:14; w = c<=7?35:28;
+  }
+  el.style.width = w+'px';
+  el.style.height = (CFG_MATCH.GLASS_CAPACITY*lh+4)+'px';
+  el.className = 'glass '+(isPlayer?'player-glass':'opponent-glass');
+  if(glass.layers.length===0) el.classList.add('empty-glass');
+  if(isPlayer && M.selectedGlass===index) el.classList.add('selected');
+  if(isPlayer && isGlassServeable(glass)) el.classList.add('serveable');
+  if(isPlayer && M.clearBottleMode && glass.layers.length>0) el.classList.add('clear-target');
+  if(isPlayer && M.colorSplashMode && glass.layers.length>0) el.classList.add('color-splash-target');
+  if(isPlayer && M.pourReadHint){
+    if(M.pourReadHint.from === index) el.classList.add('pour-read-from');
+    if(M.pourReadHint.to === index) el.classList.add('pour-read-to');
+  }
+  const anim = (isPlayer && pourAnimTarget && pourAnimTarget.glassIndex===index) ? glass.layers.length - pourAnimTarget.layerCount : -1;
+  for(let i=0;i<glass.layers.length;i++){
+    const ly = document.createElement('div');
+    ly.className = 'glass-layer';
+    ly.style.height = lh+'px';
+    ly.style.backgroundColor = COLOR_HEX[glass.layers[i]]||'#888';
+    if(i===0) ly.style.borderRadius = '0 0 4px 4px';
+    if(i>=anim && anim>=0){ ly.classList.add('pour-new'); ly.style.animationDelay = ((i-anim)*0.08)+'s'; }
+    el.appendChild(ly);
+  }
+  el.dataset.index = index;
+  return el;
+}
+function renderPlayerBoard(){
+  const c = $('player-board'); if(!c) return;
+  c.innerHTML='';
+  M.playerGlasses.forEach((g,i)=>c.appendChild(renderGlass(g,i,true)));
+  pourAnimTarget = null;
+}
+function renderOpponentBoard(){
+  const c = $('opponent-board'); if(!c) return;
+  const inv = $('opponent-inventory');
+  c.innerHTML='';
+  M.opponentGlasses.forEach((g,i)=>c.appendChild(renderGlass(g,i,false)));
+  if(inv) c.appendChild(inv);
+}
+
+function handleGlassTap(index){
+  if(M.phase!=='playing') return;
+  const glass = M.playerGlasses[index];
+  if(M.clearBottleMode){
+    if(glass.layers.length>0){
+      glass.layers=[]; M.clearBottleMode=false; M.selectedGlass=null;
+      renderPlayerBoard(); renderPowerUps(); checkServeable();
+    }
+    return;
+  }
+  if(M.colorSplashMode){ executeColorSplash(index); return; }
+  if(M.swapMode){
+    if(M.swapFirst === null){
+      if(glass.layers.length > 0){ M.swapFirst = index; M.selectedGlass = index; renderPlayerBoard(); }
+      return;
+    }
+    if(index === M.swapFirst){ M.swapFirst = null; M.selectedGlass = null; renderPlayerBoard(); return; }
+    const a = M.playerGlasses[M.swapFirst];
+    const b = glass;
+    const tmp = a.layers; a.layers = b.layers; b.layers = tmp;
+    M.swapMode = false; M.swapFirst = null; M.selectedGlass = null;
+    renderPlayerBoard(); renderPowerUps(); checkServeable();
+    return;
+  }
+  if(M.selectedGlass===null){
+    if(isGlassServeable(glass)){ serveGlass(index); return; }
+    if(glass.layers.length>0){ M.selectedGlass=index; renderPlayerBoard(); }
+  } else if(M.selectedGlass===index){
+    if(isGlassServeable(glass)){ M.selectedGlass=null; serveGlass(index); }
+    else { M.selectedGlass=null; renderPlayerBoard(); }
+  } else {
+    const from = M.selectedGlass;
+    if(isGlassServeable(glass)){ M.selectedGlass=null; serveGlass(index); return; }
+    if(canPour(from,index)){ M.selectedGlass=null; doPour(from,index); }
+    else { M.selectedGlass = glass.layers.length>0 ? index : null; renderPlayerBoard(); }
+  }
+}
+
+function generateCustomerQueue(seed, av){
+  const rng = createRNG(seed+42);
+  const names = CFG_MATCH.ALL_COLOR_NAMES.slice(0,av.colors).map(c=>c.toLowerCase());
+  const q=[];
+  for(let i=0;i<10;i++){
+    q.push({color:names[Math.floor(rng()*names.length)],patience:CFG_MATCH.CUSTOMER_PATIENCE,maxPatience:CFG_MATCH.CUSTOMER_PATIENCE,servedByPlayer:false,servedByOpponent:false,graceTimer:0,leaving:false,emoji:CUSTOMER_EMOJIS[Math.floor(rng()*CUSTOMER_EMOJIS.length)]});
+  }
+  return q;
+}
+function spawnNewCustomer(){
+  const names = CFG_MATCH.ALL_COLOR_NAMES.slice(0,M.arenaV6.colors).map(c=>c.toLowerCase());
+  const counts={}; names.forEach(c=>counts[c]=0);
+  M.playerGlasses.forEach(g=>g.layers.forEach(l=>{ if(counts[l]!==undefined) counts[l]++; }));
+  M.opponentGlasses.forEach(g=>g.layers.forEach(l=>{ if(counts[l]!==undefined) counts[l]++; }));
+  const pool=[]; for(const c of names){ const w=Math.max(1,counts[c]); for(let i=0;i<w;i++) pool.push(c); }
+  return {color:pool[Math.floor(Math.random()*pool.length)],patience:CFG_MATCH.CUSTOMER_PATIENCE,maxPatience:CFG_MATCH.CUSTOMER_PATIENCE,servedByPlayer:false,servedByOpponent:false,graceTimer:0,leaving:false,emoji:CUSTOMER_EMOJIS[Math.floor(Math.random()*CUSTOMER_EMOJIS.length)]};
+}
+function spawnInitialCustomers(){
+  M.customers=[];
+  for(let i=0;i<CFG_MATCH.VISIBLE_CUSTOMERS;i++) if(M.customerQueue.length>0) M.customers.push(M.customerQueue.shift());
+}
+function updateCustomers(dt){
+  for(let i=M.customers.length-1;i>=0;i--){
+    const c = M.customers[i];
+    if(c.lockedUntil && c.lockedUntil > performance.now()/1000){ /* frozen patience */ continue; }
+    if(c.servedByPlayer||c.servedByOpponent){
+      c.graceTimer -= dt;
+      if(c.graceTimer<=0 || (c.servedByPlayer && c.servedByOpponent)){
+        M.customers.splice(i,1);
+        M.customers.push(M.customerQueue.length>0?M.customerQueue.shift():spawnNewCustomer());
+        continue;
+      }
+    }
+    if(!c.servedByPlayer && !c.servedByOpponent){
+      c.patience -= dt;
+      if(c.patience<=0){
+        M.playerScore += CFG_MATCH.CUSTOMER_LEAVE_PENALTY;
+        M.opponentScore += CFG_MATCH.CUSTOMER_LEAVE_PENALTY;
+        c.leaving=true;
+        M.customers.splice(i,1);
+        M.customers.push(M.customerQueue.length>0?M.customerQueue.shift():spawnNewCustomer());
+        showScorePop(CFG_MATCH.CUSTOMER_LEAVE_PENALTY,'player');
+        showScorePop(CFG_MATCH.CUSTOMER_LEAVE_PENALTY,'opponent');
+      }
+    }
+  }
+}
+function renderCustomers(){
+  const z = $('customer-zone'); if(!z) return;
+  z.innerHTML='';
+  for(let i=0;i<CFG_MATCH.VISIBLE_CUSTOMERS;i++){
+    const slot = document.createElement('div'); slot.className='customer-slot';
+    if(i>=M.customers.length){ slot.classList.add('empty-slot'); slot.innerHTML='<span style="color:rgba(255,255,255,0.2)">?</span>'; z.appendChild(slot); continue; }
+    const c = M.customers[i]; const hex = COLOR_HEX[c.color]||'#888';
+    const isLocked = c.lockedUntil && c.lockedUntil > performance.now()/1000;
+    if(isLocked) slot.style.outline = '2px solid #9ad4ff';
+    if(M.customerLockMode && !c.servedByPlayer && !c.servedByOpponent){
+      slot.style.cursor = 'pointer';
+      slot.style.boxShadow = '0 0 10px rgba(154,212,255,0.7)';
+      slot.onclick = () => {
+        c.lockedUntil = performance.now()/1000 + 8;
+        M.customerLockMode = false;
+        renderPowerUps();
+        renderCustomers();
+      };
+    }
+    const em = document.createElement('div'); em.className='customer-emoji'; em.textContent=c.emoji; slot.appendChild(em);
+    const lbl = document.createElement('div'); lbl.className='customer-drink-label'; lbl.style.color=hex;
+    lbl.innerHTML = `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${hex};margin-right:3px"></span>${c.color.charAt(0).toUpperCase()+c.color.slice(1)}`;
+    slot.appendChild(lbl);
+    if(c.servedByPlayer || c.servedByOpponent){
+      const ch = document.createElement('div'); ch.className='customer-served-check'+(c._checkShown?' no-anim':'');
+      ch.innerHTML='<span>✅</span>'; slot.appendChild(ch); slot.style.opacity='0.6'; c._checkShown=true;
+    }
+    const bar=document.createElement('div'); bar.className='patience-bar';
+    const f=document.createElement('div'); f.className='patience-fill';
+    f.style.width = Math.max(0,(c.patience/c.maxPatience)*100)+'%';
+    f.style.backgroundColor = c.patience<=4?'#FF4444':c.patience<=8?'#FFCC00':'#44CC44';
+    bar.appendChild(f); slot.appendChild(bar);
+    z.appendChild(slot);
+  }
+}
+
+function serveGlass(index){
+  const g = M.playerGlasses[index];
+  if(!isGlassServeable(g)) return;
+  const color = g.layers[0]; const layers = g.layers.length;
+  let tgt=null, ti=-1;
+  for(let i=0;i<M.customers.length;i++){
+    const c = M.customers[i];
+    if(!c.servedByPlayer && !c.leaving && c.color===color && (!tgt || c.patience<tgt.patience)){ tgt=c; ti=i; }
+  }
+  if(!tgt) return;
+  const gel = document.querySelectorAll('#player-board .glass')[index];
+  const slots = document.querySelectorAll('#customer-zone .customer-slot');
+  if(gel && slots[ti]){
+    const gr=gel.getBoundingClientRect(), cr=slots[ti].getBoundingClientRect();
+    const fly = document.createElement('div');
+    const hex = COLOR_HEX[color]||'#888';
+    fly.style.cssText = `position:fixed;z-index:300;pointer-events:none;width:${gr.width}px;height:${gr.height}px;border:2px solid rgba(255,255,255,0.3);border-radius:4px 4px 12px 12px;border-top:none;overflow:hidden;display:flex;flex-direction:column-reverse;background:rgba(255,255,255,0.08);left:${gr.left}px;top:${gr.top}px`;
+    for(let l=0;l<layers;l++){ const ly=document.createElement('div'); ly.style.cssText=`width:100%;height:25%;background:${hex}`; fly.appendChild(ly); }
+    document.body.appendChild(fly);
+    const dx=cr.left+cr.width/2-gr.left-gr.width/2, dy=cr.top+cr.height/2-gr.top-gr.height/2;
+    fly.animate([{transform:'translate(0,0) scale(1)',opacity:1},{transform:`translate(${dx}px,${dy}px) scale(0.4)`,opacity:0.3}],{duration:450,easing:'cubic-bezier(0.2,0.8,0.3,1)',fill:'forwards'});
+    setTimeout(()=>fly.remove(),500);
+    slots[ti].classList.add('served-anim');
+    setTimeout(()=>slots[ti].classList.remove('served-anim'),450);
+  }
+  let pts = layers * CFG_MATCH.POINTS_PER_LAYER;
+  if(!tgt.servedByOpponent) pts += CFG_MATCH.SPEED_BONUS;
+  const elapsed = CFG_MATCH.MATCH_DURATION - M.timer;
+  if(M.lastServeTime>0 && (elapsed-M.lastServeTime)<=CFG_MATCH.COMBO_WINDOW){ M.comboCount++; pts += CFG_MATCH.COMBO_BONUS*M.comboCount; }
+  else M.comboCount = 1;
+  M.lastServeTime = elapsed;
+  if(M.comboCount > matchBestCombo) matchBestCombo = M.comboCount;
+  if(M.doubleServePending){ pts *= 2; M.doubleServePending=false; renderPowerUps(); }
+  M.playerScore += pts;
+  g.layers=[]; tgt.servedByPlayer=true; tgt.graceTimer=CFG_MATCH.SERVE_GRACE_WINDOW;
+  matchDrinksServed++;
+  showScorePop(pts,'player');
+  undoHistory=[]; M.selectedGlass=null;
+  checkServeable();
+}
+function showScorePop(points, side){
+  const c = $('screen-match'); if(!c) return;
+  const p = document.createElement('div');
+  p.className = 'score-pop';
+  p.textContent = (points>=0?'+':'')+points;
+  p.style.color = points<0?'#FF4444':points>=100?'#FFD700':'#44CC44';
+  if(side==='player'){ p.style.left='60px'; p.style.top='14px'; } else { p.style.right='60px'; p.style.top='14px'; }
+  c.appendChild(p);
+  setTimeout(()=>p.remove(),650);
+}
+
+function updateAI(dt){
+  if(M.phase!=='playing') return;
+  const diff = M.arenaV6.ai;
+  M.ai.nextPourTime -= dt;
+  if(M.ai.nextPourTime<=0){ aiMakePour(diff); M.ai.nextPourTime = diff.pourIntervalMin + Math.random()*(diff.pourIntervalMax-diff.pourIntervalMin); }
+  M.ai.nextServeCheck -= dt;
+  if(M.ai.nextServeCheck<=0){ aiCheckServe(); M.ai.nextServeCheck = diff.serveDelay; }
+}
+function countTopStack(g){
+  if(!g.layers.length) return 0;
+  const t = g.layers[g.layers.length-1]; let c=0;
+  for(let i=g.layers.length-1;i>=0 && g.layers[i]===t;i--) c++;
+  return c;
+}
+function evaluateAIPour(glasses, from, to, targetColors){
+  const sim = deepCloneGlasses(glasses);
+  doPourRaw(sim, from, to);
+  const dest=sim[to], src=sim[from];
+  const srcColor = glasses[from].layers[glasses[from].layers.length-1];
+  let score=0;
+  const eb = glasses.filter(g=>g.layers.length===0).length;
+  const ea = sim.filter(g=>g.layers.length===0).length;
+  const createsServe = dest.layers.length===CFG_MATCH.GLASS_CAPACITY && isGlassPure(dest) && targetColors.includes(dest.layers[0]);
+  if(ea===0 && !createsServe) return -100;
+  if(createsServe) score+=8;
+  else if(isGlassPure(dest) && dest.layers.length>0 && targetColors.includes(dest.layers[0])) score+=4;
+  if(src.layers.length===0) score+=3;
+  if(src.layers.length===0 && eb<=1) score+=3;
+  if(targetColors.includes(srcColor)){
+    const o=countTopStack(glasses[to]), n=countTopStack(dest);
+    if(n>o) score+=2;
+  }
+  if(glasses[to].layers.length>0 && glasses[to].layers[glasses[to].layers.length-1]===srcColor) score+=1;
+  if(src.layers.length>0){
+    const o=countTopStack(glasses[from]), n=countTopStack(src);
+    if(n<o && o>1) score-=1;
+  }
+  if(ea===1 && eb>1) score-=4;
+  if(targetColors.length>0 && !targetColors.includes(srcColor)) score-=0.5;
+  const dd = glasses[to].layers.length>0 && glasses[to].layers[glasses[to].layers.length-1]!==srcColor;
+  if(dd){ let pen=2; if(eb<=1) pen=6; else if(eb<=2) pen=3; score-=pen; }
+  return score;
+}
+function aiMakePour(diff){
+  if(M.ai.undoPending) return;
+  const gl = M.opponentGlasses;
+  if(Math.random()<diff.mistakeRate){
+    const snap = deepCloneGlasses(gl);
+    const moves=[];
+    for(let i=0;i<gl.length;i++) for(let j=0;j<gl.length;j++) if(i!==j && canPourRaw(gl,i,j)) moves.push([i,j]);
+    if(moves.length){
+      const [f,t] = moves[Math.floor(Math.random()*moves.length)];
+      doPourRaw(gl,f,t); renderOpponentBoard();
+      if(M.ai.undosRemaining>0 && Math.random()<0.5){
+        M.ai.undoPending=true;
+        setTimeout(()=>{
+          if(M.phase!=='playing'){ M.ai.undoPending=false; return; }
+          M.opponentGlasses = snap; M.ai.undosRemaining--; M.ai.undoPending=false; renderOpponentBoard();
+        }, 400+Math.random()*400);
+      }
+    }
+    return;
+  }
+  const tc = M.customers.filter(c=>!c.servedByOpponent).map(c=>c.color);
+  let best=null, bs=-Infinity;
+  for(let i=0;i<gl.length;i++) for(let j=0;j<gl.length;j++){
+    if(i!==j && canPourRaw(gl,i,j)){
+      const sc = evaluateAIPour(gl,i,j,tc);
+      if(sc>bs){ bs=sc; best=[i,j]; }
+    }
+  }
+  const en = gl.filter(g=>g.layers.length===0).length;
+  const min = en>=3?0:en===2?-2:-50;
+  if(best && bs>min){ doPourRaw(gl,best[0],best[1]); renderOpponentBoard(); }
+}
+function aiCheckServe(){
+  const gl = M.opponentGlasses;
+  for(let i=0;i<gl.length;i++){
+    const g = gl[i];
+    if(g.layers.length!==CFG_MATCH.GLASS_CAPACITY || !isGlassPure(g)) continue;
+    const color = g.layers[0];
+    let best=null;
+    for(const c of M.customers) if(c.color===color && !c.servedByOpponent && !c.leaving && (!best || c.patience<best.patience)) best=c;
+    if(best){
+      let pts = g.layers.length*CFG_MATCH.POINTS_PER_LAYER;
+      if(!best.servedByPlayer) pts += CFG_MATCH.SPEED_BONUS;
+      M.opponentScore += pts;
+      best.servedByOpponent=true; best.graceTimer=CFG_MATCH.SERVE_GRACE_WINDOW;
+      g.layers=[]; showScorePop(pts,'opponent'); renderOpponentBoard();
+      break;
+    }
+  }
+}
+
+function pickSpawnColor(){
+  const names = CFG_MATCH.ALL_COLOR_NAMES.slice(0,M.arenaV6.colors).map(c=>c.toLowerCase());
+  if(Math.random()<CFG_MATCH.SPAWN_CUSTOMER_WEIGHT && M.customers.length>0){
+    const cc = M.customers.filter(c=>!c.servedByPlayer && !c.servedByOpponent).map(c=>c.color);
+    if(cc.length>0) return cc[Math.floor(Math.random()*cc.length)];
+  }
+  return names[Math.floor(Math.random()*names.length)];
+}
+function findSpawnTarget(gl){
+  const c=[]; for(let i=0;i<gl.length;i++) if(gl[i].layers.length<CFG_MATCH.GLASS_CAPACITY) c.push(i);
+  return c.length?c[Math.floor(Math.random()*c.length)]:-1;
+}
+function useSpawn(){
+  if(M.phase!=='playing' || M.spawnCharges<=0) return;
+  const idx = findSpawnTarget(M.playerGlasses);
+  if(idx<0){ const b=$('btn-spawn'); if(b){b.classList.add('shake'); setTimeout(()=>b.classList.remove('shake'),300);} return; }
+  M.spawnCharges--;
+  M.playerGlasses[idx].layers.push(pickSpawnColor());
+  pourAnimTarget={glassIndex:idx,layerCount:1};
+  renderPlayerBoard(); updateSpawnButton();
+}
+function aiUseSpawn(){
+  if(M.aiSpawnCharges<=0) return;
+  const gl = M.opponentGlasses;
+  const names = CFG_MATCH.ALL_COLOR_NAMES.slice(0,M.arenaV6.colors).map(c=>c.toLowerCase());
+  let color;
+  const unserved = M.customers.filter(c=>!c.servedByOpponent && !c.leaving).map(c=>c.color);
+  if(unserved.length>0){
+    let bc=null, bp=-1;
+    for(const c of unserved){
+      let p=0;
+      for(const g of gl){
+        if(g.layers.length>=CFG_MATCH.GLASS_CAPACITY) continue;
+        if(g.layers.length===0) p=Math.max(p,1);
+        else if(g.layers[g.layers.length-1]===c) p=Math.max(p,3);
+      }
+      if(p>bp){ bp=p; bc=c; }
+    }
+    color = bc || unserved[Math.floor(Math.random()*unserved.length)];
+  } else color = names[Math.floor(Math.random()*names.length)];
+  let bi=-1, bp=-1;
+  for(let i=0;i<gl.length;i++){
+    const g = gl[i];
+    if(g.layers.length>=CFG_MATCH.GLASS_CAPACITY) continue;
+    if(isGlassPure(g) && g.layers.length>0 && g.layers[0]!==color) continue;
+    let p=0;
+    if(g.layers.length>0 && g.layers[g.layers.length-1]===color) p=3;
+    else if(g.layers.length===0) p=1;
+    if(p>bp){ bp=p; bi=i; }
+  }
+  if(bi<0) for(let i=0;i<gl.length;i++) if(gl[i].layers.length<CFG_MATCH.GLASS_CAPACITY){ bi=i; break; }
+  if(bi<0) return;
+  M.aiSpawnCharges--;
+  gl[bi].layers.push(color);
+  renderOpponentBoard();
+}
+function updateSpawns(dt){
+  if(M.spawnCharges<CFG_MATCH.SPAWN_MAX_CHARGES){
+    M.spawnRechargeTimer-=dt;
+    if(M.spawnRechargeTimer<=0){ M.spawnCharges=Math.min(M.spawnCharges+1,CFG_MATCH.SPAWN_MAX_CHARGES); M.spawnRechargeTimer=CFG_MATCH.SPAWN_RECHARGE_TIME; }
+  }
+  if(M.aiSpawnCharges<CFG_MATCH.SPAWN_MAX_CHARGES){
+    M.aiSpawnRechargeTimer-=dt;
+    if(M.aiSpawnRechargeTimer<=0){ M.aiSpawnCharges=Math.min(M.aiSpawnCharges+1,CFG_MATCH.SPAWN_MAX_CHARGES); M.aiSpawnRechargeTimer=CFG_MATCH.SPAWN_RECHARGE_TIME; }
+  }
+  if(M.aiSpawnCharges>0){
+    const total = M.opponentGlasses.reduce((s,g)=>s+g.layers.length,0);
+    const empty = M.opponentGlasses.filter(g=>g.layers.length===0).length;
+    const hasSpace = M.opponentGlasses.some(g=>g.layers.length<CFG_MATCH.GLASS_CAPACITY);
+    const full = M.aiSpawnCharges>=CFG_MATCH.SPAWN_MAX_CHARGES;
+    const tight = empty<=1;
+    if(hasSpace && !tight && (full || total<16 || Math.random()<0.25)) aiUseSpawn();
+  }
+  updateSpawnButton();
+}
+function updateSpawnButton(){
+  const btn=$('btn-spawn'), cnt=$('spawn-count'), ring=$('spawn-ring-fill');
+  if(!btn||!cnt) return;
+  cnt.textContent = M.spawnCharges||0;
+  btn.classList.toggle('disabled', M.spawnCharges<=0);
+  if(ring && M.spawnCharges<CFG_MATCH.SPAWN_MAX_CHARGES){
+    const p = 1 - (M.spawnRechargeTimer/CFG_MATCH.SPAWN_RECHARGE_TIME);
+    ring.style.strokeDashoffset = 100.5*(1-p);
+  } else if(ring) ring.style.strokeDashoffset = 0;
+}
+
+function updatePowerUps(){
+  const elapsed = CFG_MATCH.MATCH_DURATION - M.timer;
+  const empty = M.opponentGlasses.filter(g=>g.layers.length===0).length;
+  for(let i=0;i<M.opponentPowerUps.length;i++){
+    const pu = M.opponentPowerUps[i];
+    if(!pu || pu.used) continue;
+    let use=false;
+    switch(pu.type){
+      case 'extraBottle': use = elapsed>5 && elapsed<15 && empty<=1; break;
+      case 'colorSplash': use = M.opponentGlasses.some(g=>g.layers.length>=2 && bestColorSplashColorFor(g,'opponent')!==null) && M.customers.some(c=>!c.servedByOpponent); break;
+      case 'autoServe': {
+        const ns = M.opponentGlasses.filter(g=>isGlassPure(g) && g.layers.length>=2 && M.customers.some(c=>!c.servedByOpponent && c.color===g.layers[0])).length;
+        use = ns>=1 && elapsed>8; break;
+      }
+      case 'clearBottle': {
+        const route = M.opponentGlasses.some(g=>isGlassPure(g) && g.layers.length>0 && M.customers.some(c=>!c.servedByOpponent && c.color===g.layers[0]));
+        use = (empty===0 && !route) || (empty<=1 && !route && elapsed>15); break;
+      }
+    }
+    if(use && Math.random()<0.3){ aiUsePowerUp(i); break; }
+  }
+}
+function updateEffects(){
+  const now = performance.now()/1000, ae = M.activeEffects;
+  if(ae.playerAutoServeEndTime>now && now >= (ae.playerNextAutoServeAt||0)){
+    const idx = findAutoServeTargetForPlayer();
+    if(idx>=0){ autoServePlayerGlass(idx); ae.playerNextAutoServeAt = now+CFG_MATCH.AUTO_SERVE_DELAY; }
+  }
+  if(ae.opponentAutoServeEndTime>now && now >= (ae.opponentNextAutoServeAt||0)){
+    const idx = findAutoServeTargetForOpponent();
+    if(idx>=0){ autoServeOpponentGlass(idx); ae.opponentNextAutoServeAt = now+CFG_MATCH.AUTO_SERVE_DELAY; }
+  }
+}
+function isAutoServeActive(side){
+  const now = performance.now()/1000;
+  return side==='player'?M.activeEffects.playerAutoServeEndTime>now:M.activeEffects.opponentAutoServeEndTime>now;
+}
+function findAutoServeTargetForPlayer(){
+  for(let i=0;i<M.playerGlasses.length;i++){
+    const g = M.playerGlasses[i];
+    if(!isGlassServeable(g)) continue;
+    if(M.customers.find(c=>!c.servedByPlayer && c.color===g.layers[0])) return i;
+  }
+  return -1;
+}
+function findAutoServeTargetForOpponent(){
+  for(let i=0;i<M.opponentGlasses.length;i++){
+    const g = M.opponentGlasses[i];
+    if(!isGlassServeable(g)) continue;
+    if(M.customers.find(c=>!c.servedByOpponent && c.color===g.layers[0])) return i;
+  }
+  return -1;
+}
+function autoServePlayerGlass(idx){ if(isGlassServeable(M.playerGlasses[idx])) serveGlass(idx); }
+function autoServeOpponentGlass(idx){
+  const g = M.opponentGlasses[idx];
+  if(!g || !isGlassServeable(g)) return;
+  const color = g.layers[0];
+  let best=null;
+  for(const c of M.customers) if(c.color===color && !c.servedByOpponent && !c.leaving && (!best || c.patience<best.patience)) best=c;
+  if(!best) return;
+  let pts = g.layers.length*CFG_MATCH.POINTS_PER_LAYER;
+  if(!best.servedByPlayer) pts += CFG_MATCH.SPEED_BONUS;
+  M.opponentScore += pts;
+  best.servedByOpponent=true; best.graceTimer=CFG_MATCH.SERVE_GRACE_WINDOW;
+  g.layers=[]; showScorePop(pts,'opponent'); renderOpponentBoard();
+}
+function topContiguousSegment(g){
+  if(!g.layers.length) return {size:0,color:null};
+  const t=g.layers[g.layers.length-1]; let c=0;
+  for(let i=g.layers.length-1;i>=0 && g.layers[i]===t;i--) c++;
+  return {size:c,color:t};
+}
+function bestColorSplashColorFor(glass, side){
+  const seg = topContiguousSegment(glass);
+  if(seg.size===0) return null;
+  const colors=new Set();
+  for(const c of M.customers){ if(side==='player'?!c.servedByPlayer:!c.servedByOpponent){ if(!c.leaving) colors.add(c.color); } }
+  if(colors.size===0) return null;
+  const cand = Array.from(colors).filter(c=>c!==seg.color);
+  if(cand.length===0) return null;
+  const aff = Math.min(seg.size, CFG_MATCH.COLOR_SPLASH_MAX_LAYERS);
+  let best=null, bs=-1;
+  for(const col of cand){
+    const bi = glass.layers.length - seg.size - 1;
+    const bc = bi>=0?glass.layers[bi]:null;
+    let sc=0;
+    const pure = (bc===col || bc===null) && aff===seg.size;
+    if(pure && glass.layers.length===CFG_MATCH.GLASS_CAPACITY) sc+=100;
+    else if(pure) sc+=40; else sc+=10;
+    if(sc>bs){ bs=sc; best=col; }
+  }
+  return best;
+}
+function applyColorSplash(glass, target){
+  const seg = topContiguousSegment(glass);
+  if(seg.size===0 || !target) return 0;
+  const aff = Math.min(seg.size, CFG_MATCH.COLOR_SPLASH_MAX_LAYERS);
+  for(let i=glass.layers.length-1,n=0;n<aff;i--,n++) glass.layers[i]=target;
+  return aff;
+}
+function executeColorSplash(index){
+  const g = M.playerGlasses[index];
+  if(!g){ M.colorSplashMode=false; return; }
+  const col = bestColorSplashColorFor(g,'player');
+  M.colorSplashMode=false;
+  if(!col){ renderPlayerBoard(); renderPowerUps(); return; }
+  applyColorSplash(g,col);
+  renderPlayerBoard(); renderPowerUps(); checkServeable();
+}
+function playerUsePowerUp(slotIndex){
+  const pu = M.playerPowerUps[slotIndex];
+  if(!pu || pu.used) return;
+  const t = pu.type;
+  switch(t){
+    case 'extraBottle': M.playerGlasses.push({layers:[]}); renderPlayerBoard(); break;
+    case 'colorSplash': M.colorSplashMode=true; renderPlayerBoard(); break;
+    case 'autoServe': { const now=performance.now()/1000; M.activeEffects.playerAutoServeEndTime=now+CFG_MATCH.AUTO_SERVE_DURATION; M.activeEffects.playerNextAutoServeAt=now; break; }
+    case 'clearBottle': M.clearBottleMode=true; renderPlayerBoard(); break;
+    case 'doubleServe': M.doubleServePending=true; toast('💥 Double Serve armed'); break;
+    case 'swap': M.swapMode=true; M.swapFirst=null; renderPlayerBoard(); break;
+    case 'customerLock': M.customerLockMode=true; renderCustomers(); break;
+    case 'firstPour': case 'spawnPlus3': break; // start-of-match only
+    case 'perk_secondLook': M.undosRemaining++; updateUndoButton(); toast('↩ +1 Undo'); break;
+    case 'perk_steadyHand': M.steadyHandCharges++; toast('✋ Steady Hand armed'); break;
+    case 'perk_pourRead': showPourReadHint(); break;
+    default: break;
+  }
+  // Perks have multiple uses — don't mark as fully used until exhausted
+  if(t.startsWith('perk_')){
+    pu.usesRemaining = (pu.usesRemaining !== undefined ? pu.usesRemaining : PERKS[t.slice(5)].uses) - 1;
+    if(pu.usesRemaining <= 0) pu.used = true;
+  } else {
+    pu.used = true;
+  }
+  renderPowerUps();
+}
+
+function showPourReadHint(){
+  const moves = [];
+  for(let i=0;i<M.playerGlasses.length;i++){
+    for(let j=0;j<M.playerGlasses.length;j++){
+      if(i!==j && canPourRaw(M.playerGlasses,i,j)){
+        const sc = evaluateAIPour(M.playerGlasses,i,j,M.customers.map(c=>c.color));
+        moves.push({from:i,to:j,score:sc});
+      }
+    }
+  }
+  moves.sort((a,b)=>b.score-a.score);
+  if(moves.length === 0){ toast('No legal pours'); return; }
+  const best = moves[0];
+  M.pourReadHint = {from:best.from, to:best.to};
+  M.pourReadTimer = 3;
+  renderPlayerBoard();
+  setTimeout(()=>{ M.pourReadHint = null; renderPlayerBoard(); }, 3000);
+}
+function aiUsePowerUp(slotIndex){
+  const pu = M.opponentPowerUps[slotIndex];
+  if(!pu || pu.used) return;
+  switch(pu.type){
+    case 'extraBottle': M.opponentGlasses.push({layers:[]}); renderOpponentBoard(); break;
+    case 'colorSplash': aiExecuteColorSplash(); break;
+    case 'autoServe': { const now=performance.now()/1000; M.activeEffects.opponentAutoServeEndTime=now+CFG_MATCH.AUTO_SERVE_DURATION; M.activeEffects.opponentNextAutoServeAt=now; break; }
+    case 'clearBottle': aiExecuteClearBottle(); break;
+  }
+  pu.used=true;
+}
+function aiExecuteColorSplash(){
+  let bi=-1, bc=null, bs=-1;
+  for(let i=0;i<M.opponentGlasses.length;i++){
+    const g = M.opponentGlasses[i];
+    if(g.layers.length<2) continue;
+    const col = bestColorSplashColorFor(g,'opponent');
+    if(!col) continue;
+    const cl={layers:g.layers.slice()}; applyColorSplash(cl,col);
+    const sc = isGlassServeable(cl)?100:isGlassPure(cl)?40:10;
+    if(sc>bs){ bs=sc; bi=i; bc=col; }
+  }
+  if(bi>=0 && bc){ applyColorSplash(M.opponentGlasses[bi],bc); renderOpponentBoard(); }
+}
+function aiExecuteClearBottle(){
+  const empty = M.opponentGlasses.filter(g=>g.layers.length===0).length;
+  if(empty>1) return;
+  let bi=-1, bs=-1;
+  for(let i=0;i<M.opponentGlasses.length;i++){
+    const g = M.opponentGlasses[i];
+    if(g.layers.length===0) continue;
+    const sc = isGlassPure(g)?g.layers.length*0.5:g.layers.length;
+    if(sc>bs){ bs=sc; bi=i; }
+  }
+  if(bi>=0){ M.opponentGlasses[bi].layers=[]; renderOpponentBoard(); }
+}
+function renderPowerUps(){
+  for(let i=0;i<2;i++){
+    const slot = $('powerup-slot-'+i); if(!slot) continue;
+    const pu = M.playerPowerUps[i];
+    if(pu && !pu.used){
+      const ic = pu.type.startsWith('perk_') ? PERKS[pu.type.slice(5)].ic : (POWERUP_ICONS[pu.type]||'?');
+      const suffix = (pu.type.startsWith('perk_') && pu.usesRemaining>0) ? `<sub style="font-size:10px;color:#ffd700">×${pu.usesRemaining}</sub>` : '';
+      slot.innerHTML = ic + suffix;
+      slot.className='powerup-slot filled';
+    }
+    else if(pu && pu.used){
+      const ic = pu.type.startsWith('perk_') ? PERKS[pu.type.slice(5)].ic : (POWERUP_ICONS[pu.type]||'?');
+      slot.innerHTML = ic;
+      slot.className='powerup-slot used';
+    }
+    else { slot.textContent=''; slot.className='powerup-slot'; }
+  }
+  for(let i=0;i<2;i++){
+    const dot = $('opp-pu-dot-'+i); if(!dot) continue;
+    const pu = M.opponentPowerUps[i];
+    dot.className = 'opp-powerup-dot'+(pu && !pu.used?' filled':'');
+  }
+  const ms = $('screen-match');
+  const old = ms.querySelector('.mode-banner'); if(old) old.remove();
+  if(M.clearBottleMode){ const b=document.createElement('div'); b.className='mode-banner'; b.textContent='🧽 Tap a glass to clear'; ms.appendChild(b); }
+  else if(M.colorSplashMode){ const b=document.createElement('div'); b.className='mode-banner'; b.textContent='🎨 Tap a glass to recolor its top'; ms.appendChild(b); }
+  else if(M.swapMode){ const b=document.createElement('div'); b.className='mode-banner'; b.textContent='🔄 Swap: tap two bottles to swap contents'; ms.appendChild(b); }
+  else if(M.customerLockMode){ const b=document.createElement('div'); b.className='mode-banner'; b.textContent='🔒 Tap a customer to freeze patience 8s'; ms.appendChild(b); }
+  else if(isAutoServeActive('player')){ const b=document.createElement('div'); b.className='mode-banner'; const now=performance.now()/1000; const r=Math.max(0,M.activeEffects.playerAutoServeEndTime-now); b.textContent='🤖 Auto Serve: '+r.toFixed(1)+'s'; ms.appendChild(b); }
+  const wrap = document.querySelector('.player-board-wrapper');
+  if(wrap) wrap.classList.toggle('auto-serve-active', isAutoServeActive('player'));
+}
+
+function formatTime(sec){ const m=Math.floor(sec/60),s=Math.floor(sec%60); return m+':'+String(s).padStart(2,'0'); }
+function updateTimerDisplay(){ const el=$('timer-display'); if(!el) return; el.textContent = formatTime(M.timer); el.classList.toggle('timer-warning', M.timer<=15); }
+function updateScoreDisplay(){ const ps=$('player-score'), os=$('opponent-score'); if(ps) ps.textContent=M.playerScore; if(os) os.textContent=M.opponentScore; }
+
+function startCountdown(){
+  M.phase='countdown';
+  const overlay = $('countdown-overlay'), text = $('countdown-text');
+  overlay.classList.remove('hidden');
+  let t = CFG_MATCH.COUNTDOWN_DURATION;
+  text.textContent = t;
+  countdownInterval = setInterval(()=>{
+    t--;
+    if(t>0){ text.textContent=t; text.style.animation='none'; void text.offsetWidth; text.style.animation='countdownPop 1s ease-out'; }
+    else if(t===0){ text.textContent='MIX!'; text.style.animation='none'; void text.offsetWidth; text.style.animation='countdownPop 1s ease-out'; }
+    else { clearInterval(countdownInterval); countdownInterval=null; overlay.classList.add('hidden'); M.phase='playing'; startGameLoop(); }
+  }, 1000);
+}
+function gameLoop(ts){
+  if(!lastFrameTime) lastFrameTime = ts;
+  const dt = Math.min((ts-lastFrameTime)/1000, 0.1);
+  lastFrameTime = ts;
+  if(M && M.phase==='playing'){
+    try{
+      M.timer -= dt;
+      if(M.timer<=0){ M.timer=0; endMatchV6(); return; }
+      updateCustomers(dt); updateAI(dt); updatePowerUps(); updateEffects(); updateSpawns(dt);
+      updateTimerDisplay(); updateScoreDisplay(); renderCustomers(); renderPowerUps();
+    }catch(e){ console.error(e); }
+  }
+  if(M && (M.phase==='playing' || M.phase==='countdown' || M.phase==='paused')) requestAnimationFrame(gameLoop);
+  else gameLoopRunning = false;
+}
+function startGameLoop(){ if(gameLoopRunning) return; gameLoopRunning=true; lastFrameTime=0; requestAnimationFrame(gameLoop); }
+
+function startMatch(){
+  closePicker();
+  matchCtx.betId = s.loadout.betId;
+  matchCtx.betTier = s.loadout.betId ? BOOSTERS[s.loadout.betId].tier : 'none';
+  const av = ARENA_V6[matchCtx.arena.id];
+  rebuildColorHex(av);
+  M = newMatchState(av, matchCtx.opponent);
+
+  // Player slots: bet booster + perks
+  // firstPour / spawnPlus3 are passive start-of-match effects — don't occupy slot
+  const passiveBoosters = ['firstPour','spawnPlus3'];
+  const slots = [];
+  if(matchCtx.betId && !passiveBoosters.includes(matchCtx.betId)) slots.push({type: matchCtx.betId, used:false});
+  if(matchCtx.betId === 'spawnPlus3') M.spawnCharges += 3;
+  [s.loadout.perk1Id, s.loadout.perk2Id].forEach(pid => {
+    if(pid && slots.length<2) slots.push({type:'perk_'+pid, used:false, usesRemaining: PERKS[pid].uses});
+  });
+  while(slots.length<2) slots.push(null);
+  M.playerPowerUps = slots;
+
+  // AI loadout from v6 pool
+  const aiRoster = ARENA_BOOSTER_UNLOCKS[matchCtx.arena.id].filter(b => ['extraBottle','colorSplash','autoServe','clearBottle'].includes(b));
+  M.opponentPowerUps = [0,1].map(()=>({type: aiRoster[Math.floor(Math.random()*aiRoster.length)], used:false}));
+
+  const seed = Date.now();
+  M.playerGlasses = generateBoard(seed, av);
+  M.opponentGlasses = deepCloneGlasses(M.playerGlasses);
+  M.customerQueue = generateCustomerQueue(seed, av);
+  spawnInitialCustomers();
+
+  // FirstPour: apply 2 best pours for player
+  if(matchCtx.betId === 'firstPour'){
+    for(let k=0;k<2;k++){
+      const moves=[];
+      for(let i=0;i<M.playerGlasses.length;i++) for(let j=0;j<M.playerGlasses.length;j++) if(i!==j && canPourRaw(M.playerGlasses,i,j)) moves.push([i,j]);
+      if(moves.length){
+        const scored = moves.map(([f,t])=>({f,t,score:evaluateAIPour(M.playerGlasses,f,t,M.customers.map(c=>c.color))})).sort((a,b)=>b.score-a.score);
+        if(scored[0]) doPourRaw(M.playerGlasses, scored[0].f, scored[0].t);
+      }
+    }
+  }
+
+  const game = $('game');
+  if(game) game.style.background = `linear-gradient(180deg, ${av.bg[0]} 0%, ${av.bg[1]} 100%)`;
+  const oam = $('opp-match-avatar'), onm = $('opp-match-name');
+  if(oam) oam.textContent = matchCtx.opponent.ic;
+  if(onm) onm.textContent = matchCtx.opponent.name.toUpperCase().slice(0,10);
+
+  matchDrinksServed = 0; matchBestCombo = 0; undoHistory = [];
+  updateTimerDisplay(); updateScoreDisplay();
+  renderPlayerBoard(); renderOpponentBoard(); renderCustomers();
+  updateSpawnButton(); updateUndoButton(); renderPowerUps();
+
+  showScreen('match');
+  startCountdown();
+}
+
+function endMatchV6(){
+  if(!M) return;
+  M.phase = 'result';
+  gameLoopRunning = false;
+  const game = $('game'); if(game) game.style.background = '';
+  const result = M.playerScore > M.opponentScore ? 'win' : M.playerScore < M.opponentScore ? 'loss' : 'draw';
+  matchCtx.drinksServed = matchDrinksServed;
+  matchCtx.bestCombo = matchBestCombo;
+  matchCtx.playerScore = M.playerScore;
+  matchCtx.opponentScore = M.opponentScore;
+  applyMatchResult(result);
+}
+function endMatch(){ endMatchV6(); }
+
+/* =========================================================================
+   TUTORIAL (3 levels, 1:1 with v6)
+   ========================================================================= */
+
+const TUTORIAL_LEVELS = [
+  {title:'SORT THE COLORS!', desc:'Pour colors into bottles to fill a pure drink, then tap to serve', color:'red', glasses:[{layers:['red','red']},{layers:['red','red']},{layers:[]}], showSpawn:false, popupTitle:'GREAT JOB!', popupText:'You sorted and served a drink!', popupEmoji:'🎉'},
+  {title:'USE THE SPAWN!', desc:'Tap the Spawn button to add a color layer. Fill bottles to serve!', color:'blue', glasses:[{layers:['blue']},{layers:[]}], showSpawn:true, spawnColor:'blue', popupTitle:'NICE POUR!', popupText:'Now try your first booster — they can save you when bottles are stuck with the wrong colors!', popupEmoji:'🔥'},
+  {title:'USE A BOOSTER!', desc:'Tap the 🎨 Color Splash, then tap the bottle to recolor its top layers', color:'blue', glasses:[{layers:['blue','blue','red','red']},{layers:[]}], showSpawn:true, spawnDisabled:true, showSplash:true, popupTitle:'AWESOME!', popupText:'Now race against an opponent!\nBe faster in completing drink orders to win!', popupEmoji:'🎉'}
+];
+
+let T = null; // tutorial runtime state
+
+function startTutorial(){
+  T = {level:0, glasses:[], selected:null, customerColor:'red', spawnColor:null, splashMode:false, splashUsed:false, pourTarget:null};
+  startTutorialLevel();
+}
+function startTutorialLevel(){
+  const lvl = TUTORIAL_LEVELS[T.level];
+  // Ensure colors available
+  rebuildColorHex({colors:3});
+  T.customerColor = lvl.color;
+  T.spawnColor = lvl.spawnColor || null;
+  T.splashMode = false; T.splashUsed = false; T.pourTarget=null; T.selected=null;
+  T.glasses = lvl.glasses.map(g=>({layers:[...g.layers]}));
+
+  const header = document.querySelector('#screen-tutorial .tutorial-header');
+  if(header) header.innerHTML = '<h2>'+lvl.title+'</h2><p>'+lvl.desc+'</p>';
+  $('tutorial-popup').querySelector('.tutorial-popup-title').textContent = lvl.popupTitle;
+  $('tutorial-popup').querySelector('.tutorial-popup-text').textContent = lvl.popupText;
+  $('tutorial-popup').querySelector('.tutorial-popup-emoji').textContent = lvl.popupEmoji;
+  $('btn-tutorial-done').textContent = T.level < TUTORIAL_LEVELS.length-1 ? 'NEXT' : "LET'S GO!";
+  $('tutorial-popup').classList.add('hidden');
+
+  // Spawn button
+  let spawn = document.getElementById('tutorial-spawn');
+  if(!spawn && lvl.showSpawn){
+    spawn = document.createElement('button');
+    spawn.id = 'tutorial-spawn';
+    spawn.className = 'spawn-btn';
+    spawn.style.cssText = 'position:absolute;bottom:16px;left:16px;z-index:5';
+    spawn.innerHTML = '<svg class="spawn-ring" viewBox="0 0 36 36"><circle class="spawn-ring-bg" cx="18" cy="18" r="16"/><circle class="spawn-ring-fill" cx="18" cy="18" r="16" style="stroke-dashoffset:0"/></svg><span class="spawn-label">🍹</span>';
+    spawn.addEventListener('click', tutorialUseSpawn);
+    $('screen-tutorial').appendChild(spawn);
+  }
+  if(spawn){ spawn.style.display = lvl.showSpawn?'flex':'none'; spawn.disabled = !!lvl.spawnDisabled; spawn.style.opacity = lvl.spawnDisabled?'0.3':'1'; }
+
+  // Splash button
+  let splash = document.getElementById('tutorial-splash');
+  if(!splash && lvl.showSplash){
+    splash = document.createElement('button');
+    splash.id = 'tutorial-splash';
+    splash.className = 'powerup-slot filled';
+    splash.style.cssText = 'position:absolute;bottom:22px;left:50%;transform:translateX(-50%);z-index:5';
+    splash.innerHTML = '🎨';
+    splash.addEventListener('click', tutorialUseSplash);
+    $('screen-tutorial').appendChild(splash);
+  }
+  if(splash){ splash.style.display = lvl.showSplash?'flex':'none'; splash.className='powerup-slot filled'; }
+
+  renderTutorialCustomer();
+  renderTutorialBoard();
+  showScreen('tutorial');
+}
+function tutorialUseSpawn(){
+  const lvl = TUTORIAL_LEVELS[T.level];
+  if(lvl.spawnDisabled || !T.spawnColor) return;
+  for(let i=0;i<T.glasses.length;i++){
+    if(T.glasses[i].layers.length < CFG_MATCH.GLASS_CAPACITY){
+      T.glasses[i].layers.push(T.spawnColor);
+      T.pourTarget = {glassIndex:i, layerCount:1};
+      renderTutorialBoard();
+      return;
+    }
+  }
+}
+function tutorialUseSplash(){
+  if(T.splashUsed) return;
+  T.splashMode = true;
+  renderTutorialBoard();
+}
+function tutorialApplySplash(idx){
+  const g = T.glasses[idx];
+  if(!g || g.layers.length===0) return;
+  const top = g.layers[g.layers.length-1];
+  let seg=0;
+  for(let i=g.layers.length-1;i>=0 && g.layers[i]===top;i--) seg++;
+  const aff = Math.min(seg, CFG_MATCH.COLOR_SPLASH_MAX_LAYERS);
+  for(let i=g.layers.length-1,n=0;n<aff;i--,n++) g.layers[i] = T.customerColor;
+  T.splashMode = false; T.splashUsed = true;
+  const btn = document.getElementById('tutorial-splash');
+  if(btn){ btn.classList.remove('filled'); btn.classList.add('used'); }
+  renderTutorialBoard();
+}
+function renderTutorialCustomer(){
+  const z = $('tutorial-customer'); if(!z) return;
+  z.innerHTML='';
+  const hex = COLOR_HEX[T.customerColor]||'#888';
+  const name = T.customerColor.charAt(0).toUpperCase()+T.customerColor.slice(1);
+  const slot = document.createElement('div');
+  slot.className='customer-slot';
+  slot.innerHTML = `<div class="customer-emoji">😄</div><div class="customer-drink-label" style="color:${hex}"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${hex};margin-right:3px"></span>${name}</div>`;
+  z.appendChild(slot);
+}
+function renderTutorialBoard(){
+  const c = $('tutorial-board'); if(!c) return;
+  c.innerHTML='';
+  const lh = 30;
+  for(let i=0;i<T.glasses.length;i++){
+    const g = T.glasses[i];
+    const el = document.createElement('div');
+    el.className = 'glass player-glass';
+    el.style.height = (CFG_MATCH.GLASS_CAPACITY*lh+4)+'px';
+    el.style.width = '70px';
+    if(g.layers.length===0) el.classList.add('empty-glass');
+    if(T.selected===i) el.classList.add('selected');
+    if(T.splashMode && g.layers.length>0) el.classList.add('color-splash-target');
+    const pure = g.layers.length===CFG_MATCH.GLASS_CAPACITY && g.layers.every(l=>l===g.layers[0]);
+    const serveable = pure && g.layers[0]===T.customerColor;
+    if(serveable) el.classList.add('serveable');
+    const anim = (T.pourTarget && T.pourTarget.glassIndex===i) ? g.layers.length - T.pourTarget.layerCount : -1;
+    for(let j=0;j<g.layers.length;j++){
+      const ly = document.createElement('div');
+      ly.className='glass-layer';
+      ly.style.height = lh+'px';
+      ly.style.backgroundColor = COLOR_HEX[g.layers[j]]||'#888';
+      if(j===0) ly.style.borderRadius='0 0 4px 4px';
+      if(j>=anim && anim>=0){ ly.classList.add('pour-new'); ly.style.animationDelay=((j-anim)*0.08)+'s'; }
+      el.appendChild(ly);
+    }
+    el.dataset.index = i;
+    el.addEventListener('click', ()=>handleTutorialTap(i));
+    c.appendChild(el);
+  }
+  T.pourTarget = null;
+}
+function handleTutorialTap(index){
+  const g = T.glasses[index];
+  if(T.splashMode){ if(g && g.layers.length>0) tutorialApplySplash(index); return; }
+  const pure = g.layers.length===CFG_MATCH.GLASS_CAPACITY && g.layers.every(l=>l===g.layers[0]);
+  if(pure && g.layers[0]===T.customerColor){
+    // Serve
+    const gel = document.querySelectorAll('#tutorial-board .glass')[index];
+    const cel = document.querySelector('#tutorial-customer .customer-slot');
+    if(gel && cel){
+      const gr=gel.getBoundingClientRect(), cr=cel.getBoundingClientRect();
+      const hex = COLOR_HEX[g.layers[0]]||'#888';
+      const fly = document.createElement('div');
+      fly.style.cssText = `position:fixed;z-index:300;pointer-events:none;width:${gr.width}px;height:${gr.height}px;border:2px solid rgba(255,255,255,0.3);border-radius:4px 4px 12px 12px;border-top:none;overflow:hidden;display:flex;flex-direction:column-reverse;left:${gr.left}px;top:${gr.top}px`;
+      for(let l=0;l<g.layers.length;l++){ const ly=document.createElement('div'); ly.style.cssText=`width:100%;height:25%;background:${hex}`; fly.appendChild(ly); }
+      document.body.appendChild(fly);
+      const dx=cr.left+cr.width/2-gr.left-gr.width/2, dy=cr.top+cr.height/2-gr.top-gr.height/2;
+      fly.animate([{transform:'translate(0,0) scale(1)',opacity:1},{transform:`translate(${dx}px,${dy}px) scale(0.4)`,opacity:0.3}],{duration:500,easing:'cubic-bezier(0.2,0.8,0.3,1)',fill:'forwards'});
+      cel.classList.add('served-anim');
+      setTimeout(()=>cel.classList.remove('served-anim'),500);
+      setTimeout(()=>fly.remove(),550);
+    }
+    g.layers=[]; T.selected=null;
+    renderTutorialBoard();
+    setTimeout(()=>{
+      const cust = document.querySelector('#tutorial-customer .customer-slot');
+      if(cust){ const ch=document.createElement('div'); ch.className='customer-served-check'; ch.innerHTML='<span>✅</span>'; cust.appendChild(ch); }
+      setTimeout(()=>$('tutorial-popup').classList.remove('hidden'), 600);
+    }, 500);
+    return;
+  }
+  if(T.selected===null){ if(g.layers.length>0){ T.selected=index; renderTutorialBoard(); } }
+  else if(T.selected===index){ T.selected=null; renderTutorialBoard(); }
+  else {
+    if(canPourRaw(T.glasses, T.selected, index)){
+      const moved = doPourRaw(T.glasses, T.selected, index);
+      T.pourTarget = {glassIndex:index, layerCount:moved};
+      T.selected = null;
+      renderTutorialBoard();
+    } else {
+      T.selected = g.layers.length>0 ? index : null;
+      renderTutorialBoard();
+    }
+  }
+}
+
+function applyMatchResult(result){
+  const a = matchCtx.arena;
+  const betTier = matchCtx.betTier;
+  const practice = matchCtx.practice;
+  let trophies=0, gold=0, coins=0, stars=0;
+  let betSurvived = false, betLost = false;
+  let onFireTriggered = matchCtx.onFire;
+
+  if(!practice){
+    // Trophies w/ arena scaling
+    const delta = maxUnlockedArenaIdx() - arenaIndex(a.id);
+    const trGain = {0:1.0,1:0.5,2:0.25}[delta] ?? 0;
+    const trLoss = {0:1.0,1:0.25,2:0.1}[delta] ?? 0;
+    const coinMult = {0:1.0,1:0.75,2:0.5}[delta] ?? 0.3;
+    if(result==='win'){
+      trophies = Math.round(a.trophyBase * trGain);
+      gold = a.ante * 2; // pot win
+      coins = Math.round(COIN_PAYOUT[betTier].win * coinMult);
+      stars = betTier!=='none' ? 3 : 2;
+      betSurvived = betTier!=='none';
+      s.consecWins++;
+      s.lossStreak = 0;
+      s.stats.wins++;
+      missionProgress('win_3');
+      if(betSurvived) missionProgress('3_star_match');
+    } else if(result==='loss'){
+      trophies = -Math.round(a.trophyBase * trLoss);
+      gold = 0; // ante forfeit
+      coins = Math.round(COIN_PAYOUT[betTier].loss * coinMult);
+      stars = 1;
+      if(betTier!=='none'){ betLost = true; s.boosters[matchCtx.betId] = Math.max(0,(s.boosters[matchCtx.betId]||0)-1); }
+      s.consecWins = 0;
+      s.lossStreak++;
+    } else {
+      trophies = 0;
+      gold = a.ante; // refund
+      coins = Math.round(COIN_PAYOUT[betTier].draw * coinMult);
+      stars = 2;
+      betSurvived = betTier!=='none';
+      s.consecWins = 0;
+    }
+    // On Fire doubler
+    if(onFireTriggered){ coins *= 2; trophies *= 2; }
+    s.onFireActive = s.consecWins >= 2;
+
+    s.trophies = Math.max(0, s.trophies + trophies);
+    if(s.trophies > s.trophyRoad.highestTrophiesReached) s.trophyRoad.highestTrophiesReached = s.trophies;
+    s.gold += gold;
+    s.coins += coins;
+    s.stars += stars;
+    s.starsMeter += stars;
+    if(s.starsMeter >= 25 && !s.starChestPending){
+      s.starChestPending = true;
+      s.starsMeter = Math.max(0, s.starsMeter - 25);
+    }
+    s.stats.matches++;
+    // Arena auto-unlock on trophy threshold (also fires via TR)
+    ARENAS.forEach(ar => { if(s.trophies >= ar.min) unlockArena(ar.id); });
+    // Venue tokens
+    if(result==='win') s.venue.venueBuildingTokens += 1;
+    // BPP
+    addBPP(5 + (result==='win'?10:0));
+    // Missions
+    missionProgress('play_5');
+    if(betTier!=='none') missionProgress('use_5_bets');
+    if(coins>0) missionProgress('earn_200_coins', coins);
+    if(!s.dailyMissions.arenasPlayedToday.includes(a.id)){
+      s.dailyMissions.arenasPlayedToday.push(a.id);
+      missionProgress('play_2_arenas');
+    }
+  }
+
+  // Build result screen
+  const header = $('r-header');
+  header.textContent = result==='win'?'VICTORY':result==='loss'?'DEFEAT':'DRAW';
+  header.className = 'result-header '+result;
+  const scoreLine = matchCtx.playerScore !== undefined ? ` — ${matchCtx.playerScore} to ${matchCtx.opponentScore}` : '';
+  $('r-sub').textContent = 'vs. '+matchCtx.opponent.name+(practice?' (Practice)':'')+scoreLine;
+
+  const rr = $('r-rewards');
+  rr.innerHTML = '';
+  if(matchCtx.drinksServed !== undefined){
+    const stats = document.createElement('div');
+    stats.className='rr-row';
+    stats.innerHTML = `<span class="rr-label">Match</span><span class="rr-val">🍹 ${matchCtx.drinksServed} served · ${matchCtx.bestCombo}× combo</span>`;
+    rr.appendChild(stats);
+  }
+  if(practice){
+    rr.innerHTML = '<div class="rr-row"><span class="rr-label">Practice</span><span class="rr-val">No rewards</span></div>';
+  } else {
+    const rows = [
+      ['Trophies', (trophies>=0?'+':'')+trophies+' 🏆', trophies>0?'pos':trophies<0?'neg':''],
+      ['Gold', result==='win'?`+${gold} 💰 (pot)`:result==='loss'?`-${a.ante} 💰`:'refund', 'gold'],
+      ['Coins', '+'+coins+' 🪙', 'pos'],
+      ['Stars', '+'+stars+' ⭐ ('+s.starsMeter+'/25)', 'pos'],
+    ];
+    if(betTier!=='none'){
+      rows.push(['Bet', betSurvived?'Kept: '+BOOSTERS[matchCtx.betId].name:'Lost: '+BOOSTERS[matchCtx.betId].name, betSurvived?'pos':'neg']);
+    }
+    if(onFireTriggered){
+      rows.push(['On Fire', '×2 applied', 'gold']);
+    }
+    if(result==='win') rows.push(['Venue Token', '+1', 'pos']);
+    rows.forEach(([l,v,c], i) => {
+      const div = document.createElement('div');
+      div.className='rr-row';
+      div.style.animationDelay = (i * 0.18) + 's';
+      div.innerHTML = `<span class="rr-label">${l}</span><span class="rr-val ${c||''}">${v}</span>`;
+      rr.appendChild(div);
+    });
+  }
+
+  // Notes: sequential reveal per §14.1 (2. milestone, 3. chest, 4. mission, 5. album, 6. venue, 7. BP, 8. flash)
+  const notes = $('r-notes');
+  notes.innerHTML = '';
+  let noteIdx = 0;
+  const addNote = (html, icon)=>{
+    const n = document.createElement('div'); n.className='rn';
+    n.innerHTML = html;
+    n.style.animationDelay = (0.6 + noteIdx * 0.25) + 's';
+    notes.appendChild(n);
+    noteIdx++;
+  };
+  const readyMilestone = TROPHY_ROAD.find(m => !s.trophyRoad.claimedMilestones.includes(m.n) && s.trophies >= m.trophies);
+  if(readyMilestone) addNote(`📍 Trophy Road: Milestone ${readyMilestone.n} ready to claim — ${readyMilestone.reward}`);
+  if(s.starChestPending) addNote(`🎁 Star Chest unlocked — claim from Home`);
+  const allMissionsDone = s.dailyMissions.missions.every(m => m.claimed);
+  if(allMissionsDone && s.dailyMissions.dailyChestClaimed) addNote(`✅ Daily Chest claimed today`);
+  else {
+    const progress = s.dailyMissions.missions.filter(m=>m.claimed).length;
+    if(progress>0) addNote(`✅ Daily Missions: ${progress}/${s.dailyMissions.missions.length}`);
+  }
+  // Venue Token grant (already shown in rewards row; note any building ready to unlock)
+  const unlockedBuildings = Object.values(BUILDINGS_BY_ARENA).flat();
+  const affordableBuilding = unlockedBuildings.find(b => {
+    const lvl = s.venue.buildings[b.id] || 0;
+    return lvl < 3 && s.venue.venueBuildingTokens >= BUILDING_COSTS[lvl+1];
+  });
+  if(affordableBuilding) addNote(`🛠️ Venue: ${affordableBuilding.name} ready to upgrade`);
+  // Bar Pass tier-up
+  if(!practice && s.barPass.currentTier > 0){
+    const newTier = s.barPass.currentTier;
+    if(s.achievements.lastShownBpTier !== newTier){
+      addNote(`📜 Bar Pass: Tier ${newTier} reached`);
+      s.achievements.lastShownBpTier = newTier;
+    }
+  }
+  if(s.onFireActive) addNote(`🔥 Next match: On Fire — 2× coins & trophies`);
+  if(s.activeFlashOffer && s.activeFlashOffer.expiresAt > Date.now()){
+    const f = FLASH_OFFERS[s.activeFlashOffer.id];
+    if(f) addNote(`⚡ Flash: ${f.title} — ${f.price}`);
+  }
+
+  // Flash offer triggers (§13.8)
+  if(result==='loss' && s.lossStreak >= 3) triggerFlashOffer('comeback');
+  if(result==='win' && !practice){
+    // Arena promotion: fire when crossing into new arena
+    ARENAS.forEach((ar,i) => {
+      if(s.trophies >= ar.min && (s.trophies - trophies) < ar.min && i>0){
+        triggerFlashOffer('promotion');
+      }
+    });
+  }
+
+  showScreen('result');
+  saveSave();
+  renderHUD();
+}
+
+function rematch(){
+  // Keep persona + arena + bet selection
+  const a = matchCtx.arena;
+  if(!matchCtx.practice){
+    if(s.gold < a.ante){ toast('Not enough Gold — go Home'); return; }
+    s.gold -= a.ante;
+  }
+  matchCtx = {
+    arena: a,
+    practice: matchCtx.practice,
+    ante: matchCtx.practice?0:a.ante,
+    opponent: matchCtx.opponent,
+    onFire: s.onFireActive
+  };
+  showMatchmaking();
+}
+
+/* =========================================================================
+   STARTER PACK + FLASH OFFERS (§13.7–13.8)
+   ========================================================================= */
+
+function checkStarterPack(){
+  const sp = s.starterPack;
+  if(sp.purchased || sp.dismissedAt) return false;
+  const elapsed = Date.now() - sp.shownAt;
+  if(elapsed >= 48*3600*1000){ sp.dismissedAt = Date.now(); saveSave(); return false; }
+  return true;
+}
+
+function showStarterPack(){
+  const overlay = $('starter-overlay');
+  overlay.classList.remove('hidden');
+  updateStarterTimer();
+  if(!overlay._tid){
+    overlay._tid = setInterval(updateStarterTimer, 60000);
+  }
+}
+
+function updateStarterTimer(){
+  const sp = s.starterPack;
+  const remain = Math.max(0, 48*3600*1000 - (Date.now() - sp.shownAt));
+  const h = Math.floor(remain/3600000);
+  const m = Math.floor((remain%3600000)/60000);
+  $('sp-timer').textContent = remain>0 ? `Expires in ${h}h ${m}m` : 'Expired';
+  if(remain <= 0){ dismissStarterPack(); }
+}
+
+function dismissStarterPack(){
+  s.starterPack.dismissedAt = Date.now();
+  saveSave();
+  const overlay = $('starter-overlay');
+  overlay.classList.add('hidden');
+  if(overlay._tid){ clearInterval(overlay._tid); overlay._tid = null; }
+}
+
+function buyStarterPack(){ toast('Coming soon'); }
+
+// ===== FLASH OFFERS =====
+const FLASH_OFFERS = {
+  comeback:   {id:'comeback',  title:'Comeback Bundle', desc:'300💰 + 300🪙 + 3 boosters',        price:'$0.99', durationMs:30*60*1000},
+  promotion:  {id:'promotion', title:'Promotion Pack',  desc:'Arena-scaled gold + 5 boosters',  price:'$2.99', durationMs:24*60*60*1000},
+  refill:     {id:'refill',    title:'Refill Pack',     desc:'500💰 + 200🪙 + 2 boosters',        price:'$1.99', durationMs:2*60*60*1000},
+  sticker:    {id:'sticker',   title:'Sticker Splurge', desc:'1 Big Pack + 1 Token',            price:'$1.99', durationMs:2*60*60*1000}
+};
+
+function triggerFlashOffer(id){
+  if(s.activeFlashOffer && s.activeFlashOffer.expiresAt > Date.now()) return;
+  const f = FLASH_OFFERS[id]; if(!f) return;
+  s.activeFlashOffer = {id:f.id, expiresAt: Date.now() + f.durationMs};
+  saveSave();
+}
+
+/* =========================================================================
+   INIT
+   ========================================================================= */
+
+function init(){
+  loadSave();
+  document.querySelectorAll('.nav-btn').forEach(b=>{ b.onclick = ()=>showScreen(b.dataset.screen); });
+  $('play-btn').onclick = onPlayPressed;
+  $('practice-btn').onclick = enterPractice;
+  $('luckybox-btn').onclick = claimLuckyBox;
+  $('missions-fab').onclick = openMissions;
+  $('arena-switch').onclick = openArenaModal;
+  $('starchest-btn').onclick = ()=>{
+    if(!s.starChestPending) return;
+    rollStarChest(s.currentPlayingArena);
+    renderAll();
+  };
+
+  // Match UI wiring
+  $('btn-spawn').addEventListener('click', useSpawn);
+  $('btn-undo').addEventListener('click', doUndo);
+  $('btn-pause').addEventListener('click', ()=>{ if(!M || M.phase!=='playing') return; M.phase='paused'; $('pause-overlay').classList.remove('hidden'); });
+  $('btn-resume').addEventListener('click', ()=>{ if(!M) return; M.phase='playing'; $('pause-overlay').classList.add('hidden'); if(!gameLoopRunning){ gameLoopRunning=true; lastFrameTime=0; requestAnimationFrame(gameLoop); } });
+  $('btn-quit-home').addEventListener('click', ()=>{
+    if(M) M.phase='home';
+    gameLoopRunning = false;
+    $('pause-overlay').classList.add('hidden');
+    const game=$('game'); if(game) game.style.background='';
+    showScreen('home');
+  });
+  $('player-board').addEventListener('click', e=>{
+    const g = e.target.closest('.glass');
+    if(!g || g.dataset.index === undefined) return;
+    handleGlassTap(parseInt(g.dataset.index));
+  });
+  document.querySelector('.powerup-inventory').addEventListener('click', e=>{
+    const slot = e.target.closest('.powerup-slot');
+    if(!slot) return;
+    const idx = slot.id==='powerup-slot-0'?0:slot.id==='powerup-slot-1'?1:-1;
+    if(idx>=0) playerUsePowerUp(idx);
+  });
+  document.addEventListener('click', e=>{
+    if(M && M.selectedGlass !== null && !e.target.closest('.glass')){ M.selectedGlass = null; renderPlayerBoard(); }
+  });
+
+  // Tutorial
+  $('btn-tutorial-done').addEventListener('click', ()=>{
+    T.level++;
+    if(T.level < TUTORIAL_LEVELS.length) startTutorialLevel();
+    else {
+      s.tutorialDone = true;
+      saveSave();
+      showScreen('home');
+      renderAll();
+      if(checkStarterPack()) showStarterPack();
+    }
+  });
+
+  setInterval(()=>{ if(!$('screen-home').classList.contains('hidden')) renderHome(); }, 30000);
+  renderAll();
+
+  // Splash → tutorial on fresh save OR home
+  requestAnimationFrame(()=>{ $('splash-progress').style.width = '100%'; });
+  setTimeout(()=>{
+    $('screen-splash').classList.add('fade-out');
+    setTimeout(()=>{
+      $('screen-splash').style.display = 'none';
+      if(!s.tutorialDone){ startTutorial(); }
+      else {
+        showScreen('home');
+        if(checkStarterPack()) showStarterPack();
+      }
+    }, 700);
+  }, 1900);
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
