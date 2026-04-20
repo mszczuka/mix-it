@@ -293,18 +293,31 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:'Nunito',system-ui,
 .stub-screen p{font-size:13px;line-height:1.5;margin-bottom:10px}
 .stub-screen .stub-ic{font-size:60px;margin-bottom:14px}
 
-/* ===== MATCHMAKING ===== */
-#screen-matchmaking{padding:0;justify-content:center;align-items:center;gap:20px}
-.mm-card{background:rgba(0,0,0,0.45);border:2px solid rgba(255,215,0,0.3);border-radius:18px;padding:24px;text-align:center;width:280px}
-.mm-vs{font-family:'Lilita One',cursive;font-size:32px;color:#ffd700;margin:10px 0}
-.mm-avatar{font-size:64px;margin-bottom:10px}
-.mm-name{font-size:18px;font-weight:900}
-.mm-tagline{font-size:11px;color:rgba(255,255,255,0.7);margin-top:4px;font-style:italic}
-.mm-trophies{color:#ffd700;font-size:13px;margin-top:6px}
-.mm-bet{margin-top:12px;padding:8px 12px;background:rgba(0,0,0,0.4);border-radius:10px;font-size:11px}
-.mm-bet .mm-bet-label{color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:1px;font-size:9px}
-.mm-bet .mm-bet-val{color:#ffd700;font-size:14px;margin-top:2px}
-.mm-spin{font-size:11px;color:rgba(255,255,255,0.5);margin-top:18px}
+/* ===== MATCHMAKING (v6 prematch layout) ===== */
+#screen-matchmaking{align-items:center;justify-content:center;gap:28px;padding:0;background:linear-gradient(135deg,#144985 0%,#144985 40%,#6b1a1a 60%,#8b2020 100%)}
+.prematch-title{font-family:'Lilita One',cursive;font-size:44px;color:#ffc700;-webkit-text-stroke:0.5px #000;text-shadow:0 4px 0 #000,2px 2px 0 #000;letter-spacing:3px}
+.matchmaking-status{font-size:13px;font-weight:700;color:rgba(255,255,255,0.55);letter-spacing:1px;min-height:20px;text-transform:uppercase}
+.matchmaking-status.found{color:#44CC44}
+.vs-display{display:flex;align-items:center;gap:20px}
+.vs-player{text-align:center;min-width:110px}
+.vs-avatar{width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,0.1);border:3px solid rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:32px;margin:0 auto 8px}
+.vs-avatar.cycling{animation:avatarCycle 0.15s ease-in-out infinite alternate;border-color:#FFD700}
+@keyframes avatarCycle{0%{transform:translateY(-2px)}100%{transform:translateY(2px)}}
+.vs-avatar.found{animation:avatarFound 0.5s ease-out;border-color:#FF4444;box-shadow:0 0 20px rgba(255,68,68,0.4)}
+@keyframes avatarFound{0%{transform:scale(1.3)}50%{transform:scale(0.9)}100%{transform:scale(1)}}
+.vs-name{font-size:14px;font-weight:900;text-shadow:0 1px 2px rgba(0,0,0,0.5)}
+.vs-name.found{color:#FF4444;font-weight:800}
+.vs-trophies{font-size:11px;color:rgba(255,255,255,0.55);margin-top:2px}
+.vs-tagline{font-size:10px;color:rgba(255,255,255,0.65);font-style:italic;margin-top:4px;max-width:120px}
+.vs-bet-chip{display:inline-block;margin-top:6px;padding:3px 10px;border-radius:12px;background:rgba(0,0,0,0.4);font-size:10px;font-weight:900;letter-spacing:0.5px;text-transform:uppercase}
+.vs-bet-chip.bronze{color:#c98a4e;border:1px solid #c98a4e}
+.vs-bet-chip.silver{color:#c0c6d4;border:1px solid #c0c6d4}
+.vs-bet-chip.gold{color:#ffd700;border:1px solid #ffd700}
+.vs-bet-chip.none{color:rgba(255,255,255,0.4);border:1px solid rgba(255,255,255,0.2)}
+.vs-text{font-family:'Lilita One',cursive;font-size:34px;color:#FF4444;-webkit-text-stroke:0.5px #000;text-shadow:0 3px 0 #000}
+.start-btn{width:240px;padding:14px;border:none;border-radius:12px;background:linear-gradient(180deg,#ffac04 0%,#ffc700 100%);color:#fff;font-size:20px;font-weight:900;letter-spacing:2px;cursor:pointer;box-shadow:0 5px 0 #af3c34,0 7px 14px rgba(175,60,52,0.4);text-shadow:0 2px 0 rgba(0,0,0,0.3)}
+.start-btn:active{transform:translateY(3px);box-shadow:0 2px 0 #af3c34}
+.start-btn.hidden{display:none}
 
 /* ===== LOADOUT ===== */
 #screen-loadout{padding:68px 18px;gap:14px}
@@ -549,20 +562,27 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:'Nunito',system-ui,
     <button class="practice-btn" id="practice-btn" style="display:none">Practice (no rewards)</button>
   </div>
 
-  <!-- MATCHMAKING -->
+  <!-- MATCHMAKING (v6 prematch layout + bet) -->
   <div id="screen-matchmaking" class="screen hidden">
-    <div class="mm-card">
-      <div class="mm-avatar" id="mm-avatar">🍹</div>
-      <div class="mm-name" id="mm-name">Sandy Pete</div>
-      <div class="mm-tagline" id="mm-tagline">"The beach never sleeps."</div>
-      <div class="mm-trophies">🏆 <span id="mm-trophies">0</span></div>
-      <div class="mm-vs">VS</div>
-      <div class="mm-bet">
-        <div class="mm-bet-label">Their Bet</div>
-        <div class="mm-bet-val" id="mm-bet">None</div>
+    <div class="prematch-title">MIX IT</div>
+    <div class="matchmaking-status" id="mm-status">Finding opponent…</div>
+    <div class="vs-display">
+      <div class="vs-player">
+        <div class="vs-avatar" id="mm-player-avatar">🧑‍🍳</div>
+        <div class="vs-name">You</div>
+        <div class="vs-trophies" id="mm-player-trophies">🏆 0</div>
+        <div class="vs-bet-chip none" id="mm-player-bet">No Bet</div>
       </div>
-      <div class="mm-spin">Matchmaking…</div>
+      <div class="vs-text">VS</div>
+      <div class="vs-player">
+        <div class="vs-avatar cycling" id="mm-opponent-avatar">❓</div>
+        <div class="vs-name" id="mm-opponent-name">Searching…</div>
+        <div class="vs-trophies" id="mm-opponent-trophies"></div>
+        <div class="vs-tagline" id="mm-opponent-tagline"></div>
+        <div class="vs-bet-chip none" id="mm-opponent-bet">—</div>
+      </div>
     </div>
+    <button class="start-btn hidden" id="mm-start-btn">START</button>
   </div>
 
   <!-- LOADOUT -->
@@ -2147,12 +2167,67 @@ function pickOpponent(a){
 function showMatchmaking(){
   showScreen('matchmaking');
   const o = matchCtx.opponent;
-  $('mm-avatar').textContent = o.ic;
-  $('mm-name').textContent = o.name;
-  $('mm-tagline').textContent = o.tag;
-  $('mm-trophies').textContent = o.trophies;
-  $('mm-bet').firstElementChild.nextElementSibling.textContent = o.betTier==='none'?'None':o.betTier.charAt(0).toUpperCase()+o.betTier.slice(1);
-  setTimeout(showLoadout, 1400);
+  const a = matchCtx.arena;
+
+  // Player side (static)
+  $('mm-player-avatar').textContent = '🧑‍🍳';
+  $('mm-player-trophies').textContent = '🏆 ' + s.trophies;
+  const myBet = s.loadout.betId || null; // at this stage not picked yet; show "No Bet" until loadout
+  $('mm-player-bet').textContent = 'Bet pending';
+  $('mm-player-bet').className = 'vs-bet-chip none';
+
+  // Opponent side — cycle through random names/avatars, then settle on matchCtx.opponent
+  const avEl = $('mm-opponent-avatar');
+  const nmEl = $('mm-opponent-name');
+  const trEl = $('mm-opponent-trophies');
+  const tgEl = $('mm-opponent-tagline');
+  const btEl = $('mm-opponent-bet');
+  const statusEl = $('mm-status');
+  const startBtn = $('mm-start-btn');
+
+  startBtn.classList.add('hidden');
+  statusEl.textContent = 'Finding opponent…';
+  statusEl.classList.remove('found');
+  avEl.className = 'vs-avatar cycling';
+  nmEl.className = 'vs-name';
+  nmEl.textContent = 'Searching…';
+  trEl.textContent = '';
+  tgEl.textContent = '';
+  btEl.textContent = '—';
+  btEl.className = 'vs-bet-chip none';
+
+  // Cycle through random personas
+  const personaPool = AI_PERSONAS[a.id] || AI_PERSONAS.juice;
+  let cycles = 0;
+  const totalCycles = 12 + Math.floor(Math.random()*6);
+  function cycle(){
+    cycles++;
+    if(cycles >= totalCycles){
+      avEl.textContent = o.ic;
+      nmEl.textContent = o.name;
+      trEl.textContent = '🏆 ' + o.trophies;
+      tgEl.textContent = o.tag;
+      btEl.textContent = o.betTier === 'none' ? 'No Bet' : o.betTier.charAt(0).toUpperCase()+o.betTier.slice(1)+' Bet';
+      btEl.className = 'vs-bet-chip ' + o.betTier;
+      avEl.className = 'vs-avatar found';
+      nmEl.className = 'vs-name found';
+      statusEl.textContent = 'Opponent found!';
+      statusEl.classList.add('found');
+      setTimeout(()=>{
+        startBtn.classList.remove('hidden');
+      }, 400);
+      return;
+    }
+    const rp = personaPool[Math.floor(Math.random()*personaPool.length)];
+    avEl.textContent = rp.ic;
+    nmEl.textContent = rp.name;
+    const progress = cycles/totalCycles;
+    const delay = 80 + progress*progress*200;
+    setTimeout(cycle, delay);
+  }
+  setTimeout(cycle, 300);
+
+  startBtn.onclick = ()=>{ showLoadout(); };
 }
 
 function showLoadout(){
@@ -3149,6 +3224,75 @@ function startTutorial(){
   T = {level:0, glasses:[], selected:null, customerColor:'red', spawnColor:null, splashMode:false, splashUsed:false, pourTarget:null};
   startTutorialLevel();
 }
+function placeTutorialArrow(lvl){
+  let arrow = document.getElementById('tutorial-arrow');
+  let label = document.getElementById('tutorial-arrow-label');
+  if(!arrow){
+    arrow = document.createElement('div');
+    arrow.id = 'tutorial-arrow';
+    arrow.style.cssText = 'position:absolute;z-index:6;font-size:32px;pointer-events:none;animation:tutorialBounce 1s ease-in-out infinite;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.5))';
+    arrow.textContent = '👇';
+    $('screen-tutorial').appendChild(arrow);
+  }
+  if(!label){
+    label = document.createElement('div');
+    label.id = 'tutorial-arrow-label';
+    label.style.cssText = 'position:absolute;z-index:6;font-family:Nunito,sans-serif;font-size:12px;font-weight:900;color:#ffc700;text-shadow:0 1px 2px rgba(0,0,0,0.7);pointer-events:none;white-space:nowrap;animation:tutorialBounce 1s ease-in-out infinite';
+    $('screen-tutorial').appendChild(label);
+  }
+  if(lvl.showSplash && !T.splashUsed && !T.splashMode){
+    arrow.style.left='calc(50% - 16px)'; arrow.style.top='auto'; arrow.style.bottom='82px';
+    label.style.left='calc(50% - 62px)'; label.style.top='auto'; label.style.bottom='112px';
+    label.textContent='Tap to activate!';
+    arrow.style.display='block'; label.style.display='block';
+  } else if(lvl.showSplash && T.splashMode){
+    setTimeout(()=>{
+      const gel = document.querySelectorAll('#tutorial-board .glass')[0];
+      const sc = $('screen-tutorial');
+      if(!gel || !sc) return;
+      const gr = gel.getBoundingClientRect(), sr = sc.getBoundingClientRect();
+      arrow.style.left = (gr.left - sr.left + gr.width/2 - 16) + 'px';
+      arrow.style.top  = (gr.top  - sr.top  - 42) + 'px';
+      arrow.style.bottom='auto';
+      label.style.left = (gr.left - sr.left + gr.width/2 - 46) + 'px';
+      label.style.top  = (gr.top  - sr.top  - 62) + 'px';
+      label.style.bottom='auto';
+      label.textContent='Tap this bottle!';
+      arrow.style.display='block'; label.style.display='block';
+    }, 30);
+  } else if(lvl.showSpawn && !lvl.spawnDisabled){
+    arrow.style.left='22px'; arrow.style.top='auto'; arrow.style.bottom='75px';
+    label.style.left='8px'; label.style.top='auto'; label.style.bottom='105px';
+    label.textContent='Tap here to spawn!';
+    arrow.style.display='block'; label.style.display='block';
+  } else if(!lvl.showSpawn && !lvl.showSplash){
+    // Level 1: point at a source bottle
+    setTimeout(()=>{
+      const gel = document.querySelectorAll('#tutorial-board .glass')[0];
+      const sc = $('screen-tutorial');
+      if(!gel || !sc) return;
+      const gr = gel.getBoundingClientRect(), sr = sc.getBoundingClientRect();
+      arrow.style.left = (gr.left - sr.left + gr.width/2 - 16) + 'px';
+      arrow.style.top  = (gr.top  - sr.top  - 42) + 'px';
+      arrow.style.bottom='auto';
+      label.style.left = (gr.left - sr.left + gr.width/2 - 52) + 'px';
+      label.style.top  = (gr.top  - sr.top  - 62) + 'px';
+      label.style.bottom='auto';
+      label.textContent='Pour, then tap to serve!';
+      arrow.style.display='block'; label.style.display='block';
+    }, 30);
+  } else {
+    arrow.style.display='none'; label.style.display='none';
+  }
+}
+
+function hideTutorialArrow(){
+  const a = document.getElementById('tutorial-arrow');
+  const l = document.getElementById('tutorial-arrow-label');
+  if(a) a.style.display='none';
+  if(l) l.style.display='none';
+}
+
 function startTutorialLevel(){
   const lvl = TUTORIAL_LEVELS[T.level];
   // Ensure colors available
@@ -3195,10 +3339,12 @@ function startTutorialLevel(){
   renderTutorialCustomer();
   renderTutorialBoard();
   showScreen('tutorial');
+  placeTutorialArrow(lvl);
 }
 function tutorialUseSpawn(){
   const lvl = TUTORIAL_LEVELS[T.level];
   if(lvl.spawnDisabled || !T.spawnColor) return;
+  hideTutorialArrow();
   for(let i=0;i<T.glasses.length;i++){
     if(T.glasses[i].layers.length < CFG_MATCH.GLASS_CAPACITY){
       T.glasses[i].layers.push(T.spawnColor);
@@ -3212,6 +3358,7 @@ function tutorialUseSplash(){
   if(T.splashUsed) return;
   T.splashMode = true;
   renderTutorialBoard();
+  placeTutorialArrow(TUTORIAL_LEVELS[T.level]);
 }
 function tutorialApplySplash(idx){
   const g = T.glasses[idx];
