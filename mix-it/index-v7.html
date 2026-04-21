@@ -51,10 +51,17 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:'Nunito',system-ui,
 /* ===== HOME (v6 style) ===== */
 #screen-home{align-items:center;gap:12px;padding:52px 20px 80px;justify-content:flex-end}
 
-.home-venue-preview{width:100%;flex:1;min-height:120px;position:relative;overflow:hidden;border-radius:10px;background:linear-gradient(180deg,#2a140a 0%,#4a2a16 50%,#6a3f22 100%);border:6px solid #3a1e10;box-shadow:inset 0 0 0 2px #d4a03a,inset 0 0 0 3px #3a1e10;display:flex;align-items:center;justify-content:center}
+.home-venue-preview{width:100%;flex:1;min-height:120px;position:relative;overflow:hidden;border-radius:10px;background:linear-gradient(180deg,#2a140a 0%,#4a2a16 50%,#6a3f22 100%);border:6px solid #3a1e10;box-shadow:inset 0 0 0 2px #d4a03a,inset 0 0 0 3px #3a1e10;display:flex;align-items:flex-end;justify-content:center;padding-bottom:10px}
 .home-venue-preview::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent 0 22px,rgba(0,0,0,0.28) 22px 24px);pointer-events:none}
 .home-venue-preview::after{content:'';position:absolute;left:0;right:0;top:0;bottom:0;pointer-events:none;background:repeating-linear-gradient(90deg,transparent 0 18px,#e5b94a 18px 22px,#8a6420 22px 26px,transparent 26px 44px) top/100% 5px no-repeat,repeating-linear-gradient(90deg,transparent 0 18px,#e5b94a 18px 22px,#8a6420 22px 26px,transparent 26px 44px) bottom/100% 5px no-repeat}
 .hvp-icon{font-size:80px;filter:drop-shadow(0 4px 12px rgba(255,200,120,0.4));z-index:2;position:relative}
+.venue-items-row{z-index:2;position:relative;display:flex;align-items:flex-end;justify-content:center;gap:8px;flex-wrap:wrap;width:100%;padding:0 10px}
+.venue-items-row .vitem{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;line-height:1;filter:drop-shadow(0 3px 6px rgba(0,0,0,0.5))}
+.venue-items-row .vitem.l1{font-size:24px;opacity:0.85}
+.venue-items-row .vitem.l2{font-size:34px;filter:drop-shadow(0 3px 8px rgba(255,200,120,0.5))}
+.venue-items-row .vitem.l3{font-size:44px;filter:drop-shadow(0 4px 12px rgba(255,215,0,0.8)) drop-shadow(0 0 6px rgba(255,215,0,0.6))}
+.venue-items-row .vitem .vstars{font-size:8px;color:#ffd700;letter-spacing:1px;margin-top:2px;line-height:1;text-shadow:0 1px 2px #000}
+.venue-items-row .vitem.empty-hint{font-size:40px;opacity:0.3;filter:grayscale(0.8)}
 
 .arena-badge-box{background:rgba(0,0,0,0.15);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:14px 22px;width:300px;max-width:100%;text-align:center;position:relative}
 .arena-badge-name{font-family:'Lilita One',cursive;font-size:20px;margin-bottom:4px;-webkit-text-stroke:0.5px #000;text-shadow:0 2px 0 #000;letter-spacing:1px}
@@ -266,7 +273,7 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:'Nunito',system-ui,
 .venue-pill.active{background:rgba(255,215,0,0.15);border-color:#ffd700;color:#ffd700}
 .venue-pill.locked{opacity:0.4;cursor:not-allowed}
 
-.venue-scene{margin:0 14px 14px;border-radius:12px;padding:16px;min-height:120px;position:relative;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,#2a140a,#4a2a16);border:4px solid #3a1e10;box-shadow:inset 0 0 0 2px #d4a03a}
+.venue-scene{margin:0 14px 14px;border-radius:12px;padding:30px 16px 14px;min-height:150px;position:relative;display:flex;align-items:flex-end;justify-content:center;background:linear-gradient(180deg,#2a140a,#4a2a16);border:4px solid #3a1e10;box-shadow:inset 0 0 0 2px #d4a03a}
 .venue-scene .scene-ic{font-size:80px;filter:drop-shadow(0 4px 10px rgba(255,200,120,0.4))}
 .venue-scene .scene-label{position:absolute;top:8px;left:12px;font-size:11px;text-transform:uppercase;color:rgba(255,255,255,0.7);letter-spacing:1px;font-weight:900}
 .venue-scene .scene-level-badges{position:absolute;top:8px;right:12px;display:flex;gap:2px}
@@ -540,7 +547,7 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:'Nunito',system-ui,
       <span class="fab-badge" id="missions-badge">0</span>
     </button>
 
-    <div class="home-venue-preview"><div class="hvp-icon" id="hvp-icon">🍹</div></div>
+    <div class="home-venue-preview"><div class="venue-items-row" id="hvp-items"></div></div>
 
     <div class="arena-badge-box">
       <button class="arena-switch" id="arena-switch" title="Change arena">⇆</button>
@@ -1269,7 +1276,7 @@ function renderHome(){
   // Arena badge
   $('arena-badge-name').textContent = a.name;
   $('arena-trophy-count').textContent = s.trophies;
-  $('hvp-icon').textContent = a.icon;
+  $('hvp-items').innerHTML = buildVenueSceneHTML(s.currentPlayingArena);
   // Progress to next arena
   const myIdx = arenaIndex(a.id);
   const nextA = ARENAS[myIdx+1];
@@ -1371,6 +1378,18 @@ function renderStubCounters(){}
 
 let venueView = {arenaId:null};
 
+function buildVenueSceneHTML(arenaId){
+  const a = arenaById(arenaId);
+  const blds = BUILDINGS_BY_ARENA[arenaId] || [];
+  const unlocked = blds.filter(b => (s.venue.buildings[b.id]||0) > 0);
+  if(!unlocked.length) return `<div class="vitem empty-hint">${a.icon}</div>`;
+  return unlocked.map(b => {
+    const lvl = s.venue.buildings[b.id]||0;
+    const stars = '★'.repeat(lvl);
+    return `<div class="vitem l${lvl}">${b.ic}<span class="vstars">${stars}</span></div>`;
+  }).join('');
+}
+
 function renderVenue(){
   if(!venueView.arenaId) venueView.arenaId = s.currentPlayingArena;
   const body = $('venue-body');
@@ -1404,7 +1423,7 @@ function renderVenue(){
   const scene = document.createElement('div');
   scene.className = 'venue-scene';
   const lvlBadges = Array.from({length:3},(_,i)=>`<div class="lvl-dot ${totalLevels > (maxLevels/3)*i ? 'filled':''}"></div>`).join('');
-  scene.innerHTML = `<div class="scene-label">${a.icon} ${a.name}</div><div class="scene-level-badges">${lvlBadges}</div><div class="scene-ic">${a.icon}</div>`;
+  scene.innerHTML = `<div class="scene-label">${a.icon} ${a.name}</div><div class="scene-level-badges">${lvlBadges}</div><div class="venue-items-row">${buildVenueSceneHTML(venueView.arenaId)}</div>`;
   body.appendChild(scene);
 
   // Buildings
