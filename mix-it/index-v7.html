@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>Mix It — v7.1 Redesign (type + popups)</title>
+<title>Mix It — v7.2 MM Fidelity</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Paytone+One&family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
@@ -344,7 +344,8 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:"Fredoka","Nunito",
 .stake-slot.filled.tier-silver{border-color:#c0c6d4}
 .stake-slot.filled.tier-gold{border-color:#ffd700}
 .perk-slot.filled{border-style:solid;border-color:#9ad4ff;background:rgba(154,212,255,0.08)}
-.stakes-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.stakes-row{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.equipped-row{display:grid;grid-template-columns:1fr;gap:8px}
 .stake-mult-readout{text-align:center;font-family:"Paytone One","Lilita One",system-ui,sans-serif;font-size:18px;color:#ffd700;letter-spacing:2px;padding:4px}
 .slot-ic{font-size:26px}
 .slot-name{font-size:12px;font-weight:900}
@@ -830,7 +831,6 @@ body,html{letter-spacing:0.005em}
     <div class="home-venue-preview"><div class="venue-items-row" id="hvp-items"></div></div>
 
     <div class="arena-badge-box">
-      <button class="arena-switch" id="arena-switch" title="Change arena">⇆</button>
       <div class="arena-badge-name" id="arena-badge-name">Juice Stand</div>
       <div class="arena-trophy-count">🏆 <span id="arena-trophy-count">0</span></div>
       <div class="arena-progress-bar"><div class="arena-progress-fill" id="arena-progress-fill" style="width:0%"></div></div>
@@ -879,8 +879,17 @@ body,html{letter-spacing:0.005em}
       <div class="sb-row"><span class="sb-label">Arena</span><span class="sb-val" id="lo-arena">Juice Stand</span></div>
       <div class="sb-row"><span class="sb-label">Stakes</span><span class="sb-val" id="lo-bet-summary">None</span></div>
     </div>
-    <div class="slot-section">
-      <h4>Stake Slots — risk 0–3 boosters (Silver/Gold only)</h4>
+    <div class="slot-section" id="equipped-section">
+      <h4>Equipped Booster — any rarity, used in-match</h4>
+      <div class="equipped-row">
+        <div class="stake-slot" id="equipped-slot" onclick="openEquippedPicker()">
+          <div class="slot-ic">➕</div>
+          <div class="slot-name">None</div>
+        </div>
+      </div>
+    </div>
+    <div class="slot-section" id="stake-section">
+      <h4>Stake Slots — risk 0–4 Gold boosters</h4>
       <div class="stakes-row">
         <div class="stake-slot" id="stake-slot-0" onclick="openStakePicker(0)">
           <div class="slot-ic">➕</div>
@@ -894,8 +903,12 @@ body,html{letter-spacing:0.005em}
           <div class="slot-ic">➕</div>
           <div class="slot-name">Empty</div>
         </div>
+        <div class="stake-slot" id="stake-slot-3" onclick="openStakePicker(3)">
+          <div class="slot-ic">➕</div>
+          <div class="slot-name">Empty</div>
+        </div>
       </div>
-      <div class="stake-mult-readout" id="stake-mult-readout">×1 REWARDS</div>
+      <div class="stake-mult-readout" id="stake-mult-readout"></div>
     </div>
     <div class="slot-section">
       <h4>Perks — up to 2, no stake</h4>
@@ -1095,15 +1108,6 @@ body,html{letter-spacing:0.005em}
     </div>
   </div>
 
-  <!-- ARENA SWITCHER MODAL -->
-  <div class="modal-overlay hidden" id="arena-modal">
-    <div class="modal">
-      <h3>Choose Arena</h3>
-      <div class="picker-list" id="arena-modal-list"></div>
-      <button class="modal-close" onclick="closeArenaModal()">Close</button>
-    </div>
-  </div>
-
   <!-- TOAST -->
   <div id="toast"></div>
 </div>
@@ -1149,8 +1153,8 @@ const ARENAS = [
   {id:'beach',    name:'Beach Bar',        min:200,  trophyBase:28, icon:'🏝️'},
   {id:'cocktail', name:'Cocktail Lounge',  min:500,  trophyBase:30, icon:'🍸'},
   {id:'speak',    name:'Speakeasy',        min:1000, trophyBase:32, icon:'🥃'},
-  {id:'rooftop',  name:'Rooftop Terrace',  min:1500, trophyBase:34, icon:'🌃'},
-  {id:'grand',    name:'Grand Hotel',      min:2000, trophyBase:38, icon:'🏨'}
+  {id:'rooftop',  name:'Rooftop Terrace',  min:2000, trophyBase:34, icon:'🌃'},
+  {id:'grand',    name:'Grand Hotel',      min:3500, trophyBase:38, icon:'🏨'}
 ];
 
 const ARENA_BOOSTER_UNLOCKS = {
@@ -1163,26 +1167,26 @@ const ARENA_BOOSTER_UNLOCKS = {
 };
 
 const TROPHY_ROAD = [
-  {n:1,  trophies:50,   reward:'100 🪙',                              rewardFn:()=>{s.coins+=100}},
+  {n:1,  trophies:50,   reward:'80 🪙',                               rewardFn:()=>{s.coins+=80}},
   {n:2,  trophies:100,  reward:'2× Bronze + Bronze Frame',            rewardFn:()=>{grantBoosters(['extraBottle','firstPour']);s.profile.unlockedFrames.push('bronze')}},
-  {n:3,  trophies:150,  reward:'80 🪙',                               rewardFn:()=>{s.coins+=80}},
+  {n:3,  trophies:150,  reward:'60 🪙',                               rewardFn:()=>{s.coins+=60}},
   {n:4,  trophies:200,  reward:'Beach Bar + 2 Silver + 250 🪙',       rewardFn:()=>{unlockArena('beach');grantBoosters(['colorSplash','swap']);s.coins+=250}},
-  {n:5,  trophies:300,  reward:'1 Silver + Title: Regular',           rewardFn:()=>{grantBoosters(['customerLock']);s.profile.unlockedTitles.push('Regular')}},
-  {n:6,  trophies:400,  reward:'270 🪙',                              rewardFn:()=>{s.coins+=270}},
-  {n:7,  trophies:500,  reward:'Cocktail Lounge + 1 Gold + 400 🪙',   rewardFn:()=>{unlockArena('cocktail');grantBoosters(['clearBottle']);s.coins+=400}},
-  {n:8,  trophies:650,  reward:'230 🪙 + Avatar 2 + 1 Token',         rewardFn:()=>{s.coins+=230;s.profile.unlockedAvatars.push('a2');s.stickerTokens++}},
-  {n:9,  trophies:800,  reward:'2 Silver + 200 🪙',                   rewardFn:()=>{grantBoosters(['colorSplash','swap']);s.coins+=200}},
-  {n:10, trophies:1000, reward:'Speakeasy + 2 Gold + 600 🪙',         rewardFn:()=>{unlockArena('speak');grantBoosters(['autoServe','doubleServe']);s.coins+=600}},
-  {n:11, trophies:1200, reward:'380 🪙 + Silver Frame',               rewardFn:()=>{s.coins+=380;s.profile.unlockedFrames.push('silver')}},
+  {n:5,  trophies:300,  reward:'1 Silver + Title: Regular + 5 stickers', rewardFn:()=>{grantBoosters(['customerLock']);s.profile.unlockedTitles.push('Regular');for(let i=0;i<5;i++) addStickerByRarity(rarityRoll('diamond',false))}},
+  {n:6,  trophies:400,  reward:'180 🪙',                              rewardFn:()=>{s.coins+=180}},
+  {n:7,  trophies:500,  reward:'Cocktail Lounge + 1 Gold + 400 🪙 — Staking Unlocked', rewardFn:()=>{unlockArena('cocktail');grantBoosters(['clearBottle']);s.coins+=400}},
+  {n:8,  trophies:650,  reward:'150 🪙 + Avatar 2 + 1 Token',         rewardFn:()=>{s.coins+=150;s.profile.unlockedAvatars.push('a2');s.stickerTokens++}},
+  {n:9,  trophies:800,  reward:'2 Silver + 150 🪙',                   rewardFn:()=>{grantBoosters(['colorSplash','swap']);s.coins+=150}},
+  {n:10, trophies:1000, reward:'Speakeasy + 2 Gold + 600 🪙 — ×4 Stakes', rewardFn:()=>{unlockArena('speak');grantBoosters(['autoServe','doubleServe']);s.coins+=600}},
+  {n:11, trophies:1200, reward:'250 🪙 + Silver Frame + 5 stickers',  rewardFn:()=>{s.coins+=250;s.profile.unlockedFrames.push('silver');for(let i=0;i<5;i++) addStickerByRarity(rarityRoll('diamond',false))}},
   {n:12, trophies:1400, reward:'1 Gold + Title: Pro Bartender',      rewardFn:()=>{grantBoosters(['clearBottle']);s.profile.unlockedTitles.push('Pro Bartender')}},
-  {n:13, trophies:1600, reward:'300 🪙',                              rewardFn:()=>{s.coins+=300}},
-  {n:14, trophies:1800, reward:'450 🪙 + Avatar 3 + 1 Token',         rewardFn:()=>{s.coins+=450;s.profile.unlockedAvatars.push('a3');s.stickerTokens++}},
+  {n:13, trophies:1600, reward:'200 🪙',                              rewardFn:()=>{s.coins+=200}},
+  {n:14, trophies:1800, reward:'300 🪙 + Avatar 3 + 1 Token',         rewardFn:()=>{s.coins+=300;s.profile.unlockedAvatars.push('a3');s.stickerTokens++}},
   {n:15, trophies:2000, reward:'Rooftop + 2 Gold + 1000 🪙',          rewardFn:()=>{unlockArena('rooftop');grantBoosters(['autoServe','doubleServe']);s.coins+=1000}},
-  {n:16, trophies:2400, reward:'750 🪙 + Gold Frame',                 rewardFn:()=>{s.coins+=750;s.profile.unlockedFrames.push('gold')}},
-  {n:17, trophies:2800, reward:'2 Gold + Title: Mixologist',         rewardFn:()=>{grantBoosters(['autoServe','doubleServe']);s.profile.unlockedTitles.push('Mixologist')}},
-  {n:18, trophies:3200, reward:'1050 🪙 + Avatar 4',                  rewardFn:()=>{s.coins+=1050;s.profile.unlockedAvatars.push('a4')}},
+  {n:16, trophies:2400, reward:'500 🪙 + Gold Frame',                 rewardFn:()=>{s.coins+=500;s.profile.unlockedFrames.push('gold')}},
+  {n:17, trophies:2800, reward:'2 Gold + Title: Mixologist + 5 stickers', rewardFn:()=>{grantBoosters(['autoServe','doubleServe']);s.profile.unlockedTitles.push('Mixologist');for(let i=0;i<5;i++) addStickerByRarity(rarityRoll('diamond',false))}},
+  {n:18, trophies:3200, reward:'700 🪙 + Avatar 4',                   rewardFn:()=>{s.coins+=700;s.profile.unlockedAvatars.push('a4')}},
   {n:19, trophies:3500, reward:'Grand Hotel + 3 Gold + 1250 🪙',      rewardFn:()=>{unlockArena('grand');grantBoosters(['clearBottle','autoServe','doubleServe']);s.coins+=1250}},
-  {n:20, trophies:4000, reward:'2500 🪙 + Legend + 2 Tokens',         rewardFn:()=>{s.coins+=2500;s.profile.unlockedFrames.push('diamond');s.profile.unlockedTitles.push('Legend');s.profile.unlockedAvatars.push('a5');s.stickerTokens+=2}}
+  {n:20, trophies:4000, reward:'2000 🪙 + Diamond Frame + Title: Legend + Avatar 5 + 2 Tokens + 10 stickers', rewardFn:()=>{s.coins+=2000;s.profile.unlockedFrames.push('diamond');s.profile.unlockedTitles.push('Legend');s.profile.unlockedAvatars.push('a5');s.stickerTokens+=2;for(let i=0;i<10;i++) addStickerByRarity(rarityRoll('diamond',false))}}
 ];
 
 const AI_PERSONAS = {
@@ -1339,14 +1343,15 @@ const BUILDINGS_BY_ARENA = {
 function stickerKey(albumId, idx){ return albumId+':'+idx; }
 
 const MISSION_POOL = [
-  {id:'win_3',         text:'Win 3 matches',                        target:3,  reward:{coins:200}},
-  {id:'stake_2_wins',  text:'Win 2 matches with ≥2 stakes',         target:2,  reward:{coins:250,silverBooster:1}},
-  {id:'play_5',        text:'Play 5 matches',                       target:5,  reward:{coins:200}},
-  {id:'earn_500_coins',text:'Earn 500 Coins from matches',          target:500,reward:{coins:200}},
-  {id:'lucky_box_2',   text:'Claim Lucky Box twice',                target:2,  reward:{coins:150,bronzeBooster:1}},
-  {id:'3_star_match',  text:'Win with stakes surviving (≥1 stake)', target:1,  reward:{coins:300,goldBooster:1}},
-  {id:'play_2_arenas', text:'Play in 2 different arenas',           target:2,  reward:{coins:230}},
-  {id:'open_chest',    text:'Open any chest',                       target:1,  reward:{coins:150,bronzeBooster:2}}
+  {id:'win_3',         text:'Win 3 matches',                        target:3,  reward:{coins:180}},
+  {id:'serve_50',      text:'Serve 50 customers',                   target:50, reward:{coins:120,silverBooster:1}},
+  {id:'stake_2_wins',  text:'Win 2 matches with ≥2 stakes',         target:2,  reward:{coins:250,silverBooster:1}, gate:'cocktail'},
+  {id:'combo_4',       text:'Hit a 4-combo',                        target:1,  reward:{coins:180,silverBooster:1}},
+  {id:'play_5',        text:'Play 5 matches',                       target:5,  reward:{coins:180}},
+  {id:'earn_500_coins',text:'Earn 500 Coins from matches',          target:500,reward:{coins:180}},
+  {id:'lucky_box_2',   text:'Claim Lucky Box twice',                target:2,  reward:{coins:130,bronzeBooster:1}},
+  {id:'3_star_match',  text:'Win 2 matches with 3 stars',           target:2,  reward:{coins:300,goldBooster:1}, gate:'cocktail'},
+  {id:'open_chest',    text:'Open any chest',                       target:1,  reward:{coins:130,bronzeBooster:2}}
 ];
 
 /* =========================================================================
@@ -1359,7 +1364,6 @@ function defaultSave(){
   return {
     version:7,
     trophies:0,
-    currentPlayingArena:'juice',
     maxUnlockedArena:'juice',
     coins:200, stars:0, starsMeter:0,
     boosters:{
@@ -1368,12 +1372,13 @@ function defaultSave(){
       clearBottle:0, autoServe:0, doubleServe:0
     },
     perks:{ secondLook:true, steadyHand:true, pourRead:true },
-    loadout:{ stakes:[null,null,null], perk1Id:null, perk2Id:null },
+    loadout:{ equippedBoosterId:null, stakes:[null,null,null,null], perk1Id:null, perk2Id:null },
     onFireStreak:0, onFireActive:false, consecWins:0,
     luckyBox:{ nextAvailableAt: Date.now() },
     starChestPending:false,
     trophyRoad:{ highestTrophiesReached:0, claimedMilestones:[] },
-    dailyMissions:{ dateIso:'', missions:[], dailyChestClaimed:false, arenasPlayedToday:[] },
+    dailyMissions:{ dateIso:'', missions:[], dailyChestClaimed:false },
+    migrationFlags:{ silverStakesEjected:false },
     stickers:{},
     stickerTokens:1,
     claimedPageRewards:[], claimedAlbumRewards:[], unlockedAlbums:['barClassics'],
@@ -1414,16 +1419,45 @@ function loadSave(){
         }
         if(s.loadout && typeof s.loadout.betId !== 'undefined'){
           const legacyBet = s.loadout.betId;
-          s.loadout = {stakes:[legacyBet||null, null, null], perk1Id:s.loadout.perk1Id||null, perk2Id:s.loadout.perk2Id||null};
+          s.loadout = {equippedBoosterId:null, stakes:[legacyBet||null, null, null, null], perk1Id:s.loadout.perk1Id||null, perk2Id:s.loadout.perk2Id||null};
         }
         if(!s.loadout || !Array.isArray(s.loadout.stakes)){
-          s.loadout = {stakes:[null,null,null], perk1Id:null, perk2Id:null};
+          s.loadout = {equippedBoosterId:null, stakes:[null,null,null,null], perk1Id:null, perk2Id:null};
         }
+        // v7.2: delete legacy currentPlayingArena
+        if(typeof s.currentPlayingArena !== 'undefined'){ delete s.currentPlayingArena; }
+        // v7.2: pad stakes array to length 4
+        while(s.loadout.stakes.length < 4) s.loadout.stakes.push(null);
+        // v7.2: eject any Silver stakes back to inventory
+        if(!s.migrationFlags) s.migrationFlags = {silverStakesEjected:false};
+        let ejected = false;
+        for(let i=0;i<s.loadout.stakes.length;i++){
+          const id = s.loadout.stakes[i];
+          if(id && BOOSTERS[id] && BOOSTERS[id].tier !== 'gold'){
+            s.boosters[id] = (s.boosters[id]||0) + 1;
+            s.loadout.stakes[i] = null;
+            ejected = true;
+          }
+        }
+        if(ejected) s.migrationFlags.silverStakesEjected = true;
+        // v7.2: default equippedBoosterId to highest-rarity owned
+        if(!s.loadout.equippedBoosterId){
+          const tierRank = {gold:3, silver:2, bronze:1};
+          let best = null, bestRank = 0;
+          Object.entries(BOOSTERS).forEach(([id,b])=>{
+            if((s.boosters[id]||0) > 0 && tierRank[b.tier] > bestRank){
+              best = id; bestRank = tierRank[b.tier];
+            }
+          });
+          s.loadout.equippedBoosterId = best;
+        }
+        // v7.2: clean arenasPlayedToday (deleted)
+        if(s.dailyMissions && 'arenasPlayedToday' in s.dailyMissions) delete s.dailyMissions.arenasPlayedToday;
         // dateIso rollover
         const today = new Date().toISOString().slice(0,10);
         if(s.dailyMissions.dateIso !== today){ rerollDailies(); }
         else {
-          // Rewrite legacy mission id
+          // Rewrite legacy mission ids
           s.dailyMissions.missions.forEach(m => {
             if(m.id === 'use_5_bets'){
               m.id = 'stake_2_wins';
@@ -1434,6 +1468,23 @@ function loadSave(){
               m.claimed = false;
             }
           });
+          // v7.2: drop play_2_arenas, and gated missions when below cocktail
+          const below = arenaIndex(s.maxUnlockedArena) < arenaIndex('cocktail');
+          const dropIds = new Set();
+          dropIds.add('play_2_arenas');
+          if(below){ dropIds.add('stake_2_wins'); dropIds.add('3_star_match'); }
+          const kept = s.dailyMissions.missions.filter(m => !dropIds.has(m.id));
+          if(kept.length < s.dailyMissions.missions.length){
+            // re-roll from open pool (not already kept, not gated if below)
+            const keptIds = new Set(kept.map(m=>m.id));
+            const openPool = MISSION_POOL.filter(m => !keptIds.has(m.id) && !dropIds.has(m.id));
+            const shuffled = openPool.sort(()=>Math.random()-0.5);
+            while(kept.length < 3 && shuffled.length){
+              const m = shuffled.shift();
+              kept.push({id:m.id, text:m.text, target:m.target, reward:m.reward, progress:0, claimed:false});
+            }
+            s.dailyMissions.missions = kept;
+          }
         }
         return;
       }
@@ -1465,7 +1516,16 @@ function toast(msg){
 function arenaById(id){ return ARENAS.find(a=>a.id===id); }
 function arenaIndex(id){ return ARENAS.findIndex(a=>a.id===id); }
 function maxUnlockedArenaIdx(){ return arenaIndex(s.maxUnlockedArena); }
-function currentArena(){ return arenaById(s.currentPlayingArena); }
+// v7.2: current arena derived from trophies (auto-tier, no selector)
+function currentArenaId(){
+  let id = 'juice';
+  for(const a of ARENAS){ if(s.trophies >= a.min) id = a.id; }
+  return id;
+}
+function currentArena(){ return arenaById(currentArenaId()); }
+function goldBoostersOwned(){
+  return Object.entries(BOOSTERS).reduce((sum,[id,b])=>sum + (b.tier==='gold' ? (s.boosters[id]||0) : 0), 0);
+}
 
 function grantBoosters(ids){
   ids.forEach(id => s.boosters[id] = (s.boosters[id]||0) + 1);
@@ -1483,13 +1543,14 @@ function unlockArena(id){
 }
 
 function rerollDailies(){
-  const pool = [...MISSION_POOL].sort(()=>Math.random()-0.5);
+  // v7.2: exclude gated missions below Cocktail Lounge
+  const below = arenaIndex(s.maxUnlockedArena) < arenaIndex('cocktail');
+  const pool = MISSION_POOL.filter(m => !(below && m.gate === 'cocktail')).sort(()=>Math.random()-0.5);
   const picks = pool.slice(0,3).map(m => ({id:m.id, text:m.text, target:m.target, reward:m.reward, progress:0, claimed:false}));
   s.dailyMissions = {
     dateIso: new Date().toISOString().slice(0,10),
     missions: picks,
-    dailyChestClaimed:false,
-    arenasPlayedToday:[]
+    dailyChestClaimed:false
   };
 }
 
@@ -1508,13 +1569,13 @@ function missionProgress(id, amount=1){
   // all done → daily chest (§10.1)
   if(!s.dailyMissions.dailyChestClaimed && s.dailyMissions.missions.every(mm=>mm.claimed)){
     s.dailyMissions.dailyChestClaimed = true;
-    s.coins += 500;
+    s.coins += 400;
     grantBoosters(['extraBottle','colorSplash','clearBottle']);
     s.venue.venueBuildingTokens++;
     addStickerByRarity(rarityRoll('diamond', false));
     addStickerByRarity(rarityRoll('diamond', false));
     if(Math.random() < 0.15) s.stickerTokens++;
-    toast('🎉 Daily Chest: 500🪙 + 3 boosters + 2 stickers + 1 VT');
+    toast('🎉 Daily Chest: 400🪙 + 3 boosters + 2 stickers + 1 VT');
     // Refill flash trigger (§13.8) — low coins
     if(s.coins < 200) triggerFlashOffer('refill');
   }
@@ -1550,11 +1611,17 @@ function renderHUD(){
 }
 
 function renderHome(){
+  // v7.2: one-time migration toast for Silver stakes ejected
+  if(s.migrationFlags && s.migrationFlags.silverStakesEjected){
+    s.migrationFlags.silverStakesEjected = false;
+    toast('Staking is now Gold-only. Silver boosters returned to inventory.');
+    saveSave();
+  }
   const a = currentArena();
   // Arena badge
   $('arena-badge-name').textContent = a.name;
   $('arena-trophy-count').textContent = s.trophies;
-  $('hvp-items').innerHTML = buildVenueSceneHTML(s.currentPlayingArena);
+  $('hvp-items').innerHTML = buildVenueSceneHTML(a.id);
   // Progress to next arena
   const myIdx = arenaIndex(a.id);
   const nextA = ARENAS[myIdx+1];
@@ -1634,21 +1701,7 @@ function openMissions(){
 }
 function closeMissions(){ $('missions-modal').classList.add('hidden'); }
 
-function openArenaModal(){
-  const list = $('arena-modal-list');
-  list.innerHTML = '';
-  ARENAS.forEach((a,i) => {
-    const unlocked = i <= maxUnlockedArenaIdx();
-    const active = a.id === s.currentPlayingArena;
-    const it = document.createElement('div');
-    it.className = 'picker-item'+(unlocked?'':' disabled');
-    it.innerHTML = `<div class="pi-ic">${a.icon}</div><div class="pi-info"><div class="pi-name">${a.name}${active?' ✓':''}</div><div class="pi-desc">🏆 ${a.min}+ · Win ${ARENA_COIN_PAYOUT[a.id].win}🪙</div></div>`;
-    if(unlocked) it.onclick = ()=>{ s.currentPlayingArena = a.id; closeArenaModal(); renderAll(); };
-    list.appendChild(it);
-  });
-  $('arena-modal').classList.remove('hidden');
-}
-function closeArenaModal(){ $('arena-modal').classList.add('hidden'); }
+// v7.2: Arena Selector removed — current arena auto-derived from trophies.
 
 function renderStubCounters(){}
 
@@ -1669,7 +1722,7 @@ function buildVenueSceneHTML(arenaId){
 }
 
 function renderVenue(){
-  if(!venueView.arenaId) venueView.arenaId = s.currentPlayingArena;
+  if(!venueView.arenaId) venueView.arenaId = currentArenaId();
   const body = $('venue-body');
   body.innerHTML = '';
 
@@ -1966,7 +2019,7 @@ function renderShop(){
 function renderShopA(){
   const grid = document.createElement('div');
   grid.className = 'shop-grid';
-  const unlocked = ARENA_BOOSTER_UNLOCKS[s.currentPlayingArena];
+  const unlocked = ARENA_BOOSTER_UNLOCKS[currentArenaId()];
   Object.entries(BOOSTERS).forEach(([id,b]) => {
     if(!unlocked.includes(id)) return;
     const card = document.createElement('div');
@@ -2126,7 +2179,7 @@ function claimBarPass(n, premium){
   }
   if(r.silverBooster) for(let i=0;i<r.silverBooster;i++) grantBoosters(['colorSplash']);
   if(r.goldBooster) for(let i=0;i<r.goldBooster;i++) grantBoosters(['clearBottle']);
-  if(r.starChest) for(let i=0;i<r.starChest;i++) rollStarChest(s.currentPlayingArena);
+  if(r.starChest) for(let i=0;i<r.starChest;i++) rollStarChest(currentArenaId());
   if(r.bigPacks) for(let i=0;i<r.bigPacks;i++) rollPack({count:10,maxTier:'diamond',guaranteedGold:true});
   if(r.tokens) s.stickerTokens += r.tokens;
   if(r.venueToken) s.venue.venueBuildingTokens += r.venueToken;
@@ -2349,6 +2402,9 @@ function claimMilestone(n){
   ms.rewardFn();
   s.trophyRoad.claimedMilestones.push(n);
   toast('🏆 Claimed #'+n+': '+ms.reward);
+  // v7.2 flag moments
+  if(n === 7) setTimeout(()=>toast('🔓 Staking Unlocked — Gold boosters can now be staked!'), 1900);
+  if(n === 10) setTimeout(()=>toast('🔓 ×4 Stakes Unlocked — Speakeasy reached!'), 1900);
   renderAll();
 }
 
@@ -2371,7 +2427,7 @@ function showScreen(id){
   if(id==='home') renderHome();
   if(id==='shop') renderShop();
   if(id==='trophyroad'){ renderTrophyRoad(); requestAnimationFrame(()=>{ const sc=$('screen-trophyroad'); sc.scrollTop = sc.scrollHeight; }); }
-  if(id==='venue'){ venueView.arenaId = s.currentPlayingArena; renderVenue(); }
+  if(id==='venue'){ venueView.arenaId = currentArenaId(); renderVenue(); }
   if(id==='albums'){ albumView = {mode:'list', albumId:null}; renderAlbums(); }
 }
 function goHome(){ showScreen('home'); }
@@ -2391,12 +2447,12 @@ function claimLuckyBox(){
     ids.push(pool[Math.floor(Math.random()*pool.length)]);
   }
   grantBoosters(ids);
-  s.coins += 120;
-  // 1 sticker (common-weighted)
+  s.coins += 80;
+  // 1 sticker (white-weighted)
   addStickerByRarity('white');
   s.luckyBox.nextAvailableAt = Date.now() + 4*3600*1000;
   missionProgress('lucky_box_2');
-  toast('🎁 +4 boosters +120🪙 +1 sticker');
+  toast('🎁 +4 boosters +80🪙 +1 sticker');
   renderAll();
 }
 
@@ -2406,12 +2462,12 @@ function claimLuckyBox(){
 
 function rollStarChest(arenaId){
   const tbl = {
-    juice:   {coins:120,  boosters:2, stickers:2, decor:0.25},
-    beach:   {coins:260,  boosters:2, stickers:3, decor:0.20},
-    cocktail:{coins:500,  boosters:3, stickers:3, decor:0.18},
-    speak:   {coins:900,  boosters:3, stickers:4, decor:0.15},
-    rooftop: {coins:1600, boosters:4, stickers:4, decor:0.12},
-    grand:   {coins:2900, boosters:4, stickers:5, decor:0.10}
+    juice:   {coins:100,  boosters:2, stickers:2, decor:0.25},
+    beach:   {coins:220,  boosters:2, stickers:3, decor:0.20},
+    cocktail:{coins:420,  boosters:3, stickers:3, decor:0.18},
+    speak:   {coins:750,  boosters:3, stickers:4, decor:0.15},
+    rooftop: {coins:1400, boosters:4, stickers:4, decor:0.12},
+    grand:   {coins:2600, boosters:4, stickers:5, decor:0.10}
   };
   const t = tbl[arenaId] || tbl.juice;
   s.coins += t.coins;
@@ -2460,13 +2516,16 @@ function onPlayPressed(){
   showMatchmaking();
 }
 
-// §7.2 AI stake generation
+// §7.2 AI stake generation — Gold-only, v7.2 weights
 function rollAIStakeCount(playerStakes){
+  // v7.2: AI never stakes if player is below Cocktail Lounge
+  if(arenaIndex(s.maxUnlockedArena) < arenaIndex('cocktail')) return 0;
   const r = Math.random();
-  if(playerStakes === 0){ return r < 0.75 ? 0 : 1; }
-  if(playerStakes === 1){ if(r<0.60) return 1; if(r<0.85) return 0; return 2; }
-  if(playerStakes === 2){ if(r<0.60) return 2; if(r<0.85) return 1; return 3; }
-  if(playerStakes === 3){ return r < 0.50 ? 3 : 2; }
+  if(playerStakes === 0){ return r < 0.80 ? 0 : 2; }
+  if(playerStakes === 1){ return r < 0.70 ? 0 : 2; }
+  if(playerStakes === 2){ if(r<0.65) return 2; if(r<0.90) return 3; return 0; }
+  if(playerStakes === 3){ if(r<0.55) return 3; if(r<0.90) return 2; return 4; }
+  if(playerStakes === 4){ return r < 0.50 ? 4 : 3; }
   return 0;
 }
 
@@ -2514,7 +2573,9 @@ function showMatchmaking(){
       avEl.textContent = o.ic;
       nmEl.textContent = o.name;
       trEl.textContent = '🏆 ' + o.trophies;
-      tgEl.textContent = o.tag;
+      // v7.2: show stake count pill only when ≥2
+      const stakePill = (o.stakeCount >= 2) ? ` · ×${o.stakeCount} stake` : '';
+      tgEl.textContent = o.tag + stakePill;
       avEl.className = 'vs-avatar found';
       nmEl.className = 'vs-name found';
       statusEl.textContent = 'Opponent found!';
@@ -2538,8 +2599,20 @@ function showMatchmaking(){
 
 function showLoadout(){
   showScreen('loadout');
-  // reset loadout
-  s.loadout = {stakes:[null,null,null], perk1Id:null, perk2Id:null};
+  // reset loadout (preserve equippedBoosterId default)
+  const prevEquipped = s.loadout.equippedBoosterId || null;
+  s.loadout = {equippedBoosterId:prevEquipped, stakes:[null,null,null,null], perk1Id:null, perk2Id:null};
+  // Default equipped booster to highest-rarity owned if none
+  if(!s.loadout.equippedBoosterId){
+    const tierRank = {gold:3, silver:2, bronze:1};
+    let best = null, bestRank = 0;
+    Object.entries(BOOSTERS).forEach(([id,b])=>{
+      if((s.boosters[id]||0) > 0 && tierRank[b.tier] > bestRank){
+        best = id; bestRank = tierRank[b.tier];
+      }
+    });
+    s.loadout.equippedBoosterId = best;
+  }
   renderLoadout();
 }
 
@@ -2547,18 +2620,57 @@ function stakeCount(){
   return (s.loadout.stakes || []).filter(Boolean).length;
 }
 function stakeMultiplier(){
-  return Math.max(1, stakeCount());
+  // v7.2: 1 stake is not a multiplier
+  const c = stakeCount();
+  return c >= 2 ? c : 1;
 }
 
 function renderLoadout(){
   const a = matchCtx.arena;
   $('lo-arena').textContent = a.icon+' '+a.name;
 
-  const stakes = s.loadout.stakes || [null,null,null];
+  // Equipped booster
+  const equipSlot = $('equipped-slot');
+  equipSlot.className = 'stake-slot';
+  if(s.loadout.equippedBoosterId){
+    const b = BOOSTERS[s.loadout.equippedBoosterId];
+    equipSlot.classList.add('filled','tier-'+b.tier);
+    equipSlot.innerHTML = `<div class="slot-ic">${b.ic}</div><div class="slot-name">${b.name}</div><div class="slot-hint"><span class="pill ${b.tier}">${b.tier}</span></div>`;
+  } else {
+    equipSlot.innerHTML = `<div class="slot-ic">➕</div><div class="slot-name">None</div><div class="slot-hint">tap to equip</div>`;
+  }
+
+  // v7.2: hide Stake section entirely when player owns 0 Gold boosters
+  const goldOwned = goldBoostersOwned();
+  const stakeSection = $('stake-section');
+  if(goldOwned === 0){
+    stakeSection.style.display = 'none';
+    $('lo-bet-summary').textContent = 'None';
+    return;
+  } else {
+    stakeSection.style.display = '';
+  }
+
+  // Stake slots — 4 total; 4th slot gated to Speakeasy+
+  const stakes = s.loadout.stakes || [null,null,null,null];
   const names = [];
-  for(let i=0;i<3;i++){
+  const speakUnlocked = arenaIndex(s.maxUnlockedArena) >= arenaIndex('speak');
+  for(let i=0;i<4;i++){
     const slot = $('stake-slot-'+i);
     slot.className = 'stake-slot';
+    if(i === 3 && !speakUnlocked){
+      // v7.2: 4th slot unlocks at Speakeasy (×4 multiplier)
+      slot.classList.add('disabled');
+      slot.style.opacity = '0.4';
+      slot.style.pointerEvents = 'none';
+      slot.innerHTML = `<div class="slot-ic">🔒</div><div class="slot-name">Speakeasy</div><div class="slot-hint">×4 lock</div>`;
+      // also null it if somehow populated
+      stakes[i] = null;
+      continue;
+    } else {
+      slot.style.opacity = '';
+      slot.style.pointerEvents = '';
+    }
     const id = stakes[i];
     if(id){
       const b = BOOSTERS[id];
@@ -2566,12 +2678,21 @@ function renderLoadout(){
       slot.innerHTML = `<div class="slot-ic">${b.ic}</div><div class="slot-name">${b.name}</div><div class="slot-hint"><span class="pill ${b.tier}">${b.tier}</span></div>`;
       names.push(b.name);
     } else {
-      slot.innerHTML = `<div class="slot-ic">➕</div><div class="slot-name">Empty</div><div class="slot-hint">Silver/Gold</div>`;
+      slot.innerHTML = `<div class="slot-ic">➕</div><div class="slot-name">Empty</div><div class="slot-hint">Gold only</div>`;
     }
   }
+  const cnt = stakeCount();
   const mult = stakeMultiplier();
-  $('stake-mult-readout').textContent = `×${mult} REWARDS`;
-  $('lo-bet-summary').textContent = names.length ? names.join(', ') + ` (×${mult})` : 'None (×1)';
+  // v7.2: only show ×N pill when stake count >= 2
+  if(cnt >= 2){
+    $('stake-mult-readout').textContent = `×${mult} REWARDS`;
+    $('stake-mult-readout').style.display = '';
+    $('lo-bet-summary').textContent = names.join(', ') + ` (×${mult})`;
+  } else {
+    $('stake-mult-readout').textContent = '';
+    $('stake-mult-readout').style.display = 'none';
+    $('lo-bet-summary').textContent = cnt === 0 ? 'None' : names.join(', ');
+  }
 
   [0,1].forEach(i => {
     const slot = $('perk-slot-'+(i+1));
@@ -2611,15 +2732,41 @@ function openStakePicker(slotIdx){
     const qty = effCount(id);
     if(qty <= 0) return;
     const inArena = arenaUnlocked.includes(id);
-    const stakeable = (b.tier === 'silver' || b.tier === 'gold');
+    // v7.2: only Gold boosters can be staked
+    const stakeable = (b.tier === 'gold');
     const item = document.createElement('div');
     item.className = 'picker-item tier-'+b.tier+((inArena && stakeable)?'':' disabled');
-    const tierLabel = stakeable ? '' : ' <span style="color:#ff9a9a;font-size:9px">(Bronze can\'t be staked)</span>';
+    const tierLabel = stakeable ? '' : ' <span style="color:#ff9a9a;font-size:9px">(Gold only)</span>';
     item.innerHTML = `<div class="pi-ic">${b.ic}</div><div class="pi-info"><div class="pi-name">${b.name} <span class="pill ${b.tier}">${b.tier}</span>${tierLabel}</div><div class="pi-desc">${b.desc}</div></div><div class="pi-qty">×${qty}</div>`;
     if(inArena && stakeable){
       item.onclick = ()=>{ stakes[slotIdx] = id; closePicker(); renderLoadout(); };
     } else if(!stakeable){
-      item.onclick = ()=>{ toast("Bronze can't be staked"); };
+      item.onclick = ()=>{ toast("Only Gold boosters can be staked."); };
+    }
+    list.appendChild(item);
+  });
+  $('picker-modal').classList.remove('hidden');
+}
+
+function openEquippedPicker(){
+  const arenaUnlocked = ARENA_BOOSTER_UNLOCKS[matchCtx.arena.id];
+  $('picker-title').textContent = 'Equip Booster';
+  const list = $('picker-list');
+  list.innerHTML = '';
+  const emptyOpt = document.createElement('div');
+  emptyOpt.className = 'picker-empty-opt';
+  emptyOpt.textContent = '— No Equipped Booster —';
+  emptyOpt.onclick = ()=>{ s.loadout.equippedBoosterId = null; closePicker(); renderLoadout(); };
+  list.appendChild(emptyOpt);
+  Object.entries(BOOSTERS).forEach(([id,b]) => {
+    const qty = s.boosters[id]||0;
+    if(qty <= 0) return;
+    const inArena = arenaUnlocked.includes(id);
+    const item = document.createElement('div');
+    item.className = 'picker-item tier-'+b.tier+(inArena?'':' disabled');
+    item.innerHTML = `<div class="pi-ic">${b.ic}</div><div class="pi-info"><div class="pi-name">${b.name} <span class="pill ${b.tier}">${b.tier}</span></div><div class="pi-desc">${b.desc}</div></div><div class="pi-qty">×${qty}</div>`;
+    if(inArena){
+      item.onclick = ()=>{ s.loadout.equippedBoosterId = id; closePicker(); renderLoadout(); };
     }
     list.appendChild(item);
   });
@@ -3488,14 +3635,14 @@ function startMatch(){
   rebuildColorHex(av);
   M = newMatchState(av, matchCtx.opponent);
 
-  // Player slots: staked boosters (1st goes into active slot) + perks
-  // Only the first staked booster gets a usable powerup slot in v6 flow.
-  // Additional stakes sit as "reserve" — they multiply rewards but don't fill the 2 active slots.
+  // v7.2: Equipped booster (any rarity) is always used in-match.
+  // Stakes multiply rewards but do not populate active slots.
   const passiveBoosters = ['firstPour','spawnPlus3'];
   const slots = [];
-  const firstStake = stakes[0];
-  if(firstStake && !passiveBoosters.includes(firstStake)) slots.push({type: firstStake, used:false});
-  if(firstStake === 'spawnPlus3') M.spawnCharges += 3;
+  const equippedId = s.loadout.equippedBoosterId;
+  const activeBooster = equippedId || stakes[0] || null;
+  if(activeBooster && !passiveBoosters.includes(activeBooster)) slots.push({type: activeBooster, used:false});
+  if(activeBooster === 'spawnPlus3') M.spawnCharges += 3;
   [s.loadout.perk1Id, s.loadout.perk2Id].forEach(pid => {
     if(pid && slots.length<2) slots.push({type:'perk_'+pid, used:false, usesRemaining: PERKS[pid].uses});
   });
@@ -3513,7 +3660,7 @@ function startMatch(){
   spawnInitialCustomers();
 
   // FirstPour: apply 2 best pours for player
-  if(firstStake === 'firstPour'){
+  if(activeBooster === 'firstPour'){
     for(let k=0;k<2;k++){
       const moves=[];
       for(let i=0;i<M.playerGlasses.length;i++) for(let j=0;j<M.playerGlasses.length;j++) if(i!==j && canPourRaw(M.playerGlasses,i,j)) moves.push([i,j]);
@@ -3808,33 +3955,39 @@ function handleTutorialTap(index){
 function applyMatchResult(result){
   const a = matchCtx.arena;
   const stakes = matchCtx.stakes || [];
-  const stakeMult = matchCtx.stakeMultiplier || 1;
+  // v7.2: stakeMultiplier = filled stakes if ≥2 else 1
   const stakeCnt = stakes.length;
+  const stakeMult = stakeCnt >= 2 ? stakeCnt : 1;
+  matchCtx.stakeMultiplier = stakeMult;
   let trophies=0, coins=0, stars=0;
   let stakesSurvived = false, stakesLost = false;
   let onFireTriggered = matchCtx.onFire;
 
-  // Trophies w/ arena scaling
-  const delta = maxUnlockedArenaIdx() - arenaIndex(a.id);
-  const trGain = {0:1.0,1:0.5,2:0.25}[delta] ?? 0;
-  const trLoss = {0:1.0,1:0.25,2:0.1}[delta] ?? 0;
-  const coinMult = {0:1.0,1:0.75,2:0.5}[delta] ?? 0.3;
+  // v7.2: no arena scaling — always in current arena
   const basePayout = ARENA_COIN_PAYOUT[a.id] || ARENA_COIN_PAYOUT.juice;
 
+  // v7.2: score-margin star rule
+  const pScore = matchCtx.playerScore || 0;
+  const oScore = matchCtx.opponentScore || 0;
+  const winnerScore = Math.max(pScore, oScore);
+  const loserScore  = Math.min(pScore, oScore);
+  const marginRatio = (winnerScore - loserScore) / Math.max(winnerScore, 1);
+  matchCtx.marginRatio = marginRatio;
+
   if(result==='win'){
-    trophies = Math.round(a.trophyBase * trGain) * stakeMult;
-    coins = Math.round(basePayout.win * coinMult);
-    stars = stakeCnt >= 1 ? 3 : 2;
+    trophies = Math.round(a.trophyBase) * stakeMult;
+    coins = basePayout.win;
+    stars = marginRatio >= 0.35 ? 3 : 2;
     stakesSurvived = stakeCnt > 0;
     s.consecWins++;
     s.lossStreak = 0;
     s.stats.wins++;
     missionProgress('win_3');
-    if(stakesSurvived) missionProgress('3_star_match');
+    if(stars === 3) missionProgress('3_star_match');
     if(stakeCnt >= 2) missionProgress('stake_2_wins');
   } else if(result==='loss'){
-    trophies = -Math.round(a.trophyBase * trLoss);
-    coins = Math.round(basePayout.loss * coinMult);
+    trophies = -Math.round(a.trophyBase);
+    coins = basePayout.loss;
     stars = 1;
     if(stakeCnt > 0){
       stakesLost = true;
@@ -3844,7 +3997,7 @@ function applyMatchResult(result){
     s.lossStreak++;
   } else {
     trophies = 0;
-    coins = Math.round(basePayout.draw * coinMult);
+    coins = basePayout.draw;
     stars = 2;
     stakesSurvived = stakeCnt > 0; // returned on draw
     s.consecWins = 0;
@@ -3878,14 +4031,14 @@ function applyMatchResult(result){
   // Missions
   missionProgress('play_5');
   if(coins>0) missionProgress('earn_500_coins', coins);
-  if(!s.dailyMissions.arenasPlayedToday.includes(a.id)){
-    s.dailyMissions.arenasPlayedToday.push(a.id);
-    missionProgress('play_2_arenas');
-  }
+  // v7.2: serve_50 + combo_4 mission hooks
+  if(matchCtx.drinksServed) missionProgress('serve_50', matchCtx.drinksServed);
+  if(matchCtx.bestCombo && matchCtx.bestCombo >= 4) missionProgress('combo_4', 1);
 
   // Build result screen
   const header = $('r-header');
-  header.textContent = result==='win'?'VICTORY':result==='loss'?'DEFEAT':'DRAW';
+  const starIcons = '★'.repeat(stars) + '☆'.repeat(3-stars);
+  header.innerHTML = (result==='win'?'VICTORY':result==='loss'?'DEFEAT':'DRAW') + ` <span style="font-size:0.7em;color:#ffd700">${starIcons}</span>`;
   header.className = 'result-header '+result;
   const scoreLine = matchCtx.playerScore !== undefined ? ` — ${matchCtx.playerScore} to ${matchCtx.opponentScore}` : '';
   $('r-sub').textContent = 'vs. '+matchCtx.opponent.name+scoreLine;
@@ -3899,19 +4052,19 @@ function applyMatchResult(result){
     rr.appendChild(stats);
   }
   {
-    const stakeSuffix = stakeMult > 1 ? ` (×${stakeMult} stake)` : '';
-    const coinBreak = `${a.name} base ${basePayout[result==='draw'?'draw':(result==='win'?'win':'loss')]}${onFireTriggered?' ×2 On Fire':''}${stakeMult>1 && result==='win'?' ×'+stakeMult+' stake':''}`;
+    const showMult = stakeCnt >= 2;
+    const stakeSuffix = showMult ? ` (×${stakeMult} stake)` : '';
+    const coinBreak = `${a.name} base ${basePayout[result==='draw'?'draw':(result==='win'?'win':'loss')]}${onFireTriggered?' ×2 On Fire':''}${showMult && result==='win'?' ×'+stakeMult+' stake':''}`;
     const rows = [
       ['Trophies', (trophies>=0?'+':'')+trophies+' 🏆'+stakeSuffix, trophies>0?'pos':trophies<0?'neg':''],
       ['Coins', '+'+coins+' 🪙 ('+coinBreak+')', 'pos'],
       ['Stars', '+'+stars+' ⭐ ('+s.starsMeter+'/25)', 'pos'],
     ];
-    if(stakeCnt > 0){
+    // v7.2: only show Stakes Kept/Lost row when stake count >= 2
+    if(stakeCnt >= 2){
       const label = result==='loss' ? 'Stakes Lost' : 'Stakes Kept';
       const names = stakes.map(id => BOOSTERS[id].name).join(', ');
       rows.push([label, names, result==='loss'?'neg':'pos']);
-    } else {
-      rows.push(['Stakes', 'No stakes risked', '']);
     }
     if(onFireTriggered){
       rows.push(['On Fire', '×2 applied', 'gold']);
@@ -4059,10 +4212,9 @@ function init(){
   $('play-btn').onclick = onPlayPressed;
   $('luckybox-btn').onclick = claimLuckyBox;
   $('missions-fab').onclick = openMissions;
-  $('arena-switch').onclick = openArenaModal;
   $('starchest-btn').onclick = ()=>{
     if(!s.starChestPending) return;
-    rollStarChest(s.currentPlayingArena);
+    rollStarChest(currentArenaId());
     renderAll();
   };
 
