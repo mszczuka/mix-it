@@ -2375,8 +2375,21 @@ function rarityRoll(maxTier,forceGold){
 function renderTrophyRoad(){
   const list = $('tr-list');
   list.innerHTML = '';
-  const maxT = TROPHY_ROAD[TROPHY_ROAD.length-1].trophies;
-  const pct = Math.max(0, Math.min(100, (s.trophies / maxT) * 100));
+  // Progress bar matches visual row positions: each milestone occupies 1/N of the bar,
+  // with linear interpolation between the two milestones bracketing s.trophies.
+  const N = TROPHY_ROAD.length;
+  let pct = 0;
+  if(s.trophies >= TROPHY_ROAD[N-1].trophies){
+    pct = 100;
+  } else {
+    let idx = 0;
+    while(idx < N && s.trophies >= TROPHY_ROAD[idx].trophies) idx++;
+    // idx = index of first unreached milestone (1..N-1); reached count = idx
+    const prevT = idx === 0 ? 0 : TROPHY_ROAD[idx-1].trophies;
+    const nextT = TROPHY_ROAD[idx].trophies;
+    const frac = (s.trophies - prevT) / Math.max(1, nextT - prevT);
+    pct = ((idx + frac) / N) * 100;
+  }
   list.style.setProperty('--tr-progress', pct + '%');
   TROPHY_ROAD.forEach(ms => {
     const claimed = s.trophyRoad.claimedMilestones.includes(ms.n);
