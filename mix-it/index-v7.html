@@ -129,17 +129,17 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:"Fredoka","Nunito",
 .shop-card .sc-buy.dollar{background:linear-gradient(180deg,#4db8ff,#2e84c9);box-shadow:0 3px 0 #1a4d79}
 
 /* ===== TROPHY ROAD TAB ===== */
-#screen-trophyroad .tr-list{position:relative;display:flex;flex-direction:column-reverse;gap:8px;padding:10px 14px 10px 34px}
-#screen-trophyroad .tr-list::before{content:'';position:absolute;left:20px;top:10px;bottom:10px;width:6px;background:rgba(255,255,255,0.08);border-radius:3px;z-index:0}
-#screen-trophyroad .tr-list::after{content:'';position:absolute;left:20px;bottom:10px;width:6px;height:var(--tr-progress,0%);background:linear-gradient(180deg,#ffc700,#ffac04);border-radius:3px;box-shadow:0 0 8px rgba(255,215,0,0.5);z-index:1;transition:height 0.3s}
+#screen-trophyroad .tr-list{position:relative;display:flex;flex-direction:column-reverse;gap:8px;padding:10px 14px 10px 44px}
+#screen-trophyroad .tr-list::before{content:'';position:absolute;left:24px;top:10px;bottom:10px;width:12px;background:rgba(255,255,255,0.08);border-radius:6px;z-index:0}
+#screen-trophyroad .tr-list::after{content:'';position:absolute;left:24px;bottom:10px;width:12px;height:var(--tr-progress,0%);background:linear-gradient(180deg,#ffc700,#ffac04);border-radius:6px;box-shadow:0 0 10px rgba(255,215,0,0.6);z-index:1;transition:height 0.3s}
 .tr-row{position:relative;z-index:2;display:flex;align-items:center;gap:10px;padding:10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:10px}
 .tr-row.claimable{border-color:#ffd700;background:rgba(255,215,0,0.1)}
 .tr-row.claimed{opacity:0.5}
 .tr-row.locked{opacity:0.55}
-.tr-row .tr-n{font-family:"Paytone One","Lilita One",system-ui,sans-serif;font-size:20px;color:#ffd700;min-width:32px;text-align:center}
+.tr-row .tr-n{font-family:"Paytone One","Lilita One",system-ui,sans-serif;font-size:13px;color:rgba(255,215,0,0.7);min-width:24px;text-align:center}
 .tr-row .tr-body{flex:1}
-.tr-row .tr-threshold{font-size:12px;color:#ffd700;font-weight:900}
-.tr-row .tr-reward-text{font-size:11px;color:rgba(255,255,255,0.8);line-height:1.3;margin-top:2px}
+.tr-row .tr-threshold{font-size:20px;color:#ffd700;font-weight:900}
+.tr-row .tr-reward-text{font-size:15px;color:rgba(255,255,255,0.9);line-height:1.3;margin-top:3px;font-weight:800}
 .tr-row .tr-btn{padding:7px 12px;border:none;border-radius:8px;background:linear-gradient(180deg,#ffac04,#ffc700);color:#fff;font-weight:900;font-size:11px;cursor:pointer;box-shadow:0 3px 0 #af3c34}
 .tr-row .tr-btn:disabled{opacity:0.5;cursor:not-allowed;background:#333;box-shadow:none}
 
@@ -484,7 +484,7 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:"Fredoka","Nunito",
 .tutorial-popup-text{font-size:15px;font-weight:800;color:rgba(255,255,255,0.85);text-align:center;line-height:1.5}
 
 /* ===== RESULT ===== */
-#screen-result{padding:68px 18px;gap:14px;text-align:center;align-items:stretch}
+#screen-result{padding:68px 18px;gap:14px;text-align:center;align-items:stretch;justify-content:center}
 .result-header{font-family:"Paytone One","Lilita One",system-ui,sans-serif;font-size:30px;letter-spacing:1px;-webkit-text-stroke:0.5px #000;text-shadow:0 2px 0 #000}
 .result-header.win{color:#4ae35f}
 .result-header.loss{color:#ff6b6b}
@@ -649,7 +649,7 @@ body,html{letter-spacing:0.005em}
 .screen-title{font-size:var(--title-md);letter-spacing:0.08em;text-shadow:var(--title-shadow-2)}
 .modal h3{font-size:var(--title-sm);text-shadow:var(--title-shadow-1);letter-spacing:0.04em;margin-bottom:14px}
 .arena-badge-name,.stub-screen h2,.starter-card h2,.tutorial-header h2,
-.loadout-header,.tr-row .tr-n{font-size:var(--title-sm);text-shadow:var(--title-shadow-1)}
+.loadout-header{font-size:var(--title-sm);text-shadow:var(--title-shadow-1)}
 .pack-reveal-title,.result-header{font-size:var(--title-md);text-shadow:var(--title-shadow-2)}
 .pause-title,.tutorial-popup-title{
   font-size:var(--title-lg);
@@ -665,7 +665,7 @@ body,html{letter-spacing:0.005em}
 
 /* --- Single gold everywhere titles are gold --- */
 .arena-badge-name,.modal h3,.pack-reveal-title,.starter-card h2,
-.stub-screen h2,.tr-row .tr-n,.bp-tile .bp-n,.stake-mult-readout,
+.stub-screen h2,.bp-tile .bp-n,.stake-mult-readout,
 .tutorial-header h2,.tutorial-popup-title,.prematch-title,
 .arena-trophy-count{color:var(--title-gold)}
 
@@ -1300,7 +1300,7 @@ const BUILDINGS_BY_ARENA = {
   juice: [
     {id:'j_stand',      ic:'🍹', name:'Juice Stand',       type:'cosmetic', effect:'Fresh neon juice stand'},
     {id:'j_shop',       ic:'📦', name:'Sticker Kiosk',     type:'functional', effect:'+Arena-themed pack in Shop F'},
-    {id:'j_tavern',     ic:'🍺', name:'Pour Counter',      type:'cosmetic', effect:'Decorative tavern counter'},
+    {id:'j_tavern',     ic:'🍺', name:"Winner's Bar",      type:'cosmetic', effect:'Decorative tavern counter'},
     {id:'j_palm',       ic:'🌴', name:'Palm Marquee',      type:'cosmetic', effect:'Lit palms along the bar'}
   ],
   beach: [
@@ -1320,7 +1320,7 @@ const BUILDINGS_BY_ARENA = {
     {id:'s_bar',        ic:'🥃', name:'Speakeasy Bar',     type:'cosmetic', effect:'Hidden door, brass fittings'},
     {id:'s_shop',       ic:'📦', name:'Hidden Kiosk',      type:'functional', effect:'+Arena-themed pack in Shop F'},
     {id:'s_office',     ic:'🎁', name:'Secret Chest Vault',type:'functional', effect:'-10% Star Chest coin shortcut'},
-    {id:'s_tavern',     ic:'🍺', name:'Ledger Counter',    type:'cosmetic', effect:'Decorative tavern counter'},
+    {id:'s_tavern',     ic:'🍺', name:"Winner's Bar",      type:'cosmetic', effect:'Decorative tavern counter'},
     {id:'s_piano',      ic:'🎹', name:'Jazz Piano',        type:'cosmetic', effect:'Live piano on loop'}
   ],
   rooftop: [
@@ -1334,7 +1334,7 @@ const BUILDINGS_BY_ARENA = {
     {id:'g_bar',        ic:'🏨', name:'Grand Hotel Bar',   type:'cosmetic', effect:'Marble + crystal bar'},
     {id:'g_shop',       ic:'📦', name:'Concierge Kiosk',   type:'functional', effect:'+Arena-themed pack in Shop F'},
     {id:'g_office',     ic:'🎁', name:'Grand Chest Salon', type:'functional', effect:'-10% Star Chest coin shortcut'},
-    {id:'g_tavern',     ic:'🍺', name:'Gilded Counter',    type:'cosmetic', effect:'Decorative tavern counter'},
+    {id:'g_tavern',     ic:'🍺', name:"Winner's Bar",      type:'cosmetic', effect:'Decorative tavern counter'},
     {id:'g_chandelier', ic:'💎', name:'Chandelier',        type:'cosmetic', effect:'Thousand-crystal chandelier'},
     {id:'g_statue',     ic:'🏆', name:'Legacy Statue',     type:'cosmetic', effect:'Patron-of-the-year statue'}
   ]

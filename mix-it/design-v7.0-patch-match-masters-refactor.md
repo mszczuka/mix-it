@@ -548,13 +548,13 @@ Each venue contains a mix of:
 - **Functional buildings** — provide a small gameplay benefit (unlock at building completion):
   - **Sticker Shop** (1 per venue, adds arena-themed sticker packs to Shop F)
   - **Chest Office** (unlocks cheaper Star Chest shortcut — 10% gold discount per venue owned)
-  - **Ante Tavern** (reduces ante by 5% in that venue when fully upgraded)
   - **Recruiter's Booth** (+1 extra daily mission slot — only 1 exists across whole Venue, at Cocktail Lounge)
 - **Cosmetic landmarks** — pure flex, visually dominant:
+  - **Winner's Bar** (decorative tavern counter; thematic centerpiece for a venue — no gameplay bonus)
   - Neon signs, fountains, statues, marquee signs, rooftop lights
   - Visible on the map; photographable
 
-Each venue's building list is hand-assigned so every venue has **3 functional + 1–3 cosmetic**.
+Each venue's building list is hand-assigned so every venue has **2 functional + 2–3 cosmetic**.
 
 #### 11.14 Building progression (TH-style, played-not-paid)
 
