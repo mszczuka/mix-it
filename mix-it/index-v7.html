@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>Mix It — v7.0 Match Masters Refactor</title>
+<title>Mix It — v7.1 Coin Economy — MM Faithful</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
@@ -15,7 +15,7 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:'Nunito',system-ui,
 #game{position:relative;width:420px;max-width:100vw;height:100vh;height:100dvh;margin:0 auto;overflow:hidden;display:flex;flex-direction:column;background:linear-gradient(180deg,#0d3460 0%,#144985 30%,#144985 70%,#0a2a50 100%)}
 
 /* ===== HUD (v6 top bar) ===== */
-#hud{flex-shrink:0;display:flex;align-items:center;gap:6px;padding:0 10px;height:44px;background:#0a2a50;border-bottom:1px solid rgba(255,255,255,0.05);z-index:100}
+#hud{position:relative;flex-shrink:0;display:flex;align-items:center;gap:6px;padding:0 10px;height:44px;background:#0a2a50;border-bottom:1px solid rgba(255,255,255,0.05);z-index:100}
 #hud.hidden{display:none}
 .hud-profile{display:flex;align-items:center;gap:6px;flex:1;min-width:0}
 .hud-avatar{width:30px;height:30px;border-radius:50%;background:#162040;border:2px solid #3a6dd4;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
@@ -26,7 +26,6 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:'Nunito',system-ui,
 .cur-chip{display:flex;align-items:center;gap:4px;padding:3px 8px;background:rgba(255,255,255,0.06);border-radius:14px;font-size:12px;font-weight:900;line-height:1}
 .cur-chip .ic{font-size:14px;display:inline-block}
 .cur-chip.coins{color:#ffb94a;background:rgba(255,185,74,0.12);border:1px solid rgba(255,185,74,0.3)}
-.cur-chip.gold{color:#ffd700;background:rgba(255,215,0,0.14);border:1px solid rgba(255,215,0,0.4)}
 .cur-chip.stars{color:#9ad4ff;background:rgba(154,212,255,0.12);border:1px solid rgba(154,212,255,0.3)}
 
 /* ===== SPLASH ===== */
@@ -71,8 +70,8 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:'Nunito',system-ui,
 .star-meter{height:10px;background:rgba(0,0,0,0.4);border-radius:5px;overflow:hidden;position:relative}
 .star-meter .fill{height:100%;background:linear-gradient(90deg,#4db8ff,#9ad4ff);border-radius:5px;transition:width 0.3s}
 .star-meter .sm-num{position:absolute;right:4px;top:-1px;font-size:9px;font-weight:900;color:#fff;text-shadow:0 1px 2px #000}
-.luckybox-btn{padding:10px 14px;background:linear-gradient(180deg,#e88cff,#a54fff);border:none;border-radius:12px;color:#fff;font-weight:900;font-size:11px;cursor:pointer;box-shadow:0 3px 0 #5c2d99;text-transform:uppercase;letter-spacing:0.5px;flex-shrink:0}
-.luckybox-btn:disabled{background:#3a1f5c;box-shadow:none;opacity:0.7;cursor:not-allowed}
+.luckybox-btn{padding:10px 14px;background:linear-gradient(180deg,#4ae35f,#2ab14a);border:none;border-radius:12px;color:#fff;font-weight:900;font-size:11px;cursor:pointer;box-shadow:0 3px 0 #1a7a2e;text-transform:uppercase;letter-spacing:0.5px;flex-shrink:0}
+.luckybox-btn:disabled{background:#1f3a24;box-shadow:none;opacity:0.7;cursor:not-allowed}
 .starchest-btn{padding:10px 14px;background:linear-gradient(180deg,#4db8ff,#2e84c9);border:none;border-radius:12px;color:#fff;font-weight:900;font-size:11px;cursor:pointer;box-shadow:0 3px 0 #1a4d79;text-transform:uppercase;letter-spacing:0.5px;flex-shrink:0;animation:pulse 1.4s infinite}
 @keyframes pulse{50%{box-shadow:0 0 14px rgba(154,212,255,0.7),0 3px 0 #1a4d79}}
 
@@ -80,7 +79,6 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:'Nunito',system-ui,
 .play-btn:hover{transform:translateY(-2px);box-shadow:0 8px 0 #af3c34,0 10px 20px rgba(175,60,52,0.5)}
 .play-btn:active{transform:translateY(3px);box-shadow:0 2px 0 #af3c34}
 .play-btn .sub{display:block;font-size:11px;font-weight:700;letter-spacing:1px;margin-top:3px;opacity:0.9}
-.practice-btn{width:300px;max-width:100%;padding:10px;background:rgba(255,255,255,0.07);border:1px dashed rgba(255,255,255,0.25);border-radius:10px;color:rgba(255,255,255,0.75);font-size:12px;font-weight:800;cursor:pointer}
 
 .flash-banner{width:300px;max-width:100%;padding:10px 12px;background:linear-gradient(90deg,#ff4e6b,#ff8e4e);border-radius:12px;display:flex;align-items:center;justify-content:space-between;font-size:11px;color:#fff;font-weight:900;cursor:pointer}
 .flash-banner .f-timer{background:rgba(0,0,0,0.3);padding:3px 8px;border-radius:8px;font-size:10px}
@@ -101,6 +99,10 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:'Nunito',system-ui,
 .mission-row.done .mtxt{color:#4ae35f;text-decoration:line-through;opacity:0.7}
 
 /* ===== SHOP ===== */
+#screen-shop{overflow:hidden;padding-bottom:68px;flex-direction:column}
+#screen-shop>.screen-title{flex-shrink:0;padding:10px 0 6px;margin:0}
+#screen-shop>#shop-tabs{flex-shrink:0;border-bottom:1px solid rgba(255,255,255,0.06)}
+#screen-shop>#shop-body{flex:1;overflow-y:auto;overflow-x:hidden}
 #screen-shop .shop-section{padding:10px 14px}
 .shop-tabs{display:flex;gap:4px;padding:8px 14px;overflow-x:auto}
 .shop-tab{flex-shrink:0;padding:6px 12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:14px;font-size:11px;color:rgba(255,255,255,0.65);cursor:pointer;white-space:nowrap}
@@ -114,14 +116,16 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:'Nunito',system-ui,
 .shop-card .sc-name{font-size:12px;font-weight:900;text-align:center}
 .shop-card .sc-desc{font-size:10px;color:rgba(255,255,255,0.6);min-height:28px;line-height:1.25}
 .shop-card .sc-owned{font-size:10px;color:rgba(255,255,255,0.45);text-align:center}
-.shop-card .sc-buy{padding:6px;background:linear-gradient(180deg,#ffac04,#ffc700);border:none;border-radius:8px;color:#fff;font-weight:900;font-size:11px;cursor:pointer;box-shadow:0 3px 0 #af3c34}
+.shop-card .sc-buy{padding:6px;background:linear-gradient(180deg,#4ae35f,#2ab14a);border:none;border-radius:8px;color:#fff;font-weight:900;font-size:11px;cursor:pointer;box-shadow:0 3px 0 #1a7a2e}
 .shop-card .sc-buy:disabled{opacity:0.5;cursor:not-allowed;background:#444;box-shadow:none}
 .shop-card .sc-buy.gold{background:linear-gradient(180deg,#ffd700,#ffb500);box-shadow:0 3px 0 #8b6b00}
 .shop-card .sc-buy.dollar{background:linear-gradient(180deg,#4db8ff,#2e84c9);box-shadow:0 3px 0 #1a4d79}
 
 /* ===== TROPHY ROAD TAB ===== */
-#screen-trophyroad .tr-list{display:flex;flex-direction:column;gap:8px;padding:10px 14px}
-.tr-row{display:flex;align-items:center;gap:10px;padding:10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:10px}
+#screen-trophyroad .tr-list{position:relative;display:flex;flex-direction:column-reverse;gap:8px;padding:10px 14px 10px 34px}
+#screen-trophyroad .tr-list::before{content:'';position:absolute;left:20px;top:10px;bottom:10px;width:6px;background:rgba(255,255,255,0.08);border-radius:3px;z-index:0}
+#screen-trophyroad .tr-list::after{content:'';position:absolute;left:20px;bottom:10px;width:6px;height:var(--tr-progress,0%);background:linear-gradient(180deg,#ffc700,#ffac04);border-radius:3px;box-shadow:0 0 8px rgba(255,215,0,0.5);z-index:1;transition:height 0.3s}
+.tr-row{position:relative;z-index:2;display:flex;align-items:center;gap:10px;padding:10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:10px}
 .tr-row.claimable{border-color:#ffd700;background:rgba(255,215,0,0.1)}
 .tr-row.claimed{opacity:0.5}
 .tr-row.locked{opacity:0.55}
@@ -183,8 +187,9 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:'Nunito',system-ui,
 .bp-header .bp-progress .f{height:100%;background:linear-gradient(90deg,#ffd700,#ff9a4f)}
 .bp-premium-btn{padding:8px 14px;background:linear-gradient(180deg,#4db8ff,#2e84c9);border:none;border-radius:10px;color:#fff;font-weight:900;font-size:11px;cursor:pointer;box-shadow:0 3px 0 #1a4d79}
 .bp-premium-btn.owned{background:linear-gradient(180deg,#4ae35f,#2ab14a);box-shadow:0 3px 0 #1a7a2e;cursor:default}
-.bp-strip{display:flex;gap:8px;overflow-x:auto;padding:8px 14px 14px}
-.bp-tile{flex-shrink:0;width:118px;display:flex;flex-direction:column;gap:4px;border-radius:10px;padding:6px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08)}
+.bp-strip{display:flex;flex-direction:column;gap:8px;padding:8px 14px 14px}
+.bp-tile{flex-shrink:0;width:100%;display:grid;grid-template-columns:56px 1fr 1fr;gap:6px;align-items:stretch;border-radius:10px;padding:6px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08)}
+.bp-tile .bp-n{align-self:center}
 .bp-tile.locked{opacity:0.55}
 .bp-tile .bp-n{font-family:'Lilita One',cursive;font-size:14px;color:#ffd700;text-align:center;letter-spacing:1px}
 .bp-reward-box{background:rgba(0,0,0,0.3);border-radius:8px;padding:6px;min-height:74px;display:flex;flex-direction:column;gap:3px}
@@ -283,7 +288,7 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:'Nunito',system-ui,
 .building-row .b-lvl .dot.f3{background:#ffd700}
 .building-row .b-effect{font-size:10px;color:rgba(255,255,255,0.65);margin-top:2px;line-height:1.25}
 .building-row .b-btn{padding:8px 10px;border:none;border-radius:10px;color:#fff;font-weight:900;font-size:10px;cursor:pointer;white-space:nowrap;line-height:1.1}
-.building-row .b-btn.can{background:linear-gradient(180deg,#7b5cff,#4a3b99);box-shadow:0 3px 0 #2a1f66}
+.building-row .b-btn.can{background:linear-gradient(180deg,#4ae35f,#2ab14a);box-shadow:0 3px 0 #1a7a2e}
 .building-row .b-btn.cant{background:#333;opacity:0.6;cursor:not-allowed}
 .building-row .b-btn.max{background:#2a7a3a;cursor:default}
 
@@ -327,12 +332,13 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:'Nunito',system-ui,
 .stakes-box .sb-label{color:rgba(255,255,255,0.6)}
 .stakes-box .sb-val{color:#ffd700;font-weight:900}
 .slot-section h4{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:rgba(255,255,255,0.5);margin-bottom:8px}
-.bet-slot,.perk-slot{padding:14px;background:rgba(255,255,255,0.05);border:2px dashed rgba(255,255,255,0.2);border-radius:12px;text-align:center;cursor:pointer;min-height:66px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
-.bet-slot.filled{border-style:solid;border-color:#ffd700;background:rgba(255,215,0,0.08)}
+.bet-slot,.perk-slot,.stake-slot{padding:14px;background:rgba(255,255,255,0.05);border:2px dashed rgba(255,255,255,0.2);border-radius:12px;text-align:center;cursor:pointer;min-height:66px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
+.stake-slot.filled{border-style:solid;border-color:#ffd700;background:rgba(255,215,0,0.08)}
+.stake-slot.filled.tier-silver{border-color:#c0c6d4}
+.stake-slot.filled.tier-gold{border-color:#ffd700}
 .perk-slot.filled{border-style:solid;border-color:#9ad4ff;background:rgba(154,212,255,0.08)}
-.bet-slot.filled.tier-bronze{border-color:#c98a4e}
-.bet-slot.filled.tier-silver{border-color:#c0c6d4}
-.bet-slot.filled.tier-gold{border-color:#ffd700}
+.stakes-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.stake-mult-readout{text-align:center;font-family:'Lilita One',cursive;font-size:18px;color:#ffd700;letter-spacing:2px;padding:4px}
 .slot-ic{font-size:26px}
 .slot-name{font-size:12px;font-weight:900}
 .slot-hint{font-size:10px;color:rgba(255,255,255,0.5)}
@@ -523,7 +529,6 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:'Nunito',system-ui,
     </div>
     <div class="hud-currencies">
       <div class="cur-chip coins"><span class="ic">🪙</span><span id="hud-coins">0</span></div>
-      <div class="cur-chip gold"><span class="ic">🥇</span><span id="hud-gold">0</span></div>
       <div class="cur-chip stars"><span class="ic">⭐</span><span id="hud-stars">0</span></div>
     </div>
   </div>
@@ -556,10 +561,7 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:'Nunito',system-ui,
 
     <div id="flash-banner-slot"></div>
 
-    <button class="play-btn" id="play-btn">
-      PLAY <span class="sub" id="play-btn-sub">Wager 10 Gold</span>
-    </button>
-    <button class="practice-btn" id="practice-btn" style="display:none">Practice (no rewards)</button>
+    <button class="play-btn" id="play-btn">PLAY</button>
   </div>
 
   <!-- MATCHMAKING (v6 prematch layout + bet) -->
@@ -571,7 +573,7 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:'Nunito',system-ui,
         <div class="vs-avatar" id="mm-player-avatar">🧑‍🍳</div>
         <div class="vs-name">You</div>
         <div class="vs-trophies" id="mm-player-trophies">🏆 0</div>
-        <div class="vs-bet-chip none" id="mm-player-bet">No Bet</div>
+        <div class="vs-bet-chip none" id="mm-player-bet">×1</div>
       </div>
       <div class="vs-text">VS</div>
       <div class="vs-player">
@@ -590,16 +592,25 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:'Nunito',system-ui,
     <div class="loadout-header">CHOOSE YOUR LOADOUT</div>
     <div class="stakes-box">
       <div class="sb-row"><span class="sb-label">Arena</span><span class="sb-val" id="lo-arena">Juice Stand</span></div>
-      <div class="sb-row"><span class="sb-label">Ante</span><span class="sb-val" id="lo-ante">10 💰 (pot 20)</span></div>
-      <div class="sb-row"><span class="sb-label">Bet</span><span class="sb-val" id="lo-bet-summary">None</span></div>
+      <div class="sb-row"><span class="sb-label">Stakes</span><span class="sb-val" id="lo-bet-summary">None</span></div>
     </div>
     <div class="slot-section">
-      <h4>Bet Slot — stake 1 booster</h4>
-      <div class="bet-slot" id="bet-slot" onclick="openBetPicker()">
-        <div class="slot-ic">➕</div>
-        <div class="slot-name">Empty</div>
-        <div class="slot-hint">Tap to stake (optional)</div>
+      <h4>Stake Slots — risk 0–3 boosters (Silver/Gold only)</h4>
+      <div class="stakes-row">
+        <div class="stake-slot" id="stake-slot-0" onclick="openStakePicker(0)">
+          <div class="slot-ic">➕</div>
+          <div class="slot-name">Empty</div>
+        </div>
+        <div class="stake-slot" id="stake-slot-1" onclick="openStakePicker(1)">
+          <div class="slot-ic">➕</div>
+          <div class="slot-name">Empty</div>
+        </div>
+        <div class="stake-slot" id="stake-slot-2" onclick="openStakePicker(2)">
+          <div class="slot-ic">➕</div>
+          <div class="slot-name">Empty</div>
+        </div>
       </div>
+      <div class="stake-mult-readout" id="stake-mult-readout">×1 REWARDS</div>
     </div>
     <div class="slot-section">
       <h4>Perks — up to 2, no stake</h4>
@@ -614,7 +625,7 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:'Nunito',system-ui,
         </div>
       </div>
     </div>
-    <button class="loadout-confirm" onclick="startMatch()">FIGHT</button>
+    <button class="loadout-confirm" onclick="confirmStartMatch()">FIGHT</button>
   </div>
 
   <!-- MATCH (v6 port — 1:1 water-sort gameplay) -->
@@ -768,8 +779,7 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:'Nunito',system-ui,
       <div class="sp-sub">One-time offer</div>
       <div class="sp-timer" id="sp-timer">Expires in 48:00:00</div>
       <div class="starter-grid">
-        <div class="sp-item"><span class="sp-ic">💰</span><span class="sp-label">1000</span></div>
-        <div class="sp-item"><span class="sp-ic">🪙</span><span class="sp-label">500</span></div>
+        <div class="sp-item"><span class="sp-ic">🪙</span><span class="sp-label">2000</span></div>
         <div class="sp-item"><span class="sp-ic">⚡</span><span class="sp-label">10 Boosters</span></div>
         <div class="sp-item"><span class="sp-ic">🎨</span><span class="sp-label">5 Stickers</span></div>
         <div class="sp-item"><span class="sp-ic">🎟️</span><span class="sp-label">1 Token</span></div>
@@ -839,20 +849,23 @@ const PERKS = {
   pourRead:   {ic:'🎯',  name:'Pour Read',   desc:'Highlight best pour (×1)',                uses:1}
 };
 
-const COIN_PAYOUT = {
-  none:   {win:15,  loss:8,  draw:10},
-  bronze: {win:30,  loss:15, draw:20},
-  silver: {win:60,  loss:25, draw:40},
-  gold:   {win:120, loss:40, draw:70}
+// §6.2 — coin payout is by ARENA now. Stake multiplier applied post.
+const ARENA_COIN_PAYOUT = {
+  juice:    {win:30,  loss:8,  draw:15},
+  beach:    {win:60,  loss:15, draw:30},
+  cocktail: {win:120, loss:25, draw:60},
+  speak:    {win:200, loss:40, draw:100},
+  rooftop:  {win:320, loss:60, draw:160},
+  grand:    {win:500, loss:90, draw:250}
 };
 
 const ARENAS = [
-  {id:'juice',    name:'Juice Stand',      min:0,    ante:10,  trophyBase:25, icon:'🍹'},
-  {id:'beach',    name:'Beach Bar',        min:200,  ante:25,  trophyBase:28, icon:'🏝️'},
-  {id:'cocktail', name:'Cocktail Lounge',  min:500,  ante:60,  trophyBase:30, icon:'🍸'},
-  {id:'speak',    name:'Speakeasy',        min:1000, ante:140, trophyBase:32, icon:'🥃'},
-  {id:'rooftop',  name:'Rooftop Terrace',  min:1500, ante:280, trophyBase:34, icon:'🌃'},
-  {id:'grand',    name:'Grand Hotel',      min:2000, ante:550, trophyBase:38, icon:'🏨'}
+  {id:'juice',    name:'Juice Stand',      min:0,    trophyBase:25, icon:'🍹'},
+  {id:'beach',    name:'Beach Bar',        min:200,  trophyBase:28, icon:'🏝️'},
+  {id:'cocktail', name:'Cocktail Lounge',  min:500,  trophyBase:30, icon:'🍸'},
+  {id:'speak',    name:'Speakeasy',        min:1000, trophyBase:32, icon:'🥃'},
+  {id:'rooftop',  name:'Rooftop Terrace',  min:1500, trophyBase:34, icon:'🌃'},
+  {id:'grand',    name:'Grand Hotel',      min:2000, trophyBase:38, icon:'🏨'}
 ];
 
 const ARENA_BOOSTER_UNLOCKS = {
@@ -865,26 +878,26 @@ const ARENA_BOOSTER_UNLOCKS = {
 };
 
 const TROPHY_ROAD = [
-  {n:1,  trophies:50,   reward:'30 💰 + 50 🪙',                  rewardFn:()=>{s.gold+=30;s.coins+=50}},
-  {n:2,  trophies:100,  reward:'2× Bronze + Bronze Frame',         rewardFn:()=>{grantBoosters(['extraBottle','firstPour']);s.profile.unlockedFrames.push('bronze')}},
-  {n:3,  trophies:150,  reward:'50 💰',                            rewardFn:()=>{s.gold+=50}},
-  {n:4,  trophies:200,  reward:'Beach Bar + 2 Silver + 100 🪙',     rewardFn:()=>{unlockArena('beach');grantBoosters(['colorSplash','swap']);s.coins+=100}},
-  {n:5,  trophies:300,  reward:'1 Silver + Title: Regular',        rewardFn:()=>{grantBoosters(['customerLock']);s.profile.unlockedTitles.push('Regular')}},
-  {n:6,  trophies:400,  reward:'80 💰 + 150 🪙',                    rewardFn:()=>{s.gold+=80;s.coins+=150}},
-  {n:7,  trophies:500,  reward:'Cocktail Lounge + 1 Gold + 200 🪙', rewardFn:()=>{unlockArena('cocktail');grantBoosters(['clearBottle']);s.coins+=200}},
-  {n:8,  trophies:650,  reward:'150 💰 + Avatar 2 + 1 Token',       rewardFn:()=>{s.gold+=150;s.profile.unlockedAvatars.push('a2');s.stickerTokens++}},
-  {n:9,  trophies:800,  reward:'2 Silver + 200 🪙',                 rewardFn:()=>{grantBoosters(['colorSplash','swap']);s.coins+=200}},
-  {n:10, trophies:1000, reward:'Speakeasy + 2 Gold + 300 🪙',       rewardFn:()=>{unlockArena('speak');grantBoosters(['autoServe','doubleServe']);s.coins+=300}},
-  {n:11, trophies:1200, reward:'250 💰 + Silver Frame',             rewardFn:()=>{s.gold+=250;s.profile.unlockedFrames.push('silver')}},
-  {n:12, trophies:1400, reward:'1 Gold + Title: Pro Bartender',    rewardFn:()=>{grantBoosters(['clearBottle']);s.profile.unlockedTitles.push('Pro Bartender')}},
-  {n:13, trophies:1600, reward:'300 🪙',                            rewardFn:()=>{s.coins+=300}},
-  {n:14, trophies:1800, reward:'300 💰 + Avatar 3 + 1 Token',       rewardFn:()=>{s.gold+=300;s.profile.unlockedAvatars.push('a3');s.stickerTokens++}},
-  {n:15, trophies:2000, reward:'Rooftop + 2 Gold + 500 🪙',         rewardFn:()=>{unlockArena('rooftop');grantBoosters(['autoServe','doubleServe']);s.coins+=500}},
-  {n:16, trophies:2400, reward:'500 💰 + Gold Frame',               rewardFn:()=>{s.gold+=500;s.profile.unlockedFrames.push('gold')}},
-  {n:17, trophies:2800, reward:'2 Gold + Title: Mixologist',       rewardFn:()=>{grantBoosters(['autoServe','doubleServe']);s.profile.unlockedTitles.push('Mixologist')}},
-  {n:18, trophies:3200, reward:'700 💰 + Avatar 4',                 rewardFn:()=>{s.gold+=700;s.profile.unlockedAvatars.push('a4')}},
-  {n:19, trophies:3500, reward:'Grand Hotel + 3 Gold + 750 🪙',     rewardFn:()=>{unlockArena('grand');grantBoosters(['clearBottle','autoServe','doubleServe']);s.coins+=750}},
-  {n:20, trophies:4000, reward:'1000 💰 + 1000 🪙 + Legend + 2 Tokens', rewardFn:()=>{s.gold+=1000;s.coins+=1000;s.profile.unlockedFrames.push('diamond');s.profile.unlockedTitles.push('Legend');s.profile.unlockedAvatars.push('a5');s.stickerTokens+=2}}
+  {n:1,  trophies:50,   reward:'100 🪙',                              rewardFn:()=>{s.coins+=100}},
+  {n:2,  trophies:100,  reward:'2× Bronze + Bronze Frame',            rewardFn:()=>{grantBoosters(['extraBottle','firstPour']);s.profile.unlockedFrames.push('bronze')}},
+  {n:3,  trophies:150,  reward:'80 🪙',                               rewardFn:()=>{s.coins+=80}},
+  {n:4,  trophies:200,  reward:'Beach Bar + 2 Silver + 250 🪙',       rewardFn:()=>{unlockArena('beach');grantBoosters(['colorSplash','swap']);s.coins+=250}},
+  {n:5,  trophies:300,  reward:'1 Silver + Title: Regular',           rewardFn:()=>{grantBoosters(['customerLock']);s.profile.unlockedTitles.push('Regular')}},
+  {n:6,  trophies:400,  reward:'270 🪙',                              rewardFn:()=>{s.coins+=270}},
+  {n:7,  trophies:500,  reward:'Cocktail Lounge + 1 Gold + 400 🪙',   rewardFn:()=>{unlockArena('cocktail');grantBoosters(['clearBottle']);s.coins+=400}},
+  {n:8,  trophies:650,  reward:'230 🪙 + Avatar 2 + 1 Token',         rewardFn:()=>{s.coins+=230;s.profile.unlockedAvatars.push('a2');s.stickerTokens++}},
+  {n:9,  trophies:800,  reward:'2 Silver + 200 🪙',                   rewardFn:()=>{grantBoosters(['colorSplash','swap']);s.coins+=200}},
+  {n:10, trophies:1000, reward:'Speakeasy + 2 Gold + 600 🪙',         rewardFn:()=>{unlockArena('speak');grantBoosters(['autoServe','doubleServe']);s.coins+=600}},
+  {n:11, trophies:1200, reward:'380 🪙 + Silver Frame',               rewardFn:()=>{s.coins+=380;s.profile.unlockedFrames.push('silver')}},
+  {n:12, trophies:1400, reward:'1 Gold + Title: Pro Bartender',      rewardFn:()=>{grantBoosters(['clearBottle']);s.profile.unlockedTitles.push('Pro Bartender')}},
+  {n:13, trophies:1600, reward:'300 🪙',                              rewardFn:()=>{s.coins+=300}},
+  {n:14, trophies:1800, reward:'450 🪙 + Avatar 3 + 1 Token',         rewardFn:()=>{s.coins+=450;s.profile.unlockedAvatars.push('a3');s.stickerTokens++}},
+  {n:15, trophies:2000, reward:'Rooftop + 2 Gold + 1000 🪙',          rewardFn:()=>{unlockArena('rooftop');grantBoosters(['autoServe','doubleServe']);s.coins+=1000}},
+  {n:16, trophies:2400, reward:'750 🪙 + Gold Frame',                 rewardFn:()=>{s.coins+=750;s.profile.unlockedFrames.push('gold')}},
+  {n:17, trophies:2800, reward:'2 Gold + Title: Mixologist',         rewardFn:()=>{grantBoosters(['autoServe','doubleServe']);s.profile.unlockedTitles.push('Mixologist')}},
+  {n:18, trophies:3200, reward:'1050 🪙 + Avatar 4',                  rewardFn:()=>{s.coins+=1050;s.profile.unlockedAvatars.push('a4')}},
+  {n:19, trophies:3500, reward:'Grand Hotel + 3 Gold + 1250 🪙',      rewardFn:()=>{unlockArena('grand');grantBoosters(['clearBottle','autoServe','doubleServe']);s.coins+=1250}},
+  {n:20, trophies:4000, reward:'2500 🪙 + Legend + 2 Tokens',         rewardFn:()=>{s.coins+=2500;s.profile.unlockedFrames.push('diamond');s.profile.unlockedTitles.push('Legend');s.profile.unlockedAvatars.push('a5');s.stickerTokens+=2}}
 ];
 
 const AI_PERSONAS = {
@@ -959,36 +972,36 @@ const ALBUM_ORDER = ['barClassics','cityNights','grandHotel','seasonSummerRoofto
 
 // ===== BAR PASS (§13.6) — 30 tiers, 50 BPP/tier =====
 const BAR_PASS_TIERS = [
-  {n:1,  free:{gold:30},                        premium:{gold:100,boosters:2}},
+  {n:1,  free:{coins:50},                       premium:{coins:150,boosters:2}},
   {n:2,  free:{boosters:1},                     premium:{coins:200,boosters:2}},
-  {n:3,  free:{gold:50},                        premium:{silverBooster:1}},
-  {n:4,  free:{coins:100},                      premium:{gold:120,boosters:1}},
-  {n:5,  free:{boosters:2},                     premium:{frame:'Seasonal Frame',tokens:1}},
-  {n:6,  free:{gold:60},                        premium:{coins:250,boosters:2}},
-  {n:7,  free:{boosters:1},                     premium:{gold:180}},
+  {n:3,  free:{coins:80},                       premium:{silverBooster:1}},
+  {n:4,  free:{coins:100},                      premium:{coins:180,boosters:1}},
+  {n:5,  free:{boosters:2},                     premium:{frame:'Exclusive Seasonal Frame',tokens:1}},
+  {n:6,  free:{coins:90},                       premium:{coins:250,boosters:2}},
+  {n:7,  free:{boosters:1},                     premium:{coins:270}},
   {n:8,  free:{coins:120},                      premium:{silverBooster:1,coins:100}},
-  {n:9,  free:{gold:80},                        premium:{boosters:3}},
+  {n:9,  free:{coins:120},                      premium:{boosters:3}},
   {n:10, free:{silverBooster:1},                premium:{starChest:1,avatar:'Exclusive Avatar'}},
-  {n:11, free:{coins:150},                      premium:{gold:220,boosters:1}},
-  {n:12, free:{gold:100},                       premium:{coins:300,tokens:1}},
-  {n:13, free:{boosters:2},                     premium:{silverBooster:1,gold:150}},
-  {n:14, free:{gold:120},                       premium:{goldBooster:1}},
-  {n:15, free:{gold:100,coins:100},             premium:{boosters:3,coins:500,bigPacks:3,tokens:1}},
-  {n:16, free:{coins:200},                      premium:{gold:300}},
-  {n:17, free:{gold:150},                       premium:{boosters:3,coins:200}},
-  {n:18, free:{silverBooster:1},                premium:{goldBooster:1,gold:250}},
+  {n:11, free:{coins:150},                      premium:{coins:330,boosters:1}},
+  {n:12, free:{coins:150},                      premium:{coins:300,tokens:1}},
+  {n:13, free:{boosters:2},                     premium:{silverBooster:1,coins:230}},
+  {n:14, free:{coins:180},                      premium:{goldBooster:1}},
+  {n:15, free:{coins:300},                      premium:{boosters:3,coins:800,bigPacks:3,tokens:1}},
+  {n:16, free:{coins:200},                      premium:{coins:450}},
+  {n:17, free:{coins:230},                      premium:{boosters:3,coins:200}},
+  {n:18, free:{silverBooster:1},                premium:{goldBooster:1,coins:380}},
   {n:19, free:{coins:250},                      premium:{bigPacks:2,tokens:1}},
-  {n:20, free:{goldBooster:1},                  premium:{title:'Seasonal Title',gold:500,venueToken:1}},
-  {n:21, free:{gold:200},                       premium:{coins:400,boosters:3}},
-  {n:22, free:{coins:250},                      premium:{silverBooster:1,gold:300}},
+  {n:20, free:{goldBooster:1},                  premium:{title:'Exclusive Seasonal Title',coins:750,venueToken:1}},
+  {n:21, free:{coins:300},                      premium:{coins:400,boosters:3}},
+  {n:22, free:{coins:250},                      premium:{silverBooster:1,coins:450}},
   {n:23, free:{boosters:3},                     premium:{goldBooster:1,coins:300}},
-  {n:24, free:{gold:250},                       premium:{bigPacks:2,gold:200}},
+  {n:24, free:{coins:380},                      premium:{bigPacks:2,coins:300}},
   {n:25, free:{silverBooster:2},                premium:{boosters:10,starChest:2}},
-  {n:26, free:{coins:300},                      premium:{gold:400,tokens:1}},
-  {n:27, free:{gold:300},                       premium:{goldBooster:1,boosters:3}},
-  {n:28, free:{boosters:3},                     premium:{silverBooster:2,gold:350}},
+  {n:26, free:{coins:300},                      premium:{coins:600,tokens:1}},
+  {n:27, free:{coins:450},                      premium:{goldBooster:1,boosters:3}},
+  {n:28, free:{boosters:3},                     premium:{silverBooster:2,coins:530}},
   {n:29, free:{coins:400},                      premium:{bigPacks:3,venueToken:1}},
-  {n:30, free:{gold:200},                       premium:{gold:1000,coins:1000,avatar:'Exclusive Seasonal Avatar',tokens:2,diamondSticker:1}}
+  {n:30, free:{coins:300},                      premium:{coins:3000,avatar:'Exclusive Seasonal Avatar',tokens:2,diamondSticker:1}}
 ];
 
 // ===== VENUE BUILDINGS (§11.11–17) =====
@@ -998,13 +1011,13 @@ const BUILDINGS_BY_ARENA = {
   juice: [
     {id:'j_stand',      ic:'🍹', name:'Juice Stand',       type:'cosmetic', effect:'Fresh neon juice stand'},
     {id:'j_shop',       ic:'📦', name:'Sticker Kiosk',     type:'functional', effect:'+Arena-themed pack in Shop F'},
-    {id:'j_tavern',     ic:'💰', name:'Ante Tavern',       type:'functional', effect:'Ante -5% at L3'},
+    {id:'j_tavern',     ic:'🍺', name:'Pour Counter',      type:'cosmetic', effect:'Decorative tavern counter'},
     {id:'j_palm',       ic:'🌴', name:'Palm Marquee',      type:'cosmetic', effect:'Lit palms along the bar'}
   ],
   beach: [
     {id:'b_bar',        ic:'🏖️', name:'Beach Bar',         type:'cosmetic', effect:'Boardwalk tiki bar'},
     {id:'b_shop',       ic:'📦', name:'Surf Kiosk',        type:'functional', effect:'+Arena-themed pack in Shop F'},
-    {id:'b_office',     ic:'🎁', name:'Chest Office',      type:'functional', effect:'-10% Star Chest gold shortcut'},
+    {id:'b_office',     ic:'🎁', name:'Chest Office',      type:'functional', effect:'-10% Star Chest coin shortcut'},
     {id:'b_fountain',   ic:'⛲', name:'Coral Fountain',    type:'cosmetic', effect:'Glowing fountain'}
   ],
   cocktail: [
@@ -1017,22 +1030,22 @@ const BUILDINGS_BY_ARENA = {
   speak: [
     {id:'s_bar',        ic:'🥃', name:'Speakeasy Bar',     type:'cosmetic', effect:'Hidden door, brass fittings'},
     {id:'s_shop',       ic:'📦', name:'Hidden Kiosk',      type:'functional', effect:'+Arena-themed pack in Shop F'},
-    {id:'s_office',     ic:'🎁', name:'Secret Chest Vault',type:'functional', effect:'-10% Star Chest gold shortcut'},
-    {id:'s_tavern',     ic:'💰', name:'Ledger Tavern',     type:'functional', effect:'Ante -5% at L3'},
+    {id:'s_office',     ic:'🎁', name:'Secret Chest Vault',type:'functional', effect:'-10% Star Chest coin shortcut'},
+    {id:'s_tavern',     ic:'🍺', name:'Ledger Counter',    type:'cosmetic', effect:'Decorative tavern counter'},
     {id:'s_piano',      ic:'🎹', name:'Jazz Piano',        type:'cosmetic', effect:'Live piano on loop'}
   ],
   rooftop: [
     {id:'r_bar',        ic:'🌃', name:'Rooftop Terrace',   type:'cosmetic', effect:'Skyline panorama'},
     {id:'r_shop',       ic:'📦', name:'Sky Kiosk',         type:'functional', effect:'+Arena-themed pack in Shop F'},
-    {id:'r_office',     ic:'🎁', name:'Observatory Office',type:'functional', effect:'-10% Star Chest gold shortcut'},
+    {id:'r_office',     ic:'🎁', name:'Observatory Office',type:'functional', effect:'-10% Star Chest coin shortcut'},
     {id:'r_lights',     ic:'✨', name:'Rooftop Lights',    type:'cosmetic', effect:'Strung festival lights'},
     {id:'r_pool',       ic:'🏊', name:'Infinity Pool',     type:'cosmetic', effect:'Mirror-still infinity pool'}
   ],
   grand: [
     {id:'g_bar',        ic:'🏨', name:'Grand Hotel Bar',   type:'cosmetic', effect:'Marble + crystal bar'},
     {id:'g_shop',       ic:'📦', name:'Concierge Kiosk',   type:'functional', effect:'+Arena-themed pack in Shop F'},
-    {id:'g_office',     ic:'🎁', name:'Grand Chest Salon', type:'functional', effect:'-10% Star Chest gold shortcut'},
-    {id:'g_tavern',     ic:'💰', name:'Gilded Tavern',     type:'functional', effect:'Ante -5% at L3'},
+    {id:'g_office',     ic:'🎁', name:'Grand Chest Salon', type:'functional', effect:'-10% Star Chest coin shortcut'},
+    {id:'g_tavern',     ic:'🍺', name:'Gilded Counter',    type:'cosmetic', effect:'Decorative tavern counter'},
     {id:'g_chandelier', ic:'💎', name:'Chandelier',        type:'cosmetic', effect:'Thousand-crystal chandelier'},
     {id:'g_statue',     ic:'🏆', name:'Legacy Statue',     type:'cosmetic', effect:'Patron-of-the-year statue'}
   ]
@@ -1041,13 +1054,14 @@ const BUILDINGS_BY_ARENA = {
 function stickerKey(albumId, idx){ return albumId+':'+idx; }
 
 const MISSION_POOL = [
-  {id:'win_3',        text:'Win 3 matches',              target:3, reward:{gold:40,coins:100}},
-  {id:'use_5_bets',   text:'Equip a Bet in 5 matches',   target:5, reward:{gold:30,coins:100}},
-  {id:'play_5',       text:'Play 5 matches',             target:5, reward:{gold:40,coins:100}},
-  {id:'earn_200_coins',text:'Earn 200 Coins',            target:200,reward:{gold:50,coins:100}},
-  {id:'lucky_box_2',  text:'Claim Lucky Box twice',      target:2, reward:{gold:30,bronzeBooster:1}},
-  {id:'3_star_match', text:'Win with bet surviving',     target:1, reward:{gold:60,goldBooster:1}},
-  {id:'play_2_arenas',text:'Play in 2 different arenas', target:2, reward:{gold:50,coins:150}}
+  {id:'win_3',         text:'Win 3 matches',                        target:3,  reward:{coins:200}},
+  {id:'stake_2_wins',  text:'Win 2 matches with ≥2 stakes',         target:2,  reward:{coins:250,silverBooster:1}},
+  {id:'play_5',        text:'Play 5 matches',                       target:5,  reward:{coins:200}},
+  {id:'earn_500_coins',text:'Earn 500 Coins from matches',          target:500,reward:{coins:200}},
+  {id:'lucky_box_2',   text:'Claim Lucky Box twice',                target:2,  reward:{coins:150,bronzeBooster:1}},
+  {id:'3_star_match',  text:'Win with stakes surviving (≥1 stake)', target:1,  reward:{coins:300,goldBooster:1}},
+  {id:'play_2_arenas', text:'Play in 2 different arenas',           target:2,  reward:{coins:230}},
+  {id:'open_chest',    text:'Open any chest',                       target:1,  reward:{coins:150,bronzeBooster:2}}
 ];
 
 /* =========================================================================
@@ -1062,14 +1076,14 @@ function defaultSave(){
     trophies:0,
     currentPlayingArena:'juice',
     maxUnlockedArena:'juice',
-    gold:50, coins:100, stars:0, starsMeter:0,
+    coins:200, stars:0, starsMeter:0,
     boosters:{
       extraBottle:3, firstPour:2, spawnPlus3:0,
       colorSplash:1, swap:1, customerLock:0,
       clearBottle:0, autoServe:0, doubleServe:0
     },
     perks:{ secondLook:true, steadyHand:true, pourRead:true },
-    loadout:{ betId:null, perk1Id:null, perk2Id:null },
+    loadout:{ stakes:[null,null,null], perk1Id:null, perk2Id:null },
     onFireStreak:0, onFireActive:false, consecWins:0,
     luckyBox:{ nextAvailableAt: Date.now() },
     starChestPending:false,
@@ -1108,9 +1122,34 @@ function loadSave(){
       const parsed = JSON.parse(raw);
       if(parsed && parsed.version === 7){
         s = Object.assign(defaultSave(), parsed);
+        // v7.1 migrations — §16.2
+        if(typeof s.gold === 'number'){
+          s.coins = (s.coins||0) + Math.round(s.gold * 1.5);
+          delete s.gold;
+        }
+        if(s.loadout && typeof s.loadout.betId !== 'undefined'){
+          const legacyBet = s.loadout.betId;
+          s.loadout = {stakes:[legacyBet||null, null, null], perk1Id:s.loadout.perk1Id||null, perk2Id:s.loadout.perk2Id||null};
+        }
+        if(!s.loadout || !Array.isArray(s.loadout.stakes)){
+          s.loadout = {stakes:[null,null,null], perk1Id:null, perk2Id:null};
+        }
         // dateIso rollover
         const today = new Date().toISOString().slice(0,10);
         if(s.dailyMissions.dateIso !== today){ rerollDailies(); }
+        else {
+          // Rewrite legacy mission id
+          s.dailyMissions.missions.forEach(m => {
+            if(m.id === 'use_5_bets'){
+              m.id = 'stake_2_wins';
+              m.text = 'Win 2 matches with ≥2 stakes';
+              m.target = 2;
+              m.reward = {coins:250, silverBooster:1};
+              m.progress = 0;
+              m.claimed = false;
+            }
+          });
+        }
         return;
       }
     }
@@ -1175,25 +1214,24 @@ function missionProgress(id, amount=1){
   m.progress = Math.min(m.target, m.progress + amount);
   if(m.progress >= m.target && !m.claimed){
     m.claimed = true;
-    if(m.reward.gold) s.gold += m.reward.gold;
     if(m.reward.coins) s.coins += m.reward.coins;
     if(m.reward.bronzeBooster) grantBoosters(['extraBottle']);
+    if(m.reward.silverBooster) grantBoosters(['colorSplash']);
     if(m.reward.goldBooster) grantBoosters(['clearBottle']);
     toast('✅ Mission: '+m.text);
   }
-  // all done → daily chest
+  // all done → daily chest (§10.1)
   if(!s.dailyMissions.dailyChestClaimed && s.dailyMissions.missions.every(mm=>mm.claimed)){
     s.dailyMissions.dailyChestClaimed = true;
-    s.gold += 150; s.coins += 300;
+    s.coins += 500;
     grantBoosters(['extraBottle','colorSplash','clearBottle']);
     s.venue.venueBuildingTokens++;
-    // §10.1: 2 stickers + 15% sticker token chance
     addStickerByRarity(rarityRoll('diamond', false));
     addStickerByRarity(rarityRoll('diamond', false));
     if(Math.random() < 0.15) s.stickerTokens++;
-    toast('🎉 Daily Chest: 150g + 300c + boosters + 2 stickers + 1 VT');
-    // Refill flash trigger (§13.8)
-    if(s.gold < 100) triggerFlashOffer('refill');
+    toast('🎉 Daily Chest: 500🪙 + 3 boosters + 2 stickers + 1 VT');
+    // Refill flash trigger (§13.8) — low coins
+    if(s.coins < 200) triggerFlashOffer('refill');
   }
 }
 
@@ -1223,7 +1261,6 @@ function renderHUD(){
   $('hud-trophies').textContent = s.trophies;
   $('hud-title').textContent = s.profile.activeTitle;
   $('hud-coins').textContent = s.coins;
-  $('hud-gold').textContent = s.gold;
   $('hud-stars').textContent = s.stars;
 }
 
@@ -1269,12 +1306,7 @@ function renderHome(){
   const badge = $('missions-badge');
   badge.textContent = `${unclaimed}/${total}`;
 
-  // Play button
-  const ante = a.ante;
-  const canAfford = s.gold >= ante;
-  $('play-btn-sub').innerHTML = canAfford ? `Wager ${ante} Gold 💰` : `Need ${ante} Gold 💰`;
-  $('practice-btn').style.display = canAfford ? 'none' : 'block';
-
+  // Play button — free to enter (§14.1)
   // Flash offer banner (active)
   const fb = $('flash-banner-slot');
   fb.innerHTML = '';
@@ -1298,9 +1330,9 @@ function openMissions(){
   ml.innerHTML = '';
   s.dailyMissions.missions.forEach(m => {
     const rewStr = [
-      m.reward.gold?m.reward.gold+'💰':null,
       m.reward.coins?m.reward.coins+'🪙':null,
       m.reward.bronzeBooster?'Bronze':null,
+      m.reward.silverBooster?'Silver':null,
       m.reward.goldBooster?'Gold':null
     ].filter(Boolean).join(' + ');
     const div = document.createElement('div');
@@ -1325,7 +1357,7 @@ function openArenaModal(){
     const active = a.id === s.currentPlayingArena;
     const it = document.createElement('div');
     it.className = 'picker-item'+(unlocked?'':' disabled');
-    it.innerHTML = `<div class="pi-ic">${a.icon}</div><div class="pi-info"><div class="pi-name">${a.name}${active?' ✓':''}</div><div class="pi-desc">🏆 ${a.min}+ · Ante ${a.ante}💰</div></div>`;
+    it.innerHTML = `<div class="pi-ic">${a.icon}</div><div class="pi-info"><div class="pi-name">${a.name}${active?' ✓':''}</div><div class="pi-desc">🏆 ${a.min}+ · Win ${ARENA_COIN_PAYOUT[a.id].win}🪙</div></div>`;
     if(unlocked) it.onclick = ()=>{ s.currentPlayingArena = a.id; closeArenaModal(); renderAll(); };
     list.appendChild(it);
   });
@@ -1513,7 +1545,7 @@ function renderAlbumDetail(albumId){
     hdr.innerHTML = `<span>Page ${p+1}</span>`;
     const claimBtn = document.createElement('button');
     claimBtn.className = 'page-claim'+(pageClaimed?' claimed':'');
-    claimBtn.textContent = pageClaimed ? '✓ CLAIMED' : (pageOwned ? 'CLAIM 100💰+100🪙+1 Booster' : `${[0,1,2,3,4].filter(i=>s.stickers[stickerKey(albumId,p*5+i)]).length}/5`);
+    claimBtn.textContent = pageClaimed ? '✓ CLAIMED' : (pageOwned ? 'CLAIM 250🪙+1 Booster' : `${[0,1,2,3,4].filter(i=>s.stickers[stickerKey(albumId,p*5+i)]).length}/5`);
     claimBtn.disabled = !pageOwned || pageClaimed;
     if(pageOwned && !pageClaimed){ claimBtn.onclick = ()=>claimPageReward(albumId, p); }
     hdr.appendChild(claimBtn);
@@ -1577,12 +1609,12 @@ function claimPageReward(albumId, pageIdx){
   const key = albumId+':'+pageIdx;
   if(s.claimedPageRewards.includes(key)) return;
   s.claimedPageRewards.push(key);
-  s.gold += 100; s.coins += 100;
+  s.coins += 250;
   // Random booster
   const tier = Math.random()<0.7?'bronze':Math.random()<0.85?'silver':'gold';
   const pool = Object.keys(BOOSTERS).filter(k=>BOOSTERS[k].tier===tier);
   grantBoosters([pool[Math.floor(Math.random()*pool.length)]]);
-  toast('📖 Page ' + (pageIdx+1) + ': +100💰 +100🪙 +1 booster');
+  toast('📖 Page ' + (pageIdx+1) + ': +250🪙 +1 booster');
   renderAll();
   renderAlbums();
 }
@@ -1592,20 +1624,20 @@ function claimAlbumCompletion(albumId){
   s.claimedAlbumRewards.push(albumId);
   const alb = ALBUMS[albumId];
   if(alb.seasonal){
-    s.gold += 2000; s.coins += 2000;
+    s.coins += 6000;
     grantBoosters(['clearBottle','autoServe','doubleServe','autoServe','clearBottle']);
     s.stickerTokens += 2;
     s.profile.unlockedFrames.push('seasonal_'+albumId);
     s.profile.unlockedTitles.push('Season 1 Champion');
     s.venue.venueBuildingTokens++;
-    toast('🏆 Seasonal: 2000💰 +2000🪙 +5 Gold +2 Tokens +Frame +Title +1 VT');
+    toast('🏆 Seasonal: 6000🪙 +5 Gold +2 Tokens +Frame +Title +1 VT');
   } else {
-    s.gold += 1000; s.coins += 1000;
+    s.coins += 3000;
     grantBoosters(['clearBottle','autoServe','doubleServe']);
     s.stickerTokens++;
     const titleByAlbum = {barClassics:'Classic Act', cityNights:'Night Owl', grandHotel:'Connoisseur'};
     if(titleByAlbum[albumId]) s.profile.unlockedTitles.push(titleByAlbum[albumId]);
-    toast('🏆 Album: 1000💰 +1000🪙 +3 Gold +1 Token +Title');
+    toast('🏆 Album: 3000🪙 +3 Gold +1 Token +Title');
   }
   renderAll();
   renderAlbums();
@@ -1662,7 +1694,7 @@ function renderShopA(){
 }
 
 function renderShopB(){
-  const prices = {juice:200,beach:400,cocktail:800,speak:1600,rooftop:3000,grand:5000};
+  const prices = {juice:300,beach:600,cocktail:1200,speak:2400,rooftop:4500,grand:7500};
   const grid = document.createElement('div');
   grid.className = 'shop-grid';
   ARENAS.forEach((a,i) => {
@@ -1675,10 +1707,10 @@ function renderShopB(){
       <div class="sc-name">Star Chest</div>
       <div class="sc-desc">${a.icon} ${a.name} tier shortcut</div>
       <div class="sc-owned">Queued: ${s.starChestPending?'1':'0'}</div>
-      <button class="sc-buy gold" ${s.gold<price?'disabled':''}>${price} 💰</button>`;
+      <button class="sc-buy" ${s.coins<price?'disabled':''}>${price} 🪙</button>`;
     card.querySelector('.sc-buy').onclick = ()=>{
-      if(s.gold<price){ toast('Not enough Gold'); return; }
-      s.gold -= price;
+      if(s.coins<price){ toast('Not enough Coins'); return; }
+      s.coins -= price;
       rollStarChest(a.id);
       renderAll();
     };
@@ -1689,9 +1721,9 @@ function renderShopB(){
 
 function renderShopC(){
   const bundles = [
-    {name:"Bartender's Starter", desc:'500💰 + 500🪙 + 5 boosters', price:'$1.99'},
-    {name:'Weekend Warrior',     desc:'2000💰 + 2000🪙 + 15 boosters + 1 Star Chest', price:'$4.99'},
-    {name:'Grand Stock',         desc:'8000💰 + 8000🪙 + 40 boosters + 3 Chests + Exclusive Avatar', price:'$19.99'}
+    {name:"Bartender's Starter", desc:'1500🪙 + 5 boosters', price:'$1.99'},
+    {name:'Weekend Warrior',     desc:'6000🪙 + 15 boosters + 1 Star Chest', price:'$4.99'},
+    {name:'Grand Stock',         desc:'24000🪙 + 40 boosters + 3 Chests + Exclusive Avatar', price:'$19.99'}
   ];
   const grid = document.createElement('div');
   grid.className='shop-grid';
@@ -1762,7 +1794,6 @@ function renderShopD(){
 
 function formatBPReward(r){
   const parts = [];
-  if(r.gold) parts.push(`${r.gold}💰`);
   if(r.coins) parts.push(`${r.coins}🪙`);
   if(r.boosters) parts.push(`${r.boosters} boosters`);
   if(r.silverBooster) parts.push(`${r.silverBooster} Silver`);
@@ -1787,7 +1818,6 @@ function claimBarPass(n, premium){
   if(premium && !s.barPass.premiumUnlocked) return;
   list.push(n);
   const r = premium ? tier.premium : tier.free;
-  if(r.gold) s.gold += r.gold;
   if(r.coins) s.coins += r.coins;
   if(r.boosters){
     for(let i=0;i<r.boosters;i++){
@@ -1814,19 +1844,19 @@ function claimBarPass(n, premium){
 
 function renderShopF(){
   const packs = [
-    {id:'cheap',   name:'Cheap Pack',    desc:'3 stickers (C/S only)',       gold:100, count:3, maxTier:'silver'},
-    {id:'standard',name:'Standard Pack', desc:'5 stickers (standard roll)',  gold:250, count:5, maxTier:'diamond'},
-    {id:'big',     name:'Big Pack',      desc:'10 stickers (1+ Gold guar.)', gold:600, count:10,maxTier:'diamond',guaranteedGold:true}
+    {id:'cheap',   name:'Cheap Pack',    desc:'3 stickers (W/S only)',       price:150, count:3, maxTier:'silver'},
+    {id:'standard',name:'Standard Pack', desc:'5 stickers (standard roll)',  price:380, count:5, maxTier:'diamond'},
+    {id:'big',     name:'Big Pack',      desc:'10 stickers (1+ Gold guar.)', price:900, count:10,maxTier:'diamond',guaranteedGold:true}
   ];
   const grid = document.createElement('div');
   grid.className='shop-grid';
   packs.forEach(p=>{
     const c = document.createElement('div');
     c.className='shop-card';
-    c.innerHTML = `<div class="sc-ic">📦</div><div class="sc-name">${p.name}</div><div class="sc-desc">${p.desc}</div><div class="sc-owned">&nbsp;</div><button class="sc-buy gold" ${s.gold<p.gold?'disabled':''}>${p.gold} 💰</button>`;
+    c.innerHTML = `<div class="sc-ic">📦</div><div class="sc-name">${p.name}</div><div class="sc-desc">${p.desc}</div><div class="sc-owned">&nbsp;</div><button class="sc-buy" ${s.coins<p.price?'disabled':''}>${p.price} 🪙</button>`;
     c.querySelector('.sc-buy').onclick = ()=>{
-      if(s.gold<p.gold){ toast('Not enough Gold'); return; }
-      s.gold -= p.gold;
+      if(s.coins<p.price){ toast('Not enough Coins'); return; }
+      s.coins -= p.price;
       const pulled = rollPack(p);
       saveSave();
       showPackReveal(p.name.toUpperCase(), pulled.pulls);
@@ -1995,6 +2025,9 @@ function rarityRoll(maxTier,forceGold){
 function renderTrophyRoad(){
   const list = $('tr-list');
   list.innerHTML = '';
+  const maxT = TROPHY_ROAD[TROPHY_ROAD.length-1].trophies;
+  const pct = Math.max(0, Math.min(100, (s.trophies / maxT) * 100));
+  list.style.setProperty('--tr-progress', pct + '%');
   TROPHY_ROAD.forEach(ms => {
     const claimed = s.trophyRoad.claimedMilestones.includes(ms.n);
     const claimable = !claimed && s.trophies >= ms.trophies;
@@ -2040,7 +2073,7 @@ function showScreen(id){
   $('hud').classList.toggle('hidden', id==='match' || id==='matchmaking' || id==='tutorial');
   if(id==='home') renderHome();
   if(id==='shop') renderShop();
-  if(id==='trophyroad') renderTrophyRoad();
+  if(id==='trophyroad'){ renderTrophyRoad(); requestAnimationFrame(()=>{ const sc=$('screen-trophyroad'); sc.scrollTop = sc.scrollHeight; }); }
   if(id==='venue'){ venueView.arenaId = s.currentPlayingArena; renderVenue(); }
   if(id==='albums'){ albumView = {mode:'list', albumId:null}; renderAlbums(); }
 }
@@ -2061,13 +2094,12 @@ function claimLuckyBox(){
     ids.push(pool[Math.floor(Math.random()*pool.length)]);
   }
   grantBoosters(ids);
-  s.coins += 50;
-  s.gold += 30;
+  s.coins += 120;
   // 1 sticker (common-weighted)
   addStickerByRarity('white');
   s.luckyBox.nextAvailableAt = Date.now() + 4*3600*1000;
   missionProgress('lucky_box_2');
-  toast('🎁 +4 boosters +50🪙 +30💰 +1 sticker');
+  toast('🎁 +4 boosters +120🪙 +1 sticker');
   renderAll();
 }
 
@@ -2077,15 +2109,15 @@ function claimLuckyBox(){
 
 function rollStarChest(arenaId){
   const tbl = {
-    juice:   {gold:40,  coins:50,  boosters:2, stickers:2, decor:0.25},
-    beach:   {gold:80,  coins:100, boosters:2, stickers:3, decor:0.20},
-    cocktail:{gold:150, coins:200, boosters:3, stickers:3, decor:0.18},
-    speak:   {gold:280, coins:350, boosters:3, stickers:4, decor:0.15},
-    rooftop: {gold:500, coins:600, boosters:4, stickers:4, decor:0.12},
-    grand:   {gold:900, coins:1000,boosters:4, stickers:5, decor:0.10}
+    juice:   {coins:120,  boosters:2, stickers:2, decor:0.25},
+    beach:   {coins:260,  boosters:2, stickers:3, decor:0.20},
+    cocktail:{coins:500,  boosters:3, stickers:3, decor:0.18},
+    speak:   {coins:900,  boosters:3, stickers:4, decor:0.15},
+    rooftop: {coins:1600, boosters:4, stickers:4, decor:0.12},
+    grand:   {coins:2900, boosters:4, stickers:5, decor:0.10}
   };
   const t = tbl[arenaId] || tbl.juice;
-  s.gold += t.gold; s.coins += t.coins;
+  s.coins += t.coins;
   const boosterIds = [];
   for(let i=0;i<t.boosters;i++){
     const r = Math.random();
@@ -2109,7 +2141,7 @@ function rollStarChest(arenaId){
       decorLine = ` + 🏛️ ${pick.name}`;
     }
   }
-  toast(`🎁 Star Chest: +${t.gold}💰 +${t.coins}🪙 +${t.boosters} boosters${decorLine}`);
+  toast(`🎁 Star Chest: +${t.coins}🪙 +${t.boosters} boosters${decorLine}`);
   s.starChestPending = false;
   missionProgress('open_chest');
 }
@@ -2121,47 +2153,32 @@ function rollStarChest(arenaId){
 let matchCtx = null;
 
 function onPlayPressed(){
+  // §14.1: no ante, no affordability gate, straight to matchmaking
   const a = currentArena();
-  if(s.gold < a.ante){
-    // Practice
-    enterPractice();
-    return;
-  }
-  // Deduct ante
-  s.gold -= a.ante;
   matchCtx = {
     arena: a,
-    practice: false,
-    ante: a.ante,
-    opponent: pickOpponent(a),
+    opponent: pickOpponent(a, 0), // stake count unknown until loadout; we'll set later
     onFire: s.onFireActive
   };
   showMatchmaking();
 }
 
-function enterPractice(){
-  const a = arenaById('juice');
-  matchCtx = {
-    arena: currentArena(),
-    practice: true,
-    ante: 0,
-    opponent: pickOpponent(a),
-    onFire: false
-  };
-  showMatchmaking();
+// §7.2 AI stake generation
+function rollAIStakeCount(playerStakes){
+  const r = Math.random();
+  if(playerStakes === 0){ return r < 0.75 ? 0 : 1; }
+  if(playerStakes === 1){ if(r<0.60) return 1; if(r<0.85) return 0; return 2; }
+  if(playerStakes === 2){ if(r<0.60) return 2; if(r<0.85) return 1; return 3; }
+  if(playerStakes === 3){ return r < 0.50 ? 3 : 2; }
+  return 0;
 }
 
-function pickOpponent(a){
+function pickOpponent(a, playerStakes){
   const pool = AI_PERSONAS[a.id] || AI_PERSONAS.juice;
   const p = pool[Math.floor(Math.random()*pool.length)];
-  const betRoll = Math.random();
-  let bet='none';
-  if(betRoll<0.3) bet='bronze';
-  else if(betRoll<0.6) bet='silver';
-  else if(betRoll<0.85) bet='gold';
-  else bet='none';
   const trophiesRange = Math.max(0, s.trophies + Math.floor((Math.random()-0.5)*200));
-  return {name:p.name, ic:p.ic, tag:p.tag, trophies:trophiesRange, betTier:bet};
+  const stakeCount = rollAIStakeCount(playerStakes || 0);
+  return {name:p.name, ic:p.ic, tag:p.tag, trophies:trophiesRange, stakeCount};
 }
 
 function showMatchmaking(){
@@ -2172,8 +2189,7 @@ function showMatchmaking(){
   // Player side (static)
   $('mm-player-avatar').textContent = '🧑‍🍳';
   $('mm-player-trophies').textContent = '🏆 ' + s.trophies;
-  const myBet = s.loadout.betId || null; // at this stage not picked yet; show "No Bet" until loadout
-  $('mm-player-bet').textContent = 'Bet pending';
+  $('mm-player-bet').textContent = 'Stakes pending';
   $('mm-player-bet').className = 'vs-bet-chip none';
 
   // Opponent side — cycle through random names/avatars, then settle on matchCtx.opponent
@@ -2207,8 +2223,9 @@ function showMatchmaking(){
       nmEl.textContent = o.name;
       trEl.textContent = '🏆 ' + o.trophies;
       tgEl.textContent = o.tag;
-      btEl.textContent = o.betTier === 'none' ? 'No Bet' : o.betTier.charAt(0).toUpperCase()+o.betTier.slice(1)+' Bet';
-      btEl.className = 'vs-bet-chip ' + o.betTier;
+      const sc = o.stakeCount || 0;
+      btEl.textContent = sc === 0 ? 'No Stakes' : '×'+sc+' Stakes';
+      btEl.className = 'vs-bet-chip ' + (sc===0?'none':sc>=3?'gold':sc===2?'silver':'bronze');
       avEl.className = 'vs-avatar found';
       nmEl.className = 'vs-name found';
       statusEl.textContent = 'Opponent found!';
@@ -2233,27 +2250,39 @@ function showMatchmaking(){
 function showLoadout(){
   showScreen('loadout');
   // reset loadout
-  s.loadout = {betId:null, perk1Id:null, perk2Id:null};
+  s.loadout = {stakes:[null,null,null], perk1Id:null, perk2Id:null};
   renderLoadout();
+}
+
+function stakeCount(){
+  return (s.loadout.stakes || []).filter(Boolean).length;
+}
+function stakeMultiplier(){
+  return Math.max(1, stakeCount());
 }
 
 function renderLoadout(){
   const a = matchCtx.arena;
   $('lo-arena').textContent = a.icon+' '+a.name;
-  $('lo-ante').textContent = matchCtx.practice ? '— (Practice)' : `${a.ante} 💰 (pot ${a.ante*2})`;
 
-  const betId = s.loadout.betId;
-  const bs = $('bet-slot');
-  bs.className = 'bet-slot';
-  if(betId){
-    const b = BOOSTERS[betId];
-    bs.classList.add('filled','tier-'+b.tier);
-    bs.innerHTML = `<div class="slot-ic">${b.ic}</div><div class="slot-name">${b.name}</div><div class="slot-hint"><span class="pill ${b.tier}">${b.tier}</span></div>`;
-    $('lo-bet-summary').textContent = `${b.name} (${b.tier})`;
-  } else {
-    bs.innerHTML = `<div class="slot-ic">➕</div><div class="slot-name">Empty</div><div class="slot-hint">Tap to stake (optional)</div>`;
-    $('lo-bet-summary').textContent = 'None';
+  const stakes = s.loadout.stakes || [null,null,null];
+  const names = [];
+  for(let i=0;i<3;i++){
+    const slot = $('stake-slot-'+i);
+    slot.className = 'stake-slot';
+    const id = stakes[i];
+    if(id){
+      const b = BOOSTERS[id];
+      slot.classList.add('filled','tier-'+b.tier);
+      slot.innerHTML = `<div class="slot-ic">${b.ic}</div><div class="slot-name">${b.name}</div><div class="slot-hint"><span class="pill ${b.tier}">${b.tier}</span></div>`;
+      names.push(b.name);
+    } else {
+      slot.innerHTML = `<div class="slot-ic">➕</div><div class="slot-name">Empty</div><div class="slot-hint">Silver/Gold</div>`;
+    }
   }
+  const mult = stakeMultiplier();
+  $('stake-mult-readout').textContent = `×${mult} REWARDS`;
+  $('lo-bet-summary').textContent = names.length ? names.join(', ') + ` (×${mult})` : 'None (×1)';
 
   [0,1].forEach(i => {
     const slot = $('perk-slot-'+(i+1));
@@ -2269,26 +2298,40 @@ function renderLoadout(){
   });
 }
 
-function openBetPicker(){
-  const owned = Object.entries(s.boosters).filter(([k,v])=>v>0);
+function openStakePicker(slotIdx){
+  const stakes = s.loadout.stakes;
   const arenaUnlocked = ARENA_BOOSTER_UNLOCKS[matchCtx.arena.id];
-  $('picker-title').textContent = 'Pick your Bet';
+  $('picker-title').textContent = 'Pick Stake '+(slotIdx+1);
   const list = $('picker-list');
   list.innerHTML = '';
 
   const emptyOpt = document.createElement('div');
   emptyOpt.className = 'picker-empty-opt';
-  emptyOpt.textContent = '— No Bet (reduced coin payout) —';
-  emptyOpt.onclick = ()=>{ s.loadout.betId = null; closePicker(); renderLoadout(); };
+  emptyOpt.textContent = '— No Stake (empty slot) —';
+  emptyOpt.onclick = ()=>{ stakes[slotIdx] = null; closePicker(); renderLoadout(); };
   list.appendChild(emptyOpt);
 
-  owned.forEach(([id,qty]) => {
-    const b = BOOSTERS[id];
-    const available = arenaUnlocked.includes(id);
+  // effective-available count: owned minus already-staked in other slots
+  const effCount = id => {
+    let used = 0;
+    for(let k=0;k<stakes.length;k++){ if(k!==slotIdx && stakes[k]===id) used++; }
+    return (s.boosters[id]||0) - used;
+  };
+
+  Object.entries(BOOSTERS).forEach(([id,b]) => {
+    const qty = effCount(id);
+    if(qty <= 0) return;
+    const inArena = arenaUnlocked.includes(id);
+    const stakeable = (b.tier === 'silver' || b.tier === 'gold');
     const item = document.createElement('div');
-    item.className = 'picker-item tier-'+b.tier+(available?'':' disabled');
-    item.innerHTML = `<div class="pi-ic">${b.ic}</div><div class="pi-info"><div class="pi-name">${b.name} <span class="pill ${b.tier}">${b.tier}</span></div><div class="pi-desc">${b.desc}</div></div><div class="pi-qty">×${qty}</div>`;
-    if(available) item.onclick = ()=>{ s.loadout.betId = id; closePicker(); renderLoadout(); };
+    item.className = 'picker-item tier-'+b.tier+((inArena && stakeable)?'':' disabled');
+    const tierLabel = stakeable ? '' : ' <span style="color:#ff9a9a;font-size:9px">(Bronze can\'t be staked)</span>';
+    item.innerHTML = `<div class="pi-ic">${b.ic}</div><div class="pi-info"><div class="pi-name">${b.name} <span class="pill ${b.tier}">${b.tier}</span>${tierLabel}</div><div class="pi-desc">${b.desc}</div></div><div class="pi-qty">×${qty}</div>`;
+    if(inArena && stakeable){
+      item.onclick = ()=>{ stakes[slotIdx] = id; closePicker(); renderLoadout(); };
+    } else if(!stakeable){
+      item.onclick = ()=>{ toast("Bronze can't be staked"); };
+    }
     list.appendChild(item);
   });
   $('picker-modal').classList.remove('hidden');
@@ -3137,20 +3180,33 @@ function gameLoop(ts){
 }
 function startGameLoop(){ if(gameLoopRunning) return; gameLoopRunning=true; lastFrameTime=0; requestAnimationFrame(gameLoop); }
 
+function confirmStartMatch(){
+  const count = stakeCount();
+  if(count >= 2){
+    if(!confirm(`Stake ${count} boosters for ×${count} rewards? You'll lose them on a loss.`)) return;
+  }
+  startMatch();
+}
+
 function startMatch(){
   closePicker();
-  matchCtx.betId = s.loadout.betId;
-  matchCtx.betTier = s.loadout.betId ? BOOSTERS[s.loadout.betId].tier : 'none';
+  const stakes = (s.loadout.stakes || []).filter(Boolean);
+  matchCtx.stakes = stakes.slice();
+  matchCtx.stakeMultiplier = Math.max(1, stakes.length);
+  // §7.1: regenerate AI stake count to match player choice
+  matchCtx.opponent.stakeCount = rollAIStakeCount(stakes.length);
   const av = ARENA_V6[matchCtx.arena.id];
   rebuildColorHex(av);
   M = newMatchState(av, matchCtx.opponent);
 
-  // Player slots: bet booster + perks
-  // firstPour / spawnPlus3 are passive start-of-match effects — don't occupy slot
+  // Player slots: staked boosters (1st goes into active slot) + perks
+  // Only the first staked booster gets a usable powerup slot in v6 flow.
+  // Additional stakes sit as "reserve" — they multiply rewards but don't fill the 2 active slots.
   const passiveBoosters = ['firstPour','spawnPlus3'];
   const slots = [];
-  if(matchCtx.betId && !passiveBoosters.includes(matchCtx.betId)) slots.push({type: matchCtx.betId, used:false});
-  if(matchCtx.betId === 'spawnPlus3') M.spawnCharges += 3;
+  const firstStake = stakes[0];
+  if(firstStake && !passiveBoosters.includes(firstStake)) slots.push({type: firstStake, used:false});
+  if(firstStake === 'spawnPlus3') M.spawnCharges += 3;
   [s.loadout.perk1Id, s.loadout.perk2Id].forEach(pid => {
     if(pid && slots.length<2) slots.push({type:'perk_'+pid, used:false, usesRemaining: PERKS[pid].uses});
   });
@@ -3168,7 +3224,7 @@ function startMatch(){
   spawnInitialCustomers();
 
   // FirstPour: apply 2 best pours for player
-  if(matchCtx.betId === 'firstPour'){
+  if(firstStake === 'firstPour'){
     for(let k=0;k<2;k++){
       const moves=[];
       for(let i=0;i<M.playerGlasses.length;i++) for(let j=0;j<M.playerGlasses.length;j++) if(i!==j && canPourRaw(M.playerGlasses,i,j)) moves.push([i,j]);
@@ -3462,74 +3518,80 @@ function handleTutorialTap(index){
 
 function applyMatchResult(result){
   const a = matchCtx.arena;
-  const betTier = matchCtx.betTier;
-  const practice = matchCtx.practice;
-  let trophies=0, gold=0, coins=0, stars=0;
-  let betSurvived = false, betLost = false;
+  const stakes = matchCtx.stakes || [];
+  const stakeMult = matchCtx.stakeMultiplier || 1;
+  const stakeCnt = stakes.length;
+  let trophies=0, coins=0, stars=0;
+  let stakesSurvived = false, stakesLost = false;
   let onFireTriggered = matchCtx.onFire;
 
-  if(!practice){
-    // Trophies w/ arena scaling
-    const delta = maxUnlockedArenaIdx() - arenaIndex(a.id);
-    const trGain = {0:1.0,1:0.5,2:0.25}[delta] ?? 0;
-    const trLoss = {0:1.0,1:0.25,2:0.1}[delta] ?? 0;
-    const coinMult = {0:1.0,1:0.75,2:0.5}[delta] ?? 0.3;
-    if(result==='win'){
-      trophies = Math.round(a.trophyBase * trGain);
-      gold = a.ante * 2; // pot win
-      coins = Math.round(COIN_PAYOUT[betTier].win * coinMult);
-      stars = betTier!=='none' ? 3 : 2;
-      betSurvived = betTier!=='none';
-      s.consecWins++;
-      s.lossStreak = 0;
-      s.stats.wins++;
-      missionProgress('win_3');
-      if(betSurvived) missionProgress('3_star_match');
-    } else if(result==='loss'){
-      trophies = -Math.round(a.trophyBase * trLoss);
-      gold = 0; // ante forfeit
-      coins = Math.round(COIN_PAYOUT[betTier].loss * coinMult);
-      stars = 1;
-      if(betTier!=='none'){ betLost = true; s.boosters[matchCtx.betId] = Math.max(0,(s.boosters[matchCtx.betId]||0)-1); }
-      s.consecWins = 0;
-      s.lossStreak++;
-    } else {
-      trophies = 0;
-      gold = a.ante; // refund
-      coins = Math.round(COIN_PAYOUT[betTier].draw * coinMult);
-      stars = 2;
-      betSurvived = betTier!=='none';
-      s.consecWins = 0;
-    }
-    // On Fire doubler
-    if(onFireTriggered){ coins *= 2; trophies *= 2; }
-    s.onFireActive = s.consecWins >= 2;
+  // Trophies w/ arena scaling
+  const delta = maxUnlockedArenaIdx() - arenaIndex(a.id);
+  const trGain = {0:1.0,1:0.5,2:0.25}[delta] ?? 0;
+  const trLoss = {0:1.0,1:0.25,2:0.1}[delta] ?? 0;
+  const coinMult = {0:1.0,1:0.75,2:0.5}[delta] ?? 0.3;
+  const basePayout = ARENA_COIN_PAYOUT[a.id] || ARENA_COIN_PAYOUT.juice;
 
-    s.trophies = Math.max(0, s.trophies + trophies);
-    if(s.trophies > s.trophyRoad.highestTrophiesReached) s.trophyRoad.highestTrophiesReached = s.trophies;
-    s.gold += gold;
-    s.coins += coins;
-    s.stars += stars;
-    s.starsMeter += stars;
-    if(s.starsMeter >= 25 && !s.starChestPending){
-      s.starChestPending = true;
-      s.starsMeter = Math.max(0, s.starsMeter - 25);
+  if(result==='win'){
+    trophies = Math.round(a.trophyBase * trGain) * stakeMult;
+    coins = Math.round(basePayout.win * coinMult);
+    stars = stakeCnt >= 1 ? 3 : 2;
+    stakesSurvived = stakeCnt > 0;
+    s.consecWins++;
+    s.lossStreak = 0;
+    s.stats.wins++;
+    missionProgress('win_3');
+    if(stakesSurvived) missionProgress('3_star_match');
+    if(stakeCnt >= 2) missionProgress('stake_2_wins');
+  } else if(result==='loss'){
+    trophies = -Math.round(a.trophyBase * trLoss);
+    coins = Math.round(basePayout.loss * coinMult);
+    stars = 1;
+    if(stakeCnt > 0){
+      stakesLost = true;
+      stakes.forEach(id => { s.boosters[id] = Math.max(0,(s.boosters[id]||0)-1); });
     }
-    s.stats.matches++;
-    // Arena auto-unlock on trophy threshold (also fires via TR)
-    ARENAS.forEach(ar => { if(s.trophies >= ar.min) unlockArena(ar.id); });
-    // Venue tokens
-    if(result==='win') s.venue.venueBuildingTokens += 1;
-    // BPP
-    addBPP(5 + (result==='win'?10:0));
-    // Missions
-    missionProgress('play_5');
-    if(betTier!=='none') missionProgress('use_5_bets');
-    if(coins>0) missionProgress('earn_200_coins', coins);
-    if(!s.dailyMissions.arenasPlayedToday.includes(a.id)){
-      s.dailyMissions.arenasPlayedToday.push(a.id);
-      missionProgress('play_2_arenas');
-    }
+    s.consecWins = 0;
+    s.lossStreak++;
+  } else {
+    trophies = 0;
+    coins = Math.round(basePayout.draw * coinMult);
+    stars = 2;
+    stakesSurvived = stakeCnt > 0; // returned on draw
+    s.consecWins = 0;
+  }
+  // On Fire doubler
+  if(onFireTriggered){ coins *= 2; trophies *= 2; }
+  // Stake multiplier applies to coins on win only (stakes survived & reward lift)
+  if(result === 'win'){ coins *= stakeMult; }
+  // Guaranteed floor: ≥1 star, ≥ base loss coins (§6.4)
+  if(stars < 1) stars = 1;
+  if(coins < basePayout.loss) coins = basePayout.loss;
+
+  s.onFireActive = s.consecWins >= 2;
+
+  s.trophies = Math.max(0, s.trophies + trophies);
+  if(s.trophies > s.trophyRoad.highestTrophiesReached) s.trophyRoad.highestTrophiesReached = s.trophies;
+  s.coins += coins;
+  s.stars += stars;
+  s.starsMeter += stars;
+  if(s.starsMeter >= 25 && !s.starChestPending){
+    s.starChestPending = true;
+    s.starsMeter = Math.max(0, s.starsMeter - 25);
+  }
+  s.stats.matches++;
+  // Arena auto-unlock on trophy threshold
+  ARENAS.forEach(ar => { if(s.trophies >= ar.min) unlockArena(ar.id); });
+  // Venue tokens
+  if(result==='win') s.venue.venueBuildingTokens += 1;
+  // BPP
+  addBPP(5 + (result==='win'?10:0));
+  // Missions
+  missionProgress('play_5');
+  if(coins>0) missionProgress('earn_500_coins', coins);
+  if(!s.dailyMissions.arenasPlayedToday.includes(a.id)){
+    s.dailyMissions.arenasPlayedToday.push(a.id);
+    missionProgress('play_2_arenas');
   }
 
   // Build result screen
@@ -3537,7 +3599,7 @@ function applyMatchResult(result){
   header.textContent = result==='win'?'VICTORY':result==='loss'?'DEFEAT':'DRAW';
   header.className = 'result-header '+result;
   const scoreLine = matchCtx.playerScore !== undefined ? ` — ${matchCtx.playerScore} to ${matchCtx.opponentScore}` : '';
-  $('r-sub').textContent = 'vs. '+matchCtx.opponent.name+(practice?' (Practice)':'')+scoreLine;
+  $('r-sub').textContent = 'vs. '+matchCtx.opponent.name+scoreLine;
 
   const rr = $('r-rewards');
   rr.innerHTML = '';
@@ -3547,17 +3609,20 @@ function applyMatchResult(result){
     stats.innerHTML = `<span class="rr-label">Match</span><span class="rr-val">🍹 ${matchCtx.drinksServed} served · ${matchCtx.bestCombo}× combo</span>`;
     rr.appendChild(stats);
   }
-  if(practice){
-    rr.innerHTML = '<div class="rr-row"><span class="rr-label">Practice</span><span class="rr-val">No rewards</span></div>';
-  } else {
+  {
+    const stakeSuffix = stakeMult > 1 ? ` (×${stakeMult} stake)` : '';
+    const coinBreak = `${a.name} base ${basePayout[result==='draw'?'draw':(result==='win'?'win':'loss')]}${onFireTriggered?' ×2 On Fire':''}${stakeMult>1 && result==='win'?' ×'+stakeMult+' stake':''}`;
     const rows = [
-      ['Trophies', (trophies>=0?'+':'')+trophies+' 🏆', trophies>0?'pos':trophies<0?'neg':''],
-      ['Gold', result==='win'?`+${gold} 💰 (pot)`:result==='loss'?`-${a.ante} 💰`:'refund', 'gold'],
-      ['Coins', '+'+coins+' 🪙', 'pos'],
+      ['Trophies', (trophies>=0?'+':'')+trophies+' 🏆'+stakeSuffix, trophies>0?'pos':trophies<0?'neg':''],
+      ['Coins', '+'+coins+' 🪙 ('+coinBreak+')', 'pos'],
       ['Stars', '+'+stars+' ⭐ ('+s.starsMeter+'/25)', 'pos'],
     ];
-    if(betTier!=='none'){
-      rows.push(['Bet', betSurvived?'Kept: '+BOOSTERS[matchCtx.betId].name:'Lost: '+BOOSTERS[matchCtx.betId].name, betSurvived?'pos':'neg']);
+    if(stakeCnt > 0){
+      const label = result==='loss' ? 'Stakes Lost' : 'Stakes Kept';
+      const names = stakes.map(id => BOOSTERS[id].name).join(', ');
+      rows.push([label, names, result==='loss'?'neg':'pos']);
+    } else {
+      rows.push(['Stakes', 'No stakes risked', '']);
     }
     if(onFireTriggered){
       rows.push(['On Fire', '×2 applied', 'gold']);
@@ -3600,7 +3665,7 @@ function applyMatchResult(result){
   });
   if(affordableBuilding) addNote(`🛠️ Venue: ${affordableBuilding.name} ready to upgrade`);
   // Bar Pass tier-up
-  if(!practice && s.barPass.currentTier > 0){
+  if(s.barPass.currentTier > 0){
     const newTier = s.barPass.currentTier;
     if(s.achievements.lastShownBpTier !== newTier){
       addNote(`📜 Bar Pass: Tier ${newTier} reached`);
@@ -3615,7 +3680,7 @@ function applyMatchResult(result){
 
   // Flash offer triggers (§13.8)
   if(result==='loss' && s.lossStreak >= 3) triggerFlashOffer('comeback');
-  if(result==='win' && !practice){
+  if(result==='win'){
     // Arena promotion: fire when crossing into new arena
     ARENAS.forEach((ar,i) => {
       if(s.trophies >= ar.min && (s.trophies - trophies) < ar.min && i>0){
@@ -3630,16 +3695,10 @@ function applyMatchResult(result){
 }
 
 function rematch(){
-  // Keep persona + arena + bet selection
+  // Keep persona + arena
   const a = matchCtx.arena;
-  if(!matchCtx.practice){
-    if(s.gold < a.ante){ toast('Not enough Gold — go Home'); return; }
-    s.gold -= a.ante;
-  }
   matchCtx = {
     arena: a,
-    practice: matchCtx.practice,
-    ante: matchCtx.practice?0:a.ante,
     opponent: matchCtx.opponent,
     onFire: s.onFireActive
   };
@@ -3688,10 +3747,10 @@ function buyStarterPack(){ toast('Coming soon'); }
 
 // ===== FLASH OFFERS =====
 const FLASH_OFFERS = {
-  comeback:   {id:'comeback',  title:'Comeback Bundle', desc:'300💰 + 300🪙 + 3 boosters',        price:'$0.99', durationMs:30*60*1000},
-  promotion:  {id:'promotion', title:'Promotion Pack',  desc:'Arena-scaled gold + 5 boosters',  price:'$2.99', durationMs:24*60*60*1000},
-  refill:     {id:'refill',    title:'Refill Pack',     desc:'500💰 + 200🪙 + 2 boosters',        price:'$1.99', durationMs:2*60*60*1000},
-  sticker:    {id:'sticker',   title:'Sticker Splurge', desc:'1 Big Pack + 1 Token',            price:'$1.99', durationMs:2*60*60*1000}
+  comeback:   {id:'comeback',  title:'Comeback Bundle', desc:'900🪙 + 3 boosters',                 price:'$0.99', durationMs:30*60*1000},
+  promotion:  {id:'promotion', title:'Promotion Pack',  desc:'Arena-scaled 🪙 + 5 boosters + token', price:'$2.99', durationMs:24*60*60*1000},
+  refill:     {id:'refill',    title:'Refill Pack',     desc:'1000🪙 + 2 boosters',                price:'$1.99', durationMs:2*60*60*1000},
+  sticker:    {id:'sticker',   title:'Sticker Splurge', desc:'1 Big Pack + 1 Token',              price:'$1.99', durationMs:2*60*60*1000}
 };
 
 function triggerFlashOffer(id){
@@ -3709,7 +3768,6 @@ function init(){
   loadSave();
   document.querySelectorAll('.nav-btn').forEach(b=>{ b.onclick = ()=>showScreen(b.dataset.screen); });
   $('play-btn').onclick = onPlayPressed;
-  $('practice-btn').onclick = enterPractice;
   $('luckybox-btn').onclick = claimLuckyBox;
   $('missions-fab').onclick = openMissions;
   $('arena-switch').onclick = openArenaModal;
