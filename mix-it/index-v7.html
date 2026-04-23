@@ -1186,6 +1186,14 @@ body,html{letter-spacing:0.005em}
     </div>
   </div>
 
+  <!-- ACCOUNT SETUP MODAL (v7.4 §12) -->
+  <div class="modal-overlay hidden" id="account-modal" style="z-index:9999">
+    <div class="modal" style="max-width:380px">
+      <h3>Welcome to Mix-It</h3>
+      <div id="account-modal-body"></div>
+    </div>
+  </div>
+
   <!-- DISTRICT PICKER MODAL (v7.3 §7) -->
   <div class="modal-overlay hidden" id="district-modal">
     <div class="modal" style="max-width:360px">
@@ -1259,14 +1267,15 @@ const ARENA_COIN_PAYOUT = {
 };
 
 const ARENAS = [
+  // v7.4 §3 — flattened trophy curve (Cocktail @ 1,000 preserved)
   {id:'juice',     name:'Juice Stand',      min:0,    trophyBase:25, icon:'🍹'},
   {id:'smoothie',  name:'Smoothie Bar',     min:150,  trophyBase:26, icon:'🥤'},
   {id:'coffee',    name:'Coffee House',     min:400,  trophyBase:28, icon:'☕'},
-  {id:'tea',       name:'Tea Garden',       min:800,  trophyBase:30, icon:'🍵'},
-  {id:'cocktail',  name:'Cocktail Lounge',  min:1300, trophyBase:32, icon:'🍸'},
-  {id:'wine',      name:'Wine Cellar',      min:2000, trophyBase:34, icon:'🍷'},
-  {id:'champagne', name:'Champagne Room',   min:2900, trophyBase:36, icon:'🥂'},
-  {id:'grand',     name:'Grand Hotel',      min:4000, trophyBase:38, icon:'🏨'}
+  {id:'tea',       name:'Tea Garden',       min:700,  trophyBase:30, icon:'🍵'},
+  {id:'cocktail',  name:'Cocktail Lounge',  min:1000, trophyBase:32, icon:'🍸'},
+  {id:'wine',      name:'Wine Cellar',      min:1500, trophyBase:34, icon:'🍷'},
+  {id:'champagne', name:'Champagne Room',   min:2200, trophyBase:36, icon:'🥂'},
+  {id:'grand',     name:'Grand Hotel',      min:3200, trophyBase:38, icon:'🏨'}
 ];
 
 // v7.3 §15.A — cumulative booster roster 2/3/4/5/6/7/8/8.
@@ -1285,33 +1294,34 @@ const ARENA_BOOSTER_UNLOCKS = {
 // Legacy arena id map (pre-v7.3) — used for save migration + Trophy Road compat.
 const LEGACY_ARENA_MAP = { beach:'smoothie', speak:'wine', rooftop:'champagne' };
 
-// v7.3 §3 + §15.B — 25-milestone Trophy Road. Stakes ×2/×3/×4 unlock lives at #7 (1,000 trophies).
+// v7.4 §15.A — re-paced 25-milestone Trophy Road (flattened curve).
+// Stakes ×2/×3/×4 + Cocktail Lounge arena skin at #7 (1,000 trophies).
 const TROPHY_ROAD = [
-  {n:1,  trophies:50,   reward:'200 🪙',                                 rewardFn:()=>{s.coins+=200}},
-  {n:2,  trophies:150,  reward:'Smoothie Bar + Booster: Pour-Back ×2',   rewardFn:()=>{unlockArena('smoothie');grantBoosters(['firstPour','firstPour'])}},
-  {n:3,  trophies:250,  reward:'1 Silver Pack',                          rewardFn:()=>{grantBoosters(['colorSplash'])}},
-  {n:4,  trophies:400,  reward:'Coffee House + 500 🪙 + Booster: Extra Tube', rewardFn:()=>{unlockArena('coffee');s.coins+=500;grantBoosters(['extraBottle'])}},
-  {n:5,  trophies:600,  reward:'Avatar Frame: Barista',                  rewardFn:()=>{s.profile.unlockedFrames.push('barista')}},
-  {n:6,  trophies:800,  reward:'Tea Garden + 800 🪙 + Booster: Color Swap', rewardFn:()=>{unlockArena('tea');s.coins+=800;grantBoosters(['swap'])}},
-  {n:7,  trophies:1000, reward:'🔓 Stakes ×2/×3/×4 + 1000 🪙',            rewardFn:()=>{s.stakesUnlocked=true;s.coins+=1000}},
-  {n:8,  trophies:1300, reward:'Cocktail Lounge + Booster: Undo ×3',     rewardFn:()=>{unlockArena('cocktail');grantBoosters(['customerLock','customerLock','customerLock'])}},
-  {n:9,  trophies:1600, reward:'1 Gold Pack',                            rewardFn:()=>{grantBoosters(['clearBottle'])}},
-  {n:10, trophies:2000, reward:'Wine Cellar + 1500 🪙 + Booster: Freeze Timer', rewardFn:()=>{unlockArena('wine');s.coins+=1500;grantBoosters(['customerLock'])}},
-  {n:11, trophies:2300, reward:'Emote Pack: Mixologist + 250 🪙',        rewardFn:()=>{s.coins+=250;if(!s.profile.unlockedTitles.includes('Mixologist')) s.profile.unlockedTitles.push('Mixologist')}},
-  {n:12, trophies:2600, reward:'2000 🪙 + 1 Silver Pack',                rewardFn:()=>{s.coins+=2000;grantBoosters(['swap'])}},
-  {n:13, trophies:2900, reward:'Champagne Room + Booster: Hint+',        rewardFn:()=>{unlockArena('champagne');grantBoosters(['spawnPlus3','spawnPlus3'])}},
-  {n:14, trophies:3100, reward:'1 Gold Pack',                            rewardFn:()=>{grantBoosters(['autoServe'])}},
-  {n:15, trophies:3300, reward:'2500 🪙',                                rewardFn:()=>{s.coins+=2500}},
-  {n:16, trophies:3500, reward:'Profile Frame: Sommelier',               rewardFn:()=>{s.profile.unlockedFrames.push('sommelier')}},
-  {n:17, trophies:3700, reward:'3000 🪙 + Booster: Auto-Sort',           rewardFn:()=>{s.coins+=3000;grantBoosters(['autoServe','autoServe'])}},
-  {n:18, trophies:3900, reward:'1 Gold Pack',                            rewardFn:()=>{grantBoosters(['doubleServe'])}},
-  {n:19, trophies:4000, reward:'Grand Hotel + 5000 🪙',                  rewardFn:()=>{unlockArena('grand');s.coins+=5000}},
-  {n:20, trophies:4100, reward:'Emote Pack: Concierge',                  rewardFn:()=>{if(!s.profile.unlockedTitles.includes('Concierge')) s.profile.unlockedTitles.push('Concierge')}},
-  {n:21, trophies:4200, reward:'1 Gold Pack',                            rewardFn:()=>{grantBoosters(['clearBottle'])}},
-  {n:22, trophies:4300, reward:'3500 🪙',                                rewardFn:()=>{s.coins+=3500}},
-  {n:23, trophies:4400, reward:'Legendary Avatar Frame',                 rewardFn:()=>{s.profile.unlockedFrames.push('legendary')}},
-  {n:24, trophies:4450, reward:'2 Gold Packs',                           rewardFn:()=>{grantBoosters(['autoServe','doubleServe'])}},
-  {n:25, trophies:4500, reward:'10,000 🪙 + Seasonal Cosmetic Bundle',   rewardFn:()=>{s.coins+=10000;s.profile.unlockedFrames.push('seasonal');if(!s.profile.unlockedTitles.includes('Legend')) s.profile.unlockedTitles.push('Legend')}}
+  {n:1,  trophies:50,   reward:'200 🪙',                                                     rewardFn:()=>{s.coins+=200}},
+  {n:2,  trophies:150,  reward:'Smoothie Bar + Booster: Pour-Back ×2',                       rewardFn:()=>{unlockArena('smoothie');grantBoosters(['firstPour','firstPour'])}},
+  {n:3,  trophies:250,  reward:'1 Silver Sticker Pack',                                      rewardFn:()=>{grantBoosters(['colorSplash'])}},
+  {n:4,  trophies:400,  reward:'Coffee House + 500 🪙 + Booster: Extra Tube',                rewardFn:()=>{unlockArena('coffee');s.coins+=500;grantBoosters(['extraBottle'])}},
+  {n:5,  trophies:550,  reward:'Avatar Frame: Barista',                                      rewardFn:()=>{s.profile.unlockedFrames.push('barista')}},
+  {n:6,  trophies:700,  reward:'Tea Garden + 800 🪙 + Booster: Color Swap',                  rewardFn:()=>{unlockArena('tea');s.coins+=800;grantBoosters(['swap'])}},
+  {n:7,  trophies:1000, reward:'Cocktail Lounge + 🔓 Stakes ×2/×3/×4 + 1000 🪙',              rewardFn:()=>{unlockArena('cocktail');s.stakesUnlocked=true;s.coins+=1000}},
+  {n:8,  trophies:1150, reward:'Booster: Undo ×3 + 1 Silver Pack',                           rewardFn:()=>{grantBoosters(['customerLock','customerLock','customerLock','colorSplash'])}},
+  {n:9,  trophies:1300, reward:'1 Gold Sticker Pack',                                        rewardFn:()=>{grantBoosters(['clearBottle'])}},
+  {n:10, trophies:1500, reward:'Wine Cellar + 1200 🪙 + Booster: Freeze Timer',              rewardFn:()=>{unlockArena('wine');s.coins+=1200;grantBoosters(['customerLock'])}},
+  {n:11, trophies:1700, reward:'Emote Pack: Mixologist',                                     rewardFn:()=>{if(!s.profile.unlockedTitles.includes('Mixologist')) s.profile.unlockedTitles.push('Mixologist')}},
+  {n:12, trophies:1900, reward:'1500 🪙 + 1 Silver Pack',                                    rewardFn:()=>{s.coins+=1500;grantBoosters(['swap'])}},
+  {n:13, trophies:2100, reward:'Booster: Hint+',                                             rewardFn:()=>{grantBoosters(['spawnPlus3','spawnPlus3'])}},
+  {n:14, trophies:2200, reward:'Champagne Room + 1 Gold Sticker Pack',                       rewardFn:()=>{unlockArena('champagne');grantBoosters(['autoServe'])}},
+  {n:15, trophies:2400, reward:'2000 🪙',                                                    rewardFn:()=>{s.coins+=2000}},
+  {n:16, trophies:2600, reward:'Profile Frame: Sommelier',                                   rewardFn:()=>{s.profile.unlockedFrames.push('sommelier')}},
+  {n:17, trophies:2850, reward:'2500 🪙 + Booster: Auto-Sort',                               rewardFn:()=>{s.coins+=2500;grantBoosters(['autoServe','autoServe'])}},
+  {n:18, trophies:3050, reward:'1 Gold Sticker Pack',                                        rewardFn:()=>{grantBoosters(['doubleServe'])}},
+  {n:19, trophies:3200, reward:'Grand Hotel + 4000 🪙 + Frame: Concierge',                   rewardFn:()=>{unlockArena('grand');s.coins+=4000;s.profile.unlockedFrames.push('concierge');if(!s.profile.unlockedTitles.includes('Concierge')) s.profile.unlockedTitles.push('Concierge')}},
+  {n:20, trophies:3500, reward:'Emote Pack: Grand',                                          rewardFn:()=>{if(!s.profile.unlockedTitles.includes('Grand')) s.profile.unlockedTitles.push('Grand')}},
+  {n:21, trophies:3750, reward:'1 Gold Sticker Pack',                                        rewardFn:()=>{grantBoosters(['clearBottle'])}},
+  {n:22, trophies:4000, reward:'3000 🪙 + 1 Silver Pack',                                    rewardFn:()=>{s.coins+=3000;grantBoosters(['swap'])}},
+  {n:23, trophies:4250, reward:'Legendary Avatar Frame',                                     rewardFn:()=>{s.profile.unlockedFrames.push('legendary')}},
+  {n:24, trophies:4400, reward:'2 Gold Sticker Packs',                                       rewardFn:()=>{grantBoosters(['autoServe','doubleServe'])}},
+  {n:25, trophies:4500, reward:'7500 🪙 + Seasonal Cosmetic Bundle',                         rewardFn:()=>{s.coins+=7500;s.profile.unlockedFrames.push('seasonal');if(!s.profile.unlockedTitles.includes('Legend')) s.profile.unlockedTitles.push('Legend')}}
 ];
 
 const AI_PERSONAS = {
@@ -1604,6 +1614,7 @@ function defaultSave(){
     perks:{ secondLook:true, steadyHand:true, pourRead:true },
     loadout:{ stakes:[null,null,null], perk1Id:null, perk2Id:null },
     stakesUnlocked:false, // v7.3 §15.B milestone #7 (1,000 trophies)
+    cushionFaded:false, // v7.4 §9/§10 — set true on first Cocktail crossing; persists on demotion
     onFireStreak:0, onFireActive:false, consecWins:0,
     luckyBox:{ nextAvailableAt: Date.now() },
     starChestPending:false, // legacy — post-v7.3 star chest removed for MVP
@@ -1628,14 +1639,20 @@ function defaultSave(){
       unlockedAvatars:['a1'], unlockedFrames:['default'], unlockedTitles:['Newcomer'],
       activeAvatar:'a1', activeFrame:'default', activeTitle:'Newcomer',
       countryCode:'US', // v7.3 §9 — geo-locked at creation (MVP: default 2-letter ISO)
+      // v7.4 §12 — username set during first-run flow, locked after (rename via support)
+      username:'', usernameLocked:false,
       top1000Seasons:0, globalRank:null // v7.3 §9 Tab 4
     },
+    // v7.4 §12 — minimal account model: device-bound, cloud-mirrored PlayerID
+    account:{ playerId:'', firstRunDone:false, eulaAcceptedAt:null, marketingConsent:false },
     vip:{points:0, highestTier:0}, // v7.3 §10 — VIP points (100 per $1), lifetime-accumulated
     teams:{firstClickedAt:null, notifyOptIn:false, notifyAt:null}, // v7.3 §8 — opt-in capture
     barPass:{
       seasonStartAt:Date.now(), seasonEndAt:Date.now()+30*86400000,
       bpp:0, currentTier:0, premiumUnlocked:false,
-      claimedFreeTiers:[], claimedPremiumTiers:[]
+      claimedFreeTiers:[], claimedPremiumTiers:[],
+      // v7.4 §4 — Bonus Bank: post-T30 BPP converts at 400→100c, capped at 5,000c/season
+      bonusBankCoins:0, bonusBankEarnedThisSeason:0
     },
     starterPack:{ shownAt:Date.now(), purchased:false, dismissedAt:null },
     activeFlashOffer:null,
@@ -1687,6 +1704,15 @@ function loadSave(){
         if(!s.vip) s.vip = {points:0, highestTier:0};
         if(!s.teams) s.teams = {firstClickedAt:null, notifyOptIn:false, notifyAt:null};
         if(typeof s.venue.homeDistrictId === 'undefined') s.venue.homeDistrictId = null;
+        // v7.4 §12 — backfill account fields for pre-v7.4 saves (legacy saves treated as firstRunDone)
+        if(!s.account) s.account = { playerId:generatePlayerId(), firstRunDone:true, eulaAcceptedAt:Date.now(), marketingConsent:false };
+        if(typeof s.profile.username !== 'string') s.profile.username = '';
+        if(typeof s.profile.usernameLocked !== 'boolean') s.profile.usernameLocked = !!s.profile.username;
+        // v7.4 §4 — Bonus Bank backfill
+        if(typeof s.barPass.bonusBankCoins !== 'number') s.barPass.bonusBankCoins = 0;
+        if(typeof s.barPass.bonusBankEarnedThisSeason !== 'number') s.barPass.bonusBankEarnedThisSeason = 0;
+        // v7.4 §9 — cushion fade flag (derive from historical trophy peak)
+        if(typeof s.cushionFaded !== 'boolean') s.cushionFaded = (s.trophyRoad?.highestTrophiesReached || s.trophies || 0) >= 1000;
         // v7.1 migrations — §16.2
         if(typeof s.gold === 'number'){
           s.coins = (s.coins||0) + Math.round(s.gold * 1.5);
@@ -1939,15 +1965,44 @@ function missionProgress(id, amount=1){
 // Match grants: +10 played, +20 win bonus. Daily Mission completion: +100 BPP each.
 // VIP §4 Silver I perk = +10% BPP multiplier.
 const BPP_PER_TIER = 400;
+// v7.4 §4 — Bonus Bank constants
+const BONUS_BANK_COINS_PER_BPP = 100 / 400; // 400 BPP = 100c
+const BONUS_BANK_SEASON_CAP = 5000;
 function addBPP(n){
   // v7.3.1 §9 — VIP Silver I (tier 4) +10% BPP multiplier
   if(currentVipTier() >= 4) n = Math.round(n * 1.10);
+  const preBpp = s.barPass.bpp;
   s.barPass.bpp += n;
   const newTier = Math.min(30, Math.floor(s.barPass.bpp / BPP_PER_TIER));
   if(newTier > s.barPass.currentTier){
     s.barPass.currentTier = newTier;
     toast('📜 Bar Pass Tier '+newTier);
   }
+  // v7.4 §4 — post-T30 BPP overflow converts to Bonus Bank coins (5k/season cap)
+  if(s.barPass.currentTier >= 30){
+    const capThresholdBpp = 30 * BPP_PER_TIER;
+    const overflowBpp = Math.max(0, s.barPass.bpp - capThresholdBpp) - Math.max(0, preBpp - capThresholdBpp);
+    if(overflowBpp > 0){
+      const capLeft = BONUS_BANK_SEASON_CAP - (s.barPass.bonusBankEarnedThisSeason||0);
+      if(capLeft > 0){
+        const banked = Math.min(capLeft, Math.round(overflowBpp * BONUS_BANK_COINS_PER_BPP));
+        if(banked > 0){
+          s.barPass.bonusBankCoins = (s.barPass.bonusBankCoins||0) + banked;
+          s.barPass.bonusBankEarnedThisSeason = (s.barPass.bonusBankEarnedThisSeason||0) + banked;
+          toast('🏦 Bonus Bank +'+banked+'🪙');
+        }
+      }
+    }
+  }
+}
+// v7.4 §4 — claim Bonus Bank into coin wallet
+function claimBonusBank(){
+  const amt = s.barPass.bonusBankCoins || 0;
+  if(amt <= 0){ toast('Bank is empty'); return; }
+  s.coins += amt;
+  s.barPass.bonusBankCoins = 0;
+  toast('+'+amt+'🪙 banked');
+  renderAll();
 }
 
 /* =========================================================================
@@ -1965,7 +2020,8 @@ function renderAll(){
 
 function renderHUD(){
   $('hud-trophies').textContent = s.trophies;
-  $('hud-title').textContent = s.profile.activeTitle;
+  // v7.4 §12 — HUD shows username if set, else active title
+  $('hud-title').textContent = s.profile.username || s.profile.activeTitle;
   $('hud-coins').textContent = s.coins;
   $('hud-stars').textContent = s.stars;
 }
@@ -2628,7 +2684,8 @@ function claimAlbumCompletion(albumId){
 
 let shopTab = 'A';
 function renderShop(){
-  const tabs = [['A','Boosters'],['B','Star Chest'],['C','Bundles'],['D','Bar Pass'],['F','Stickers']];
+  // v7.4 §15.F/G/H/J — Shop section labels locked: A Boosters · B Coins · C Bundles · D Pass · F Stickers
+  const tabs = [['A','Boosters'],['B','Coins'],['C','Bundles'],['D','Bar Pass'],['F','Stickers']];
   const tbar = $('shop-tabs');
   tbar.innerHTML = '';
   tabs.forEach(([id,label]) => {
@@ -2648,6 +2705,7 @@ function renderShop(){
 }
 
 function renderShopA(){
+  const wrap = document.createElement('div');
   const grid = document.createElement('div');
   grid.className = 'shop-grid';
   const unlocked = ARENA_BOOSTER_UNLOCKS[s.currentPlayingArena];
@@ -2671,51 +2729,85 @@ function renderShopA(){
     };
     grid.appendChild(card);
   });
-  return grid;
+  wrap.appendChild(grid);
+
+  // v7.4 §15.F — Booster quantity bundles (≤25% discount; stake losses must still sting).
+  const hdr = document.createElement('div');
+  hdr.style.cssText = 'padding:14px 14px 4px;font-size:11px;font-weight:800;color:rgba(255,255,255,0.8);text-transform:uppercase;letter-spacing:1.5px';
+  hdr.textContent = 'Booster bundles';
+  wrap.appendChild(hdr);
+  const bundleGrid = document.createElement('div');
+  bundleGrid.className = 'shop-grid';
+  const bundles = [
+    {id:'b5bronze',  name:'5 Bronze bundle',         tier:'bronze', ic:'📦', price:225,  disc:'10% off',   grant:()=>{for(let i=0;i<5;i++){const p=['extraBottle','firstPour','spawnPlus3'];grantBoosters([p[i%3]]);}}},
+    {id:'b5silver',  name:'5 Silver bundle',         tier:'silver', ic:'📦', price:650,  disc:'13% off',   grant:()=>{for(let i=0;i<5;i++){const p=['colorSplash','swap','customerLock'];grantBoosters([p[i%3]]);}}},
+    {id:'b3gold',    name:'3 Gold bundle',           tier:'gold',   ic:'📦', price:1100, disc:'8% off',    grant:()=>{grantBoosters(['clearBottle','autoServe','doubleServe']);}},
+    {id:'b10gold',   name:'10 Gold bundle',          tier:'gold',   ic:'🎁', price:3500, disc:'12.5% off', grant:()=>{const p=['clearBottle','autoServe','doubleServe'];for(let i=0;i<10;i++) grantBoosters([p[i%3]]);}},
+    {id:'bShaker',   name:'Shaker (2B + 2S + 1G)',   tier:'silver', ic:'🥤', price:750,  disc:'~9% off',   grant:()=>{grantBoosters(['extraBottle','firstPour','colorSplash','swap','clearBottle']);}}
+  ];
+  bundles.forEach(b => {
+    const card = document.createElement('div');
+    card.className = 'shop-card tier-'+b.tier;
+    card.innerHTML = `
+      <div class="sc-ic">${b.ic}</div>
+      <div class="sc-name">${b.name}</div>
+      <span class="pill ${b.tier}">${b.tier}</span>
+      <div class="sc-desc">${b.disc}</div>
+      <div class="sc-owned">&nbsp;</div>
+      <button class="sc-buy" ${s.coins<b.price?'disabled':''}>${b.price} 🪙</button>`;
+    card.querySelector('.sc-buy').onclick = ()=>{
+      if(s.coins < b.price){ toast('Not enough Coins'); return; }
+      s.coins -= b.price;
+      b.grant();
+      toast('+'+b.name);
+      renderAll();
+    };
+    bundleGrid.appendChild(card);
+  });
+  wrap.appendChild(bundleGrid);
+  return wrap;
 }
 
 function renderShopB(){
-  // v7.3 §4 — Star Chest removed for MVP. Re-purposed as arena-themed Sticker Pack shortcut.
-  const prices  = {juice:200,smoothie:300,coffee:450,tea:700,cocktail:900,wine:1300,champagne:1800,grand:2500};
-  const pulls   = {juice:5,  smoothie:5, coffee:6,  tea:6,  cocktail:8, wine:8,   champagne:10,  grand:10};
+  // v7.4 §15.G — Coin Packs $ ladder. MVP ceiling $19.99; coins/$ escalates toward top.
+  const packs = [
+    {id:'pocket',  name:'Pocket',  icon:'🪙', coins:1000,  bonus:0,  price:'$0.99',  vipPts:99},
+    {id:'handful', name:'Handful', icon:'💰', coins:3200,  bonus:7,  price:'$2.99',  vipPts:299, tag:'+7%'},
+    {id:'stack',   name:'Stack',   icon:'💰', coins:5600,  bonus:12, price:'$4.99',  vipPts:499, tag:'+12%'},
+    {id:'pile',    name:'Pile',    icon:'💎', coins:11500, bonus:20, price:'$9.99',  vipPts:999, tag:'+20%', best:'Best Value'},
+    {id:'vault',   name:'Vault',   icon:'🏦', coins:23000, bonus:35, price:'$19.99', vipPts:1999, tag:'+35%'}
+  ];
   const grid = document.createElement('div');
   grid.className = 'shop-grid';
-  ARENAS.forEach((a,i) => {
-    if(i>maxUnlockedArenaIdx()) return;
-    const price = prices[a.id];
-    const pullCount = pulls[a.id];
+  packs.forEach(p => {
+    const total = Math.round(p.coins * (1 + p.bonus/100));
     const card = document.createElement('div');
     card.className = 'shop-card';
     card.innerHTML = `
-      <div class="sc-ic">${a.icon}</div>
-      <div class="sc-name">${a.name} Pack</div>
-      <div class="sc-desc">${pullCount} pulls · arena-themed stickers</div>
+      <div class="sc-ic">${p.icon}</div>
+      <div class="sc-name">${p.name}${p.best?' <span style="font-size:9px;color:#ffd700">⭐</span>':''}</div>
+      <div class="sc-desc">${total.toLocaleString()} 🪙${p.bonus?' <span style="color:#44dd44">'+p.tag+'</span>':''}<br><span style="font-size:9px;color:rgba(255,255,255,0.55)">+${p.vipPts} VIP pts</span></div>
       <div class="sc-owned">&nbsp;</div>
-      <button class="sc-buy" ${s.coins<price?'disabled':''}>${price} 🪙</button>`;
-    card.querySelector('.sc-buy').onclick = ()=>{
-      if(s.coins<price){ toast('Not enough Coins'); return; }
-      s.coins -= price;
-      const packResult = rollPack({count:pullCount, maxTier:'gold', guaranteedGold:false});
-      showPackReveal(a.name+' Pack', packResult.pulls);
-      renderAll();
-    };
+      <button class="sc-buy dollar">${p.price}</button>`;
+    card.querySelector('.sc-buy').onclick = ()=>toast('Coming soon');
     grid.appendChild(card);
   });
   return grid;
 }
 
 function renderShopC(){
+  // v7.4 §15.H — Premium bundles: Happy Hour / Mixologist / Grand Service.
   const bundles = [
-    {name:"Bartender's Starter", desc:'1500🪙 + 5 boosters', price:'$1.99'},
-    {name:'Weekend Warrior',     desc:'6000🪙 + 15 boosters + 2 Gold Packs', price:'$4.99'},
-    {name:'Grand Stock',         desc:'24000🪙 + 40 boosters + 3 Chests + Exclusive Avatar', price:'$19.99'}
+    {name:'Happy Hour',    ic:'🍸', desc:'4,500🪙 · 3 Silver + 1 Gold booster · 5 Silver mixed', price:'$4.99',  value:'~8,250🪙 (3.3× vs Stack)'},
+    {name:'Mixologist',    ic:'🧪', desc:'9,000🪙 · 3 Silver + 3 Gold · 3 Gold + 5 Silver boosters · seasonal frame', price:'$9.99',  value:'~19,500🪙 (3.5× vs Pile)'},
+    {name:'Grand Service', ic:'🎩', desc:'18,000🪙 · 4 Silver + 6 Gold · 10 Gold + 5 Silver boosters · exclusive emote + frame', price:'$19.99', value:'~39,000🪙 (3.9× vs Vault)'}
   ];
   const grid = document.createElement('div');
   grid.className='shop-grid';
   bundles.forEach(b=>{
     const c = document.createElement('div');
     c.className='shop-card';
-    c.innerHTML = `<div class="sc-ic">💎</div><div class="sc-name">${b.name}</div><div class="sc-desc">${b.desc}</div><div class="sc-owned">&nbsp;</div><button class="sc-buy dollar">${b.price}</button>`;
+    c.innerHTML = `<div class="sc-ic">${b.ic}</div><div class="sc-name">${b.name}</div><div class="sc-desc">${b.desc}<br><span style="font-size:9px;color:#ffd700">${b.value}</span></div><div class="sc-owned">&nbsp;</div><button class="sc-buy dollar">${b.price}</button>`;
     c.querySelector('.sc-buy').onclick = ()=>toast('Coming soon');
     grid.appendChild(c);
   });
@@ -2753,6 +2845,28 @@ function renderShopD(){
   info.style.cssText = 'padding:0 14px 8px;font-size:10px;color:rgba(255,255,255,0.55);line-height:1.3';
   info.textContent = 'Earn BPP: +10 per match played, +20 win bonus, +100 per Daily Mission. 400 BPP per tier. Premium retroactively claims earned tiers.';
   wrap.appendChild(info);
+
+  // v7.4 §4 — Bonus Bank (post-T30 overflow)
+  if(tier >= 30){
+    const banked = s.barPass.bonusBankCoins || 0;
+    const earned = s.barPass.bonusBankEarnedThisSeason || 0;
+    const bankPct = Math.min(100, (earned / BONUS_BANK_SEASON_CAP) * 100);
+    const bank = document.createElement('div');
+    bank.style.cssText = 'margin:4px 14px 10px;padding:10px;background:linear-gradient(180deg,rgba(255,215,0,0.12),rgba(255,215,0,0.04));border:1px solid rgba(255,215,0,0.35);border-radius:10px';
+    bank.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <div style="font-size:12px;font-weight:800;color:#ffd700">🏦 BONUS BANK</div>
+        <div style="font-size:10px;color:rgba(255,255,255,0.6)">${earned}/${BONUS_BANK_SEASON_CAP}c this season</div>
+      </div>
+      <div style="background:rgba(0,0,0,0.45);height:6px;border-radius:3px;overflow:hidden;margin-bottom:8px"><div style="height:100%;width:${bankPct}%;background:linear-gradient(90deg,#ffd700,#ff8a00)"></div></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+        <div style="font-size:12px;color:#fff"><b>${banked}</b>🪙 ready to claim</div>
+        <button class="sc-buy" id="bonus-bank-claim" ${banked<=0?'disabled':''}>Claim</button>
+      </div>
+      <div style="font-size:9px;color:rgba(255,255,255,0.45);margin-top:6px;line-height:1.3">Extra BPP converts at 400→100🪙, capped 5,000🪙/season (v7.4 §4). Resets with season.</div>`;
+    bank.querySelector('#bonus-bank-claim').onclick = claimBonusBank;
+    wrap.appendChild(bank);
+  }
 
   // Strip
   const strip = document.createElement('div');
@@ -2876,20 +2990,33 @@ function purchasePassCatchup(tiers){
 }
 
 function renderShopF(){
+  // v7.4 §15.J — Sticker SKUs at-cost (no markup) to preserve bundle value by comparison.
+  // Daily Silver deal: −40% (FOMO), 1/day, rolled silently per day.
+  const todayIso = new Date().toISOString().slice(0,10);
+  if(!s.shop) s.shop = {};
+  if(s.shop.dailyStickerDealDate !== todayIso){
+    s.shop.dailyStickerDealDate = todayIso;
+    s.shop.dailyStickerDealClaimed = false;
+  }
   const packs = [
-    {id:'cheap',   name:'Cheap Pack',    desc:'3 stickers (W/S only)',       price:150, count:3, maxTier:'silver'},
-    {id:'standard',name:'Standard Pack', desc:'5 stickers (standard roll)',  price:380, count:5, maxTier:'diamond'},
-    {id:'big',     name:'Big Pack',      desc:'10 stickers (1+ Gold guar.)', price:900, count:10,maxTier:'diamond',guaranteedGold:true}
+    {id:'silver1',      name:'Silver Pack',         desc:'5 pulls · W/S weighted',                 price:500,  count:5,  maxTier:'silver'},
+    {id:'gold1',        name:'Gold Pack',           desc:'7 pulls · 1+ Gold guaranteed',           price:1500, count:7,  maxTier:'gold', guaranteedGold:true},
+    {id:'silver5',      name:'Silver ×5 bundle',    desc:'25 pulls · 10% off (2,500 → 2,250)',     price:2250, count:25, maxTier:'silver'},
+    {id:'gold3',        name:'Gold ×3 bundle',      desc:'21 pulls · 7% off · 3+ Gold guaranteed', price:4200, count:21, maxTier:'gold', guaranteedGold:true},
+    {id:'dailySilver',  name:'Daily Silver Deal',   desc:'5 pulls · 40% OFF · 1/day (FOMO)',       price:300,  count:5,  maxTier:'silver', daily:true}
   ];
   const grid = document.createElement('div');
   grid.className='shop-grid';
   packs.forEach(p=>{
     const c = document.createElement('div');
     c.className='shop-card';
-    c.innerHTML = `<div class="sc-ic">📦</div><div class="sc-name">${p.name}</div><div class="sc-desc">${p.desc}</div><div class="sc-owned">&nbsp;</div><button class="sc-buy" ${s.coins<p.price?'disabled':''}>${p.price} 🪙</button>`;
+    const locked = p.daily && s.shop.dailyStickerDealClaimed;
+    c.innerHTML = `<div class="sc-ic">${p.daily?'⏰':'📦'}</div><div class="sc-name">${p.name}</div><div class="sc-desc">${p.desc}</div><div class="sc-owned">&nbsp;</div><button class="sc-buy" ${(s.coins<p.price||locked)?'disabled':''}>${locked?'Claimed — back tomorrow':p.price+' 🪙'}</button>`;
     c.querySelector('.sc-buy').onclick = ()=>{
+      if(locked) return;
       if(s.coins<p.price){ toast('Not enough Coins'); return; }
       s.coins -= p.price;
+      if(p.daily) s.shop.dailyStickerDealClaimed = true;
       const pulled = rollPack(p);
       saveSave();
       showPackReveal(p.name.toUpperCase(), pulled.pulls);
@@ -3183,13 +3310,23 @@ let rankingTab = 'starrace';
 function renderRanking(){
   const tabs = $('ranking-tabs');
   tabs.innerHTML = '';
+  // v7.4 §10 — Star Race gated until Arena 3 (400 trophies) to avoid cold-start leaderboard
+  const starRaceUnlocked = s.trophies >= 400;
   [['starrace','Star Race'],['arena','Arena'],['country','Country'],['global','Global']].forEach(([id,n])=>{
     const b = document.createElement('button');
-    b.className = 'shop-tab'+(rankingTab===id?' active':'');
-    b.textContent = n;
-    b.onclick = ()=>{ rankingTab = id; renderRanking(); };
+    const locked = id==='starrace' && !starRaceUnlocked;
+    b.className = 'shop-tab'+(rankingTab===id?' active':'')+(locked?' locked-tab':'');
+    b.textContent = locked ? '🔒 Star Race' : n;
+    if(locked){
+      b.style.opacity = '0.5';
+      b.title = 'Unlocks at Arena 3 (400 🏆)';
+      b.onclick = ()=>toast('Star Race unlocks at Arena 3 (400 🏆)');
+    } else {
+      b.onclick = ()=>{ rankingTab = id; renderRanking(); };
+    }
     tabs.appendChild(b);
   });
+  if(rankingTab==='starrace' && !starRaceUnlocked) rankingTab = 'arena';
   const body = $('ranking-body');
   body.innerHTML = '';
   if(rankingTab === 'starrace'){ renderRankingStarRace(body); return; }
@@ -3280,7 +3417,7 @@ const VIP_TIERS = [
   {n:6,  name:'Silver III', pts:2000,  dollars:'$200',  perks:['+30% coin bonus','booster shop −15%','monthly 1 free Gold Pack']},
   {n:7,  name:'Gold I',     pts:4000,  dollars:'$400',  perks:['+35% coin bonus','+1 mission slot (4→5)','cosmetic priority-queue (full)']},
   {n:8,  name:'Gold II',    pts:7000,  dollars:'$700',  perks:['+40% coin bonus','booster shop −20%','exclusive seasonal skin']},
-  {n:9,  name:'Diamond',    pts:12000, dollars:'$1,200',perks:['+45% coin bonus','weekly 1 free Gold Pack','VIP9 legendary frame','Favorite-3 sticker showcase']},
+  {n:9,  name:'Diamond',    pts:12000, dollars:'$1,200',perks:['+45% coin bonus','weekly 1 free Gold Pack','VIP9 legendary frame','Obsidian leaderboard name highlight prep']},
   {n:10, name:'Obsidian',   pts:20000, dollars:'$2,000',perks:['+50% coin bonus','booster shop −25%','name highlight in leaderboards','concierge cosmetic bundle']}
 ];
 
@@ -3374,7 +3511,7 @@ function renderProfile(){
   body.innerHTML = `
     <div style="padding:14px;text-align:center">
       <div style="font-size:48px;line-height:1">🧑‍🍳</div>
-      <div style="font-size:18px;font-weight:900;margin-top:6px">Player ${vipBadge}</div>
+      <div style="font-size:18px;font-weight:900;margin-top:6px">${s.profile.username || 'Player'} ${vipBadge}</div>
       <div style="font-size:11px;color:rgba(255,255,255,0.6)">${countryPill(countryCode)}${s.profile.activeTitle||'Newcomer'}</div>
       <div style="font-size:11px;color:rgba(255,255,255,0.75);margin-top:6px">🏆 ${s.trophies} current · peak ${s.trophyRoad.highestTrophiesReached||0}</div>
       <div style="font-size:11px;color:rgba(255,255,255,0.55);margin-top:2px">Arena: ${currentArena().name}</div>
@@ -3395,7 +3532,11 @@ function renderProfile(){
       <button class="sc-buy" onclick="showScreen('albums')">📗 Albums</button>
       <button class="sc-buy" onclick="showScreen('trophyroad')">🏆 Trophy Road</button>
     </div>
-    <div style="padding:0 14px;font-size:10px;color:rgba(255,255,255,0.4);text-align:center">Username & Favorite-3 sticker picker: Diamond VIP+ only</div>`;
+    <div style="padding:0 14px;font-size:10px;color:rgba(255,255,255,0.4);text-align:center;line-height:1.5">
+      Username lock: rename via support. Favorite-3 stickers unlock with any 3 collected (v7.4 §5).<br>
+      <span style="color:rgba(255,215,0,0.55)">Player ID: <span style="color:#ffd700;font-family:monospace" id="acc-playerid-display">${(s.account&&s.account.playerId)||'—'}</span></span>
+      <span style="display:block;margin-top:2px;color:rgba(255,255,255,0.35)">Save this — it's your only recovery key before account linking ships.</span>
+    </div>`;
 }
 
 function openPublicProfile(name){
@@ -3429,7 +3570,7 @@ function openPublicProfile(name){
         return `<div style="font-size:11px;margin-bottom:4px"><div style="display:flex;justify-content:space-between"><span>${al.ic} ${al.name}</span><span style="color:rgba(255,255,255,0.6)">${sim.albumPct[i]}%</span></div><div style="background:rgba(0,0,0,0.4);height:5px;border-radius:3px;overflow:hidden"><div style="height:100%;width:${sim.albumPct[i]}%;background:linear-gradient(90deg,#9ad4ff,#ffd700)"></div></div></div>`;
       }).join('')}
     </div>
-    ${sim.vipTier>=9?'<div style="padding:10px;text-align:center;font-size:10px;color:rgba(255,215,0,0.7)">★ Favorite 3 Stickers (Diamond VIP)</div>':'<div style="padding:10px;text-align:center;font-size:10px;color:rgba(255,255,255,0.4)">🔒 Favorite-3 Stickers: unlock at Diamond VIP</div>'}
+    <div style="padding:10px;text-align:center;font-size:10px;color:rgba(255,215,0,0.8)">★ Favorite 3 Stickers · free for all (v7.4 §5)</div>
     <div style="padding:4px 10px;font-size:10px;color:rgba(255,255,255,0.4);text-align:center">⚠ Report player (moderation)</div>`;
   $('public-profile-modal').classList.remove('hidden');
 }
@@ -4138,13 +4279,25 @@ function showScorePop(points, side){
   setTimeout(()=>p.remove(),650);
 }
 
+// v7.4 §9 — bot cushion curve. Larger multiplier = slower bot = higher player WR.
+// Targets: Arena 1 70% · 2 65% · 3 60% · 4 55% · 5+ 52% (normal MM).
+// Post-Arena-5 crossing disables cushion permanently; tracked on s.cushionFaded.
+const BOT_CUSHION_MULT = {
+  juice:1.55, smoothie:1.35, coffee:1.20, tea:1.08,
+  cocktail:1.00, wine:1.00, champagne:1.00, grand:1.00
+};
+function botCushionMult(arenaId){
+  if(s && s.cushionFaded) return 1.0;
+  return BOT_CUSHION_MULT[arenaId] || 1.0;
+}
 function updateAI(dt){
   if(M.phase!=='playing') return;
   const diff = M.arenaV6.ai;
+  const mult = botCushionMult(matchCtx.arena.id);
   M.ai.nextPourTime -= dt;
-  if(M.ai.nextPourTime<=0){ aiMakePour(diff); M.ai.nextPourTime = diff.pourIntervalMin + Math.random()*(diff.pourIntervalMax-diff.pourIntervalMin); }
+  if(M.ai.nextPourTime<=0){ aiMakePour(diff); M.ai.nextPourTime = (diff.pourIntervalMin + Math.random()*(diff.pourIntervalMax-diff.pourIntervalMin)) * mult; }
   M.ai.nextServeCheck -= dt;
-  if(M.ai.nextServeCheck<=0){ aiCheckServe(); M.ai.nextServeCheck = diff.serveDelay; }
+  if(M.ai.nextServeCheck<=0){ aiCheckServe(); M.ai.nextServeCheck = diff.serveDelay * mult; }
 }
 function countTopStack(g){
   if(!g.layers.length) return 0;
@@ -4989,6 +5142,8 @@ function applyMatchResult(result){
 
   s.trophies = Math.max(0, s.trophies + trophies);
   if(s.trophies > s.trophyRoad.highestTrophiesReached) s.trophyRoad.highestTrophiesReached = s.trophies;
+  // v7.4 §9/§10 — cushion fades permanently on Cocktail crossing (≥1,000 🏆)
+  if(!s.cushionFaded && s.trophies >= 1000) s.cushionFaded = true;
   s.coins += coins;
   s.stars += stars; // lifetime total (HUD chip)
   // v7.3 §4 — Star Race arena-scoped weekly counter. star_source='solo' (Team Box will repoint post-MVP).
@@ -5333,6 +5488,12 @@ function init(){
     $('screen-splash').classList.add('fade-out');
     setTimeout(()=>{
       $('screen-splash').style.display = 'none';
+      // v7.4 §12 — first-run account/username setup before tutorial
+      if(!s.account || !s.account.firstRunDone){
+        if(!s.account) s.account = { playerId:'', firstRunDone:false, eulaAcceptedAt:null, marketingConsent:false };
+        openAccountSetup();
+        return;
+      }
       if(!s.tutorialDone){ startTutorial(); }
       else {
         showScreen('home');
@@ -5340,6 +5501,98 @@ function init(){
       }
     }, 700);
   }, 1900);
+}
+
+// v7.4 §12 — Account / Username / Privacy minimal spec
+const USERNAME_ROLE_NOUNS = [
+  'Bartender','Mixologist','Barback','Sommelier','Barista','Pourmaster','Shaker','Stirrer',
+  'Tapster','Taster','Concierge','Patron','Regular','Host','Maestro','Hype','Tender','Curator',
+  'Enthusiast','Keeper','Sipper','Neatman','Rocker','Twister','Zester','Jigger','Dasher','Brewer',
+  'Crafter','Blender','Roaster','Muddler','Strainer','Garnisher','Chaser','Snifter','Toaster','Saberer','Cellar','Vintner'
+];
+function generatePlayerId(){
+  const hex = '0123456789abcdef';
+  let id = 'MX-';
+  for(let i=0;i<4;i++){ for(let j=0;j<4;j++) id += hex[Math.floor(Math.random()*16)]; if(i<3) id += '-'; }
+  return id;
+}
+function generateUsernameSuggestion(){
+  const noun = USERNAME_ROLE_NOUNS[Math.floor(Math.random()*USERNAME_ROLE_NOUNS.length)];
+  const num = Math.floor(1000 + Math.random()*9000);
+  return noun + '_' + num;
+}
+function detectLocaleCountry(){
+  try {
+    const loc = (navigator.language || 'en-US').toUpperCase();
+    const m = loc.match(/[-_]([A-Z]{2})$/);
+    return m ? m[1] : 'US';
+  } catch(e){ return 'US'; }
+}
+const USERNAME_PROFANITY_BLOCKLIST = ['fuck','shit','asshole','bitch','nazi','slut','cunt','retard'];
+function validateUsername(name){
+  if(!name || name.length < 3) return 'Name must be 3–16 characters';
+  if(name.length > 16) return 'Name must be 3–16 characters';
+  if(!/^[A-Za-z0-9_]+$/.test(name)) return 'Letters, numbers, underscore only';
+  const low = name.toLowerCase();
+  if(USERNAME_PROFANITY_BLOCKLIST.some(w => low.includes(w))) return 'Name is not allowed';
+  return null;
+}
+function openAccountSetup(){
+  let suggestion = generateUsernameSuggestion();
+  const body = $('account-modal-body');
+  const render = (mode)=>{
+    if(mode==='change'){
+      body.innerHTML = `
+        <div style="font-size:12px;color:rgba(255,255,255,0.75);line-height:1.4;margin-bottom:10px">Pick your username. 3–16 characters; letters, numbers, and underscore only.</div>
+        <input id="acc-username-input" type="text" maxlength="16" placeholder="YourName"
+               style="width:100%;padding:10px;font-size:14px;background:rgba(0,0,0,0.5);border:1px solid rgba(154,212,255,0.3);border-radius:8px;color:#fff;margin-bottom:8px" />
+        <div id="acc-username-err" style="font-size:11px;color:#ff6666;min-height:14px;margin-bottom:8px"></div>
+        <button class="sc-buy" id="acc-confirm-custom" style="width:100%;margin-bottom:6px">Confirm name</button>
+        <button class="sc-buy" id="acc-back" style="width:100%;background:rgba(255,255,255,0.1)">Back to suggestion</button>`;
+      const inp = $('acc-username-input');
+      inp.value = '';
+      inp.focus();
+      $('acc-confirm-custom').onclick = ()=>{
+        const val = inp.value.trim();
+        const err = validateUsername(val);
+        if(err){ $('acc-username-err').textContent = err; return; }
+        finishAccountSetup(val, true);
+      };
+      $('acc-back').onclick = ()=>render('suggestion');
+    } else {
+      body.innerHTML = `
+        <div style="font-size:12px;color:rgba(255,255,255,0.75);line-height:1.4;margin-bottom:12px">Choose your bartender name. You can change it now — after setup, rename requires support.</div>
+        <div style="padding:14px;background:linear-gradient(180deg,rgba(154,212,255,0.15),rgba(154,212,255,0.04));border:1px solid rgba(154,212,255,0.35);border-radius:10px;text-align:center;margin-bottom:10px">
+          <div style="font-size:10px;color:rgba(255,255,255,0.55);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Suggested</div>
+          <div style="font-size:18px;font-weight:900;color:#fff">${suggestion}</div>
+        </div>
+        <label style="display:flex;gap:8px;align-items:flex-start;font-size:11px;color:rgba(255,255,255,0.75);line-height:1.4;margin-bottom:12px;cursor:pointer">
+          <input id="acc-eula" type="checkbox" style="margin-top:2px" />
+          <span>I accept the <a href="#" onclick="event.preventDefault();toast('EULA stub — post-MVP regional copy')" style="color:#9ad4ff">EULA</a> and <a href="#" onclick="event.preventDefault();toast('Privacy stub — post-MVP regional copy')" style="color:#9ad4ff">Privacy Policy</a>.</span>
+        </label>
+        <button class="sc-buy" id="acc-use-this" style="width:100%;margin-bottom:6px" disabled>Use this name</button>
+        <button class="sc-buy" id="acc-change" style="width:100%;background:rgba(255,255,255,0.1)">Change</button>`;
+      const eulaCb = $('acc-eula');
+      const btn = $('acc-use-this');
+      eulaCb.onchange = ()=>{ btn.disabled = !eulaCb.checked; };
+      btn.onclick = ()=>{ if(!eulaCb.checked) return; finishAccountSetup(suggestion, false); };
+      $('acc-change').onclick = ()=>render('change');
+    }
+  };
+  render('suggestion');
+  $('account-modal').classList.remove('hidden');
+}
+function finishAccountSetup(username, wasCustom){
+  s.profile.username = username;
+  s.profile.usernameLocked = true;
+  s.profile.countryCode = detectLocaleCountry();
+  if(!s.account.playerId) s.account.playerId = generatePlayerId();
+  s.account.firstRunDone = true;
+  s.account.eulaAcceptedAt = Date.now();
+  saveSave();
+  $('account-modal').classList.add('hidden');
+  toast(wasCustom ? 'Welcome, '+username+'!' : 'Welcome!');
+  if(!s.tutorialDone){ startTutorial(); } else { showScreen('home'); }
 }
 
 document.addEventListener('DOMContentLoaded', init);
