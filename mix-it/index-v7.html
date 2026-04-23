@@ -3578,11 +3578,11 @@ function renderProfile(){
         return `<div style="font-size:11px;margin-bottom:4px"><div style="display:flex;justify-content:space-between"><span>${al.ic} ${al.name}</span><span style="color:rgba(255,255,255,0.6)">${owned}/${al.stickers.length}</span></div><div style="background:rgba(0,0,0,0.4);height:5px;border-radius:3px;overflow:hidden"><div style="height:100%;width:${pct}%;background:linear-gradient(90deg,#9ad4ff,#ffd700)"></div></div></div>`;
       }).join('')}
     </div>
-    <div style="padding:0 14px;display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
-      <button class="sc-buy" onclick="showScreen('vip')">👑 VIP Ladder</button>
-      <button class="sc-buy" onclick="showScreen('venue')">🏗️ Venue</button>
-      <button class="sc-buy" onclick="showScreen('albums')">📗 Albums</button>
-      <button class="sc-buy" onclick="showScreen('trophyroad')">🏆 Trophy Road</button>
+    <div style="padding:0 14px;display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <button class="profile-nav-btn" style="padding:12px 10px;background:linear-gradient(180deg,#4db8ff,#2e84c9);border:none;border-radius:12px;color:#fff;font-family:'Paytone One','Lilita One',system-ui,sans-serif;font-size:13px;letter-spacing:0.5px;cursor:pointer;box-shadow:0 4px 0 #1a4d79;text-shadow:0 1px 0 rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;gap:6px" onclick="showScreen('vip')"><span style="font-size:18px">👑</span> VIP Ladder</button>
+      <button class="profile-nav-btn" style="padding:12px 10px;background:linear-gradient(180deg,#4db8ff,#2e84c9);border:none;border-radius:12px;color:#fff;font-family:'Paytone One','Lilita One',system-ui,sans-serif;font-size:13px;letter-spacing:0.5px;cursor:pointer;box-shadow:0 4px 0 #1a4d79;text-shadow:0 1px 0 rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;gap:6px" onclick="showScreen('venue')"><span style="font-size:18px">🏗️</span> Venue</button>
+      <button class="profile-nav-btn" style="padding:12px 10px;background:linear-gradient(180deg,#4db8ff,#2e84c9);border:none;border-radius:12px;color:#fff;font-family:'Paytone One','Lilita One',system-ui,sans-serif;font-size:13px;letter-spacing:0.5px;cursor:pointer;box-shadow:0 4px 0 #1a4d79;text-shadow:0 1px 0 rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;gap:6px" onclick="showScreen('albums')"><span style="font-size:18px">📗</span> Albums</button>
+      <button class="profile-nav-btn" style="padding:12px 10px;background:linear-gradient(180deg,#4db8ff,#2e84c9);border:none;border-radius:12px;color:#fff;font-family:'Paytone One','Lilita One',system-ui,sans-serif;font-size:13px;letter-spacing:0.5px;cursor:pointer;box-shadow:0 4px 0 #1a4d79;text-shadow:0 1px 0 rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;gap:6px" onclick="showScreen('trophyroad')"><span style="font-size:18px">🏆</span> Trophy Road</button>
     </div>
     <div style="padding:0 14px;font-size:10px;color:rgba(255,255,255,0.4);text-align:center;line-height:1.5">
       Username lock: rename via support. Favorite-3 stickers unlock with any 3 collected (v7.4 §5).<br>
