@@ -2736,35 +2736,53 @@ function renderShopA(){
   hdr.style.cssText = 'padding:14px 14px 4px;font-size:11px;font-weight:800;color:rgba(255,255,255,0.8);text-transform:uppercase;letter-spacing:1.5px';
   hdr.textContent = 'Booster bundles';
   wrap.appendChild(hdr);
-  const bundleGrid = document.createElement('div');
-  bundleGrid.className = 'shop-grid';
   const bundles = [
-    {id:'b5bronze',  name:'5 Bronze bundle',         tier:'bronze', ic:'📦', price:225,  disc:'10% off',   grant:()=>{for(let i=0;i<5;i++){const p=['extraBottle','firstPour','spawnPlus3'];grantBoosters([p[i%3]]);}}},
-    {id:'b5silver',  name:'5 Silver bundle',         tier:'silver', ic:'📦', price:650,  disc:'13% off',   grant:()=>{for(let i=0;i<5;i++){const p=['colorSplash','swap','customerLock'];grantBoosters([p[i%3]]);}}},
-    {id:'b3gold',    name:'3 Gold bundle',           tier:'gold',   ic:'📦', price:1100, disc:'8% off',    grant:()=>{grantBoosters(['clearBottle','autoServe','doubleServe']);}},
-    {id:'b10gold',   name:'10 Gold bundle',          tier:'gold',   ic:'🎁', price:3500, disc:'12.5% off', grant:()=>{const p=['clearBottle','autoServe','doubleServe'];for(let i=0;i<10;i++) grantBoosters([p[i%3]]);}},
-    {id:'bShaker',   name:'Shaker (2B + 2S + 1G)',   tier:'silver', ic:'🥤', price:750,  disc:'~9% off',   grant:()=>{grantBoosters(['extraBottle','firstPour','colorSplash','swap','clearBottle']);}}
+    {id:'b5bronze', name:'5 Bronze bundle',       tier:'bronze', ic:'📦', price:225,  disc:'10% off',
+      items:[{ic:'🧪',label:'2× Extra Bottle'},{ic:'💧',label:'2× First Pour'},{ic:'✨',label:'1× Spawn+3'}],
+      grant:()=>{grantBoosters(['extraBottle','extraBottle','firstPour','firstPour','spawnPlus3']);}},
+    {id:'b5silver', name:'5 Silver bundle',       tier:'silver', ic:'📦', price:650,  disc:'13% off',
+      items:[{ic:'🎨',label:'2× Color Splash'},{ic:'🔄',label:'2× Swap'},{ic:'🔒',label:'1× Customer Lock'}],
+      grant:()=>{grantBoosters(['colorSplash','colorSplash','swap','swap','customerLock']);}},
+    {id:'b3gold',   name:'3 Gold bundle',         tier:'gold',   ic:'📦', price:1100, disc:'8% off',
+      items:[{ic:'🗑️',label:'1× Clear Bottle'},{ic:'⚡',label:'1× Auto Serve'},{ic:'💥',label:'1× Double Serve'}],
+      grant:()=>{grantBoosters(['clearBottle','autoServe','doubleServe']);}},
+    {id:'b10gold',  name:'10 Gold bundle',        tier:'gold',   ic:'🎁', price:3500, disc:'12.5% off', best:true,
+      items:[{ic:'🗑️',label:'4× Clear Bottle'},{ic:'⚡',label:'3× Auto Serve'},{ic:'💥',label:'3× Double Serve'}],
+      grant:()=>{const seq=['clearBottle','autoServe','doubleServe','clearBottle','autoServe','doubleServe','clearBottle','autoServe','doubleServe','clearBottle'];seq.forEach(id=>grantBoosters([id]));}},
+    {id:'bShaker',  name:'Shaker (2B + 2S + 1G)', tier:'silver', ic:'🥤', price:750,  disc:'~9% off',
+      items:[{ic:'🧪',label:'1× Extra Bottle'},{ic:'💧',label:'1× First Pour'},{ic:'🎨',label:'1× Color Splash'},{ic:'🔄',label:'1× Swap'},{ic:'🗑️',label:'1× Clear Bottle'}],
+      grant:()=>{grantBoosters(['extraBottle','firstPour','colorSplash','swap','clearBottle']);}}
   ];
+  const TIER_BORDER = {bronze:'rgba(201,138,78,0.55)', silver:'rgba(192,198,212,0.55)', gold:'rgba(255,215,0,0.55)'};
+  const TIER_BG = {bronze:'rgba(201,138,78,0.08)', silver:'rgba(192,198,212,0.06)', gold:'rgba(255,215,0,0.08)'};
   bundles.forEach(b => {
     const card = document.createElement('div');
-    card.className = 'shop-card tier-'+b.tier;
+    card.style.cssText = 'margin:8px 8px 12px;padding:12px;background:linear-gradient(180deg,'+TIER_BG[b.tier]+',rgba(0,0,0,0.10));border:1px solid '+(b.best?'rgba(255,215,0,0.75)':TIER_BORDER[b.tier])+';border-radius:14px;position:relative';
+    const chips = b.items.map(it => `
+      <div style="display:flex;align-items:center;gap:6px;padding:6px 8px;background:rgba(0,0,0,0.35);border:1px solid rgba(255,255,255,0.08);border-radius:8px;font-size:11px;color:#fff">
+        <span style="font-size:14px">${it.ic}</span><span>${it.label}</span>
+      </div>`).join('');
     card.innerHTML = `
-      <div class="sc-ic">${b.ic}</div>
-      <div class="sc-name">${b.name}</div>
-      <span class="pill ${b.tier}">${b.tier}</span>
-      <div class="sc-desc">${b.disc}</div>
-      <div class="sc-owned">&nbsp;</div>
-      <button class="sc-buy" ${s.coins<b.price?'disabled':''}>${b.price} 🪙</button>`;
-    card.querySelector('.sc-buy').onclick = ()=>{
+      ${b.best?'<div style="position:absolute;top:-8px;right:12px;background:linear-gradient(180deg,#ffd700,#ff9500);color:#1a0e00;font-family:\'Paytone One\',\'Lilita One\',system-ui,sans-serif;font-size:10px;letter-spacing:1px;padding:3px 8px;border-radius:6px;box-shadow:0 2px 0 rgba(0,0,0,0.3)">BEST VALUE</div>':''}
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+        <div style="font-size:32px">${b.ic}</div>
+        <div style="flex:1">
+          <div style="font-family:'Paytone One','Lilita One',system-ui,sans-serif;font-size:16px;color:#fff">${b.name}</div>
+          <div style="font-size:10px;color:#ffd700">${b.disc}</div>
+        </div>
+        <span class="pill ${b.tier}">${b.tier}</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px">${chips}</div>
+      <button class="bundle-coin-buy" style="width:100%;padding:11px;background:linear-gradient(180deg,#4ae35f,#2ab14a);border:none;border-radius:10px;color:#fff;font-family:'Paytone One','Lilita One',system-ui,sans-serif;font-size:14px;letter-spacing:0.5px;cursor:pointer;box-shadow:0 3px 0 #1a7a2e;${s.coins<b.price?'opacity:0.5;cursor:not-allowed':''}">${b.price} 🪙</button>`;
+    card.querySelector('.bundle-coin-buy').onclick = ()=>{
       if(s.coins < b.price){ toast('Not enough Coins'); return; }
       s.coins -= b.price;
       b.grant();
       toast('+'+b.name);
       renderAll();
     };
-    bundleGrid.appendChild(card);
+    wrap.appendChild(card);
   });
-  wrap.appendChild(bundleGrid);
   return wrap;
 }
 
