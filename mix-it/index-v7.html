@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>Mix It — v7.2 MM Fidelity</title>
+<title>Mix It — v7.1 Redesign (type + popups)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Paytone+One&family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
@@ -18,7 +18,8 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:"Fredoka","Nunito",
 #hud{position:relative;flex-shrink:0;display:flex;align-items:center;gap:6px;padding:0 10px;height:44px;background:#0a2a50;border-bottom:1px solid rgba(255,255,255,0.05);z-index:100}
 #hud.hidden{display:none}
 .hud-profile{display:flex;align-items:center;gap:6px;flex:1;min-width:0}
-.hud-avatar{width:30px;height:30px;border-radius:50%;background:#162040;border:2px solid #3a6dd4;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.hud-avatar{width:30px;height:30px;border-radius:50%;background:#162040;border:2px solid #3a6dd4;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;cursor:pointer;transition:transform 0.12s}
+.hud-avatar:active{transform:scale(0.92)}
 .hud-name-block{flex:1;min-width:0;overflow:hidden}
 .hud-name-block .title{color:rgba(255,255,255,0.55);font-size:10px;text-transform:uppercase;letter-spacing:0.5px;line-height:1}
 .hud-name-block .trophies{color:#fff;font-weight:900;font-size:12px;line-height:1.1}
@@ -52,6 +53,22 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:"Fredoka","Nunito",
 #screen-home{align-items:center;gap:12px;padding:52px 20px 80px;justify-content:flex-end}
 
 .home-venue-preview{width:100%;flex:1;min-height:120px;position:relative;overflow:hidden;border-radius:10px;background:linear-gradient(180deg,#2a140a 0%,#4a2a16 50%,#6a3f22 100%);border:6px solid #3a1e10;box-shadow:inset 0 0 0 2px #d4a03a,inset 0 0 0 3px #3a1e10;display:flex;align-items:flex-end;justify-content:center;padding-bottom:10px}
+.home-sidebuttons{position:absolute;right:12px;top:54px;display:flex;flex-direction:column;gap:8px;z-index:50}
+.home-sbtn{width:44px;height:44px;border-radius:12px;border:none;cursor:pointer;font-size:20px;position:relative;display:flex;align-items:center;justify-content:center;color:#fff}
+.home-sbtn[data-screen="trophyroad"]{background:linear-gradient(180deg,#ffc947,#d88f1c);box-shadow:0 3px 0 #8a5a12}
+.home-sbtn[data-screen="ranking"]{background:linear-gradient(180deg,#6aa9ff,#2e6fc9);box-shadow:0 3px 0 #1a4d79}
+.home-sbtn[data-screen="pass"]{background:linear-gradient(180deg,#b084ff,#7046d6);box-shadow:0 3px 0 #3e2485}
+.home-sbtn:active{transform:translateY(1px)}
+.home-sbtn[data-screen="trophyroad"]:active{box-shadow:0 2px 0 #8a5a12}
+.home-sbtn[data-screen="ranking"]:active{box-shadow:0 2px 0 #1a4d79}
+.home-sbtn[data-screen="pass"]:active{box-shadow:0 2px 0 #3e2485}
+.home-sbtn-badge{position:absolute;top:-4px;right:-4px;min-width:18px;height:18px;padding:0 4px;border-radius:9px;background:#ff3b3b;color:#fff;font-size:10px;font-weight:900;line-height:18px;text-align:center;display:none;border:2px solid #0a2a50}
+.home-sbtn-badge.on{display:inline-block}
+.nav-badge{position:absolute;top:4px;right:8px;font-size:9px;font-weight:900;background:#ff3030;color:#fff;padding:2px 5px;border-radius:8px;display:none}
+.nav-badge.on{display:inline-block}
+.nav-btn{position:relative}
+.hvp-district-btn{position:absolute;top:8px;right:8px;width:30px;height:30px;border-radius:50%;background:rgba(0,0,0,0.55);border:1px solid rgba(255,215,0,0.4);color:#ffd700;font-weight:900;font-size:14px;cursor:pointer;z-index:2}
+.hvp-district-label{position:absolute;top:10px;left:12px;color:rgba(255,215,0,0.85);font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:1px;z-index:2;text-shadow:0 2px 3px #000}
 .home-venue-preview::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent 0 22px,rgba(0,0,0,0.28) 22px 24px);pointer-events:none}
 .home-venue-preview::after{content:'';position:absolute;left:0;right:0;top:0;bottom:0;pointer-events:none;background:repeating-linear-gradient(90deg,transparent 0 18px,#e5b94a 18px 22px,#8a6420 22px 26px,transparent 26px 44px) top/100% 5px no-repeat,repeating-linear-gradient(90deg,transparent 0 18px,#e5b94a 18px 22px,#8a6420 22px 26px,transparent 26px 44px) bottom/100% 5px no-repeat}
 .hvp-icon{font-size:80px;filter:drop-shadow(0 4px 12px rgba(255,200,120,0.4));z-index:2;position:relative}
@@ -72,6 +89,13 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:"Fredoka","Nunito",
 .arena-switch{position:absolute;top:8px;right:8px;width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);color:#fff;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center}
 
 .home-action-row{display:flex;gap:10px;align-items:center;width:300px;max-width:100%}
+.mt-tab{flex:1;padding:8px 10px;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.08);color:rgba(255,255,255,0.6);border-radius:8px;font-weight:800;font-size:12px;cursor:pointer}
+.mt-tab.active{background:linear-gradient(180deg,#ffac04,#ffc700);color:#1a1a1a;border-color:rgba(255,215,0,0.6)}
+.star-race-btn{flex:1;background:linear-gradient(180deg,rgba(255,172,4,0.22),rgba(154,212,255,0.10));border:1px solid rgba(255,215,0,0.35);border-radius:12px;padding:8px 12px;color:#fff;cursor:pointer;text-align:left;display:flex;flex-direction:column;gap:2px}
+.star-race-btn:active{transform:translateY(1px)}
+.star-race-btn .srb-label{font-size:10px;color:rgba(255,215,0,0.85);text-transform:uppercase;letter-spacing:1px;font-weight:900}
+.star-race-btn .srb-val{font-size:13px;font-weight:800;color:#fff}
+.star-race-btn .srb-tier{font-size:9px;color:#9ad4ff;letter-spacing:0.5px;text-transform:uppercase;min-height:10px}
 .star-meter-wrap{flex:1;background:rgba(0,0,0,0.25);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:8px 12px}
 .star-meter-wrap .sm-label{font-size:10px;color:rgba(255,255,255,0.55);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
 .star-meter{height:10px;background:rgba(0,0,0,0.4);border-radius:5px;overflow:hidden;position:relative}
@@ -112,7 +136,7 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:"Fredoka","Nunito",
 #screen-shop>#shop-body{flex:1;overflow-y:auto;overflow-x:hidden}
 #screen-shop .shop-section{padding:10px 14px}
 .shop-tabs{display:flex;gap:4px;padding:8px 14px;overflow-x:auto}
-.shop-tab{flex-shrink:0;padding:6px 12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:14px;font-size:11px;color:rgba(255,255,255,0.65);cursor:pointer;white-space:nowrap}
+.shop-tab{flex-shrink:0;padding:6px 12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:14px;font-size:11px;color:rgba(255,255,255,0.75);cursor:pointer;white-space:nowrap;-webkit-appearance:none;appearance:none;font-family:"Fredoka","Nunito",system-ui,sans-serif;font-weight:700;letter-spacing:0.4px;min-width:60px;text-align:center}
 .shop-tab.active{background:rgba(255,215,0,0.15);border-color:#ffd700;color:#ffd700}
 .shop-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:10px 14px}
 .shop-card{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:6px}
@@ -129,17 +153,17 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:"Fredoka","Nunito",
 .shop-card .sc-buy.dollar{background:linear-gradient(180deg,#4db8ff,#2e84c9);box-shadow:0 3px 0 #1a4d79}
 
 /* ===== TROPHY ROAD TAB ===== */
-#screen-trophyroad .tr-list{position:relative;display:flex;flex-direction:column-reverse;gap:8px;padding:10px 14px 10px 44px}
-#screen-trophyroad .tr-list::before{content:'';position:absolute;left:24px;top:10px;bottom:10px;width:12px;background:rgba(255,255,255,0.08);border-radius:6px;z-index:0}
-#screen-trophyroad .tr-list::after{content:'';position:absolute;left:24px;bottom:10px;width:12px;height:var(--tr-progress,0%);background:linear-gradient(180deg,#ffc700,#ffac04);border-radius:6px;box-shadow:0 0 10px rgba(255,215,0,0.6);z-index:1;transition:height 0.3s}
+#screen-trophyroad .tr-list{position:relative;display:flex;flex-direction:column-reverse;gap:8px;padding:10px 14px 10px 34px}
+#screen-trophyroad .tr-list::before{content:'';position:absolute;left:20px;top:10px;bottom:10px;width:6px;background:rgba(255,255,255,0.08);border-radius:3px;z-index:0}
+#screen-trophyroad .tr-list::after{content:'';position:absolute;left:20px;bottom:10px;width:6px;height:var(--tr-progress,0%);background:linear-gradient(180deg,#ffc700,#ffac04);border-radius:3px;box-shadow:0 0 8px rgba(255,215,0,0.5);z-index:1;transition:height 0.3s}
 .tr-row{position:relative;z-index:2;display:flex;align-items:center;gap:10px;padding:10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:10px}
 .tr-row.claimable{border-color:#ffd700;background:rgba(255,215,0,0.1)}
 .tr-row.claimed{opacity:0.5}
 .tr-row.locked{opacity:0.55}
-.tr-row .tr-n{font-family:"Paytone One","Lilita One",system-ui,sans-serif;font-size:13px;color:rgba(255,215,0,0.7);min-width:24px;text-align:center}
+.tr-row .tr-n{font-family:"Paytone One","Lilita One",system-ui,sans-serif;font-size:20px;color:#ffd700;min-width:32px;text-align:center}
 .tr-row .tr-body{flex:1}
-.tr-row .tr-threshold{font-size:20px;color:#ffd700;font-weight:900}
-.tr-row .tr-reward-text{font-size:15px;color:rgba(255,255,255,0.9);line-height:1.3;margin-top:3px;font-weight:800}
+.tr-row .tr-threshold{font-size:12px;color:#ffd700;font-weight:900}
+.tr-row .tr-reward-text{font-size:11px;color:rgba(255,255,255,0.8);line-height:1.3;margin-top:2px}
 .tr-row .tr-btn{padding:7px 12px;border:none;border-radius:8px;background:linear-gradient(180deg,#ffac04,#ffc700);color:#fff;font-weight:900;font-size:11px;cursor:pointer;box-shadow:0 3px 0 #af3c34}
 .tr-row .tr-btn:disabled{opacity:0.5;cursor:not-allowed;background:#333;box-shadow:none}
 
@@ -344,8 +368,7 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:"Fredoka","Nunito",
 .stake-slot.filled.tier-silver{border-color:#c0c6d4}
 .stake-slot.filled.tier-gold{border-color:#ffd700}
 .perk-slot.filled{border-style:solid;border-color:#9ad4ff;background:rgba(154,212,255,0.08)}
-.stakes-row{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
-.equipped-row{display:grid;grid-template-columns:1fr;gap:8px}
+.stakes-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
 .stake-mult-readout{text-align:center;font-family:"Paytone One","Lilita One",system-ui,sans-serif;font-size:18px;color:#ffd700;letter-spacing:2px;padding:4px}
 .slot-ic{font-size:26px}
 .slot-name{font-size:12px;font-weight:900}
@@ -484,7 +507,7 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:"Fredoka","Nunito",
 .tutorial-popup-text{font-size:15px;font-weight:800;color:rgba(255,255,255,0.85);text-align:center;line-height:1.5}
 
 /* ===== RESULT ===== */
-#screen-result{padding:68px 18px;gap:14px;text-align:center;align-items:stretch;justify-content:center}
+#screen-result{padding:68px 18px;gap:14px;text-align:center;align-items:stretch}
 .result-header{font-family:"Paytone One","Lilita One",system-ui,sans-serif;font-size:30px;letter-spacing:1px;-webkit-text-stroke:0.5px #000;text-shadow:0 2px 0 #000}
 .result-header.win{color:#4ae35f}
 .result-header.loss{color:#ff6b6b}
@@ -649,7 +672,7 @@ body,html{letter-spacing:0.005em}
 .screen-title{font-size:var(--title-md);letter-spacing:0.08em;text-shadow:var(--title-shadow-2)}
 .modal h3{font-size:var(--title-sm);text-shadow:var(--title-shadow-1);letter-spacing:0.04em;margin-bottom:14px}
 .arena-badge-name,.stub-screen h2,.starter-card h2,.tutorial-header h2,
-.loadout-header{font-size:var(--title-sm);text-shadow:var(--title-shadow-1)}
+.loadout-header,.tr-row .tr-n{font-size:var(--title-sm);text-shadow:var(--title-shadow-1)}
 .pack-reveal-title,.result-header{font-size:var(--title-md);text-shadow:var(--title-shadow-2)}
 .pause-title,.tutorial-popup-title{
   font-size:var(--title-lg);
@@ -665,7 +688,7 @@ body,html{letter-spacing:0.005em}
 
 /* --- Single gold everywhere titles are gold --- */
 .arena-badge-name,.modal h3,.pack-reveal-title,.starter-card h2,
-.stub-screen h2,.bp-tile .bp-n,.stake-mult-readout,
+.stub-screen h2,.tr-row .tr-n,.bp-tile .bp-n,.stake-mult-readout,
 .tutorial-header h2,.tutorial-popup-title,.prematch-title,
 .arena-trophy-count{color:var(--title-gold)}
 
@@ -827,10 +850,21 @@ body,html{letter-spacing:0.005em}
       🎯
       <span class="fab-badge" id="missions-badge">0</span>
     </button>
+    <!-- Home right-side button stack (Trophy Road + Ranking + Pass shortcut) -->
+    <div class="home-sidebuttons">
+      <button class="home-sbtn" data-screen="trophyroad" title="Trophy Road">🏆<span class="home-sbtn-badge" id="sbtn-badge-trophy"></span></button>
+      <button class="home-sbtn" data-screen="ranking" title="Ranking">🥇<span class="home-sbtn-badge" id="sbtn-badge-rank"></span></button>
+      <button class="home-sbtn" data-screen="pass" title="Bar Pass">🎫<span class="home-sbtn-badge" id="sbtn-badge-pass"></span></button>
+    </div>
 
-    <div class="home-venue-preview"><div class="venue-items-row" id="hvp-items"></div></div>
+    <div class="home-venue-preview">
+      <button class="hvp-district-btn" id="hvp-district-btn" title="Switch district">⇆</button>
+      <div class="hvp-district-label" id="hvp-district-label"></div>
+      <div class="venue-items-row" id="hvp-items"></div>
+    </div>
 
     <div class="arena-badge-box">
+      <button class="arena-switch" id="arena-switch" title="Change arena">⇆</button>
       <div class="arena-badge-name" id="arena-badge-name">Juice Stand</div>
       <div class="arena-trophy-count">🏆 <span id="arena-trophy-count">0</span></div>
       <div class="arena-progress-bar"><div class="arena-progress-fill" id="arena-progress-fill" style="width:0%"></div></div>
@@ -838,11 +872,11 @@ body,html{letter-spacing:0.005em}
     </div>
 
     <div class="home-action-row">
-      <div class="star-meter-wrap">
-        <div class="sm-label">Star Meter <span id="star-meter-num" style="float:right;color:#9ad4ff">0/25</span></div>
-        <div class="star-meter"><div class="fill" id="star-meter-fill" style="width:0%"></div></div>
-      </div>
-      <button class="starchest-btn" id="starchest-btn" style="display:none">🎁⭐</button>
+      <button class="star-race-btn" id="star-race-btn" title="Star Race">
+        <div class="srb-label">🥇 STAR RACE</div>
+        <div class="srb-val"><span id="srb-stars">0</span>★ · <span id="srb-timer">—</span></div>
+        <div class="srb-tier" id="srb-tier"></div>
+      </button>
       <button class="luckybox-btn" id="luckybox-btn">🎁</button>
     </div>
 
@@ -879,17 +913,8 @@ body,html{letter-spacing:0.005em}
       <div class="sb-row"><span class="sb-label">Arena</span><span class="sb-val" id="lo-arena">Juice Stand</span></div>
       <div class="sb-row"><span class="sb-label">Stakes</span><span class="sb-val" id="lo-bet-summary">None</span></div>
     </div>
-    <div class="slot-section" id="equipped-section">
-      <h4>Equipped Booster — any rarity, used in-match</h4>
-      <div class="equipped-row">
-        <div class="stake-slot" id="equipped-slot" onclick="openEquippedPicker()">
-          <div class="slot-ic">➕</div>
-          <div class="slot-name">None</div>
-        </div>
-      </div>
-    </div>
-    <div class="slot-section" id="stake-section">
-      <h4>Stake Slots — risk 0–4 Gold boosters</h4>
+    <div class="slot-section">
+      <h4>Stake Slots — risk 0–3 boosters (Silver/Gold only)</h4>
       <div class="stakes-row">
         <div class="stake-slot" id="stake-slot-0" onclick="openStakePicker(0)">
           <div class="slot-ic">➕</div>
@@ -903,12 +928,8 @@ body,html{letter-spacing:0.005em}
           <div class="slot-ic">➕</div>
           <div class="slot-name">Empty</div>
         </div>
-        <div class="stake-slot" id="stake-slot-3" onclick="openStakePicker(3)">
-          <div class="slot-ic">➕</div>
-          <div class="slot-name">Empty</div>
-        </div>
       </div>
-      <div class="stake-mult-readout" id="stake-mult-readout"></div>
+      <div class="stake-mult-readout" id="stake-mult-readout">×1 REWARDS</div>
     </div>
     <div class="slot-section">
       <h4>Perks — up to 2, no stake</h4>
@@ -1033,6 +1054,49 @@ body,html{letter-spacing:0.005em}
     <div id="albums-body"></div>
   </div>
 
+  <!-- TEAMS STUB (v7.3 §8) -->
+  <div id="screen-teams" class="screen hidden">
+    <div class="screen-title">TEAMS</div>
+    <div id="teams-body"></div>
+  </div>
+
+  <!-- RANKING HUB (v7.3 §9) -->
+  <div id="screen-ranking" class="screen hidden">
+    <div class="screen-title">RANKING</div>
+    <div id="ranking-tabs" class="shop-tabs"></div>
+    <div id="ranking-body"></div>
+  </div>
+
+  <!-- VIP LADDER (v7.3 §10) -->
+  <div id="screen-vip" class="screen hidden">
+    <div class="screen-title">VIP</div>
+    <div id="vip-body"></div>
+  </div>
+
+  <!-- PROFILE (v7.3 §11) -->
+  <div id="screen-profile" class="screen hidden">
+    <div class="screen-title">PROFILE</div>
+    <div id="profile-body"></div>
+  </div>
+
+  <!-- PUBLIC PROFILE MODAL (v7.3 §11) -->
+  <div class="modal-overlay hidden" id="public-profile-modal">
+    <div class="modal" style="max-width:400px">
+      <h3>Player Profile</h3>
+      <div id="public-profile-body"></div>
+      <button class="modal-close" onclick="closePublicProfile()">Close</button>
+    </div>
+  </div>
+
+  <!-- OFFER TRANSPARENCY MODAL (v7.3 §13) -->
+  <div class="modal-overlay hidden" id="offer-modal">
+    <div class="modal" style="max-width:400px">
+      <h3 id="offer-modal-title">Offer</h3>
+      <div id="offer-modal-body"></div>
+      <button class="modal-close" onclick="closeOfferModal()">Close</button>
+    </div>
+  </div>
+
   <!-- STICKER MODAL -->
   <div class="modal-overlay hidden" id="sticker-modal">
     <div class="modal">
@@ -1047,13 +1111,13 @@ body,html{letter-spacing:0.005em}
     </div>
   </div>
 
-  <!-- BOTTOM NAV -->
+  <!-- BOTTOM NAV (per designer override: Shop | Teams | Home | Venue | Albums) -->
   <nav id="bottom-nav">
-    <button class="nav-btn" data-screen="shop"><span class="ic">🛒</span>Shop</button>
-    <button class="nav-btn" data-screen="trophyroad"><span class="ic">🏆</span>Road</button>
-    <button class="nav-btn home active" data-screen="home"><span class="ic">🏠</span>Home</button>
-    <button class="nav-btn" data-screen="venue"><span class="ic">🏝️</span>Venue</button>
-    <button class="nav-btn" data-screen="albums"><span class="ic">📗</span>Albums</button>
+    <button class="nav-btn" data-screen="shop"><span class="ic">🛒</span>Shop<span class="nav-badge" id="nav-badge-shop"></span></button>
+    <button class="nav-btn" data-screen="teams"><span class="ic">👥</span>Teams<span class="nav-badge" id="nav-badge-teams">NEW</span></button>
+    <button class="nav-btn home active" data-screen="home"><span class="ic">🏠</span>Home<span class="nav-badge" id="nav-badge-home"></span></button>
+    <button class="nav-btn" data-screen="venue"><span class="ic">🏗️</span>Venue<span class="nav-badge" id="nav-badge-venue"></span></button>
+    <button class="nav-btn" data-screen="albums"><span class="ic">📗</span>Albums<span class="nav-badge" id="nav-badge-albums"></span></button>
   </nav>
 
   <!-- PACK REVEAL OVERLAY -->
@@ -1082,11 +1146,11 @@ body,html{letter-spacing:0.005em}
         <div class="sp-item"><span class="sp-ic">🎨</span><span class="sp-label">5 Stickers</span></div>
         <div class="sp-item"><span class="sp-ic">🎟️</span><span class="sp-label">1 Token</span></div>
         <div class="sp-item"><span class="sp-ic">🖼️</span><span class="sp-label">Founder Frame</span></div>
-        <div class="sp-item"><span class="sp-ic">🎁</span><span class="sp-label">Star Chest</span></div>
+        <div class="sp-item"><span class="sp-ic">🎁</span><span class="sp-label">1 Gold Pack</span></div>
         <div class="sp-item"><span class="sp-ic">⭐</span><span class="sp-label">Exclusive</span></div>
       </div>
       <button class="sp-buy-btn" onclick="buyStarterPack()">$2.99</button>
-      <div class="sp-footer">One-time purchase — expires after 48h</div>
+      <div class="sp-footer"><a style="color:#9ad4ff;cursor:pointer;text-decoration:underline" onclick="showStarterPackDetails()">What's inside ▾</a> · One-time purchase — expires after 48h</div>
     </div>
   </div>
 
@@ -1101,10 +1165,53 @@ body,html{letter-spacing:0.005em}
 
   <!-- MISSIONS MODAL -->
   <div class="modal-overlay hidden" id="missions-modal">
-    <div class="modal">
-      <h3>Daily Missions</h3>
-      <div class="missions-list" id="missions-list"></div>
+    <div class="modal" style="max-width:440px">
+      <h3>Missions</h3>
+      <div class="mt-tabs" style="display:flex;gap:4px;margin-bottom:10px">
+        <button class="mt-tab active" data-mtab="daily">Daily</button>
+        <button class="mt-tab" data-mtab="weekly">Weekly</button>
+      </div>
+      <div id="missions-daily"><div class="missions-list" id="missions-list"></div></div>
+      <div id="missions-weekly" class="hidden"><div class="missions-list" id="weekly-missions-list"></div></div>
       <button class="modal-close" onclick="closeMissions()">Close</button>
+    </div>
+  </div>
+
+  <!-- ARENA SWITCHER MODAL -->
+  <div class="modal-overlay hidden" id="arena-modal">
+    <div class="modal">
+      <h3>Choose Arena</h3>
+      <div class="picker-list" id="arena-modal-list"></div>
+      <button class="modal-close" onclick="closeArenaModal()">Close</button>
+    </div>
+  </div>
+
+  <!-- DISTRICT PICKER MODAL (v7.3 §7) -->
+  <div class="modal-overlay hidden" id="district-modal">
+    <div class="modal" style="max-width:360px">
+      <h3>Switch District</h3>
+      <div class="picker-list" id="district-picker-list"></div>
+      <button class="modal-close" onclick="closeDistrictPicker()">Close</button>
+    </div>
+  </div>
+
+  <!-- PASS CATCH-UP MODAL (v7.3 §6) -->
+  <div class="modal-overlay hidden" id="passcatchup-modal">
+    <div class="modal" style="max-width:380px">
+      <h3>⏭ Skip Ahead</h3>
+      <div style="font-size:11px;color:rgba(255,255,255,0.65);margin-bottom:10px;line-height:1.4">Purchase tier advances for this season. Max reachable: Tier 28. The final 2 tiers must be earned.</div>
+      <div id="passcatchup-body"></div>
+      <button class="modal-close" onclick="closePassCatchup()">Close</button>
+    </div>
+  </div>
+
+  <!-- STAR RACE MODAL (v7.3 §4) -->
+  <div class="modal-overlay hidden" id="starrace-modal">
+    <div class="modal" style="max-width:420px">
+      <h3>🥇 Star Race</h3>
+      <div id="starrace-body"></div>
+      <div style="font-size:10px;color:rgba(255,255,255,0.5);text-align:center;margin-top:8px;font-style:italic">Solo leaderboard — Team Leagues coming soon</div>
+      <button class="modal-close" onclick="closeStarRace()">Close</button>
     </div>
   </div>
 
@@ -1138,55 +1245,73 @@ const PERKS = {
   pourRead:   {ic:'🎯',  name:'Pour Read',   desc:'Highlight best pour (×1)',                uses:1}
 };
 
-// §6.2 — coin payout is by ARENA now. Stake multiplier applied post.
+// v7.3 §2 + §15.A — 8-arena ladder. v7.3.1 §2A — arenas 5–8 rebased down to trim whale spike tail.
+// Loss ≈ 25% of win, draw ≈ 50%.
 const ARENA_COIN_PAYOUT = {
-  juice:    {win:30,  loss:8,  draw:15},
-  beach:    {win:60,  loss:15, draw:30},
-  cocktail: {win:120, loss:25, draw:60},
-  speak:    {win:200, loss:40, draw:100},
-  rooftop:  {win:320, loss:60, draw:160},
-  grand:    {win:500, loss:90, draw:250}
+  juice:     {win:20, loss:5,  draw:10},
+  smoothie:  {win:30, loss:8,  draw:15},
+  coffee:    {win:40, loss:10, draw:20},
+  tea:       {win:55, loss:14, draw:27},
+  cocktail:  {win:50, loss:13, draw:25},  // v7.3.1 §2A: 70→50
+  wine:      {win:65, loss:17, draw:32},  // v7.3.1 §2A: 90→65
+  champagne: {win:80, loss:20, draw:40},  // v7.3.1 §2A: 115→80
+  grand:     {win:90, loss:23, draw:45}   // v7.3.1 §2A: 150→90
 };
 
 const ARENAS = [
-  {id:'juice',    name:'Juice Stand',      min:0,    trophyBase:25, icon:'🍹'},
-  {id:'beach',    name:'Beach Bar',        min:200,  trophyBase:28, icon:'🏝️'},
-  {id:'cocktail', name:'Cocktail Lounge',  min:500,  trophyBase:30, icon:'🍸'},
-  {id:'speak',    name:'Speakeasy',        min:1000, trophyBase:32, icon:'🥃'},
-  {id:'rooftop',  name:'Rooftop Terrace',  min:2000, trophyBase:34, icon:'🌃'},
-  {id:'grand',    name:'Grand Hotel',      min:3500, trophyBase:38, icon:'🏨'}
+  {id:'juice',     name:'Juice Stand',      min:0,    trophyBase:25, icon:'🍹'},
+  {id:'smoothie',  name:'Smoothie Bar',     min:150,  trophyBase:26, icon:'🥤'},
+  {id:'coffee',    name:'Coffee House',     min:400,  trophyBase:28, icon:'☕'},
+  {id:'tea',       name:'Tea Garden',       min:800,  trophyBase:30, icon:'🍵'},
+  {id:'cocktail',  name:'Cocktail Lounge',  min:1300, trophyBase:32, icon:'🍸'},
+  {id:'wine',      name:'Wine Cellar',      min:2000, trophyBase:34, icon:'🍷'},
+  {id:'champagne', name:'Champagne Room',   min:2900, trophyBase:36, icon:'🥂'},
+  {id:'grand',     name:'Grand Hotel',      min:4000, trophyBase:38, icon:'🏨'}
 ];
 
+// v7.3 §15.A — cumulative booster roster 2/3/4/5/6/7/8/8.
+// Full BOOSTERS keys (9): extraBottle, firstPour, spawnPlus3, colorSplash, swap, customerLock, clearBottle, autoServe, doubleServe.
 const ARENA_BOOSTER_UNLOCKS = {
-  juice:    ['extraBottle','firstPour','spawnPlus3'],
-  beach:    ['extraBottle','firstPour','spawnPlus3','colorSplash','swap','customerLock'],
-  cocktail: ['extraBottle','firstPour','spawnPlus3','colorSplash','swap','customerLock','clearBottle','autoServe'],
-  speak:    Object.keys(BOOSTERS),
-  rooftop:  Object.keys(BOOSTERS),
-  grand:    Object.keys(BOOSTERS)
+  juice:     ['extraBottle','firstPour'],
+  smoothie:  ['extraBottle','firstPour','spawnPlus3'],
+  coffee:    ['extraBottle','firstPour','spawnPlus3','colorSplash'],
+  tea:       ['extraBottle','firstPour','spawnPlus3','colorSplash','swap'],
+  cocktail:  ['extraBottle','firstPour','spawnPlus3','colorSplash','swap','customerLock'],
+  wine:      ['extraBottle','firstPour','spawnPlus3','colorSplash','swap','customerLock','clearBottle'],
+  champagne: ['extraBottle','firstPour','spawnPlus3','colorSplash','swap','customerLock','clearBottle','autoServe'],
+  grand:     Object.keys(BOOSTERS)
 };
 
+// Legacy arena id map (pre-v7.3) — used for save migration + Trophy Road compat.
+const LEGACY_ARENA_MAP = { beach:'smoothie', speak:'wine', rooftop:'champagne' };
+
+// v7.3 §3 + §15.B — 25-milestone Trophy Road. Stakes ×2/×3/×4 unlock lives at #7 (1,000 trophies).
 const TROPHY_ROAD = [
-  {n:1,  trophies:50,   reward:'80 🪙',                               rewardFn:()=>{s.coins+=80}},
-  {n:2,  trophies:100,  reward:'2× Bronze + Bronze Frame',            rewardFn:()=>{grantBoosters(['extraBottle','firstPour']);s.profile.unlockedFrames.push('bronze')}},
-  {n:3,  trophies:150,  reward:'60 🪙',                               rewardFn:()=>{s.coins+=60}},
-  {n:4,  trophies:200,  reward:'Beach Bar + 2 Silver + 250 🪙',       rewardFn:()=>{unlockArena('beach');grantBoosters(['colorSplash','swap']);s.coins+=250}},
-  {n:5,  trophies:300,  reward:'1 Silver + Title: Regular + 5 stickers', rewardFn:()=>{grantBoosters(['customerLock']);s.profile.unlockedTitles.push('Regular');for(let i=0;i<5;i++) addStickerByRarity(rarityRoll('diamond',false))}},
-  {n:6,  trophies:400,  reward:'180 🪙',                              rewardFn:()=>{s.coins+=180}},
-  {n:7,  trophies:500,  reward:'Cocktail Lounge + 1 Gold + 400 🪙 — Staking Unlocked', rewardFn:()=>{unlockArena('cocktail');grantBoosters(['clearBottle']);s.coins+=400}},
-  {n:8,  trophies:650,  reward:'150 🪙 + Avatar 2 + 1 Token',         rewardFn:()=>{s.coins+=150;s.profile.unlockedAvatars.push('a2');s.stickerTokens++}},
-  {n:9,  trophies:800,  reward:'2 Silver + 150 🪙',                   rewardFn:()=>{grantBoosters(['colorSplash','swap']);s.coins+=150}},
-  {n:10, trophies:1000, reward:'Speakeasy + 2 Gold + 600 🪙 — ×4 Stakes', rewardFn:()=>{unlockArena('speak');grantBoosters(['autoServe','doubleServe']);s.coins+=600}},
-  {n:11, trophies:1200, reward:'250 🪙 + Silver Frame + 5 stickers',  rewardFn:()=>{s.coins+=250;s.profile.unlockedFrames.push('silver');for(let i=0;i<5;i++) addStickerByRarity(rarityRoll('diamond',false))}},
-  {n:12, trophies:1400, reward:'1 Gold + Title: Pro Bartender',      rewardFn:()=>{grantBoosters(['clearBottle']);s.profile.unlockedTitles.push('Pro Bartender')}},
-  {n:13, trophies:1600, reward:'200 🪙',                              rewardFn:()=>{s.coins+=200}},
-  {n:14, trophies:1800, reward:'300 🪙 + Avatar 3 + 1 Token',         rewardFn:()=>{s.coins+=300;s.profile.unlockedAvatars.push('a3');s.stickerTokens++}},
-  {n:15, trophies:2000, reward:'Rooftop + 2 Gold + 1000 🪙',          rewardFn:()=>{unlockArena('rooftop');grantBoosters(['autoServe','doubleServe']);s.coins+=1000}},
-  {n:16, trophies:2400, reward:'500 🪙 + Gold Frame',                 rewardFn:()=>{s.coins+=500;s.profile.unlockedFrames.push('gold')}},
-  {n:17, trophies:2800, reward:'2 Gold + Title: Mixologist + 5 stickers', rewardFn:()=>{grantBoosters(['autoServe','doubleServe']);s.profile.unlockedTitles.push('Mixologist');for(let i=0;i<5;i++) addStickerByRarity(rarityRoll('diamond',false))}},
-  {n:18, trophies:3200, reward:'700 🪙 + Avatar 4',                   rewardFn:()=>{s.coins+=700;s.profile.unlockedAvatars.push('a4')}},
-  {n:19, trophies:3500, reward:'Grand Hotel + 3 Gold + 1250 🪙',      rewardFn:()=>{unlockArena('grand');grantBoosters(['clearBottle','autoServe','doubleServe']);s.coins+=1250}},
-  {n:20, trophies:4000, reward:'2000 🪙 + Diamond Frame + Title: Legend + Avatar 5 + 2 Tokens + 10 stickers', rewardFn:()=>{s.coins+=2000;s.profile.unlockedFrames.push('diamond');s.profile.unlockedTitles.push('Legend');s.profile.unlockedAvatars.push('a5');s.stickerTokens+=2;for(let i=0;i<10;i++) addStickerByRarity(rarityRoll('diamond',false))}}
+  {n:1,  trophies:50,   reward:'200 🪙',                                 rewardFn:()=>{s.coins+=200}},
+  {n:2,  trophies:150,  reward:'Smoothie Bar + Booster: Pour-Back ×2',   rewardFn:()=>{unlockArena('smoothie');grantBoosters(['firstPour','firstPour'])}},
+  {n:3,  trophies:250,  reward:'1 Silver Pack',                          rewardFn:()=>{grantBoosters(['colorSplash'])}},
+  {n:4,  trophies:400,  reward:'Coffee House + 500 🪙 + Booster: Extra Tube', rewardFn:()=>{unlockArena('coffee');s.coins+=500;grantBoosters(['extraBottle'])}},
+  {n:5,  trophies:600,  reward:'Avatar Frame: Barista',                  rewardFn:()=>{s.profile.unlockedFrames.push('barista')}},
+  {n:6,  trophies:800,  reward:'Tea Garden + 800 🪙 + Booster: Color Swap', rewardFn:()=>{unlockArena('tea');s.coins+=800;grantBoosters(['swap'])}},
+  {n:7,  trophies:1000, reward:'🔓 Stakes ×2/×3/×4 + 1000 🪙',            rewardFn:()=>{s.stakesUnlocked=true;s.coins+=1000}},
+  {n:8,  trophies:1300, reward:'Cocktail Lounge + Booster: Undo ×3',     rewardFn:()=>{unlockArena('cocktail');grantBoosters(['customerLock','customerLock','customerLock'])}},
+  {n:9,  trophies:1600, reward:'1 Gold Pack',                            rewardFn:()=>{grantBoosters(['clearBottle'])}},
+  {n:10, trophies:2000, reward:'Wine Cellar + 1500 🪙 + Booster: Freeze Timer', rewardFn:()=>{unlockArena('wine');s.coins+=1500;grantBoosters(['customerLock'])}},
+  {n:11, trophies:2300, reward:'Emote Pack: Mixologist + 250 🪙',        rewardFn:()=>{s.coins+=250;if(!s.profile.unlockedTitles.includes('Mixologist')) s.profile.unlockedTitles.push('Mixologist')}},
+  {n:12, trophies:2600, reward:'2000 🪙 + 1 Silver Pack',                rewardFn:()=>{s.coins+=2000;grantBoosters(['swap'])}},
+  {n:13, trophies:2900, reward:'Champagne Room + Booster: Hint+',        rewardFn:()=>{unlockArena('champagne');grantBoosters(['spawnPlus3','spawnPlus3'])}},
+  {n:14, trophies:3100, reward:'1 Gold Pack',                            rewardFn:()=>{grantBoosters(['autoServe'])}},
+  {n:15, trophies:3300, reward:'2500 🪙',                                rewardFn:()=>{s.coins+=2500}},
+  {n:16, trophies:3500, reward:'Profile Frame: Sommelier',               rewardFn:()=>{s.profile.unlockedFrames.push('sommelier')}},
+  {n:17, trophies:3700, reward:'3000 🪙 + Booster: Auto-Sort',           rewardFn:()=>{s.coins+=3000;grantBoosters(['autoServe','autoServe'])}},
+  {n:18, trophies:3900, reward:'1 Gold Pack',                            rewardFn:()=>{grantBoosters(['doubleServe'])}},
+  {n:19, trophies:4000, reward:'Grand Hotel + 5000 🪙',                  rewardFn:()=>{unlockArena('grand');s.coins+=5000}},
+  {n:20, trophies:4100, reward:'Emote Pack: Concierge',                  rewardFn:()=>{if(!s.profile.unlockedTitles.includes('Concierge')) s.profile.unlockedTitles.push('Concierge')}},
+  {n:21, trophies:4200, reward:'1 Gold Pack',                            rewardFn:()=>{grantBoosters(['clearBottle'])}},
+  {n:22, trophies:4300, reward:'3500 🪙',                                rewardFn:()=>{s.coins+=3500}},
+  {n:23, trophies:4400, reward:'Legendary Avatar Frame',                 rewardFn:()=>{s.profile.unlockedFrames.push('legendary')}},
+  {n:24, trophies:4450, reward:'2 Gold Packs',                           rewardFn:()=>{grantBoosters(['autoServe','doubleServe'])}},
+  {n:25, trophies:4500, reward:'10,000 🪙 + Seasonal Cosmetic Bundle',   rewardFn:()=>{s.coins+=10000;s.profile.unlockedFrames.push('seasonal');if(!s.profile.unlockedTitles.includes('Legend')) s.profile.unlockedTitles.push('Legend')}}
 ];
 
 const AI_PERSONAS = {
@@ -1195,25 +1320,35 @@ const AI_PERSONAS = {
     {name:'Lemon Liz',   ic:'🍋', tag:'"Tart but fair."'},
     {name:'Pulpy Pete',  ic:'🥭', tag:'"More pulp, more power."'}
   ],
-  beach: [
-    {name:'Sandy Pete',  ic:'🏖️', tag:'"The beach never sleeps."'},
-    {name:'Tiki Tom',    ic:'🗿', tag:'"Coconut first, questions later."'},
-    {name:'Wave Wendy',  ic:'🌊', tag:'"Surf\'s up, pours down."'}
+  smoothie: [
+    {name:'Berry Bea',   ic:'🍓', tag:'"Blend it smoother."'},
+    {name:'Mango Milo',  ic:'🥭', tag:'"Extra pulp, extra win."'},
+    {name:'Kiwi Kai',    ic:'🥝', tag:'"Tart and tidy."'}
+  ],
+  coffee: [
+    {name:'Barista Bo',  ic:'☕', tag:'"Crema or quit."'},
+    {name:'Espresso Eva',ic:'☕', tag:'"Double shot, no mercy."'},
+    {name:'Latte Lola',  ic:'🥛', tag:'"Foam art, clean pour."'}
+  ],
+  tea: [
+    {name:'Sencha Sue',  ic:'🍵', tag:'"Three minutes. Exactly."'},
+    {name:'Oolong Omar', ic:'🌿', tag:'"Patience brews wins."'},
+    {name:'Matcha Mei',  ic:'🍃', tag:'"Whisked to perfection."'}
   ],
   cocktail: [
     {name:'Velvet Viv',  ic:'🍸', tag:'"Shaken and stirred."'},
     {name:'Olive Otto',  ic:'🫒', tag:'"Three olives, never two."'},
     {name:'Ruby Rose',   ic:'🌹', tag:'"A splash of drama."'}
   ],
-  speak: [
-    {name:'Whiskey Wes', ic:'🥃', tag:'"Password: rye."'},
-    {name:'Midnight Mo', ic:'🎩', tag:'"The clock always strikes."'},
-    {name:'Gin Jack',    ic:'🎭', tag:'"You didn\'t see me here."'}
+  wine: [
+    {name:'Cellar Cass', ic:'🍷', tag:'"Decanted and deadly."'},
+    {name:'Vintage Vic', ic:'🍇', tag:'"Aged beats fresh."'},
+    {name:'Sommelier Syd',ic:'🥃', tag:'"Nose first, pour second."'}
   ],
-  rooftop: [
-    {name:'Skylar Sky',  ic:'🌃', tag:'"Above the clouds."'},
-    {name:'Neon Nia',    ic:'🌆', tag:'"City lights, city nights."'},
-    {name:'Penthouse Pablo',ic:'🏙️', tag:'"The view is extra."'}
+  champagne: [
+    {name:'Bubbly Bel',  ic:'🥂', tag:'"Pop the cork, pour the line."'},
+    {name:'Flute Flynn', ic:'🍾', tag:'"Tall glass, tall wins."'},
+    {name:'Rosé Rhea',   ic:'🌹', tag:'"Pink and perfect."'}
   ],
   grand: [
     {name:'Maestro Max', ic:'🎼', tag:'"Every pour is a symphony."'},
@@ -1259,6 +1394,34 @@ const ALBUMS = {
 
 const ALBUM_ORDER = ['barClassics','cityNights','grandHotel','seasonSummerRooftop'];
 
+// v7.3 §12 + v7.3.1 §3 — Album reward data (coin cuts + cosmetics + Sticker Tokens).
+const ALBUM_REWARDS_DATA = {
+  barClassics:        {pages:['200🪙 + 1 Silver','400🪙 + 1 Silver','600🪙 + 1 Gold','1000🪙 + 1 Gold'], full:'4,000🪙 + Exclusive Frame + Exclusive Title + 2 Gold Packs + 1🎟️'},
+  cityNights:         {pages:['200🪙 + 1 Silver','400🪙 + 1 Silver','600🪙 + 1 Gold','1000🪙 + 1 Gold'], full:'4,000🪙 + Exclusive Frame + Exclusive Title + 2 Gold Packs + 1🎟️'},
+  grandHotel:         {pages:['200🪙 + 1 Silver','400🪙 + 1 Silver','600🪙 + 1 Gold','1000🪙 + 1 Gold'], full:'4,000🪙 + Exclusive Frame + Exclusive Title + 2 Gold Packs + 1🎟️'},
+  seasonSummerRooftop:{pages:['400🪙 + 1 Gold','700🪙 + 1 Gold','1000🪙 + 1 Gold + Emote','1500🪙 + 2 Gold'], full:'8,000🪙 + Seasonal Skin + Frame + Title + 5 Gold Packs + 2🎟️'}
+};
+
+// Coin/pack numbers keyed by album + page (authoritative for claim logic)
+const ALBUM_PAGE_REWARDS = {
+  regular: [
+    {coins:200,  silverPack:1, goldPack:0},
+    {coins:400,  silverPack:1, goldPack:0},
+    {coins:600,  silverPack:0, goldPack:1},
+    {coins:1000, silverPack:0, goldPack:1}
+  ],
+  seasonal: [
+    {coins:400,  silverPack:0, goldPack:1},
+    {coins:700,  silverPack:0, goldPack:1},
+    {coins:1000, silverPack:0, goldPack:1},
+    {coins:1500, silverPack:0, goldPack:2}
+  ]
+};
+const ALBUM_FULL_REWARDS = {
+  regular:  {coins:4000,  goldPacks:2, stickerTokens:1, frame:'album_frame', title:'Collector'},
+  seasonal: {coins:8000,  goldPacks:5, stickerTokens:2, frame:'seasonal_album_frame', title:'Season Collector'}
+};
+
 // ===== BAR PASS (§13.6) — 30 tiers, 50 BPP/tier =====
 const BAR_PASS_TIERS = [
   {n:1,  free:{coins:50},                       premium:{coins:150,boosters:2}},
@@ -1270,7 +1433,7 @@ const BAR_PASS_TIERS = [
   {n:7,  free:{boosters:1},                     premium:{coins:270}},
   {n:8,  free:{coins:120},                      premium:{silverBooster:1,coins:100}},
   {n:9,  free:{coins:120},                      premium:{boosters:3}},
-  {n:10, free:{silverBooster:1},                premium:{starChest:1,avatar:'Exclusive Avatar'}},
+  {n:10, free:{silverBooster:1},                premium:{bigPacks:1,avatar:'Exclusive Avatar'}},
   {n:11, free:{coins:150},                      premium:{coins:330,boosters:1}},
   {n:12, free:{coins:150},                      premium:{coins:300,tokens:1}},
   {n:13, free:{boosters:2},                     premium:{silverBooster:1,coins:230}},
@@ -1285,7 +1448,7 @@ const BAR_PASS_TIERS = [
   {n:22, free:{coins:250},                      premium:{silverBooster:1,coins:450}},
   {n:23, free:{boosters:3},                     premium:{goldBooster:1,coins:300}},
   {n:24, free:{coins:380},                      premium:{bigPacks:2,coins:300}},
-  {n:25, free:{silverBooster:2},                premium:{boosters:10,starChest:2}},
+  {n:25, free:{silverBooster:2},                premium:{boosters:10,bigPacks:2}},
   {n:26, free:{coins:300},                      premium:{coins:600,tokens:1}},
   {n:27, free:{coins:450},                      premium:{goldBooster:1,boosters:3}},
   {n:28, free:{boosters:3},                     premium:{silverBooster:2,coins:530}},
@@ -1293,65 +1456,131 @@ const BAR_PASS_TIERS = [
   {n:30, free:{coins:300},                      premium:{coins:3000,avatar:'Exclusive Seasonal Avatar',tokens:2,diamondSticker:1}}
 ];
 
-// ===== VENUE BUILDINGS (§11.11–17) =====
-// 29 total: 4 + 4 + 5 + 5 + 5 + 6, each 3 levels, cost 2/5/10 VT
+// v7.3 §7 + §15.K — 3 districts, 10 buildings each, 3 levels (90 building-levels total).
+// Arena→district mapping: Café Row (1–3) / Boulevard (4–5) / Uptown (6–8).
+// Districts 4–6 reserved for post-MVP seasonal drops.
 const BUILDING_COSTS = [0, 2, 5, 10]; // index = target level
-const BUILDINGS_BY_ARENA = {
-  juice: [
-    {id:'j_stand',      ic:'🍹', name:'Juice Stand',       type:'cosmetic', effect:'Fresh neon juice stand'},
-    {id:'j_shop',       ic:'📦', name:'Sticker Kiosk',     type:'functional', effect:'+Arena-themed pack in Shop F'},
-    {id:'j_tavern',     ic:'🍺', name:"Winner's Bar",      type:'cosmetic', effect:'Decorative tavern counter'},
-    {id:'j_palm',       ic:'🌴', name:'Palm Marquee',      type:'cosmetic', effect:'Lit palms along the bar'}
-  ],
-  beach: [
-    {id:'b_bar',        ic:'🏖️', name:'Beach Bar',         type:'cosmetic', effect:'Boardwalk tiki bar'},
-    {id:'b_shop',       ic:'📦', name:'Surf Kiosk',        type:'functional', effect:'+Arena-themed pack in Shop F'},
-    {id:'b_office',     ic:'🎁', name:'Chest Office',      type:'functional', effect:'-10% Star Chest coin shortcut'},
-    {id:'b_fountain',   ic:'⛲', name:'Coral Fountain',    type:'cosmetic', effect:'Glowing fountain'}
-  ],
-  cocktail: [
-    {id:'c_lounge',     ic:'🍸', name:'Cocktail Lounge',   type:'cosmetic', effect:'Velvet-seat lounge'},
-    {id:'c_shop',       ic:'📦', name:'Mixer Kiosk',       type:'functional', effect:'+Arena-themed pack in Shop F'},
-    {id:'c_recruit',    ic:'📋', name:"Recruiter's Booth", type:'functional', effect:'+1 Daily Mission slot at L3'},
-    {id:'c_neon',       ic:'💡', name:'Neon Fountain',     type:'cosmetic', effect:'Neon pink fountain'},
-    {id:'c_statue',     ic:'🗿', name:'Bartender Statue',  type:'cosmetic', effect:'Bronze bartender statue'}
-  ],
-  speak: [
-    {id:'s_bar',        ic:'🥃', name:'Speakeasy Bar',     type:'cosmetic', effect:'Hidden door, brass fittings'},
-    {id:'s_shop',       ic:'📦', name:'Hidden Kiosk',      type:'functional', effect:'+Arena-themed pack in Shop F'},
-    {id:'s_office',     ic:'🎁', name:'Secret Chest Vault',type:'functional', effect:'-10% Star Chest coin shortcut'},
-    {id:'s_tavern',     ic:'🍺', name:"Winner's Bar",      type:'cosmetic', effect:'Decorative tavern counter'},
-    {id:'s_piano',      ic:'🎹', name:'Jazz Piano',        type:'cosmetic', effect:'Live piano on loop'}
-  ],
-  rooftop: [
-    {id:'r_bar',        ic:'🌃', name:'Rooftop Terrace',   type:'cosmetic', effect:'Skyline panorama'},
-    {id:'r_shop',       ic:'📦', name:'Sky Kiosk',         type:'functional', effect:'+Arena-themed pack in Shop F'},
-    {id:'r_office',     ic:'🎁', name:'Observatory Office',type:'functional', effect:'-10% Star Chest coin shortcut'},
-    {id:'r_lights',     ic:'✨', name:'Rooftop Lights',    type:'cosmetic', effect:'Strung festival lights'},
-    {id:'r_pool',       ic:'🏊', name:'Infinity Pool',     type:'cosmetic', effect:'Mirror-still infinity pool'}
-  ],
-  grand: [
-    {id:'g_bar',        ic:'🏨', name:'Grand Hotel Bar',   type:'cosmetic', effect:'Marble + crystal bar'},
-    {id:'g_shop',       ic:'📦', name:'Concierge Kiosk',   type:'functional', effect:'+Arena-themed pack in Shop F'},
-    {id:'g_office',     ic:'🎁', name:'Grand Chest Salon', type:'functional', effect:'-10% Star Chest coin shortcut'},
-    {id:'g_tavern',     ic:'🍺', name:"Winner's Bar",      type:'cosmetic', effect:'Decorative tavern counter'},
-    {id:'g_chandelier', ic:'💎', name:'Chandelier',        type:'cosmetic', effect:'Thousand-crystal chandelier'},
-    {id:'g_statue',     ic:'🏆', name:'Legacy Statue',     type:'cosmetic', effect:'Patron-of-the-year statue'}
-  ]
-};
+const DISTRICTS = [
+  {id:'cafe', name:'Café Row', theme:'Sunny, casual', icon:'☕', arenas:['juice','smoothie','coffee'], tokenPerWin:1.0,
+    buildings:[
+      {id:'cf_juice',    ic:'🍹', name:'Juice Stand',      type:'cosmetic',   effect:'Fresh neon juice stand'},
+      {id:'cf_smoothie', ic:'🥤', name:'Smoothie Cart',    type:'cosmetic',   effect:'Pastel blender cart'},
+      {id:'cf_coffee',   ic:'☕', name:'Coffee House',     type:'cosmetic',   effect:'Roaster + terrace seating'},
+      {id:'cf_shop',     ic:'📦', name:'Sticker Kiosk',    type:'functional', effect:'+Café-themed pack in Shop F'},
+      {id:'cf_pastry',   ic:'🥐', name:'Pastry Cart',      type:'cosmetic',   effect:'Morning bakery smell'},
+      {id:'cf_news',     ic:'📰', name:'Newsstand',        type:'cosmetic',   effect:'Daily paper rack'},
+      {id:'cf_bike',     ic:'🚲', name:'Bike Rack',        type:'cosmetic',   effect:'Clustered bikes'},
+      {id:'cf_palm',     ic:'🌴', name:'Palm Marquee',     type:'cosmetic',   effect:'Lit palms along the bar'},
+      {id:'cf_mural',    ic:'🎨', name:'Street Mural',     type:'cosmetic',   effect:'Vibrant alley mural'},
+      {id:'cf_bench',    ic:'🪑', name:'Plaza Bench',      type:'cosmetic',   effect:'Bronze plaza bench'}
+    ]},
+  {id:'boulevard', name:'Boulevard', theme:'Mid-tier urban', icon:'🏙️', arenas:['tea','cocktail'], tokenPerWin:0.3, /* v7.3.1 §8: 0.5→0.3 */
+    buildings:[
+      {id:'bv_tea',      ic:'🍵', name:'Tea Garden',       type:'cosmetic',   effect:'Lantern-lit tea garden'},
+      {id:'bv_cocktail', ic:'🍸', name:'Cocktail Lounge',  type:'cosmetic',   effect:'Velvet-seat lounge'},
+      {id:'bv_shop',     ic:'📦', name:'Mixer Kiosk',      type:'functional', effect:'+Boulevard-themed pack in Shop F'},
+      {id:'bv_recruit',  ic:'📋', name:"Recruiter's Booth",type:'functional', effect:'+1 Daily Mission slot at L3'},
+      {id:'bv_jazz',     ic:'🎷', name:'Jazz Club',        type:'cosmetic',   effect:'Live sax on loop'},
+      {id:'bv_lamp',     ic:'🪔', name:'Streetlamp Row',   type:'cosmetic',   effect:'Warm-glow lamp row'},
+      {id:'bv_neon',     ic:'💡', name:'Neon Fountain',    type:'cosmetic',   effect:'Neon pink fountain'},
+      {id:'bv_statue',   ic:'🗿', name:'Bartender Statue', type:'cosmetic',   effect:'Bronze bartender statue'},
+      {id:'bv_clock',    ic:'🕰️', name:'Clock Tower',      type:'cosmetic',   effect:'Chiming clock tower'},
+      {id:'bv_bistro',   ic:'🍽️', name:'Sidewalk Bistro',  type:'cosmetic',   effect:'Bistro patio lights'}
+    ]},
+  {id:'uptown', name:'Uptown', theme:'Luxury, aspirational', icon:'🏨', arenas:['wine','champagne','grand'], tokenPerWin:0.1, /* v7.3.1 §8: 0.15→0.1 */
+    buildings:[
+      {id:'up_wine',     ic:'🍷', name:'Wine Cellar',      type:'cosmetic',   effect:'Arched stone cellar'},
+      {id:'up_champagne',ic:'🥂', name:'Champagne Room',   type:'cosmetic',   effect:'Crystal coupe display'},
+      {id:'up_hotel',    ic:'🏨', name:'Grand Hotel Bar',  type:'cosmetic',   effect:'Marble + crystal bar'},
+      {id:'up_shop',     ic:'📦', name:'Concierge Kiosk',  type:'functional', effect:'+Uptown-themed pack in Shop F'},
+      {id:'up_vault',    ic:'🔐', name:'Cellar Vault',     type:'functional', effect:'+5% Lucky Box coins at L3'},
+      {id:'up_chand',    ic:'💎', name:'Chandelier',       type:'cosmetic',   effect:'Thousand-crystal chandelier'},
+      {id:'up_statue',   ic:'🏆', name:'Legacy Statue',    type:'cosmetic',   effect:'Patron-of-the-year statue'},
+      {id:'up_valet',    ic:'🚗', name:'Valet Stand',      type:'cosmetic',   effect:'Classic-car valet line'},
+      {id:'up_doorman',  ic:'🎩', name:'Doorman',          type:'cosmetic',   effect:'Top-hatted doorman'},
+      {id:'up_penthouse',ic:'🌃', name:'Penthouse Sign',   type:'cosmetic',   effect:'Skyline penthouse sign'}
+    ]}
+];
+
+// Shims for back-compat: BUILDINGS_BY_ARENA[arenaId] → buildings of that arena's district.
+function districtForArena(arenaId){ return DISTRICTS.find(d => d.arenas.includes(arenaId)); }
+function districtById(id){ return DISTRICTS.find(d => d.id === id); }
+function districtIndex(id){ return DISTRICTS.findIndex(d => d.id === id); }
+function maxUnlockedDistrictIdx(){
+  const d = districtForArena(s.maxUnlockedArena);
+  return d ? districtIndex(d.id) : 0;
+}
+const BUILDINGS_BY_ARENA = {};
+ARENAS.forEach(a => {
+  const d = districtForArena(a.id);
+  BUILDINGS_BY_ARENA[a.id] = d ? d.buildings : [];
+});
 
 function stickerKey(albumId, idx){ return albumId+':'+idx; }
 
+// v7.3 §4 + §15.C · v7.3.1 §4 — Star Race rewards (~40% cut all tiers; participation 10★→40★).
+const STAR_RACE_REWARDS = {
+  juice:     {top10:{coins:800,  silver:1, gold:0}, top100:{coins:400,  silver:0, gold:0}, top500:{coins:200,  silver:0, gold:0}, participation:{coins:80,  silver:0, gold:0}},
+  smoothie:  {top10:{coins:1500, silver:1, gold:0}, top100:{coins:700,  silver:0, gold:0}, top500:{coins:350,  silver:0, gold:0}, participation:{coins:150, silver:0, gold:0}},
+  coffee:    {top10:{coins:2500, silver:2, gold:0}, top100:{coins:1100, silver:1, gold:0}, top500:{coins:550,  silver:0, gold:0}, participation:{coins:250, silver:0, gold:0}},
+  tea:       {top10:{coins:3500, silver:0, gold:1}, top100:{coins:1700, silver:1, gold:0}, top500:{coins:850,  silver:0, gold:0}, participation:{coins:400, silver:0, gold:0}},
+  cocktail:  {top10:{coins:5500, silver:0, gold:1}, top100:{coins:2500, silver:2, gold:0}, top500:{coins:1200, silver:1, gold:0}, participation:{coins:550, silver:0, gold:0}},
+  wine:      {top10:{coins:8000, silver:0, gold:1}, top100:{coins:3600, silver:0, gold:1}, top500:{coins:1700, silver:1, gold:0}, participation:{coins:800, silver:0, gold:0}},
+  champagne: {top10:{coins:11000,silver:0, gold:2}, top100:{coins:5000, silver:0, gold:1}, top500:{coins:2400, silver:2, gold:0}, participation:{coins:1100,silver:0, gold:0}},
+  grand:     {top10:{coins:15000,silver:0, gold:2}, top100:{coins:7000, silver:0, gold:1}, top500:{coins:3300, silver:0, gold:1}, participation:{coins:1500,silver:0, gold:0}}
+};
+
+// v7.3.1 §4 — raised participation threshold 10→40★ to prevent trivial-faucet floor.
+function computeStarRaceTier(stars){
+  if(stars >= 300) return 'top10';
+  if(stars >= 200) return 'top100';
+  if(stars >= 100) return 'top500';
+  if(stars >= 40)  return 'participation';
+  return null;
+}
+
+// Monday 00:00 UTC of the given instant (ms).
+function getWeekStartMs(now){
+  const d = new Date(typeof now==='number' ? now : Date.now());
+  const day = d.getUTCDay(); // 0=Sun..6=Sat
+  const offset = (day === 0 ? 6 : day - 1);
+  d.setUTCDate(d.getUTCDate() - offset);
+  d.setUTCHours(0, 0, 0, 0);
+  return d.getTime();
+}
+
+// v7.3 §5 + §15.D — Weekly Missions pool (10). 3 active per week, no mid-week rotation.
+// Reward per: 300c + 1 Silver pack. Full-clear bonus: +1,500c + 1 Gold pack.
+const WEEKLY_MISSION_POOL = [
+  {id:'w_win_15',         text:'Win 15 matches',                  target:15, reward:{coins:300, silverPack:1}},
+  {id:'w_stake2_wins_8',  text:'Win 8 matches at stakes ×2+',     target:8,  reward:{coins:300, silverPack:1}},
+  {id:'w_earn_stars_40',  text:'Earn 40 Stars',                   target:40, reward:{coins:300, silverPack:1}},
+  {id:'w_page_1',         text:'Complete any sticker page',       target:1,  reward:{coins:300, silverPack:1}},
+  {id:'w_use_boosters_10',text:'Use boosters in 10 wins',         target:10, reward:{coins:300, silverPack:1}},
+  {id:'w_no_booster_5',   text:'Win 5 matches without boosters',  target:5,  reward:{coins:300, silverPack:1}},
+  {id:'w_promote_defend', text:'Promote or defend arena',         target:1,  reward:{coins:300, silverPack:1}},
+  {id:'w_streak_2',       text:'Win 3 in a row twice',            target:2,  reward:{coins:300, silverPack:1}},
+  {id:'w_play_30',        text:'Play 30 matches',                 target:30, reward:{coins:300, silverPack:1}},
+  {id:'w_clean_50',       text:'Serve 50 drinks cleanly',         target:50, reward:{coins:300, silverPack:1}}
+];
+
+// v7.3 §5 — Weekly reset chest by arena tier.
+function weeklyResetChestReward(arenaId){
+  const idx = arenaIndex(arenaId);
+  if(idx <= 1) return {coins:300,  silverPack:1, goldPack:0, tokens:0, tier:'small'};
+  if(idx <= 4) return {coins:1000, silverPack:1, goldPack:0, tokens:1, tier:'medium'};
+  return              {coins:2500, silverPack:0, goldPack:1, tokens:2, tier:'large'};
+}
+
 const MISSION_POOL = [
-  {id:'win_3',         text:'Win 3 matches',                        target:3,  reward:{coins:180}},
-  {id:'serve_50',      text:'Serve 50 customers',                   target:50, reward:{coins:120,silverBooster:1}},
-  {id:'stake_2_wins',  text:'Win 2 matches with ≥2 stakes',         target:2,  reward:{coins:250,silverBooster:1}, gate:'cocktail'},
-  {id:'combo_4',       text:'Hit a 4-combo',                        target:1,  reward:{coins:180,silverBooster:1}},
-  {id:'play_5',        text:'Play 5 matches',                       target:5,  reward:{coins:180}},
-  {id:'earn_500_coins',text:'Earn 500 Coins from matches',          target:500,reward:{coins:180}},
-  {id:'lucky_box_2',   text:'Claim Lucky Box twice',                target:2,  reward:{coins:130,bronzeBooster:1}},
-  {id:'3_star_match',  text:'Win 2 matches with 3 stars',           target:2,  reward:{coins:300,goldBooster:1}, gate:'cocktail'},
-  {id:'open_chest',    text:'Open any chest',                       target:1,  reward:{coins:130,bronzeBooster:2}}
+  {id:'win_3',         text:'Win 3 matches',                        target:3,  reward:{coins:200}},
+  {id:'stake_2_wins',  text:'Win 2 matches with ≥2 stakes',         target:2,  reward:{coins:250,silverBooster:1}},
+  {id:'play_5',        text:'Play 5 matches',                       target:5,  reward:{coins:200}},
+  {id:'earn_500_coins',text:'Earn 500 Coins from matches',          target:500,reward:{coins:200}},
+  {id:'lucky_box_2',   text:'Claim Lucky Box twice',                target:2,  reward:{coins:150,bronzeBooster:1}},
+  {id:'3_star_match',  text:'Win with stakes surviving (≥1 stake)', target:1,  reward:{coins:300,goldBooster:1}},
+  {id:'play_2_arenas', text:'Play in 2 different arenas',           target:2,  reward:{coins:230}},
+  {id:'open_chest',    text:'Open any chest',                       target:1,  reward:{coins:150,bronzeBooster:2}}
 ];
 
 /* =========================================================================
@@ -1364,29 +1593,45 @@ function defaultSave(){
   return {
     version:7,
     trophies:0,
+    currentPlayingArena:'juice',
     maxUnlockedArena:'juice',
-    coins:200, stars:0, starsMeter:0,
+    coins:200, stars:0, starsMeter:0, // starsMeter retained for legacy; unused post-v7.3
     boosters:{
       extraBottle:3, firstPour:2, spawnPlus3:0,
       colorSplash:1, swap:1, customerLock:0,
       clearBottle:0, autoServe:0, doubleServe:0
     },
     perks:{ secondLook:true, steadyHand:true, pourRead:true },
-    loadout:{ equippedBoosterId:null, stakes:[null,null,null,null], perk1Id:null, perk2Id:null },
+    loadout:{ stakes:[null,null,null], perk1Id:null, perk2Id:null },
+    stakesUnlocked:false, // v7.3 §15.B milestone #7 (1,000 trophies)
     onFireStreak:0, onFireActive:false, consecWins:0,
     luckyBox:{ nextAvailableAt: Date.now() },
-    starChestPending:false,
+    starChestPending:false, // legacy — post-v7.3 star chest removed for MVP
+    // v7.3 §4+§5 — Star Race weekly solo leaderboard
+    starRace:{ weekStartAt: getWeekStartMs(), starsByArena:{}, mailbox:[] },
+    // v7.3 §5 — Weekly Missions + weekly reset chest
+    weeklyMissions:{
+      weekStartAt: getWeekStartMs(),
+      missions: [], // populated on first load via weeklyMissionsWeekResetCheck()
+      fullClearClaimed: false,
+      resetChestPending: false,
+      streakWins: 0 // live consec-win streak to count w_streak_2 transitions
+    },
+    cleanServes: 0, // counter for w_clean_50 progress (proxy: served drinks)
     trophyRoad:{ highestTrophiesReached:0, claimedMilestones:[] },
-    dailyMissions:{ dateIso:'', missions:[], dailyChestClaimed:false },
-    migrationFlags:{ silverStakesEjected:false },
+    dailyMissions:{ dateIso:'', missions:[], dailyChestClaimed:false, arenasPlayedToday:[] },
     stickers:{},
     stickerTokens:1,
     claimedPageRewards:[], claimedAlbumRewards:[], unlockedAlbums:['barClassics'],
-    venue:{ venueBuildingTokens:0, buildings:{}, venuesUnlocked:['juice'] },
+    venue:{ venueBuildingTokens:0, buildings:{}, venuesUnlocked:['juice'], homeDistrictId:null /* v7.3 §7 — null = auto-follow current arena */ },
     profile:{
       unlockedAvatars:['a1'], unlockedFrames:['default'], unlockedTitles:['Newcomer'],
-      activeAvatar:'a1', activeFrame:'default', activeTitle:'Newcomer'
+      activeAvatar:'a1', activeFrame:'default', activeTitle:'Newcomer',
+      countryCode:'US', // v7.3 §9 — geo-locked at creation (MVP: default 2-letter ISO)
+      top1000Seasons:0, globalRank:null // v7.3 §9 Tab 4
     },
+    vip:{points:0, highestTier:0}, // v7.3 §10 — VIP points (100 per $1), lifetime-accumulated
+    teams:{firstClickedAt:null, notifyOptIn:false, notifyAt:null}, // v7.3 §8 — opt-in capture
     barPass:{
       seasonStartAt:Date.now(), seasonEndAt:Date.now()+30*86400000,
       bpp:0, currentTier:0, premiumUnlocked:false,
@@ -1412,6 +1657,36 @@ function loadSave(){
       const parsed = JSON.parse(raw);
       if(parsed && parsed.version === 7){
         s = Object.assign(defaultSave(), parsed);
+        // v7.3 migration — legacy arena ids (beach/speak/rooftop) → new ids
+        if(LEGACY_ARENA_MAP[s.currentPlayingArena]) s.currentPlayingArena = LEGACY_ARENA_MAP[s.currentPlayingArena];
+        if(LEGACY_ARENA_MAP[s.maxUnlockedArena]) s.maxUnlockedArena = LEGACY_ARENA_MAP[s.maxUnlockedArena];
+        if(s.venue && Array.isArray(s.venue.venuesUnlocked)){
+          s.venue.venuesUnlocked = s.venue.venuesUnlocked.map(id => LEGACY_ARENA_MAP[id] || id);
+        }
+        if(s.dailyMissions && Array.isArray(s.dailyMissions.arenasPlayedToday)){
+          s.dailyMissions.arenasPlayedToday = s.dailyMissions.arenasPlayedToday.map(id => LEGACY_ARENA_MAP[id] || id);
+        }
+        // v7.3 §15.B — stakes multi-slot unlock derived from trophy history
+        if(typeof s.stakesUnlocked !== 'boolean'){
+          s.stakesUnlocked = (s.trophyRoad?.highestTrophiesReached || s.trophies || 0) >= 1000;
+        }
+        // v7.3 §4 — Star Race state init for pre-v7.3 saves
+        if(!s.starRace || typeof s.starRace.weekStartAt !== 'number'){
+          s.starRace = {weekStartAt: getWeekStartMs(), starsByArena:{}, mailbox:[]};
+        }
+        starRaceWeekResetCheck();
+        // v7.3 §5 — Weekly Missions init + reset check
+        if(!s.weeklyMissions){
+          s.weeklyMissions = {weekStartAt:getWeekStartMs(), missions:[], fullClearClaimed:false, resetChestPending:false, streakWins:0};
+        }
+        weeklyMissionsWeekResetCheck();
+        if(typeof s.cleanServes !== 'number') s.cleanServes = 0;
+        // v7.3 §§8-11 — profile / VIP / Teams backfill for pre-v7.3 saves
+        if(!s.profile.countryCode) s.profile.countryCode = 'US';
+        if(typeof s.profile.top1000Seasons !== 'number') s.profile.top1000Seasons = 0;
+        if(!s.vip) s.vip = {points:0, highestTier:0};
+        if(!s.teams) s.teams = {firstClickedAt:null, notifyOptIn:false, notifyAt:null};
+        if(typeof s.venue.homeDistrictId === 'undefined') s.venue.homeDistrictId = null;
         // v7.1 migrations — §16.2
         if(typeof s.gold === 'number'){
           s.coins = (s.coins||0) + Math.round(s.gold * 1.5);
@@ -1419,45 +1694,16 @@ function loadSave(){
         }
         if(s.loadout && typeof s.loadout.betId !== 'undefined'){
           const legacyBet = s.loadout.betId;
-          s.loadout = {equippedBoosterId:null, stakes:[legacyBet||null, null, null, null], perk1Id:s.loadout.perk1Id||null, perk2Id:s.loadout.perk2Id||null};
+          s.loadout = {stakes:[legacyBet||null, null, null], perk1Id:s.loadout.perk1Id||null, perk2Id:s.loadout.perk2Id||null};
         }
         if(!s.loadout || !Array.isArray(s.loadout.stakes)){
-          s.loadout = {equippedBoosterId:null, stakes:[null,null,null,null], perk1Id:null, perk2Id:null};
+          s.loadout = {stakes:[null,null,null], perk1Id:null, perk2Id:null};
         }
-        // v7.2: delete legacy currentPlayingArena
-        if(typeof s.currentPlayingArena !== 'undefined'){ delete s.currentPlayingArena; }
-        // v7.2: pad stakes array to length 4
-        while(s.loadout.stakes.length < 4) s.loadout.stakes.push(null);
-        // v7.2: eject any Silver stakes back to inventory
-        if(!s.migrationFlags) s.migrationFlags = {silverStakesEjected:false};
-        let ejected = false;
-        for(let i=0;i<s.loadout.stakes.length;i++){
-          const id = s.loadout.stakes[i];
-          if(id && BOOSTERS[id] && BOOSTERS[id].tier !== 'gold'){
-            s.boosters[id] = (s.boosters[id]||0) + 1;
-            s.loadout.stakes[i] = null;
-            ejected = true;
-          }
-        }
-        if(ejected) s.migrationFlags.silverStakesEjected = true;
-        // v7.2: default equippedBoosterId to highest-rarity owned
-        if(!s.loadout.equippedBoosterId){
-          const tierRank = {gold:3, silver:2, bronze:1};
-          let best = null, bestRank = 0;
-          Object.entries(BOOSTERS).forEach(([id,b])=>{
-            if((s.boosters[id]||0) > 0 && tierRank[b.tier] > bestRank){
-              best = id; bestRank = tierRank[b.tier];
-            }
-          });
-          s.loadout.equippedBoosterId = best;
-        }
-        // v7.2: clean arenasPlayedToday (deleted)
-        if(s.dailyMissions && 'arenasPlayedToday' in s.dailyMissions) delete s.dailyMissions.arenasPlayedToday;
         // dateIso rollover
         const today = new Date().toISOString().slice(0,10);
         if(s.dailyMissions.dateIso !== today){ rerollDailies(); }
         else {
-          // Rewrite legacy mission ids
+          // Rewrite legacy mission id
           s.dailyMissions.missions.forEach(m => {
             if(m.id === 'use_5_bets'){
               m.id = 'stake_2_wins';
@@ -1468,23 +1714,6 @@ function loadSave(){
               m.claimed = false;
             }
           });
-          // v7.2: drop play_2_arenas, and gated missions when below cocktail
-          const below = arenaIndex(s.maxUnlockedArena) < arenaIndex('cocktail');
-          const dropIds = new Set();
-          dropIds.add('play_2_arenas');
-          if(below){ dropIds.add('stake_2_wins'); dropIds.add('3_star_match'); }
-          const kept = s.dailyMissions.missions.filter(m => !dropIds.has(m.id));
-          if(kept.length < s.dailyMissions.missions.length){
-            // re-roll from open pool (not already kept, not gated if below)
-            const keptIds = new Set(kept.map(m=>m.id));
-            const openPool = MISSION_POOL.filter(m => !keptIds.has(m.id) && !dropIds.has(m.id));
-            const shuffled = openPool.sort(()=>Math.random()-0.5);
-            while(kept.length < 3 && shuffled.length){
-              const m = shuffled.shift();
-              kept.push({id:m.id, text:m.text, target:m.target, reward:m.reward, progress:0, claimed:false});
-            }
-            s.dailyMissions.missions = kept;
-          }
         }
         return;
       }
@@ -1492,11 +1721,141 @@ function loadSave(){
   }catch(e){ console.warn('save load fail',e); }
   s = defaultSave();
   rerollDailies();
+  weeklyMissionsWeekResetCheck(); // v7.3 §5 — populate weekly missions on first run
   saveSave();
 }
 
 function saveSave(){
   try{ localStorage.setItem(SAVE_KEY, JSON.stringify(s)); }catch(e){}
+}
+
+// v7.3.1 §5 — Monday peak coin ceiling (tuning guardrail, not runtime-enforced).
+// Rule: Monday peak should not exceed 2× daily average for a given segment. Add to tuning checklist
+// before any new weekly-cycle reward is shipped.
+//   F2P casual:   daily 800c  → Monday peak ~1,200c  (1.5× cap)
+//   F2P engaged:  daily 2,200c → Monday peak ~4,500c (2.0× cap)
+//   Pass dolphin: daily 2,900c → Monday peak ~6,000c (2.0× cap)
+//   VIP whale:    daily 6,000c → Monday peak ~12,000c (2.0× cap)
+const MONDAY_PEAK_COIN_GUARDRAIL = {
+  f2pCasual:  {avg:800,  peak:1200},
+  f2pEngaged: {avg:2200, peak:4500},
+  passDolphin:{avg:2900, peak:6000},
+  vipWhale:   {avg:6000, peak:12000}
+};
+
+// v7.3 §4+§5 — Star Race weekly reset. Mails rewards based on last week's star count, resets counters.
+function starRaceWeekResetCheck(){
+  if(!s.starRace){ s.starRace = {weekStartAt:getWeekStartMs(), starsByArena:{}, mailbox:[]}; return; }
+  const currentWeekStart = getWeekStartMs();
+  if((s.starRace.weekStartAt||0) < currentWeekStart){
+    Object.keys(s.starRace.starsByArena||{}).forEach(arenaId => {
+      const stars = s.starRace.starsByArena[arenaId] || 0;
+      const tier = computeStarRaceTier(stars);
+      if(!tier) return;
+      const tbl = STAR_RACE_REWARDS[arenaId]; if(!tbl) return;
+      const reward = tbl[tier]; if(!reward) return;
+      s.starRace.mailbox.push({
+        week: s.starRace.weekStartAt, arenaId, tier, stars,
+        coins: reward.coins, silver: reward.silver, gold: reward.gold,
+        expiresAt: currentWeekStart + 14*86400000,
+        claimed: false
+      });
+    });
+    s.starRace.starsByArena = {};
+    s.starRace.weekStartAt = currentWeekStart;
+  }
+  // Also prune expired (past 14-day claim window, unclaimed) for housekeeping
+  const now = Date.now();
+  s.starRace.mailbox = (s.starRace.mailbox||[]).filter(m => m.claimed || m.expiresAt > now);
+}
+
+// v7.3 §5 — Weekly Missions. 3 random from pool, no mid-week rotation. On Monday reset:
+// pending rewards (unclaimed) are forfeited (design: "no rotation mid-week" + hard weekly cycle).
+function rollWeeklyMissions(){
+  const pool = [...WEEKLY_MISSION_POOL].sort(()=>Math.random()-0.5);
+  return pool.slice(0,3).map(m => ({id:m.id, text:m.text, target:m.target, reward:{...m.reward}, progress:0, claimed:false}));
+}
+
+function weeklyMissionsWeekResetCheck(){
+  if(!s.weeklyMissions){
+    s.weeklyMissions = {weekStartAt:getWeekStartMs(), missions:rollWeeklyMissions(), fullClearClaimed:false, resetChestPending:false, streakWins:0};
+    return;
+  }
+  const currentWeekStart = getWeekStartMs();
+  if(!s.weeklyMissions.missions || s.weeklyMissions.missions.length === 0){
+    s.weeklyMissions.missions = rollWeeklyMissions();
+    s.weeklyMissions.weekStartAt = currentWeekStart;
+    return;
+  }
+  if((s.weeklyMissions.weekStartAt||0) < currentWeekStart){
+    // v7.3 §5 — trophy-gated reset chest queued for the week that just ended
+    s.weeklyMissions.resetChestPending = true;
+    s.weeklyMissions.missions = rollWeeklyMissions();
+    s.weeklyMissions.fullClearClaimed = false;
+    s.weeklyMissions.weekStartAt = currentWeekStart;
+    s.weeklyMissions.streakWins = 0;
+  }
+}
+
+function weeklyMissionProgress(id, amount=1){
+  if(!s.weeklyMissions) return;
+  const m = (s.weeklyMissions.missions||[]).find(m => m.id === id && !m.claimed);
+  if(!m) return;
+  m.progress = Math.min(m.target, m.progress + amount);
+}
+
+function claimWeeklyMission(id){
+  const m = (s.weeklyMissions.missions||[]).find(m => m.id === id);
+  if(!m || m.claimed || m.progress < m.target) return;
+  m.claimed = true;
+  const r = m.reward;
+  if(r.coins) s.coins += r.coins;
+  if(r.silverPack) for(let i=0;i<r.silverPack;i++) grantBoosters(['colorSplash']);
+  if(r.goldPack)   for(let i=0;i<r.goldPack;i++)   grantBoosters(['clearBottle']);
+  toast(`✓ Weekly: +${r.coins||0}🪙${r.silverPack?' +Silver':''}${r.goldPack?' +Gold':''}`);
+  saveSave();
+}
+
+function claimWeeklyFullClear(){
+  if(!s.weeklyMissions) return;
+  const all = (s.weeklyMissions.missions||[]).every(m => m.claimed);
+  if(!all || s.weeklyMissions.fullClearClaimed) return;
+  s.weeklyMissions.fullClearClaimed = true;
+  s.coins += 1500;
+  grantBoosters(['clearBottle']); // Gold pack (clearBottle icon-proxy)
+  // v7.3.1 §7 — Sticker Token every 4 consecutive full-clear weeks
+  s.weeklyMissions.fullClearStreak = (s.weeklyMissions.fullClearStreak||0) + 1;
+  let streakBonus = '';
+  if(s.weeklyMissions.fullClearStreak >= 4){
+    s.weeklyMissions.fullClearStreak = 0;
+    s.stickerTokens++;
+    streakBonus = ' + 1🎟️ (4-streak!)';
+  }
+  toast('🏆 Full-clear bonus: +1500🪙 + 1 Gold Pack'+streakBonus);
+  saveSave();
+}
+
+function claimWeeklyResetChest(){
+  if(!s.weeklyMissions || !s.weeklyMissions.resetChestPending) return;
+  const r = weeklyResetChestReward(s.currentPlayingArena);
+  s.coins += r.coins;
+  for(let i=0;i<r.silverPack;i++) grantBoosters(['colorSplash']);
+  for(let i=0;i<r.goldPack;i++)   grantBoosters(['clearBottle']);
+  s.stickerTokens += r.tokens;
+  s.weeklyMissions.resetChestPending = false;
+  toast(`📦 Weekly Reset (${r.tier}): +${r.coins}🪙${r.silverPack?' +Silver':''}${r.goldPack?' +Gold':''}${r.tokens?' +'+r.tokens+'🎟️':''}`);
+  saveSave();
+}
+
+function claimStarRaceMail(idx){
+  const m = s.starRace.mailbox[idx];
+  if(!m || m.claimed) return;
+  s.coins += m.coins||0;
+  for(let i=0;i<(m.silver||0);i++) grantBoosters(['colorSplash']);
+  for(let i=0;i<(m.gold||0);i++) grantBoosters(['clearBottle']);
+  m.claimed = true;
+  saveSave();
+  toast(`✉️ +${m.coins}🪙${m.silver?' +'+m.silver+' Silver':''}${m.gold?' +'+m.gold+' Gold':''}`);
 }
 
 /* =========================================================================
@@ -1516,23 +1875,18 @@ function toast(msg){
 function arenaById(id){ return ARENAS.find(a=>a.id===id); }
 function arenaIndex(id){ return ARENAS.findIndex(a=>a.id===id); }
 function maxUnlockedArenaIdx(){ return arenaIndex(s.maxUnlockedArena); }
-// v7.2: current arena derived from trophies (auto-tier, no selector)
-function currentArenaId(){
-  let id = 'juice';
-  for(const a of ARENAS){ if(s.trophies >= a.min) id = a.id; }
-  return id;
-}
-function currentArena(){ return arenaById(currentArenaId()); }
-function goldBoostersOwned(){
-  return Object.entries(BOOSTERS).reduce((sum,[id,b])=>sum + (b.tier==='gold' ? (s.boosters[id]||0) : 0), 0);
-}
+function currentArena(){ return arenaById(s.currentPlayingArena); }
 
 function grantBoosters(ids){
   ids.forEach(id => s.boosters[id] = (s.boosters[id]||0) + 1);
 }
 
 function unlockArena(id){
+  if(LEGACY_ARENA_MAP[id]) id = LEGACY_ARENA_MAP[id]; // v7.3 compat
   const idx = arenaIndex(id);
+  // v7.3 §5 — "Promote or defend arena" weekly mission
+  const wasLocked = idx > maxUnlockedArenaIdx();
+  if(wasLocked && typeof weeklyMissionProgress === 'function') weeklyMissionProgress('w_promote_defend', 1);
   const wasNew = idx > maxUnlockedArenaIdx();
   if(wasNew){ s.maxUnlockedArena = id; s.venue.venueBuildingTokens += 5; } // §11.15 +5 VT per arena promo
   if(!s.venue.venuesUnlocked.includes(id)) s.venue.venuesUnlocked.push(id);
@@ -1543,14 +1897,13 @@ function unlockArena(id){
 }
 
 function rerollDailies(){
-  // v7.2: exclude gated missions below Cocktail Lounge
-  const below = arenaIndex(s.maxUnlockedArena) < arenaIndex('cocktail');
-  const pool = MISSION_POOL.filter(m => !(below && m.gate === 'cocktail')).sort(()=>Math.random()-0.5);
+  const pool = [...MISSION_POOL].sort(()=>Math.random()-0.5);
   const picks = pool.slice(0,3).map(m => ({id:m.id, text:m.text, target:m.target, reward:m.reward, progress:0, claimed:false}));
   s.dailyMissions = {
     dateIso: new Date().toISOString().slice(0,10),
     missions: picks,
-    dailyChestClaimed:false
+    dailyChestClaimed:false,
+    arenasPlayedToday:[]
   };
 }
 
@@ -1564,26 +1917,33 @@ function missionProgress(id, amount=1){
     if(m.reward.bronzeBooster) grantBoosters(['extraBottle']);
     if(m.reward.silverBooster) grantBoosters(['colorSplash']);
     if(m.reward.goldBooster) grantBoosters(['clearBottle']);
-    toast('✅ Mission: '+m.text);
+    addBPP(100); // v7.3.1 §6 — +100 BPP per Daily Mission completion
+    toast('✅ Mission: '+m.text+' (+100 BPP)');
   }
   // all done → daily chest (§10.1)
   if(!s.dailyMissions.dailyChestClaimed && s.dailyMissions.missions.every(mm=>mm.claimed)){
     s.dailyMissions.dailyChestClaimed = true;
-    s.coins += 400;
+    s.coins += 500;
     grantBoosters(['extraBottle','colorSplash','clearBottle']);
     s.venue.venueBuildingTokens++;
     addStickerByRarity(rarityRoll('diamond', false));
     addStickerByRarity(rarityRoll('diamond', false));
     if(Math.random() < 0.15) s.stickerTokens++;
-    toast('🎉 Daily Chest: 400🪙 + 3 boosters + 2 stickers + 1 VT');
+    toast('🎉 Daily Chest: 500🪙 + 3 boosters + 2 stickers + 1 VT');
     // Refill flash trigger (§13.8) — low coins
     if(s.coins < 200) triggerFlashOffer('refill');
   }
 }
 
+// v7.3.1 §6 — 400 BPP flat per tier (was 50×N cumulative). 30 tiers = 12,000 BPP.
+// Match grants: +10 played, +20 win bonus. Daily Mission completion: +100 BPP each.
+// VIP §4 Silver I perk = +10% BPP multiplier.
+const BPP_PER_TIER = 400;
 function addBPP(n){
+  // v7.3.1 §9 — VIP Silver I (tier 4) +10% BPP multiplier
+  if(currentVipTier() >= 4) n = Math.round(n * 1.10);
   s.barPass.bpp += n;
-  const newTier = Math.min(30, Math.floor(s.barPass.bpp / 50));
+  const newTier = Math.min(30, Math.floor(s.barPass.bpp / BPP_PER_TIER));
   if(newTier > s.barPass.currentTier){
     s.barPass.currentTier = newTier;
     toast('📜 Bar Pass Tier '+newTier);
@@ -1611,17 +1971,15 @@ function renderHUD(){
 }
 
 function renderHome(){
-  // v7.2: one-time migration toast for Silver stakes ejected
-  if(s.migrationFlags && s.migrationFlags.silverStakesEjected){
-    s.migrationFlags.silverStakesEjected = false;
-    toast('Staking is now Gold-only. Silver boosters returned to inventory.');
-    saveSave();
-  }
   const a = currentArena();
   // Arena badge
   $('arena-badge-name').textContent = a.name;
   $('arena-trophy-count').textContent = s.trophies;
-  $('hvp-items').innerHTML = buildVenueSceneHTML(a.id);
+  // v7.3 §7 — Home district display
+  const homeDist = resolveHomeDistrictId();
+  const hdObj = districtById(homeDist);
+  $('hvp-items').innerHTML = buildVenueSceneHTML(homeDist);
+  if($('hvp-district-label')) $('hvp-district-label').textContent = hdObj ? `${hdObj.icon} ${hdObj.name}` : '';
   // Progress to next arena
   const myIdx = arenaIndex(a.id);
   const nextA = ARENAS[myIdx+1];
@@ -1635,11 +1993,18 @@ function renderHome(){
     $('arena-progress-label').textContent = `${s.trophies} (MAX)`;
   }
 
-  // Star meter
-  $('star-meter-num').textContent = s.starsMeter+'/25';
-  $('star-meter-fill').style.width = Math.min(100,(s.starsMeter/25)*100)+'%';
-  // Pending star chest
-  $('starchest-btn').style.display = s.starChestPending ? 'block' : 'none';
+  // v7.3 §4+§5 — weekly resets
+  starRaceWeekResetCheck();
+  weeklyMissionsWeekResetCheck();
+  const srArena = s.currentPlayingArena;
+  const srStars = (s.starRace.starsByArena[srArena]||0);
+  $('srb-stars').textContent = srStars;
+  const nextReset = getWeekStartMs() + 7*86400000;
+  const ms = nextReset - Date.now();
+  const days = Math.floor(ms/86400000), hrs = Math.floor((ms%86400000)/3600000);
+  $('srb-timer').textContent = days>0 ? (days+'d '+hrs+'h') : (hrs+'h');
+  const tier = computeStarRaceTier(srStars);
+  $('srb-tier').textContent = tier ? ({top10:'🥇 Top 10 tier',top100:'🥈 Top 100 tier',top500:'🥉 Top 500 tier',participation:'✓ Participation'}[tier]) : '40★ for participation';
 
   // Lucky box
   const lbReady = Date.now() >= s.luckyBox.nextAvailableAt;
@@ -1652,11 +2017,49 @@ function renderHome(){
     lbBtn.disabled = true;
   }
 
-  // Missions badge (count unclaimed with progress, or pending daily chest)
+  // v7.3 §14 — Home side-button badges
+  const trophyBadge = $('sbtn-badge-trophy');
+  if(trophyBadge){
+    const ready = TROPHY_ROAD.find(m => !s.trophyRoad.claimedMilestones.includes(m.n) && s.trophies >= m.trophies);
+    const distance = ready ? 0 : (TROPHY_ROAD.find(m=>!s.trophyRoad.claimedMilestones.includes(m.n))?.trophies||0) - s.trophies;
+    if(ready){ trophyBadge.textContent = '!'; trophyBadge.classList.add('on'); }
+    else if(distance > 0 && distance <= 50){ trophyBadge.textContent = distance; trophyBadge.classList.add('on'); }
+    else { trophyBadge.classList.remove('on'); }
+  }
+  const rankBadge = $('sbtn-badge-rank');
+  if(rankBadge){
+    const wk = (s.starRace.starsByArena[s.currentPlayingArena]||0);
+    const youRank = Math.max(1, 500 - Math.floor(wk*1.5));
+    if(youRank <= 100){ rankBadge.textContent = '#'+youRank; rankBadge.classList.add('on'); }
+    else { rankBadge.classList.remove('on'); }
+  }
+  // v7.3 §14 — bottom nav badges
+  const teamsBadge = $('nav-badge-teams');
+  if(teamsBadge){
+    if(s.teams && s.teams.firstClickedAt){
+      if(s.trophies >= 1000){ teamsBadge.textContent = '🔒'; teamsBadge.classList.add('on'); }
+      else { teamsBadge.classList.remove('on'); }
+    } else { teamsBadge.textContent = 'NEW'; teamsBadge.classList.add('on'); }
+  }
+  const shopBadge = $('nav-badge-shop');
+  if(shopBadge){
+    const hasFlash = s.activeFlashOffer && s.activeFlashOffer.expiresAt > Date.now();
+    if(hasFlash){ shopBadge.textContent = '!'; shopBadge.classList.add('on'); } else shopBadge.classList.remove('on');
+  }
+  const passSbtn = $('sbtn-badge-pass');
+  if(passSbtn){
+    const hasClaimable = BAR_PASS_TIERS.some(t => s.barPass.currentTier >= t.n && (!s.barPass.claimedFreeTiers.includes(t.n) || (s.barPass.premiumUnlocked && !s.barPass.claimedPremiumTiers.includes(t.n))));
+    if(hasClaimable){ passSbtn.textContent = '!'; passSbtn.classList.add('on'); } else passSbtn.classList.remove('on');
+  }
+  // Missions badge — daily progress + v7.3 §5 weekly claimable pulse
   const unclaimed = s.dailyMissions.missions.filter(m=>m.claimed).length;
   const total = s.dailyMissions.missions.length;
+  const wk = s.weeklyMissions;
+  const wkClaimable = wk ? ((wk.missions||[]).some(m => !m.claimed && m.progress >= m.target) ||
+    (wk.resetChestPending) ||
+    ((wk.missions||[]).length>0 && (wk.missions||[]).every(m=>m.claimed) && !wk.fullClearClaimed)) : false;
   const badge = $('missions-badge');
-  badge.textContent = `${unclaimed}/${total}`;
+  badge.textContent = wkClaimable ? '!' : `${unclaimed}/${total}`;
 
   // Play button — free to enter (§14.1)
   // Flash offer banner (active)
@@ -1671,13 +2074,14 @@ function renderHome(){
       const el = document.createElement('div');
       el.className = 'flash-banner';
       el.innerHTML = `<span>🔥 ${f.title} — ${f.desc}</span><span class="f-timer">${f.price} · ${timeStr}</span>`;
-      el.onclick = ()=>toast('Coming soon');
+      el.onclick = ()=>showFlashOfferDetails(f.id);
       fb.appendChild(el);
     }
   }
 }
 
 function openMissions(){
+  // Daily
   const ml = $('missions-list');
   ml.innerHTML = '';
   s.dailyMissions.missions.forEach(m => {
@@ -1697,23 +2101,203 @@ function openMissions(){
       <span class="mrew">${m.progress}/${m.target}<br>${rewStr}</span>`;
     ml.appendChild(div);
   });
+
+  // v7.3 §5 — Weekly
+  weeklyMissionsWeekResetCheck();
+  const wl = $('weekly-missions-list');
+  wl.innerHTML = '';
+  // Reset chest card (if pending)
+  if(s.weeklyMissions.resetChestPending){
+    const r = weeklyResetChestReward(s.currentPlayingArena);
+    const chestCard = document.createElement('div');
+    chestCard.className = 'mission-row';
+    chestCard.style.cssText = 'background:rgba(255,215,0,0.1);border:1px solid rgba(255,215,0,0.4)';
+    chestCard.innerHTML = `<div class="mprog-wrap"><span class="mtxt">📦 Weekly Reset Chest (${r.tier})</span><div class="mprog"><div class="f" style="width:100%"></div></div></div>
+      <button class="sc-buy">CLAIM</button>`;
+    chestCard.querySelector('button').onclick = ()=>{ claimWeeklyResetChest(); openMissions(); renderAll(); };
+    wl.appendChild(chestCard);
+  }
+  // Weekly mission rows
+  (s.weeklyMissions.missions||[]).forEach(m => {
+    const r = m.reward;
+    const rewStr = [r.coins?r.coins+'🪙':null, r.silverPack?'Silver Pack':null, r.goldPack?'Gold Pack':null].filter(Boolean).join(' + ');
+    const complete = m.progress >= m.target;
+    const div = document.createElement('div');
+    div.className = 'mission-row'+(m.claimed?' done':'');
+    div.innerHTML = `
+      <div class="mprog-wrap">
+        <span class="mtxt">${m.text}</span>
+        <div class="mprog"><div class="f" style="width:${Math.min(100,(m.progress/m.target)*100)}%"></div></div>
+      </div>
+      <span class="mrew">${m.progress}/${m.target}<br>${rewStr}</span>`;
+    if(complete && !m.claimed){
+      const btn = document.createElement('button');
+      btn.className = 'sc-buy';
+      btn.textContent = 'CLAIM';
+      btn.style.marginLeft = '6px';
+      btn.onclick = ()=>{ claimWeeklyMission(m.id); openMissions(); renderAll(); };
+      div.appendChild(btn);
+    }
+    wl.appendChild(div);
+  });
+  // Full-clear bonus
+  const allClaimed = (s.weeklyMissions.missions||[]).length > 0 && s.weeklyMissions.missions.every(m => m.claimed);
+  const fc = document.createElement('div');
+  fc.className = 'mission-row';
+  fc.style.cssText = 'background:rgba(128,0,255,0.12);border:1px solid rgba(128,0,255,0.35)';
+  fc.innerHTML = `<div class="mprog-wrap"><span class="mtxt">🏆 Full-Clear Bonus (3/3)</span><div class="mprog"><div class="f" style="width:${allClaimed?'100':'0'}%"></div></div></div>
+    <span class="mrew">+1,500🪙 + Gold Pack</span>`;
+  if(allClaimed && !s.weeklyMissions.fullClearClaimed){
+    const btn = document.createElement('button');
+    btn.className = 'sc-buy'; btn.textContent = 'CLAIM'; btn.style.marginLeft = '6px';
+    btn.onclick = ()=>{ claimWeeklyFullClear(); openMissions(); renderAll(); };
+    fc.appendChild(btn);
+  } else if(s.weeklyMissions.fullClearClaimed){
+    fc.classList.add('done');
+  }
+  wl.appendChild(fc);
+
+  // Tab switch
+  document.querySelectorAll('.mt-tab').forEach(btn => {
+    btn.onclick = ()=>{
+      document.querySelectorAll('.mt-tab').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      const tab = btn.dataset.mtab;
+      $('missions-daily').classList.toggle('hidden', tab !== 'daily');
+      $('missions-weekly').classList.toggle('hidden', tab !== 'weekly');
+    };
+  });
+  // Default to Daily
+  document.querySelectorAll('.mt-tab').forEach(b=>b.classList.remove('active'));
+  document.querySelector('.mt-tab[data-mtab="daily"]').classList.add('active');
+  $('missions-daily').classList.remove('hidden');
+  $('missions-weekly').classList.add('hidden');
+
   $('missions-modal').classList.remove('hidden');
 }
 function closeMissions(){ $('missions-modal').classList.add('hidden'); }
 
-// v7.2: Arena Selector removed — current arena auto-derived from trophies.
+function openArenaModal(){
+  const list = $('arena-modal-list');
+  list.innerHTML = '';
+  ARENAS.forEach((a,i) => {
+    const unlocked = i <= maxUnlockedArenaIdx();
+    const active = a.id === s.currentPlayingArena;
+    const it = document.createElement('div');
+    it.className = 'picker-item'+(unlocked?'':' disabled');
+    it.innerHTML = `<div class="pi-ic">${a.icon}</div><div class="pi-info"><div class="pi-name">${a.name}${active?' ✓':''}</div><div class="pi-desc">🏆 ${a.min}+ · Win ${ARENA_COIN_PAYOUT[a.id].win}🪙</div></div>`;
+    if(unlocked) it.onclick = ()=>{ s.currentPlayingArena = a.id; closeArenaModal(); renderAll(); };
+    list.appendChild(it);
+  });
+  $('arena-modal').classList.remove('hidden');
+}
+function closeArenaModal(){ $('arena-modal').classList.add('hidden'); }
+
+// v7.3 §7 — Home district picker
+function openDistrictPicker(){
+  const list = $('district-picker-list');
+  list.innerHTML = '';
+  const current = resolveHomeDistrictId();
+  DISTRICTS.forEach((d, i) => {
+    const unlocked = i <= maxUnlockedDistrictIdx();
+    const active = d.id === current;
+    const it = document.createElement('div');
+    it.className = 'picker-item'+(unlocked?'':' disabled');
+    const firstArena = arenaById(d.arenas[0]);
+    const hint = unlocked
+      ? `Arenas: ${d.arenas.map(id => arenaById(id)?.icon || '').join(' ')} · ${d.theme}`
+      : `🔒 Unlocks at ${firstArena ? firstArena.name+' ('+firstArena.min+' 🏆)' : '?'}`;
+    it.innerHTML = `<div class="pi-ic">${unlocked?d.icon:'🔒'}</div><div class="pi-info"><div class="pi-name">${d.name}${active?' ✓':''}</div><div class="pi-desc">${hint}</div></div>`;
+    if(unlocked){
+      it.onclick = ()=>{ s.venue.homeDistrictId = d.id; saveSave(); closeDistrictPicker(); renderAll(); };
+    }
+    list.appendChild(it);
+  });
+  $('district-modal').classList.remove('hidden');
+}
+function closeDistrictPicker(){ $('district-modal').classList.add('hidden'); }
+
+// v7.3 §4 — Star Race modal
+function openStarRace(){
+  starRaceWeekResetCheck();
+  const body = $('starrace-body');
+  const nextReset = getWeekStartMs() + 7*86400000;
+  const ms = nextReset - Date.now();
+  const days = Math.floor(ms/86400000), hrs = Math.floor((ms%86400000)/3600000);
+  const mins = Math.floor((ms%3600000)/60000);
+  let html = `<div style="background:rgba(0,0,0,0.4);border-radius:10px;padding:10px;margin-bottom:10px;text-align:center;font-size:12px">
+    Week resets in <b style="color:#ffd700">${days}d ${hrs}h ${mins}m</b>
+  </div>`;
+  // Per-arena standings for unlocked arenas
+  html += '<div style="font-size:10px;color:rgba(255,255,255,0.6);text-transform:uppercase;letter-spacing:1px;margin:6px 0">This Week</div>';
+  ARENAS.forEach((a,i) => {
+    if(i > maxUnlockedArenaIdx()) return;
+    const wkStars = s.starRace.starsByArena[a.id] || 0;
+    const tier = computeStarRaceTier(wkStars);
+    const tierLbl = tier ? ({top10:'🥇 Top 10',top100:'🥈 Top 100',top500:'🥉 Top 500',participation:'✓ Participation'}[tier]) : '—';
+    const reward = tier ? STAR_RACE_REWARDS[a.id][tier] : null;
+    const rewardStr = reward ? `${reward.coins}🪙${reward.silver?' +'+reward.silver+' Silver':''}${reward.gold?' +'+reward.gold+' Gold':''}` : '40★ for participation';
+    html += `<div style="display:flex;align-items:center;gap:8px;padding:8px;background:rgba(0,0,0,0.3);border-radius:8px;margin-bottom:4px;font-size:11px">
+      <div style="font-size:18px">${a.icon}</div>
+      <div style="flex:1">
+        <div style="font-weight:800">${a.name}</div>
+        <div style="color:#9ad4ff;font-size:10px">${tierLbl} · <span style="color:rgba(255,255,255,0.7)">${rewardStr}</span></div>
+      </div>
+      <div style="font-weight:900;color:#ffd700">${wkStars}★</div>
+    </div>`;
+  });
+  // Mailbox
+  const mail = (s.starRace.mailbox||[]).filter(m => !m.claimed);
+  html += '<div style="font-size:10px;color:rgba(255,255,255,0.6);text-transform:uppercase;letter-spacing:1px;margin:10px 0 6px">Mailbox ('+mail.length+')</div>';
+  if(mail.length === 0){
+    html += '<div style="font-size:11px;color:rgba(255,255,255,0.5);text-align:center;padding:10px">No pending rewards</div>';
+  } else {
+    mail.forEach((m, idx) => {
+      const globalIdx = s.starRace.mailbox.indexOf(m);
+      const a = arenaById(m.arenaId);
+      const label = {top10:'Top 10',top100:'Top 100',top500:'Top 500',participation:'Participation'}[m.tier];
+      const rewardStr = `${m.coins}🪙${m.silver?' +'+m.silver+' Silver':''}${m.gold?' +'+m.gold+' Gold':''}`;
+      const daysLeft = Math.max(0, Math.ceil((m.expiresAt - Date.now())/86400000));
+      html += `<div style="display:flex;align-items:center;gap:8px;padding:8px;background:rgba(255,215,0,0.08);border:1px solid rgba(255,215,0,0.3);border-radius:8px;margin-bottom:4px;font-size:11px">
+        <div style="flex:1">
+          <div style="font-weight:800">${a?a.icon:''} ${a?a.name:m.arenaId} — ${label}</div>
+          <div style="color:rgba(255,255,255,0.7);font-size:10px">${rewardStr} · expires in ${daysLeft}d</div>
+        </div>
+        <button class="sc-buy" data-mail-idx="${globalIdx}">CLAIM</button>
+      </div>`;
+    });
+  }
+  body.innerHTML = html;
+  body.querySelectorAll('[data-mail-idx]').forEach(btn => {
+    btn.onclick = () => { claimStarRaceMail(parseInt(btn.dataset.mailIdx)); openStarRace(); renderAll(); };
+  });
+  $('starrace-modal').classList.remove('hidden');
+}
+function closeStarRace(){ $('starrace-modal').classList.add('hidden'); }
 
 function renderStubCounters(){}
 
 /* ========== VENUE ========== */
 
-let venueView = {arenaId:null};
+// v7.3 §7 — venue view uses district, not arena
+let venueView = {districtId:null};
 
-function buildVenueSceneHTML(arenaId){
-  const a = arenaById(arenaId);
-  const blds = BUILDINGS_BY_ARENA[arenaId] || [];
+function resolveHomeDistrictId(){
+  // Home display selector: explicit override if unlocked; otherwise auto-follow current arena.
+  const explicit = s.venue && s.venue.homeDistrictId;
+  if(explicit){
+    const idx = districtIndex(explicit);
+    if(idx >= 0 && idx <= maxUnlockedDistrictIdx()) return explicit;
+  }
+  const d = districtForArena(s.currentPlayingArena);
+  return d ? d.id : DISTRICTS[0].id;
+}
+
+function buildVenueSceneHTML(districtId){
+  const d = districtById(districtId); if(!d) return '';
+  const blds = d.buildings;
   const unlocked = blds.filter(b => (s.venue.buildings[b.id]||0) > 0);
-  if(!unlocked.length) return `<div class="vitem empty-hint">${a.icon}</div>`;
+  if(!unlocked.length) return `<div class="vitem empty-hint">${d.icon}</div>`;
   return unlocked.map(b => {
     const lvl = s.venue.buildings[b.id]||0;
     const stars = '★'.repeat(lvl);
@@ -1722,39 +2306,39 @@ function buildVenueSceneHTML(arenaId){
 }
 
 function renderVenue(){
-  if(!venueView.arenaId) venueView.arenaId = currentArenaId();
+  if(!venueView.districtId) venueView.districtId = resolveHomeDistrictId();
   const body = $('venue-body');
   body.innerHTML = '';
 
   // Header
   const hdr = document.createElement('div');
   hdr.className = 'venue-header';
-  hdr.innerHTML = `<span>Build your venue</span><span class="vt-chip">🛠️ ${s.venue.venueBuildingTokens} VT</span>`;
+  hdr.innerHTML = `<span>Build your venue</span><span class="vt-chip">🛠️ ${Math.floor(s.venue.venueBuildingTokens||0)} VT</span>`;
   body.appendChild(hdr);
 
-  // District pills
+  // District pills (v7.3 §7 — 3 districts, locked ones shown as silhouettes)
   const pills = document.createElement('div');
   pills.className = 'venue-pills';
-  ARENAS.forEach((a,i) => {
-    const unlocked = i <= maxUnlockedArenaIdx();
-    const active = a.id === venueView.arenaId;
+  DISTRICTS.forEach((d, i) => {
+    const unlocked = i <= maxUnlockedDistrictIdx();
+    const active = d.id === venueView.districtId;
     const p = document.createElement('div');
     p.className = 'venue-pill'+(active?' active':'')+(unlocked?'':' locked');
-    p.textContent = `${a.icon} ${a.name}`;
-    if(unlocked) p.onclick = ()=>{ venueView.arenaId = a.id; renderVenue(); };
+    p.textContent = unlocked ? `${d.icon} ${d.name}` : `🔒 ${d.name}`;
+    if(unlocked) p.onclick = ()=>{ venueView.districtId = d.id; renderVenue(); };
     pills.appendChild(p);
   });
   body.appendChild(pills);
 
   // Scene
-  const a = arenaById(venueView.arenaId);
-  const blds = BUILDINGS_BY_ARENA[venueView.arenaId] || [];
+  const d = districtById(venueView.districtId);
+  const blds = d.buildings;
   const totalLevels = blds.reduce((acc,b)=>acc+(s.venue.buildings[b.id]||0),0);
   const maxLevels = blds.length * 3;
   const scene = document.createElement('div');
   scene.className = 'venue-scene';
   const lvlBadges = Array.from({length:3},(_,i)=>`<div class="lvl-dot ${totalLevels > (maxLevels/3)*i ? 'filled':''}"></div>`).join('');
-  scene.innerHTML = `<div class="scene-label">${a.icon} ${a.name}</div><div class="scene-level-badges">${lvlBadges}</div><div class="venue-items-row">${buildVenueSceneHTML(venueView.arenaId)}</div>`;
+  scene.innerHTML = `<div class="scene-label">${d.icon} ${d.name} <span style="color:rgba(255,255,255,0.5);font-size:10px;font-weight:400">· ${d.theme}</span></div><div class="scene-level-badges">${lvlBadges}</div><div class="venue-items-row">${buildVenueSceneHTML(venueView.districtId)}</div>`;
   body.appendChild(scene);
 
   // Buildings
@@ -1795,14 +2379,35 @@ function renderVenue(){
   body.appendChild(list);
 }
 
+// v7.3.1 §8 — Venue Token 200 soft cap; overflow converts 5 VT → 1 Sticker Shard (5 shards = 1 Silver Pack)
+const VENUE_TOKEN_CAP = 200;
+function addVenueTokens(amount){
+  const current = s.venue.venueBuildingTokens || 0;
+  let total = current + amount;
+  if(total > VENUE_TOKEN_CAP){
+    const overflow = total - VENUE_TOKEN_CAP;
+    total = VENUE_TOKEN_CAP;
+    s.venue.stickerShards = (s.venue.stickerShards||0) + Math.floor(overflow / 5);
+    const leftover = overflow - Math.floor(overflow/5)*5;
+    total += leftover; // keep fractional overflow below shard threshold
+    // Convert shards→Silver Pack every 5
+    while((s.venue.stickerShards||0) >= 5){
+      s.venue.stickerShards -= 5;
+      grantBoosters(['colorSplash']); // Silver Pack proxy
+      toast('🎟️ 5 Venue shards → 1 Silver Pack');
+    }
+  }
+  return total;
+}
+
 function upgradeBuilding(id){
   const lvl = s.venue.buildings[id] || 0;
   if(lvl >= 3) return;
   const cost = BUILDING_COSTS[lvl+1];
-  if(s.venue.venueBuildingTokens < cost){ toast('Not enough Venue Tokens'); return; }
-  s.venue.venueBuildingTokens -= cost;
+  if(Math.floor(s.venue.venueBuildingTokens||0) < cost){ toast('Not enough Venue Tokens'); return; }
+  s.venue.venueBuildingTokens = (s.venue.venueBuildingTokens||0) - cost;
   s.venue.buildings[id] = lvl+1;
-  const b = Object.values(BUILDINGS_BY_ARENA).flat().find(x=>x.id===id);
+  const b = DISTRICTS.flatMap(d=>d.buildings).find(x=>x.id===id);
   toast(`🏗️ ${b.name} → L${lvl+1}`);
   renderVenue();
   renderHUD();
@@ -1872,17 +2477,36 @@ function renderAlbumDetail(albumId){
   topInfo.innerHTML = `<div><b style="font-size:15px">${alb.ic} ${alb.name}</b><br><span style="color:rgba(255,255,255,0.6);font-size:10px">${alb.theme}</span></div><div style="text-align:right"><b style="color:#ffd700;font-size:16px">${owned}/20</b><br><span style="color:rgba(255,255,255,0.5);font-size:10px">🎟️ ${s.stickerTokens}</span></div>`;
   wrap.appendChild(topInfo);
 
-  // Album completion claim button
+  // v7.3 §12 — Full-album banner (reward preview + progress + claim state)
+  const albRewardText = ALBUM_REWARDS_DATA[albumId]?.full || '10,000🪙 + exclusive frame + 2 Gold Packs';
   const albAllOwned = owned >= 20;
   const albClaimed = s.claimedAlbumRewards.includes(albumId);
+  const banner = document.createElement('div');
+  banner.style.cssText = `width:100%;padding:12px;margin-bottom:12px;border-radius:12px;background:${albClaimed?'linear-gradient(135deg,rgba(255,215,0,0.35),rgba(255,172,4,0.25))':albAllOwned?'linear-gradient(135deg,rgba(128,0,255,0.25),rgba(255,215,0,0.2))':'linear-gradient(135deg,rgba(0,0,0,0.35),rgba(0,0,0,0.25))'};border:1px solid ${albClaimed?'rgba(255,215,0,0.6)':albAllOwned?'rgba(255,215,0,0.5)':'rgba(255,255,255,0.1)'}`;
+  banner.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+      <div style="flex:1">
+        <div style="font-size:10px;color:rgba(255,255,255,0.65);text-transform:uppercase;letter-spacing:1px">Album Completion</div>
+        <div style="font-size:12px;font-weight:800;margin-top:2px">🏆 ${albRewardText}</div>
+        <div style="background:rgba(0,0,0,0.4);height:6px;border-radius:3px;margin-top:6px;overflow:hidden"><div style="height:100%;width:${(owned/20)*100}%;background:linear-gradient(90deg,#9ad4ff,#ffd700)"></div></div>
+        <div style="font-size:10px;color:rgba(255,255,255,0.6);margin-top:4px">${owned}/20 stickers collected</div>
+      </div>
+      <div style="font-size:28px">${albClaimed?'✓':albAllOwned?'🎁':'📗'}</div>
+    </div>`;
   if(albAllOwned && !albClaimed){
     const btn = document.createElement('button');
     btn.className = 'page-claim';
-    btn.style.cssText='width:100%;padding:10px;margin-bottom:12px;font-size:13px';
-    btn.textContent = '🏆 CLAIM ALBUM COMPLETION';
+    btn.style.cssText = 'width:100%;padding:8px;margin-top:8px;font-size:12px';
+    btn.textContent = 'CLAIM ALBUM COMPLETION';
     btn.onclick = ()=>{ claimAlbumCompletion(albumId); };
-    wrap.appendChild(btn);
+    banner.appendChild(btn);
+  } else if(albClaimed){
+    const stamp = document.createElement('div');
+    stamp.style.cssText = 'text-align:center;font-size:10px;color:rgba(255,215,0,0.85);margin-top:4px;letter-spacing:1px;font-weight:800';
+    stamp.textContent = '✓ CLAIMED';
+    banner.appendChild(stamp);
   }
+  wrap.appendChild(banner);
 
   // 4 pages × 5 stickers
   for(let p=0;p<4;p++){
@@ -1890,12 +2514,20 @@ function renderAlbumDetail(albumId){
     page.className = 'album-page';
     const pageOwned = [0,1,2,3,4].every(i => s.stickers[stickerKey(albumId,p*5+i)]);
     const pageClaimed = s.claimedPageRewards.includes(albumId+':'+p);
+    const progressCount = [0,1,2,3,4].filter(i=>s.stickers[stickerKey(albumId,p*5+i)]).length;
     const hdr = document.createElement('div');
     hdr.className = 'album-page-hdr';
-    hdr.innerHTML = `<span>Page ${p+1}</span>`;
+    // v7.3 §12 — per-page header with reward preview + state
+    const pageReward = ALBUM_REWARDS_DATA[albumId]?.pages?.[p] || '250🪙 + 1 Booster';
+    const stateLabel = pageClaimed
+      ? '<span style="color:rgba(0,255,100,0.8);font-size:9px;letter-spacing:1px;font-weight:800">✓ CLAIMED</span>'
+      : pageOwned
+        ? '<span style="color:#ffd700;font-size:9px;letter-spacing:1px;font-weight:800;animation:pulse 1.4s infinite">READY</span>'
+        : `<span style="color:rgba(255,255,255,0.5);font-size:9px">${progressCount}/5</span>`;
+    hdr.innerHTML = `<span style="display:flex;flex-direction:column;gap:2px"><span><b>Page ${p+1}</b> <span style="color:rgba(255,215,0,0.75);font-size:10px">· ${pageReward}</span></span>${stateLabel}</span>`;
     const claimBtn = document.createElement('button');
     claimBtn.className = 'page-claim'+(pageClaimed?' claimed':'');
-    claimBtn.textContent = pageClaimed ? '✓ CLAIMED' : (pageOwned ? 'CLAIM 250🪙+1 Booster' : `${[0,1,2,3,4].filter(i=>s.stickers[stickerKey(albumId,p*5+i)]).length}/5`);
+    claimBtn.textContent = pageClaimed ? '✓' : (pageOwned ? 'CLAIM' : '🔒');
     claimBtn.disabled = !pageOwned || pageClaimed;
     if(pageOwned && !pageClaimed){ claimBtn.onclick = ()=>claimPageReward(albumId, p); }
     hdr.appendChild(claimBtn);
@@ -1959,12 +2591,14 @@ function claimPageReward(albumId, pageIdx){
   const key = albumId+':'+pageIdx;
   if(s.claimedPageRewards.includes(key)) return;
   s.claimedPageRewards.push(key);
-  s.coins += 250;
-  // Random booster
-  const tier = Math.random()<0.7?'bronze':Math.random()<0.85?'silver':'gold';
-  const pool = Object.keys(BOOSTERS).filter(k=>BOOSTERS[k].tier===tier);
-  grantBoosters([pool[Math.floor(Math.random()*pool.length)]]);
-  toast('📖 Page ' + (pageIdx+1) + ': +250🪙 +1 booster');
+  // v7.3.1 §3 — table-driven page rewards
+  const seasonal = !!ALBUMS[albumId]?.seasonal;
+  const r = (seasonal ? ALBUM_PAGE_REWARDS.seasonal : ALBUM_PAGE_REWARDS.regular)[pageIdx] || {coins:0};
+  s.coins += r.coins||0;
+  for(let i=0;i<(r.silverPack||0);i++) grantBoosters(['colorSplash']);
+  for(let i=0;i<(r.goldPack||0);i++) grantBoosters(['clearBottle']);
+  toast(`📖 Page ${pageIdx+1}: +${r.coins}🪙${r.silverPack?' +Silver':''}${r.goldPack?' +Gold':''}`);
+  if(typeof weeklyMissionProgress === 'function') weeklyMissionProgress('w_page_1', 1); // v7.3 §5
   renderAll();
   renderAlbums();
 }
@@ -1973,22 +2607,19 @@ function claimAlbumCompletion(albumId){
   if(s.claimedAlbumRewards.includes(albumId)) return;
   s.claimedAlbumRewards.push(albumId);
   const alb = ALBUMS[albumId];
-  if(alb.seasonal){
-    s.coins += 6000;
-    grantBoosters(['clearBottle','autoServe','doubleServe','autoServe','clearBottle']);
-    s.stickerTokens += 2;
-    s.profile.unlockedFrames.push('seasonal_'+albumId);
-    s.profile.unlockedTitles.push('Season 1 Champion');
-    s.venue.venueBuildingTokens++;
-    toast('🏆 Seasonal: 6000🪙 +5 Gold +2 Tokens +Frame +Title +1 VT');
-  } else {
-    s.coins += 3000;
-    grantBoosters(['clearBottle','autoServe','doubleServe']);
-    s.stickerTokens++;
+  // v7.3.1 §3 — full-album rewards (−60% coins, +cosmetics, +Sticker Tokens)
+  const r = alb.seasonal ? ALBUM_FULL_REWARDS.seasonal : ALBUM_FULL_REWARDS.regular;
+  s.coins += r.coins;
+  for(let i=0;i<r.goldPacks;i++) grantBoosters(['clearBottle']);
+  s.stickerTokens += (r.stickerTokens||0);
+  if(r.frame) s.profile.unlockedFrames.push(r.frame+':'+albumId);
+  if(r.title){
     const titleByAlbum = {barClassics:'Classic Act', cityNights:'Night Owl', grandHotel:'Connoisseur'};
-    if(titleByAlbum[albumId]) s.profile.unlockedTitles.push(titleByAlbum[albumId]);
-    toast('🏆 Album: 3000🪙 +3 Gold +1 Token +Title');
+    const final = alb.seasonal ? 'Season 1 '+r.title : (titleByAlbum[albumId] || r.title);
+    if(!s.profile.unlockedTitles.includes(final)) s.profile.unlockedTitles.push(final);
   }
+  if(alb.seasonal) s.venue.venueBuildingTokens = (s.venue.venueBuildingTokens||0) + 1;
+  toast(`🏆 ${alb.seasonal?'Seasonal':'Album'}: +${r.coins}🪙 +${r.goldPacks} Gold +${r.stickerTokens}🎟️`);
   renderAll();
   renderAlbums();
 }
@@ -2019,7 +2650,7 @@ function renderShop(){
 function renderShopA(){
   const grid = document.createElement('div');
   grid.className = 'shop-grid';
-  const unlocked = ARENA_BOOSTER_UNLOCKS[currentArenaId()];
+  const unlocked = ARENA_BOOSTER_UNLOCKS[s.currentPlayingArena];
   Object.entries(BOOSTERS).forEach(([id,b]) => {
     if(!unlocked.includes(id)) return;
     const card = document.createElement('div');
@@ -2044,24 +2675,28 @@ function renderShopA(){
 }
 
 function renderShopB(){
-  const prices = {juice:300,beach:600,cocktail:1200,speak:2400,rooftop:4500,grand:7500};
+  // v7.3 §4 — Star Chest removed for MVP. Re-purposed as arena-themed Sticker Pack shortcut.
+  const prices  = {juice:200,smoothie:300,coffee:450,tea:700,cocktail:900,wine:1300,champagne:1800,grand:2500};
+  const pulls   = {juice:5,  smoothie:5, coffee:6,  tea:6,  cocktail:8, wine:8,   champagne:10,  grand:10};
   const grid = document.createElement('div');
   grid.className = 'shop-grid';
   ARENAS.forEach((a,i) => {
     if(i>maxUnlockedArenaIdx()) return;
     const price = prices[a.id];
+    const pullCount = pulls[a.id];
     const card = document.createElement('div');
     card.className = 'shop-card';
     card.innerHTML = `
-      <div class="sc-ic">🎁</div>
-      <div class="sc-name">Star Chest</div>
-      <div class="sc-desc">${a.icon} ${a.name} tier shortcut</div>
-      <div class="sc-owned">Queued: ${s.starChestPending?'1':'0'}</div>
+      <div class="sc-ic">${a.icon}</div>
+      <div class="sc-name">${a.name} Pack</div>
+      <div class="sc-desc">${pullCount} pulls · arena-themed stickers</div>
+      <div class="sc-owned">&nbsp;</div>
       <button class="sc-buy" ${s.coins<price?'disabled':''}>${price} 🪙</button>`;
     card.querySelector('.sc-buy').onclick = ()=>{
       if(s.coins<price){ toast('Not enough Coins'); return; }
       s.coins -= price;
-      rollStarChest(a.id);
+      const packResult = rollPack({count:pullCount, maxTier:'gold', guaranteedGold:false});
+      showPackReveal(a.name+' Pack', packResult.pulls);
       renderAll();
     };
     grid.appendChild(card);
@@ -2072,7 +2707,7 @@ function renderShopB(){
 function renderShopC(){
   const bundles = [
     {name:"Bartender's Starter", desc:'1500🪙 + 5 boosters', price:'$1.99'},
-    {name:'Weekend Warrior',     desc:'6000🪙 + 15 boosters + 1 Star Chest', price:'$4.99'},
+    {name:'Weekend Warrior',     desc:'6000🪙 + 15 boosters + 2 Gold Packs', price:'$4.99'},
     {name:'Grand Stock',         desc:'24000🪙 + 40 boosters + 3 Chests + Exclusive Avatar', price:'$19.99'}
   ];
   const grid = document.createElement('div');
@@ -2095,21 +2730,28 @@ function renderShopD(){
   hdr.className = 'bp-header';
   const tier = s.barPass.currentTier;
   const bpp = s.barPass.bpp;
-  const nextTierBpp = tier >= 30 ? bpp : (tier+1)*50;
-  const curTierBpp = tier*50;
+  // v7.3.1 §6 — 400 BPP flat per tier
+  const nextTierBpp = tier >= 30 ? bpp : (tier+1)*BPP_PER_TIER;
+  const curTierBpp = tier*BPP_PER_TIER;
   const pct = tier>=30 ? 100 : ((bpp-curTierBpp)/(nextTierBpp-curTierBpp))*100;
+  // v7.3 §6 — Skip Ahead button (catch-up tier purchase, cap T28)
+  const canSkip = tier < 28;
   hdr.innerHTML = `
     <div class="bp-tier-info">Tier <b>${tier}</b> / 30 · ${bpp} BPP${tier<30?` · ${nextTierBpp-bpp} to next`:' · MAX'}</div>
     <div class="bp-progress"><div class="f" style="width:${Math.max(0,Math.min(100,pct))}%"></div></div>
-    <button class="bp-premium-btn ${s.barPass.premiumUnlocked?'owned':''}">${s.barPass.premiumUnlocked?'✓ Premium':'Unlock Premium — $9.99'}</button>`;
+    <div style="display:flex;gap:6px;margin-top:6px">
+      <button class="bp-premium-btn ${s.barPass.premiumUnlocked?'owned':''}" style="flex:1">${s.barPass.premiumUnlocked?'✓ Premium':'Unlock Premium — $9.99'}</button>
+      <button class="bp-premium-btn" id="bp-skip-btn" style="flex-shrink:0;background:linear-gradient(180deg,#6a3bff,#8b5cf6);${canSkip?'':'opacity:0.4;pointer-events:none'}">⏭ Skip</button>
+    </div>`;
   const btn = hdr.querySelector('.bp-premium-btn');
   if(!s.barPass.premiumUnlocked) btn.onclick = ()=>toast('Coming soon');
+  hdr.querySelector('#bp-skip-btn').onclick = openPassCatchup;
   wrap.appendChild(hdr);
 
   // Info
   const info = document.createElement('div');
   info.style.cssText = 'padding:0 14px 8px;font-size:10px;color:rgba(255,255,255,0.55);line-height:1.3';
-  info.textContent = 'Earn BPP from every match played (+5) and won (+10). Premium retroactively claims earned tiers.';
+  info.textContent = 'Earn BPP: +10 per match played, +20 win bonus, +100 per Daily Mission. 400 BPP per tier. Premium retroactively claims earned tiers.';
   wrap.appendChild(info);
 
   // Strip
@@ -2148,7 +2790,7 @@ function formatBPReward(r){
   if(r.boosters) parts.push(`${r.boosters} boosters`);
   if(r.silverBooster) parts.push(`${r.silverBooster} Silver`);
   if(r.goldBooster) parts.push(`${r.goldBooster} Gold`);
-  if(r.starChest) parts.push(`${r.starChest} Star Chest`);
+  // starChest removed in v7.3; kept for back-compat render if legacy data appears
   if(r.bigPacks) parts.push(`${r.bigPacks} Big Packs`);
   if(r.tokens) parts.push(`${r.tokens}🎟️`);
   if(r.venueToken) parts.push(`${r.venueToken}🛠️`);
@@ -2179,7 +2821,7 @@ function claimBarPass(n, premium){
   }
   if(r.silverBooster) for(let i=0;i<r.silverBooster;i++) grantBoosters(['colorSplash']);
   if(r.goldBooster) for(let i=0;i<r.goldBooster;i++) grantBoosters(['clearBottle']);
-  if(r.starChest) for(let i=0;i<r.starChest;i++) rollStarChest(currentArenaId());
+  // starChest BP reward path removed in v7.3 (Star Chest deprecated); legacy saves ignored
   if(r.bigPacks) for(let i=0;i<r.bigPacks;i++) rollPack({count:10,maxTier:'diamond',guaranteedGold:true});
   if(r.tokens) s.stickerTokens += r.tokens;
   if(r.venueToken) s.venue.venueBuildingTokens += r.venueToken;
@@ -2188,6 +2830,47 @@ function claimBarPass(n, premium){
   if(r.avatar) s.profile.unlockedAvatars.push(r.avatar);
   if(r.diamondSticker){ s.stickerTokens++; } // proxy: give a token to pick any
   toast('🎁 Tier '+n+(premium?' Premium':' Free')+' claimed');
+  renderAll();
+  renderShop();
+}
+
+// v7.3 §6 + §15.J — Pass catch-up. Cap at Tier 28 (final 2 tiers earned only).
+function openPassCatchup(){
+  const body = $('passcatchup-body');
+  const tier = s.barPass.currentTier;
+  const cap = 28;
+  const roomSmall = Math.max(0, Math.min(3, cap - tier));
+  const roomBulk  = Math.max(0, Math.min(15, cap - tier));
+  const mkCard = (price, reqTiers, actualTiers, perTier) => {
+    const usable = actualTiers > 0;
+    return `<div class="shop-card" style="margin-bottom:8px">
+      <div class="sc-ic">⏭</div>
+      <div class="sc-name">${reqTiers}-tier Skip</div>
+      <div class="sc-desc">Advance ${usable?actualTiers:reqTiers} tier${reqTiers>1?'s':''} · ${perTier} per tier${actualTiers<reqTiers?` <span style="color:#ff9a9a">(cap: Tier ${cap} — only ${actualTiers} remain)</span>`:''}</div>
+      <div class="sc-owned">Now: Tier ${tier} → Tier ${tier + (usable?actualTiers:0)}</div>
+      <button class="sc-buy" data-tiers="${actualTiers}" ${usable?'':'disabled'}>${price}</button>
+    </div>`;
+  };
+  body.innerHTML = mkCard('$0.99', 3, roomSmall, '$0.33') + mkCard('$4.99', 15, roomBulk, '$0.33');
+  body.querySelectorAll('[data-tiers]').forEach(btn => {
+    btn.onclick = ()=>{ purchasePassCatchup(parseInt(btn.dataset.tiers)); closePassCatchup(); };
+  });
+  $('passcatchup-modal').classList.remove('hidden');
+}
+function closePassCatchup(){ $('passcatchup-modal').classList.add('hidden'); }
+
+function purchasePassCatchup(tiers){
+  if(!tiers || tiers <= 0) return;
+  const cap = 28;
+  const target = Math.min(cap, (s.barPass.currentTier||0) + tiers);
+  const gained = target - s.barPass.currentTier;
+  if(gained <= 0){ toast('Max purchasable: Tier ' + cap); return; }
+  s.barPass.currentTier = target;
+  // Sync BPP with current formula (v7.3.1 §6: 400 flat per tier)
+  const neededBpp = target * BPP_PER_TIER;
+  if((s.barPass.bpp||0) < neededBpp) s.barPass.bpp = neededBpp;
+  toast(`⏭ +${gained} tier${gained>1?'s':''} — Tier ${target}/30`);
+  saveSave();
   renderAll();
   renderShop();
 }
@@ -2238,6 +2921,18 @@ function addStickerByRarity(rarity){
     const coins = {white:10, silver:40, gold:150, diamond:0}[rarity]||10;
     s.coins += coins;
     if(rarity==='diamond') s.stickerTokens++;
+    // v7.3.1 §7 — Gold-dupe conversion: 5 Gold dupes (after album full) → 1 Sticker Token
+    if(rarity === 'gold'){
+      const albFull = ALBUMS[albumId].stickers.every((_,i) => s.stickers[stickerKey(albumId,i)] > 0);
+      if(albFull){
+        s.goldDupeCounter = (s.goldDupeCounter||0) + 1;
+        if(s.goldDupeCounter >= 5){
+          s.goldDupeCounter -= 5;
+          s.stickerTokens++;
+          toast('🎟️ 5 Gold dupes → +1 Sticker Token');
+        }
+      }
+    }
     return {dup:true, coins, rarity, albumId, idx};
   } else {
     s.stickers[key] = 1;
@@ -2375,21 +3070,8 @@ function rarityRoll(maxTier,forceGold){
 function renderTrophyRoad(){
   const list = $('tr-list');
   list.innerHTML = '';
-  // Progress bar matches visual row positions: each milestone occupies 1/N of the bar,
-  // with linear interpolation between the two milestones bracketing s.trophies.
-  const N = TROPHY_ROAD.length;
-  let pct = 0;
-  if(s.trophies >= TROPHY_ROAD[N-1].trophies){
-    pct = 100;
-  } else {
-    let idx = 0;
-    while(idx < N && s.trophies >= TROPHY_ROAD[idx].trophies) idx++;
-    // idx = index of first unreached milestone (1..N-1); reached count = idx
-    const prevT = idx === 0 ? 0 : TROPHY_ROAD[idx-1].trophies;
-    const nextT = TROPHY_ROAD[idx].trophies;
-    const frac = (s.trophies - prevT) / Math.max(1, nextT - prevT);
-    pct = ((idx + frac) / N) * 100;
-  }
+  const maxT = TROPHY_ROAD[TROPHY_ROAD.length-1].trophies;
+  const pct = Math.max(0, Math.min(100, (s.trophies / maxT) * 100));
   list.style.setProperty('--tr-progress', pct + '%');
   TROPHY_ROAD.forEach(ms => {
     const claimed = s.trophyRoad.claimedMilestones.includes(ms.n);
@@ -2415,9 +3097,6 @@ function claimMilestone(n){
   ms.rewardFn();
   s.trophyRoad.claimedMilestones.push(n);
   toast('🏆 Claimed #'+n+': '+ms.reward);
-  // v7.2 flag moments
-  if(n === 7) setTimeout(()=>toast('🔓 Staking Unlocked — Gold boosters can now be staked!'), 1900);
-  if(n === 10) setTimeout(()=>toast('🔓 ×4 Stakes Unlocked — Speakeasy reached!'), 1900);
   renderAll();
 }
 
@@ -2425,11 +3104,14 @@ function claimMilestone(n){
    SCREEN NAV
    ========================================================================= */
 
-const SCREENS = ['home','matchmaking','loadout','match','result','shop','trophyroad','venue','albums','tutorial'];
+const SCREENS = ['home','matchmaking','loadout','match','result','shop','trophyroad','venue','albums','tutorial','teams','ranking','vip','profile'];
 function showScreen(id){
-  SCREENS.forEach(x => $('screen-'+x).classList.add('hidden'));
-  $('screen-'+id).classList.remove('hidden');
-  // nav highlight
+  // v7.3 §14 — "pass" nav slot opens Shop screen with Pass tab active
+  if(id === 'pass'){ showScreen('shop'); shopTab = 'D'; renderShop(); return; }
+  SCREENS.forEach(x => { const el = $('screen-'+x); if(el) el.classList.add('hidden'); });
+  const tgt = $('screen-'+id);
+  if(tgt) tgt.classList.remove('hidden');
+  // nav highlight (Pass button stays active when shop is open on D tab)
   document.querySelectorAll('.nav-btn').forEach(b=>{
     b.classList.toggle('active', b.dataset.screen===id);
   });
@@ -2440,14 +3122,349 @@ function showScreen(id){
   if(id==='home') renderHome();
   if(id==='shop') renderShop();
   if(id==='trophyroad'){ renderTrophyRoad(); requestAnimationFrame(()=>{ const sc=$('screen-trophyroad'); sc.scrollTop = sc.scrollHeight; }); }
-  if(id==='venue'){ venueView.arenaId = currentArenaId(); renderVenue(); }
+  if(id==='venue'){ venueView.districtId = resolveHomeDistrictId(); renderVenue(); }
   if(id==='albums'){ albumView = {mode:'list', albumId:null}; renderAlbums(); }
+  if(id==='teams') renderTeams();
+  if(id==='ranking') renderRanking();
+  if(id==='vip') renderVIP();
+  if(id==='profile') renderProfile();
 }
 function goHome(){ showScreen('home'); }
 
 /* =========================================================================
+   v7.3 §8 — TEAMS STUB
+   ========================================================================= */
+function renderTeams(){
+  const body = $('teams-body');
+  const unlocked = s.trophies >= 1000;
+  const ribbon = unlocked
+    ? '<div style="position:absolute;top:10px;right:-40px;transform:rotate(28deg);background:linear-gradient(90deg,#ffac04,#ffc700);color:#1a1a1a;font-weight:900;font-size:10px;padding:4px 50px;letter-spacing:1px">UNLOCKING SOON!</div>'
+    : '<div style="position:absolute;top:10px;right:-40px;transform:rotate(28deg);background:rgba(154,212,255,0.85);color:#002940;font-weight:900;font-size:10px;padding:4px 50px;letter-spacing:1px">COMING SOON</div>';
+  const cta = unlocked
+    ? '<button class="play-btn" id="teams-cta" style="margin-top:14px">⏳ GET READY</button>'
+    : '<button class="play-btn" id="teams-cta" style="margin-top:14px">🔔 NOTIFY ME</button>';
+  body.innerHTML = `
+    <div style="position:relative;overflow:hidden;margin:14px;padding:18px;background:linear-gradient(180deg,rgba(12,162,231,0.2),rgba(128,0,255,0.12));border:1px solid rgba(255,215,0,0.3);border-radius:14px;text-align:center">
+      ${ribbon}
+      <div style="font-size:42px;line-height:1">👥</div>
+      <div style="font-size:24px;font-weight:900;letter-spacing:1px;margin-top:10px">Your crew is coming.</div>
+      <div style="display:flex;justify-content:center;gap:4px;margin-top:10px">
+        ${[1,2,3,4,5].map(()=>'<div style="width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center">❔</div>').join('')}
+      </div>
+      ${cta}
+      <div style="font-size:10px;color:rgba(255,255,255,0.5);margin-top:8px">Launching v9 — estimated next season</div>
+    </div>
+    <div style="padding:0 14px">
+      <div style="font-size:11px;color:rgba(255,255,255,0.55);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Preview features ↓</div>
+      ${[
+        ['💬','Team Chat','Coordinate with your crew'],
+        ['📦','Team Box','Open together, win together'],
+        ['🥇','Team Star Race','Compete as a team'],
+        ['🎁','Booster Donations','Share boosters with teammates']
+      ].map(([ic,n,d])=>`<div style="display:flex;gap:10px;align-items:center;padding:10px;background:rgba(0,0,0,0.25);border-radius:10px;margin-bottom:6px"><div style="font-size:28px">${ic}</div><div><div style="font-weight:800">${n}</div><div style="font-size:11px;color:rgba(255,255,255,0.6)">${d}</div></div></div>`).join('')}
+    </div>`;
+  const cb = $('teams-cta');
+  if(cb) cb.onclick = ()=>{
+    s.teams = s.teams || {};
+    s.teams.notifyOptIn = true;
+    s.teams.notifyAt = Date.now();
+    saveSave();
+    toast(unlocked?'⏳ You\'ll be first in line':'🔔 We\'ll notify you at launch');
+  };
+  // track first-view unlock (one-time): clear NEW badge on first tab-click
+  s.teams = s.teams || {};
+  if(!s.teams.firstClickedAt){ s.teams.firstClickedAt = Date.now(); saveSave(); }
+}
+
+/* =========================================================================
+   v7.3 §9 — RANKING HUB (4 tabs)
+   ========================================================================= */
+let rankingTab = 'starrace';
+function renderRanking(){
+  const tabs = $('ranking-tabs');
+  tabs.innerHTML = '';
+  [['starrace','Star Race'],['arena','Arena'],['country','Country'],['global','Global']].forEach(([id,n])=>{
+    const b = document.createElement('button');
+    b.className = 'shop-tab'+(rankingTab===id?' active':'');
+    b.textContent = n;
+    b.onclick = ()=>{ rankingTab = id; renderRanking(); };
+    tabs.appendChild(b);
+  });
+  const body = $('ranking-body');
+  body.innerHTML = '';
+  if(rankingTab === 'starrace'){ renderRankingStarRace(body); return; }
+  if(rankingTab === 'arena'){ renderRankingArena(body); return; }
+  if(rankingTab === 'country'){ renderRankingCountry(body); return; }
+  if(rankingTab === 'global'){ renderRankingGlobal(body); return; }
+}
+
+// Simulated leaderboard entries — prototype fidelity only. Uses country codes (not flag
+// emojis) because Windows Chrome/Edge doesn't render regional indicator sequences.
+function simLeaderboard(seed, count, scoreFn){
+  const names = ['Velvet Viv','Barista Bo','Olive Otto','Whiskey Wes','Ruby Rose','Cellar Cass','Sandy Pete','Gin Jack','Flute Flynn','Matcha Mei','Bubbly Bel','Vintage Vic','Neon Nia','Rosé Rhea','Tiki Tom','Sencha Sue','Baron Bo','Midnight Mo','Duchess Dee','Penthouse Pablo'];
+  const codes = ['US','PL','GB','JP','DE','BR','FR','IT','KR','MX'];
+  let h = seed;
+  const rand = ()=>{ h = (h*9301+49297) % 233280; return h/233280; };
+  return Array.from({length:count}, (_,i)=>({
+    rank: i+1,
+    name: names[Math.floor(rand()*names.length)],
+    country: codes[Math.floor(rand()*codes.length)],
+    score: scoreFn(i, rand),
+    avatar: ['🧑‍🍳','🧑‍🎤','👸','🦸','🧔','🧙','👨‍🍳','👩‍💼'][Math.floor(rand()*8)]
+  }));
+}
+
+function countryPill(code){
+  return `<span style="display:inline-block;background:rgba(154,212,255,0.15);border:1px solid rgba(154,212,255,0.4);border-radius:4px;padding:1px 5px;font-size:9px;color:#9ad4ff;font-weight:800;letter-spacing:0.5px;margin-right:4px;vertical-align:middle">${code}</span>`;
+}
+
+function lbRow(entry, scoreLabel){
+  const medal = entry.rank<=3?['🥇','🥈','🥉'][entry.rank-1]:'';
+  return `<div class="picker-item" data-lb-name="${entry.name}"><div class="pi-ic">${medal||'#'+entry.rank}</div><div class="pi-info"><div class="pi-name">${countryPill(entry.country)}<span style="font-size:16px">${entry.avatar}</span> ${entry.name}</div><div class="pi-desc">${scoreLabel}: ${entry.score}</div></div></div>`;
+}
+
+function renderRankingStarRace(body){
+  starRaceWeekResetCheck();
+  const a = currentArena();
+  const wk = s.starRace.starsByArena[a.id] || 0;
+  const nextReset = getWeekStartMs() + 7*86400000;
+  const days = Math.floor((nextReset-Date.now())/86400000);
+  const sim = simLeaderboard(a.min+1, 20, (i,r)=>Math.max(10, 260 - i*12 + Math.floor(r()*8)));
+  const youRank = Math.max(1, 20 - Math.floor(wk/15));
+  body.innerHTML = `
+    <div style="padding:10px;background:rgba(0,0,0,0.3);border-radius:8px;margin:10px;text-align:center;font-size:12px">${a.icon} <b>${a.name}</b> · Resets in <b style="color:#ffd700">${days}d</b> · You: <b style="color:#ffd700">${wk}★</b> (~#${youRank})</div>
+    <div style="padding:0 10px">${sim.map(e=>lbRow(e,'★')).join('')}</div>`;
+  body.querySelectorAll('[data-lb-name]').forEach(el => el.onclick = ()=>openPublicProfile(el.dataset.lbName));
+}
+
+function renderRankingArena(body){
+  const a = currentArena();
+  const sim = simLeaderboard(a.min+17, 20, (i,r)=>Math.max(a.min, a.min + 600 - i*22 + Math.floor(r()*10)));
+  body.innerHTML = `
+    <div style="padding:10px;background:rgba(0,0,0,0.3);border-radius:8px;margin:10px;text-align:center;font-size:12px">${a.icon} <b>${a.name}</b> — Top 100 · Monthly reset</div>
+    <div style="padding:0 10px">${sim.map(e=>lbRow(e,'🏆')).join('')}</div>`;
+  body.querySelectorAll('[data-lb-name]').forEach(el => el.onclick = ()=>openPublicProfile(el.dataset.lbName));
+}
+
+function renderRankingCountry(body){
+  const a = currentArena();
+  const countryCode = (s.profile.countryCode || 'US');
+  const sim = simLeaderboard(a.min+31, 20, (i,r)=>Math.max(a.min, a.min + 500 - i*18 + Math.floor(r()*12)));
+  sim.forEach(e => e.country = countryCode);
+  body.innerHTML = `
+    <div style="padding:10px;background:rgba(0,0,0,0.3);border-radius:8px;margin:10px;text-align:center;font-size:12px">${countryPill(countryCode)} ${a.icon} <b>${a.name}</b> — Country Top 100 · Monthly reset</div>
+    <div style="padding:0 10px">${sim.map(e=>lbRow(e,'🏆')).join('')}</div>`;
+  body.querySelectorAll('[data-lb-name]').forEach(el => el.onclick = ()=>openPublicProfile(el.dataset.lbName));
+}
+
+function renderRankingGlobal(body){
+  const sim = simLeaderboard(99, 20, (i,r)=>Math.max(1000, 9000 - i*180 + Math.floor(r()*50)));
+  const youRank = (s.profile.globalRank && s.profile.globalRank > 0) ? s.profile.globalRank : (s.trophies < 1000 ? null : 420);
+  const rankStr = youRank ? `#${youRank}` : `Not ranked — need ~${Math.max(0, 1000 - s.trophies)} more 🏆 to enter`;
+  body.innerHTML = `
+    <div style="padding:10px;background:rgba(0,0,0,0.3);border-radius:8px;margin:10px;text-align:center;font-size:12px">🌍 <b>Global Top 1,000</b> · Vanity only · Monthly reset<br><span style="color:#ffd700">You: ${rankStr}</span></div>
+    <div style="padding:0 10px">${sim.map(e=>lbRow(e,'🏆')).join('')}</div>`;
+  body.querySelectorAll('[data-lb-name]').forEach(el => el.onclick = ()=>openPublicProfile(el.dataset.lbName));
+}
+
+/* =========================================================================
+   v7.3 §10 + §15.G — VIP LADDER
+   ========================================================================= */
+// E9 (v7.3.1) swaps Silver I ↔ Silver II perks — applied in later part
+const VIP_TIERS = [
+  {n:1,  name:'Bronze I',   pts:30,    dollars:'$3',    perks:['+5% coin bonus','VIP1 frame']},
+  {n:2,  name:'Bronze II',  pts:100,   dollars:'$10',   perks:['+10% coin bonus','booster shop −5%','VIP2 frame']},
+  {n:3,  name:'Bronze III', pts:250,   dollars:'$25',   perks:['+15% coin bonus','+1 daily mission slot (3→4)','exclusive emote pack']},
+  {n:4,  name:'Silver I',   pts:500,   dollars:'$50',   perks:['+20% coin bonus','booster shop −10%','+10% BPP multiplier']}, // v7.3.1 §9 perk swap
+  {n:5,  name:'Silver II',  pts:1000,  dollars:'$100',  perks:['+25% coin bonus','2× Lucky Box capacity','cosmetic priority-queue animation','VIP5 animated frame']},
+  {n:6,  name:'Silver III', pts:2000,  dollars:'$200',  perks:['+30% coin bonus','booster shop −15%','monthly 1 free Gold Pack']},
+  {n:7,  name:'Gold I',     pts:4000,  dollars:'$400',  perks:['+35% coin bonus','+1 mission slot (4→5)','cosmetic priority-queue (full)']},
+  {n:8,  name:'Gold II',    pts:7000,  dollars:'$700',  perks:['+40% coin bonus','booster shop −20%','exclusive seasonal skin']},
+  {n:9,  name:'Diamond',    pts:12000, dollars:'$1,200',perks:['+45% coin bonus','weekly 1 free Gold Pack','VIP9 legendary frame','Favorite-3 sticker showcase']},
+  {n:10, name:'Obsidian',   pts:20000, dollars:'$2,000',perks:['+50% coin bonus','booster shop −25%','name highlight in leaderboards','concierge cosmetic bundle']}
+];
+
+function currentVipTier(){
+  const pts = (s.vip && s.vip.points) || 0;
+  let cur = 0;
+  VIP_TIERS.forEach(t => { if(pts >= t.pts) cur = t.n; });
+  return cur;
+}
+
+function vipCoinBonusPct(){
+  const n = currentVipTier();
+  if(n === 0) return 0;
+  // +5, +10, ..., +50 pattern
+  return n * 5;
+}
+
+function vipBoosterShopDiscountPct(){
+  const n = currentVipTier();
+  // discounts at tiers 2/4/6/8/10: 5/10/15/20/25
+  if(n >= 10) return 25;
+  if(n >= 8)  return 20;
+  if(n >= 6)  return 15;
+  if(n >= 4)  return 10;
+  if(n >= 2)  return 5;
+  return 0;
+}
+
+function vipMissionSlotBonus(){
+  const n = currentVipTier();
+  if(n >= 7) return 2; // 3→5
+  if(n >= 3) return 1; // 3→4
+  return 0;
+}
+
+function vipLuckyBoxCapacityMult(){ return currentVipTier() >= 5 ? 2 : 1; }
+
+function grantVipPoints(usd){
+  s.vip = s.vip || {points:0, highestTier:0};
+  const before = currentVipTier();
+  s.vip.points = (s.vip.points||0) + Math.round(usd * 100);
+  const after = currentVipTier();
+  if(after > before){
+    toast(`👑 VIP Promoted: ${VIP_TIERS[after-1].name}`);
+    s.vip.highestTier = Math.max(s.vip.highestTier||0, after);
+  }
+}
+
+function renderVIP(){
+  const body = $('vip-body');
+  const pts = (s.vip && s.vip.points) || 0;
+  const cur = currentVipTier();
+  const next = VIP_TIERS.find(t => t.pts > pts);
+  const progressText = next
+    ? `${pts} / ${next.pts} VIP pts · ${next.pts-pts} to ${next.name}`
+    : `${pts} VIP pts · MAX`;
+  const progressPct = next ? Math.min(100, (pts / next.pts)*100) : 100;
+  let html = `
+    <div style="padding:14px;text-align:center">
+      <div style="font-size:34px">${cur>0?'👑':'🔒'}</div>
+      <div style="font-size:18px;font-weight:900;letter-spacing:0.5px;margin-top:6px">${cur>0?VIP_TIERS[cur-1].name:'No VIP Tier'}</div>
+      <div style="font-size:11px;color:rgba(255,255,255,0.6);margin:4px 0 10px">${progressText}</div>
+      <div style="background:rgba(0,0,0,0.4);height:10px;border-radius:5px;overflow:hidden;margin-bottom:6px"><div style="height:100%;width:${progressPct}%;background:linear-gradient(90deg,#ffac04,#ffc700,#9ad4ff)"></div></div>
+      <div style="font-size:10px;color:rgba(255,255,255,0.5);margin-bottom:12px">VIP points earned: 100 pts per $1 spent. Free players do not earn VIP.</div>
+    </div>
+    <div style="padding:0 10px">`;
+  VIP_TIERS.forEach(t => {
+    const reached = cur >= t.n;
+    const isNext = !reached && next && t.n === next.n;
+    html += `<div style="padding:10px;background:${reached?'rgba(255,215,0,0.1)':isNext?'rgba(154,212,255,0.1)':'rgba(0,0,0,0.25)'};border:1px solid ${reached?'rgba(255,215,0,0.35)':isNext?'rgba(154,212,255,0.35)':'rgba(255,255,255,0.08)'};border-radius:10px;margin-bottom:6px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="font-size:20px">${reached?'✓':'🔒'}</div>
+        <div style="flex:1"><div style="font-weight:800">${t.name}</div><div style="font-size:10px;color:rgba(255,255,255,0.6)">${t.pts.toLocaleString()} pts · ~${t.dollars} lifetime</div></div>
+      </div>
+      <div style="font-size:10px;color:rgba(255,255,255,0.75);margin-top:6px;line-height:1.4">${t.perks.map(p=>'• '+p).join('<br>')}</div>
+    </div>`;
+  });
+  html += '</div>';
+  body.innerHTML = html;
+}
+
+/* =========================================================================
+   v7.3 §11 — PROFILE (own) + public profile modal
+   ========================================================================= */
+function renderProfile(){
+  const body = $('profile-body');
+  const cur = currentVipTier();
+  const countryCode = s.profile.countryCode || 'US';
+  const vipBadge = cur >= 4 ? `<span style="color:#ffd700">👑 ${VIP_TIERS[cur-1].name}</span>` : '';
+  const topBadges = (s.profile.top1000Seasons || 0);
+  body.innerHTML = `
+    <div style="padding:14px;text-align:center">
+      <div style="font-size:48px;line-height:1">🧑‍🍳</div>
+      <div style="font-size:18px;font-weight:900;margin-top:6px">Player ${vipBadge}</div>
+      <div style="font-size:11px;color:rgba(255,255,255,0.6)">${countryPill(countryCode)}${s.profile.activeTitle||'Newcomer'}</div>
+      <div style="font-size:11px;color:rgba(255,255,255,0.75);margin-top:6px">🏆 ${s.trophies} current · peak ${s.trophyRoad.highestTrophiesReached||0}</div>
+      <div style="font-size:11px;color:rgba(255,255,255,0.55);margin-top:2px">Arena: ${currentArena().name}</div>
+      ${topBadges>0?`<div style="font-size:11px;color:#ffd700;margin-top:4px">🏅 Top 1000 ×${topBadges}</div>`:''}
+    </div>
+    <div style="padding:0 14px;margin-bottom:10px">
+      <div style="font-size:10px;color:rgba(255,255,255,0.55);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Albums</div>
+      ${ALBUM_ORDER.map(aid => {
+        const al = ALBUMS[aid];
+        const owned = al.stickers.filter((_,i)=>s.stickers[stickerKey(aid,i)]>0).length;
+        const pct = Math.round(owned/al.stickers.length*100);
+        return `<div style="font-size:11px;margin-bottom:4px"><div style="display:flex;justify-content:space-between"><span>${al.ic} ${al.name}</span><span style="color:rgba(255,255,255,0.6)">${owned}/${al.stickers.length}</span></div><div style="background:rgba(0,0,0,0.4);height:5px;border-radius:3px;overflow:hidden"><div style="height:100%;width:${pct}%;background:linear-gradient(90deg,#9ad4ff,#ffd700)"></div></div></div>`;
+      }).join('')}
+    </div>
+    <div style="padding:0 14px;display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+      <button class="sc-buy" onclick="showScreen('vip')">👑 VIP Ladder</button>
+      <button class="sc-buy" onclick="showScreen('venue')">🏗️ Venue</button>
+      <button class="sc-buy" onclick="showScreen('albums')">📗 Albums</button>
+      <button class="sc-buy" onclick="showScreen('trophyroad')">🏆 Trophy Road</button>
+    </div>
+    <div style="padding:0 14px;font-size:10px;color:rgba(255,255,255,0.4);text-align:center">Username & Favorite-3 sticker picker: Diamond VIP+ only</div>`;
+}
+
+function openPublicProfile(name){
+  const body = $('public-profile-body');
+  // Simulated public profile (no real other-player data in prototype)
+  const sim = {
+    name: name || 'Player',
+    avatar: '🧑‍🍳',
+    country: ['US','PL','GB','JP','DE'][Math.floor(Math.random()*5)],
+    trophies: 400 + Math.floor(Math.random()*3800),
+    peakTrophies: 0,
+    arena: ARENAS[Math.floor(Math.random()*ARENAS.length)],
+    vipTier: Math.floor(Math.random()*7),
+    top1000: Math.random()<0.2 ? Math.floor(Math.random()*3)+1 : 0,
+    albumPct: ALBUM_ORDER.map(()=>Math.floor(Math.random()*100))
+  };
+  sim.peakTrophies = Math.max(sim.trophies, sim.trophies + Math.floor(Math.random()*500));
+  body.innerHTML = `
+    <div style="text-align:center;padding:10px">
+      <div style="font-size:48px;line-height:1">${sim.avatar}</div>
+      <div style="font-size:18px;font-weight:900;margin-top:6px">${countryPill(sim.country)}${sim.name}</div>
+      ${sim.vipTier>=4?`<div style="color:#ffd700;font-size:11px">👑 ${VIP_TIERS[sim.vipTier-1].name}</div>`:''}
+      <div style="font-size:11px;color:rgba(255,255,255,0.7);margin-top:4px">🏆 ${sim.trophies} · peak ${sim.peakTrophies}</div>
+      <div style="font-size:11px;color:rgba(255,255,255,0.55)">Arena: ${sim.arena.icon} ${sim.arena.name}</div>
+      ${sim.top1000?`<div style="font-size:11px;color:#ffd700;margin-top:4px">🏅 Top 1000 ×${sim.top1000}</div>`:''}
+    </div>
+    <div style="padding:10px">
+      <div style="font-size:10px;color:rgba(255,255,255,0.55);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Album completion</div>
+      ${ALBUM_ORDER.map((aid,i)=>{
+        const al = ALBUMS[aid];
+        return `<div style="font-size:11px;margin-bottom:4px"><div style="display:flex;justify-content:space-between"><span>${al.ic} ${al.name}</span><span style="color:rgba(255,255,255,0.6)">${sim.albumPct[i]}%</span></div><div style="background:rgba(0,0,0,0.4);height:5px;border-radius:3px;overflow:hidden"><div style="height:100%;width:${sim.albumPct[i]}%;background:linear-gradient(90deg,#9ad4ff,#ffd700)"></div></div></div>`;
+      }).join('')}
+    </div>
+    ${sim.vipTier>=9?'<div style="padding:10px;text-align:center;font-size:10px;color:rgba(255,215,0,0.7)">★ Favorite 3 Stickers (Diamond VIP)</div>':'<div style="padding:10px;text-align:center;font-size:10px;color:rgba(255,255,255,0.4)">🔒 Favorite-3 Stickers: unlock at Diamond VIP</div>'}
+    <div style="padding:4px 10px;font-size:10px;color:rgba(255,255,255,0.4);text-align:center">⚠ Report player (moderation)</div>`;
+  $('public-profile-modal').classList.remove('hidden');
+}
+function closePublicProfile(){ $('public-profile-modal').classList.add('hidden'); }
+
+/* =========================================================================
+   v7.3 §13 — OFFER TRANSPARENCY MODAL
+   ========================================================================= */
+function openOfferModal(title, items, rarityBreakdown, disclaimer){
+  $('offer-modal-title').textContent = title;
+  const body = $('offer-modal-body');
+  const tierColor = {bronze:'#cd7f32', silver:'#c0c0c0', gold:'#ffd700'};
+  body.innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:6px 0">
+      ${items.map(it => `<div style="padding:8px;background:rgba(0,0,0,0.3);border:2px solid ${tierColor[it.tier]||'rgba(255,255,255,0.15)'};border-radius:8px;text-align:center;position:relative">
+        <div style="font-size:22px">${it.ic}</div>
+        <div style="font-size:10px;color:rgba(255,255,255,0.8);margin-top:2px">${it.name}</div>
+        ${it.qty?`<div style="position:absolute;bottom:4px;right:6px;font-size:11px;font-weight:900;color:#ffd700">×${it.qty}</div>`:''}
+        ${it.rarity?`<div style="position:absolute;top:4px;left:6px;width:8px;height:8px;border-radius:50%;background:${tierColor[it.rarity]||'#fff'}"></div>`:''}
+      </div>`).join('')}
+    </div>
+    <details style="margin-top:10px;padding:8px;background:rgba(0,0,0,0.3);border-radius:8px"><summary style="font-size:11px;color:#ffd700;cursor:pointer;font-weight:800">What's inside ▾</summary>
+      <div style="font-size:10px;color:rgba(255,255,255,0.7);margin-top:6px;line-height:1.5">${(rarityBreakdown||[]).map(x=>'• '+x).join('<br>')||'• Contents as listed above'}</div>
+    </details>
+    <div style="font-size:9px;color:rgba(255,255,255,0.4);margin-top:6px;line-height:1.3">${disclaimer||'Contents itemized above. No mystery tiers unless explicitly marked "?". Coin-equiv shown where applicable.'}</div>`;
+  $('offer-modal').classList.remove('hidden');
+}
+function closeOfferModal(){ $('offer-modal').classList.add('hidden'); }
+
+/* =========================================================================
    LUCKY BOX
    ========================================================================= */
+
+// v7.3.1 §1 — Lucky Box per-claim coin values (−80% from v7.3 §15.L). VIP tier 5+ = 2× capacity handled via cooldown halve.
+const LUCKY_BOX_COINS = {juice:100, smoothie:120, coffee:150, tea:180, cocktail:200, wine:250, champagne:300, grand:350};
 
 function claimLuckyBox(){
   if(Date.now() < s.luckyBox.nextAvailableAt) return;
@@ -2460,12 +3477,17 @@ function claimLuckyBox(){
     ids.push(pool[Math.floor(Math.random()*pool.length)]);
   }
   grantBoosters(ids);
-  s.coins += 80;
-  // 1 sticker (white-weighted)
+  // v7.3.1 §1: per-arena coins, optionally +5% from Uptown Cellar Vault L3 functional perk
+  let coins = LUCKY_BOX_COINS[s.currentPlayingArena] || LUCKY_BOX_COINS.juice;
+  if((s.venue.buildings['up_vault']||0) >= 3) coins = Math.round(coins * 1.05);
+  s.coins += coins;
+  // 1 sticker (common-weighted)
   addStickerByRarity('white');
-  s.luckyBox.nextAvailableAt = Date.now() + 4*3600*1000;
+  // VIP tier 5+ halves cooldown (= 2× capacity per day)
+  const cooldownMs = (vipLuckyBoxCapacityMult() >= 2 ? 2 : 4) * 3600*1000;
+  s.luckyBox.nextAvailableAt = Date.now() + cooldownMs;
   missionProgress('lucky_box_2');
-  toast('🎁 +4 boosters +80🪙 +1 sticker');
+  toast('🎁 +4 boosters +'+coins+'🪙 +1 sticker');
   renderAll();
 }
 
@@ -2475,12 +3497,14 @@ function claimLuckyBox(){
 
 function rollStarChest(arenaId){
   const tbl = {
-    juice:   {coins:100,  boosters:2, stickers:2, decor:0.25},
-    beach:   {coins:220,  boosters:2, stickers:3, decor:0.20},
-    cocktail:{coins:420,  boosters:3, stickers:3, decor:0.18},
-    speak:   {coins:750,  boosters:3, stickers:4, decor:0.15},
-    rooftop: {coins:1400, boosters:4, stickers:4, decor:0.12},
-    grand:   {coins:2600, boosters:4, stickers:5, decor:0.10}
+    juice:    {coins:120,  boosters:2, stickers:2, decor:0.25},
+    smoothie: {coins:220,  boosters:2, stickers:3, decor:0.22},
+    coffee:   {coins:360,  boosters:2, stickers:3, decor:0.20},
+    tea:      {coins:500,  boosters:3, stickers:3, decor:0.18},
+    cocktail: {coins:700,  boosters:3, stickers:4, decor:0.16},
+    wine:     {coins:1000, boosters:3, stickers:4, decor:0.14},
+    champagne:{coins:1500, boosters:4, stickers:5, decor:0.12},
+    grand:    {coins:2200, boosters:4, stickers:5, decor:0.10}
   };
   const t = tbl[arenaId] || tbl.juice;
   s.coins += t.coins;
@@ -2529,16 +3553,13 @@ function onPlayPressed(){
   showMatchmaking();
 }
 
-// §7.2 AI stake generation — Gold-only, v7.2 weights
+// §7.2 AI stake generation
 function rollAIStakeCount(playerStakes){
-  // v7.2: AI never stakes if player is below Cocktail Lounge
-  if(arenaIndex(s.maxUnlockedArena) < arenaIndex('cocktail')) return 0;
   const r = Math.random();
-  if(playerStakes === 0){ return r < 0.80 ? 0 : 2; }
-  if(playerStakes === 1){ return r < 0.70 ? 0 : 2; }
-  if(playerStakes === 2){ if(r<0.65) return 2; if(r<0.90) return 3; return 0; }
-  if(playerStakes === 3){ if(r<0.55) return 3; if(r<0.90) return 2; return 4; }
-  if(playerStakes === 4){ return r < 0.50 ? 4 : 3; }
+  if(playerStakes === 0){ return r < 0.75 ? 0 : 1; }
+  if(playerStakes === 1){ if(r<0.60) return 1; if(r<0.85) return 0; return 2; }
+  if(playerStakes === 2){ if(r<0.60) return 2; if(r<0.85) return 1; return 3; }
+  if(playerStakes === 3){ return r < 0.50 ? 3 : 2; }
   return 0;
 }
 
@@ -2586,9 +3607,7 @@ function showMatchmaking(){
       avEl.textContent = o.ic;
       nmEl.textContent = o.name;
       trEl.textContent = '🏆 ' + o.trophies;
-      // v7.2: show stake count pill only when ≥2
-      const stakePill = (o.stakeCount >= 2) ? ` · ×${o.stakeCount} stake` : '';
-      tgEl.textContent = o.tag + stakePill;
+      tgEl.textContent = o.tag;
       avEl.className = 'vs-avatar found';
       nmEl.className = 'vs-name found';
       statusEl.textContent = 'Opponent found!';
@@ -2612,78 +3631,29 @@ function showMatchmaking(){
 
 function showLoadout(){
   showScreen('loadout');
-  // reset loadout (preserve equippedBoosterId default)
-  const prevEquipped = s.loadout.equippedBoosterId || null;
-  s.loadout = {equippedBoosterId:prevEquipped, stakes:[null,null,null,null], perk1Id:null, perk2Id:null};
-  // Default equipped booster to highest-rarity owned if none
-  if(!s.loadout.equippedBoosterId){
-    const tierRank = {gold:3, silver:2, bronze:1};
-    let best = null, bestRank = 0;
-    Object.entries(BOOSTERS).forEach(([id,b])=>{
-      if((s.boosters[id]||0) > 0 && tierRank[b.tier] > bestRank){
-        best = id; bestRank = tierRank[b.tier];
-      }
-    });
-    s.loadout.equippedBoosterId = best;
-  }
+  // reset loadout
+  s.loadout = {stakes:[null,null,null], perk1Id:null, perk2Id:null};
   renderLoadout();
 }
 
 function stakeCount(){
-  return (s.loadout.stakes || []).filter(Boolean).length;
+  const stakes = (s.loadout.stakes || []);
+  if(!s.stakesUnlocked) return stakes[0] ? 1 : 0;
+  return stakes.filter(Boolean).length;
 }
 function stakeMultiplier(){
-  // v7.2: 1 stake is not a multiplier
-  const c = stakeCount();
-  return c >= 2 ? c : 1;
+  return Math.max(1, stakeCount());
 }
 
 function renderLoadout(){
   const a = matchCtx.arena;
   $('lo-arena').textContent = a.icon+' '+a.name;
 
-  // Equipped booster
-  const equipSlot = $('equipped-slot');
-  equipSlot.className = 'stake-slot';
-  if(s.loadout.equippedBoosterId){
-    const b = BOOSTERS[s.loadout.equippedBoosterId];
-    equipSlot.classList.add('filled','tier-'+b.tier);
-    equipSlot.innerHTML = `<div class="slot-ic">${b.ic}</div><div class="slot-name">${b.name}</div><div class="slot-hint"><span class="pill ${b.tier}">${b.tier}</span></div>`;
-  } else {
-    equipSlot.innerHTML = `<div class="slot-ic">➕</div><div class="slot-name">None</div><div class="slot-hint">tap to equip</div>`;
-  }
-
-  // v7.2: hide Stake section entirely when player owns 0 Gold boosters
-  const goldOwned = goldBoostersOwned();
-  const stakeSection = $('stake-section');
-  if(goldOwned === 0){
-    stakeSection.style.display = 'none';
-    $('lo-bet-summary').textContent = 'None';
-    return;
-  } else {
-    stakeSection.style.display = '';
-  }
-
-  // Stake slots — 4 total; 4th slot gated to Speakeasy+
-  const stakes = s.loadout.stakes || [null,null,null,null];
+  const stakes = s.loadout.stakes || [null,null,null];
   const names = [];
-  const speakUnlocked = arenaIndex(s.maxUnlockedArena) >= arenaIndex('speak');
-  for(let i=0;i<4;i++){
+  for(let i=0;i<3;i++){
     const slot = $('stake-slot-'+i);
     slot.className = 'stake-slot';
-    if(i === 3 && !speakUnlocked){
-      // v7.2: 4th slot unlocks at Speakeasy (×4 multiplier)
-      slot.classList.add('disabled');
-      slot.style.opacity = '0.4';
-      slot.style.pointerEvents = 'none';
-      slot.innerHTML = `<div class="slot-ic">🔒</div><div class="slot-name">Speakeasy</div><div class="slot-hint">×4 lock</div>`;
-      // also null it if somehow populated
-      stakes[i] = null;
-      continue;
-    } else {
-      slot.style.opacity = '';
-      slot.style.pointerEvents = '';
-    }
     const id = stakes[i];
     if(id){
       const b = BOOSTERS[id];
@@ -2691,21 +3661,18 @@ function renderLoadout(){
       slot.innerHTML = `<div class="slot-ic">${b.ic}</div><div class="slot-name">${b.name}</div><div class="slot-hint"><span class="pill ${b.tier}">${b.tier}</span></div>`;
       names.push(b.name);
     } else {
-      slot.innerHTML = `<div class="slot-ic">➕</div><div class="slot-name">Empty</div><div class="slot-hint">Gold only</div>`;
+      const locked = i > 0 && !s.stakesUnlocked;
+      if(locked){
+        slot.classList.add('locked');
+        slot.innerHTML = `<div class="slot-ic">🔒</div><div class="slot-name">Locked</div><div class="slot-hint">Unlock @ 1,000 🏆</div>`;
+      } else {
+        slot.innerHTML = `<div class="slot-ic">➕</div><div class="slot-name">Empty</div><div class="slot-hint">Silver/Gold</div>`;
+      }
     }
   }
-  const cnt = stakeCount();
   const mult = stakeMultiplier();
-  // v7.2: only show ×N pill when stake count >= 2
-  if(cnt >= 2){
-    $('stake-mult-readout').textContent = `×${mult} REWARDS`;
-    $('stake-mult-readout').style.display = '';
-    $('lo-bet-summary').textContent = names.join(', ') + ` (×${mult})`;
-  } else {
-    $('stake-mult-readout').textContent = '';
-    $('stake-mult-readout').style.display = 'none';
-    $('lo-bet-summary').textContent = cnt === 0 ? 'None' : names.join(', ');
-  }
+  $('stake-mult-readout').textContent = `×${mult} REWARDS`;
+  $('lo-bet-summary').textContent = names.length ? names.join(', ') + ` (×${mult})` : 'None (×1)';
 
   [0,1].forEach(i => {
     const slot = $('perk-slot-'+(i+1));
@@ -2722,6 +3689,11 @@ function renderLoadout(){
 }
 
 function openStakePicker(slotIdx){
+  // v7.3 §15.B — slots 2 and 3 require stakesUnlocked (Trophy Road milestone #7)
+  if(slotIdx > 0 && !s.stakesUnlocked){
+    toast('🔒 Unlock at 1,000 🏆 (Trophy Road #7)');
+    return;
+  }
   const stakes = s.loadout.stakes;
   const arenaUnlocked = ARENA_BOOSTER_UNLOCKS[matchCtx.arena.id];
   $('picker-title').textContent = 'Pick Stake '+(slotIdx+1);
@@ -2745,41 +3717,15 @@ function openStakePicker(slotIdx){
     const qty = effCount(id);
     if(qty <= 0) return;
     const inArena = arenaUnlocked.includes(id);
-    // v7.2: only Gold boosters can be staked
-    const stakeable = (b.tier === 'gold');
+    const stakeable = (b.tier === 'silver' || b.tier === 'gold');
     const item = document.createElement('div');
     item.className = 'picker-item tier-'+b.tier+((inArena && stakeable)?'':' disabled');
-    const tierLabel = stakeable ? '' : ' <span style="color:#ff9a9a;font-size:9px">(Gold only)</span>';
+    const tierLabel = stakeable ? '' : ' <span style="color:#ff9a9a;font-size:9px">(Bronze can\'t be staked)</span>';
     item.innerHTML = `<div class="pi-ic">${b.ic}</div><div class="pi-info"><div class="pi-name">${b.name} <span class="pill ${b.tier}">${b.tier}</span>${tierLabel}</div><div class="pi-desc">${b.desc}</div></div><div class="pi-qty">×${qty}</div>`;
     if(inArena && stakeable){
       item.onclick = ()=>{ stakes[slotIdx] = id; closePicker(); renderLoadout(); };
     } else if(!stakeable){
-      item.onclick = ()=>{ toast("Only Gold boosters can be staked."); };
-    }
-    list.appendChild(item);
-  });
-  $('picker-modal').classList.remove('hidden');
-}
-
-function openEquippedPicker(){
-  const arenaUnlocked = ARENA_BOOSTER_UNLOCKS[matchCtx.arena.id];
-  $('picker-title').textContent = 'Equip Booster';
-  const list = $('picker-list');
-  list.innerHTML = '';
-  const emptyOpt = document.createElement('div');
-  emptyOpt.className = 'picker-empty-opt';
-  emptyOpt.textContent = '— No Equipped Booster —';
-  emptyOpt.onclick = ()=>{ s.loadout.equippedBoosterId = null; closePicker(); renderLoadout(); };
-  list.appendChild(emptyOpt);
-  Object.entries(BOOSTERS).forEach(([id,b]) => {
-    const qty = s.boosters[id]||0;
-    if(qty <= 0) return;
-    const inArena = arenaUnlocked.includes(id);
-    const item = document.createElement('div');
-    item.className = 'picker-item tier-'+b.tier+(inArena?'':' disabled');
-    item.innerHTML = `<div class="pi-ic">${b.ic}</div><div class="pi-info"><div class="pi-name">${b.name} <span class="pill ${b.tier}">${b.tier}</span></div><div class="pi-desc">${b.desc}</div></div><div class="pi-qty">×${qty}</div>`;
-    if(inArena){
-      item.onclick = ()=>{ s.loadout.equippedBoosterId = id; closePicker(); renderLoadout(); };
+      item.onclick = ()=>{ toast("Bronze can't be staked"); };
     }
     list.appendChild(item);
   });
@@ -2838,12 +3784,14 @@ const CFG_MATCH = {
 };
 
 const ARENA_V6 = {
-  juice:    {idx:0, colors:3, sourceGlasses:3, emptyGlasses:2, bg:['#5c3210','#3d1a08'], ai:{pourIntervalMin:1.8,pourIntervalMax:3.2,mistakeRate:0.03,serveDelay:0.15}},
-  beach:    {idx:1, colors:5, sourceGlasses:4, emptyGlasses:3, bg:['#003d5c','#002940'], ai:{pourIntervalMin:1.5,pourIntervalMax:2.8,mistakeRate:0.02,serveDelay:0.12}},
-  cocktail: {idx:2, colors:7, sourceGlasses:5, emptyGlasses:3, bg:['#2D1B69','#1a1a2e'], ai:{pourIntervalMin:1.3,pourIntervalMax:2.5,mistakeRate:0.015,serveDelay:0.10}},
-  speak:    {idx:3, colors:7, sourceGlasses:6, emptyGlasses:4, bg:['#1B4D2E','#0D2818'], ai:{pourIntervalMin:1.1,pourIntervalMax:2.2,mistakeRate:0.01,serveDelay:0.08}},
-  rooftop:  {idx:4, colors:7, sourceGlasses:7, emptyGlasses:5, bg:['#5c1a1a','#3d2800'], ai:{pourIntervalMin:1.0,pourIntervalMax:1.8,mistakeRate:0.005,serveDelay:0.06}},
-  grand:    {idx:5, colors:7, sourceGlasses:8, emptyGlasses:5, bg:['#1a1a1a','#2D2D00'], ai:{pourIntervalMin:0.9,pourIntervalMax:1.5,mistakeRate:0.003,serveDelay:0.05}}
+  juice:     {idx:0, colors:3, sourceGlasses:3, emptyGlasses:2, bg:['#5c3210','#3d1a08'], ai:{pourIntervalMin:1.8,pourIntervalMax:3.2,mistakeRate:0.03,serveDelay:0.15}},
+  smoothie:  {idx:1, colors:4, sourceGlasses:3, emptyGlasses:2, bg:['#8c1a4a','#4a0d28'], ai:{pourIntervalMin:1.6,pourIntervalMax:3.0,mistakeRate:0.025,serveDelay:0.13}},
+  coffee:    {idx:2, colors:5, sourceGlasses:4, emptyGlasses:3, bg:['#3d2414','#1f1208'], ai:{pourIntervalMin:1.5,pourIntervalMax:2.8,mistakeRate:0.02,serveDelay:0.12}},
+  tea:       {idx:3, colors:5, sourceGlasses:5, emptyGlasses:3, bg:['#1f4d2e','#0f2818'], ai:{pourIntervalMin:1.4,pourIntervalMax:2.6,mistakeRate:0.018,serveDelay:0.11}},
+  cocktail:  {idx:4, colors:6, sourceGlasses:5, emptyGlasses:3, bg:['#2D1B69','#1a1a2e'], ai:{pourIntervalMin:1.3,pourIntervalMax:2.5,mistakeRate:0.015,serveDelay:0.10}},
+  wine:      {idx:5, colors:7, sourceGlasses:6, emptyGlasses:4, bg:['#5a0f2a','#2d0815'], ai:{pourIntervalMin:1.1,pourIntervalMax:2.2,mistakeRate:0.01,serveDelay:0.08}},
+  champagne: {idx:6, colors:7, sourceGlasses:7, emptyGlasses:5, bg:['#5c4a1a','#3d2e00'], ai:{pourIntervalMin:1.0,pourIntervalMax:1.8,mistakeRate:0.005,serveDelay:0.06}},
+  grand:     {idx:7, colors:7, sourceGlasses:8, emptyGlasses:5, bg:['#1a1a1a','#2D2D00'], ai:{pourIntervalMin:0.9,pourIntervalMax:1.5,mistakeRate:0.003,serveDelay:0.05}}
 };
 
 const POWERUP_ICONS = {
@@ -3648,14 +4596,14 @@ function startMatch(){
   rebuildColorHex(av);
   M = newMatchState(av, matchCtx.opponent);
 
-  // v7.2: Equipped booster (any rarity) is always used in-match.
-  // Stakes multiply rewards but do not populate active slots.
+  // Player slots: staked boosters (1st goes into active slot) + perks
+  // Only the first staked booster gets a usable powerup slot in v6 flow.
+  // Additional stakes sit as "reserve" — they multiply rewards but don't fill the 2 active slots.
   const passiveBoosters = ['firstPour','spawnPlus3'];
   const slots = [];
-  const equippedId = s.loadout.equippedBoosterId;
-  const activeBooster = equippedId || stakes[0] || null;
-  if(activeBooster && !passiveBoosters.includes(activeBooster)) slots.push({type: activeBooster, used:false});
-  if(activeBooster === 'spawnPlus3') M.spawnCharges += 3;
+  const firstStake = stakes[0];
+  if(firstStake && !passiveBoosters.includes(firstStake)) slots.push({type: firstStake, used:false});
+  if(firstStake === 'spawnPlus3') M.spawnCharges += 3;
   [s.loadout.perk1Id, s.loadout.perk2Id].forEach(pid => {
     if(pid && slots.length<2) slots.push({type:'perk_'+pid, used:false, usesRemaining: PERKS[pid].uses});
   });
@@ -3673,7 +4621,7 @@ function startMatch(){
   spawnInitialCustomers();
 
   // FirstPour: apply 2 best pours for player
-  if(activeBooster === 'firstPour'){
+  if(firstStake === 'firstPour'){
     for(let k=0;k<2;k++){
       const moves=[];
       for(let i=0;i<M.playerGlasses.length;i++) for(let j=0;j<M.playerGlasses.length;j++) if(i!==j && canPourRaw(M.playerGlasses,i,j)) moves.push([i,j]);
@@ -3968,40 +4916,38 @@ function handleTutorialTap(index){
 function applyMatchResult(result){
   const a = matchCtx.arena;
   const stakes = matchCtx.stakes || [];
-  // v7.2: stakeMultiplier = filled stakes if ≥2 else 1
+  const stakeMult = matchCtx.stakeMultiplier || 1;
   const stakeCnt = stakes.length;
-  const stakeMult = stakeCnt >= 2 ? stakeCnt : 1;
-  matchCtx.stakeMultiplier = stakeMult;
   let trophies=0, coins=0, stars=0;
   let stakesSurvived = false, stakesLost = false;
   let onFireTriggered = matchCtx.onFire;
 
-  // v7.2: no arena scaling — always in current arena
+  // Trophies w/ arena scaling
+  const delta = maxUnlockedArenaIdx() - arenaIndex(a.id);
+  const trGain = {0:1.0,1:0.5,2:0.25}[delta] ?? 0;
+  const trLoss = {0:1.0,1:0.25,2:0.1}[delta] ?? 0;
+  const coinMult = {0:1.0,1:0.75,2:0.5}[delta] ?? 0.3;
   const basePayout = ARENA_COIN_PAYOUT[a.id] || ARENA_COIN_PAYOUT.juice;
 
-  // v7.2: score-margin star rule
-  const pScore = matchCtx.playerScore || 0;
-  const oScore = matchCtx.opponentScore || 0;
-  const winnerScore = Math.max(pScore, oScore);
-  const loserScore  = Math.min(pScore, oScore);
-  const marginRatio = (winnerScore - loserScore) / Math.max(winnerScore, 1);
-  matchCtx.marginRatio = marginRatio;
-
   if(result==='win'){
-    trophies = Math.round(a.trophyBase) * stakeMult;
-    coins = basePayout.win;
-    stars = marginRatio >= 0.35 ? 3 : 2;
+    trophies = Math.round(a.trophyBase * trGain) * stakeMult;
+    coins = Math.round(basePayout.win * coinMult);
+    // v7.3 §4 — stars by score margin: ≥30% → 3, else win → 2
+    const pScore = matchCtx.playerScore || 0, oScore = matchCtx.opponentScore || 0;
+    const hi = Math.max(pScore, oScore);
+    const margin = hi > 0 ? (pScore - oScore) / hi : 0;
+    stars = margin >= 0.30 ? 3 : 2;
     stakesSurvived = stakeCnt > 0;
     s.consecWins++;
     s.lossStreak = 0;
     s.stats.wins++;
     missionProgress('win_3');
-    if(stars === 3) missionProgress('3_star_match');
+    if(stakesSurvived) missionProgress('3_star_match');
     if(stakeCnt >= 2) missionProgress('stake_2_wins');
   } else if(result==='loss'){
-    trophies = -Math.round(a.trophyBase);
-    coins = basePayout.loss;
-    stars = 1;
+    trophies = -Math.round(a.trophyBase * trLoss);
+    coins = Math.round(basePayout.loss * coinMult);
+    stars = 1; // v7.3 §4 — loss (non-technical) → 1★
     if(stakeCnt > 0){
       stakesLost = true;
       stakes.forEach(id => { s.boosters[id] = Math.max(0,(s.boosters[id]||0)-1); });
@@ -4010,15 +4956,31 @@ function applyMatchResult(result){
     s.lossStreak++;
   } else {
     trophies = 0;
-    coins = basePayout.draw;
-    stars = 2;
+    coins = Math.round(basePayout.draw * coinMult);
+    stars = 1; // v7.3: draw treated as non-technical loss for star-race purposes
     stakesSurvived = stakeCnt > 0; // returned on draw
     s.consecWins = 0;
   }
-  // On Fire doubler
-  if(onFireTriggered){ coins *= 2; trophies *= 2; }
-  // Stake multiplier applies to coins on win only (stakes survived & reward lift)
-  if(result === 'win'){ coins *= stakeMult; }
+  // v7.3.1 §2B — cap On-Fire × Stake stacking on coins (preserves trophy stacking per v7.2)
+  // Rule: coins = base × max(stake,onFire) + base × min(stake,onFire) × 0.5
+  // Trophies still stack multiplicatively (already computed above).
+  if(onFireTriggered){ trophies *= 2; }
+  if(result === 'win'){
+    const base = coins;
+    const ofMult = onFireTriggered ? 2 : 1;
+    const stMult = stakeMult;
+    if(ofMult > 1 && stMult > 1){
+      coins = base * Math.max(ofMult, stMult) + base * Math.min(ofMult, stMult) * 0.5;
+      coins = Math.round(coins);
+    } else {
+      coins = Math.round(base * ofMult * stMult);
+    }
+  } else {
+    if(onFireTriggered) coins *= 2;
+  }
+  // v7.3 §10 — VIP coin bonus (+5%/tier) applied to match-win coins
+  const vipBonus = vipCoinBonusPct();
+  if(vipBonus > 0) coins = Math.round(coins * (1 + vipBonus/100));
   // Guaranteed floor: ≥1 star, ≥ base loss coins (§6.4)
   if(stars < 1) stars = 1;
   if(coins < basePayout.loss) coins = basePayout.loss;
@@ -4028,33 +4990,59 @@ function applyMatchResult(result){
   s.trophies = Math.max(0, s.trophies + trophies);
   if(s.trophies > s.trophyRoad.highestTrophiesReached) s.trophyRoad.highestTrophiesReached = s.trophies;
   s.coins += coins;
-  s.stars += stars;
-  s.starsMeter += stars;
-  if(s.starsMeter >= 25 && !s.starChestPending){
-    s.starChestPending = true;
-    s.starsMeter = Math.max(0, s.starsMeter - 25);
+  s.stars += stars; // lifetime total (HUD chip)
+  // v7.3 §4 — Star Race arena-scoped weekly counter. star_source='solo' (Team Box will repoint post-MVP).
+  starRaceWeekResetCheck();
+  s.starRace.starsByArena[a.id] = (s.starRace.starsByArena[a.id]||0) + stars;
+
+  // v7.3 §5 — Weekly Missions progress hooks
+  weeklyMissionsWeekResetCheck();
+  weeklyMissionProgress('w_earn_stars_40', stars);
+  weeklyMissionProgress('w_play_30', 1);
+  if(matchCtx.drinksServed) weeklyMissionProgress('w_clean_50', matchCtx.drinksServed);
+  if(result === 'win'){
+    weeklyMissionProgress('w_win_15', 1);
+    if(stakeCnt >= 2) weeklyMissionProgress('w_stake2_wins_8', 1);
+    // "Use boosters in a win" — proxy: win with any stake placed (powerups-during-match tracking is deeper)
+    if(stakeCnt >= 1) weeklyMissionProgress('w_use_boosters_10', 1);
+    if(stakeCnt === 0) weeklyMissionProgress('w_no_booster_5', 1);
+    // Streaks: count each 3-win run as 1 unit; reset counter on loss
+    s.weeklyMissions.streakWins = (s.weeklyMissions.streakWins||0) + 1;
+    if(s.weeklyMissions.streakWins > 0 && s.weeklyMissions.streakWins % 3 === 0){
+      weeklyMissionProgress('w_streak_2', 1);
+    }
+  } else {
+    s.weeklyMissions.streakWins = 0;
   }
   s.stats.matches++;
   // Arena auto-unlock on trophy threshold
   ARENAS.forEach(ar => { if(s.trophies >= ar.min) unlockArena(ar.id); });
-  // Venue tokens
-  if(result==='win') s.venue.venueBuildingTokens += 1;
+  // v7.3 §15.K + v7.3.1 §8 — Venue tokens scale by district × stake mult on wins; cap 200 overflow → Sticker Shards
+  if(result === 'win'){
+    const dist = districtForArena(a.id);
+    const rate = dist ? dist.tokenPerWin : 0.3;
+    s.venue.venueBuildingTokens = addVenueTokens(rate * stakeMult);
+  }
   // BPP
-  addBPP(5 + (result==='win'?10:0));
+  // v7.3.1 §6 — new match grants (+10 played, +20 win bonus; was +5/+10)
+  addBPP(10 + (result==='win'?20:0));
   // Missions
   missionProgress('play_5');
   if(coins>0) missionProgress('earn_500_coins', coins);
-  // v7.2: serve_50 + combo_4 mission hooks
-  if(matchCtx.drinksServed) missionProgress('serve_50', matchCtx.drinksServed);
-  if(matchCtx.bestCombo && matchCtx.bestCombo >= 4) missionProgress('combo_4', 1);
+  if(!s.dailyMissions.arenasPlayedToday.includes(a.id)){
+    s.dailyMissions.arenasPlayedToday.push(a.id);
+    missionProgress('play_2_arenas');
+  }
 
   // Build result screen
   const header = $('r-header');
-  const starIcons = '★'.repeat(stars) + '☆'.repeat(3-stars);
-  header.innerHTML = (result==='win'?'VICTORY':result==='loss'?'DEFEAT':'DRAW') + ` <span style="font-size:0.7em;color:#ffd700">${starIcons}</span>`;
+  header.textContent = result==='win'?'VICTORY':result==='loss'?'DEFEAT':'DRAW';
   header.className = 'result-header '+result;
   const scoreLine = matchCtx.playerScore !== undefined ? ` — ${matchCtx.playerScore} to ${matchCtx.opponentScore}` : '';
-  $('r-sub').textContent = 'vs. '+matchCtx.opponent.name+scoreLine;
+  // v7.3 §11 — tap opponent name → public profile
+  $('r-sub').innerHTML = 'vs. <span style="cursor:pointer;text-decoration:underline;color:#9ad4ff" data-opp-tap="1">'+matchCtx.opponent.name+'</span>'+scoreLine;
+  const oppSpan = $('r-sub').querySelector('[data-opp-tap]');
+  if(oppSpan) oppSpan.onclick = ()=>openPublicProfile(matchCtx.opponent.name);
 
   const rr = $('r-rewards');
   rr.innerHTML = '';
@@ -4065,19 +5053,19 @@ function applyMatchResult(result){
     rr.appendChild(stats);
   }
   {
-    const showMult = stakeCnt >= 2;
-    const stakeSuffix = showMult ? ` (×${stakeMult} stake)` : '';
-    const coinBreak = `${a.name} base ${basePayout[result==='draw'?'draw':(result==='win'?'win':'loss')]}${onFireTriggered?' ×2 On Fire':''}${showMult && result==='win'?' ×'+stakeMult+' stake':''}`;
+    const stakeSuffix = stakeMult > 1 ? ` (×${stakeMult} stake)` : '';
+    const coinBreak = `${a.name} base ${basePayout[result==='draw'?'draw':(result==='win'?'win':'loss')]}${onFireTriggered?' ×2 On Fire':''}${stakeMult>1 && result==='win'?' ×'+stakeMult+' stake':''}`;
     const rows = [
       ['Trophies', (trophies>=0?'+':'')+trophies+' 🏆'+stakeSuffix, trophies>0?'pos':trophies<0?'neg':''],
       ['Coins', '+'+coins+' 🪙 ('+coinBreak+')', 'pos'],
-      ['Stars', '+'+stars+' ⭐ ('+s.starsMeter+'/25)', 'pos'],
+      ['Stars', '+'+stars+' ⭐ (Star Race '+a.name+': '+(s.starRace.starsByArena[a.id]||0)+'★ this week)', 'pos'],
     ];
-    // v7.2: only show Stakes Kept/Lost row when stake count >= 2
-    if(stakeCnt >= 2){
+    if(stakeCnt > 0){
       const label = result==='loss' ? 'Stakes Lost' : 'Stakes Kept';
       const names = stakes.map(id => BOOSTERS[id].name).join(', ');
       rows.push([label, names, result==='loss'?'neg':'pos']);
+    } else {
+      rows.push(['Stakes', 'No stakes risked', '']);
     }
     if(onFireTriggered){
       rows.push(['On Fire', '×2 applied', 'gold']);
@@ -4105,7 +5093,15 @@ function applyMatchResult(result){
   };
   const readyMilestone = TROPHY_ROAD.find(m => !s.trophyRoad.claimedMilestones.includes(m.n) && s.trophies >= m.trophies);
   if(readyMilestone) addNote(`📍 Trophy Road: Milestone ${readyMilestone.n} ready to claim — ${readyMilestone.reward}`);
-  if(s.starChestPending) addNote(`🎁 Star Chest unlocked — claim from Home`);
+  // v7.3 §4 — Star Race tier hint (what the player would earn if week ended now)
+  {
+    const wkStars = s.starRace.starsByArena[a.id] || 0;
+    const tier = computeStarRaceTier(wkStars);
+    if(tier){
+      const label = {top10:'Top 10',top100:'Top 100',top500:'Top 500',participation:'Participation'}[tier];
+      addNote(`🥇 Star Race: ${label} tier in ${a.name} (${wkStars}★)`);
+    }
+  }
   const allMissionsDone = s.dailyMissions.missions.every(m => m.claimed);
   if(allMissionsDone && s.dailyMissions.dailyChestClaimed) addNote(`✅ Daily Chest claimed today`);
   else {
@@ -4113,7 +5109,7 @@ function applyMatchResult(result){
     if(progress>0) addNote(`✅ Daily Missions: ${progress}/${s.dailyMissions.missions.length}`);
   }
   // Venue Token grant (already shown in rewards row; note any building ready to unlock)
-  const unlockedBuildings = Object.values(BUILDINGS_BY_ARENA).flat();
+  const unlockedBuildings = DISTRICTS.flatMap(d=>d.buildings);
   const affordableBuilding = unlockedBuildings.find(b => {
     const lvl = s.venue.buildings[b.id] || 0;
     return lvl < 3 && s.venue.venueBuildingTokens >= BUILDING_COSTS[lvl+1];
@@ -4198,7 +5194,43 @@ function dismissStarterPack(){
   if(overlay._tid){ clearInterval(overlay._tid); overlay._tid = null; }
 }
 
-function buyStarterPack(){ toast('Coming soon'); }
+function buyStarterPack(){
+  // Simulated IAP + VIP point grant per v7.3 §10 (100 pts per $1)
+  grantVipPoints(2.99);
+  s.coins += 3000;
+  grantBoosters(['extraBottle','extraBottle','extraBottle','extraBottle','extraBottle','colorSplash','colorSplash','colorSplash','colorSplash','colorSplash']);
+  // Silver × 3, Gold × 1, 1 token, Founder frame
+  rollPack({count:3, maxTier:'silver', guaranteedGold:false});
+  rollPack({count:5, maxTier:'gold',   guaranteedGold:true});
+  s.stickerTokens++;
+  if(!s.profile.unlockedFrames.includes('founder')) s.profile.unlockedFrames.push('founder');
+  s.starterPack.purchased = true;
+  dismissStarterPack();
+  toast('✓ Starter Pack unlocked (+30 VIP pts)');
+  saveSave();
+  renderAll();
+}
+
+// v7.3 §13 — Starter Pack content preview (transparency)
+function showStarterPackDetails(){
+  openOfferModal('Starter Pack · $2.99', [
+    {ic:'🪙', name:'Coins',         qty:3000, tier:'gold'},
+    {ic:'🧪', name:'Extra Bottle',  qty:5,    tier:'bronze'},
+    {ic:'🎨', name:'Color Splash',  qty:5,    tier:'silver'},
+    {ic:'📦', name:'Silver Pack',   qty:3,    tier:'silver'},
+    {ic:'📦', name:'Gold Pack',     qty:1,    tier:'gold'},
+    {ic:'🎟️', name:'Sticker Token', qty:1,    tier:'gold'},
+    {ic:'🖼️', name:'Founder Frame', qty:1,    tier:'gold'}
+  ], [
+    '3,000 coins (base value)',
+    '10 boosters (5 Bronze + 5 Silver)',
+    '4 sticker packs (3 Silver + 1 Gold, guaranteed Gold)',
+    '1 Sticker Token (use for any sticker)',
+    'Exclusive Founder Frame (cosmetic)',
+    '+30 VIP points (unlocks Bronze I)',
+    'Displayed value: ~11,000 coins (5× vs $2.99 shop base)'
+  ], 'Contents are itemized — no mystery tiers. Bundle value compared against standard shop coin pricing.');
+}
 
 // ===== FLASH OFFERS =====
 const FLASH_OFFERS = {
@@ -4207,6 +5239,20 @@ const FLASH_OFFERS = {
   refill:     {id:'refill',    title:'Refill Pack',     desc:'1000🪙 + 2 boosters',                price:'$1.99', durationMs:2*60*60*1000},
   sticker:    {id:'sticker',   title:'Sticker Splurge', desc:'1 Big Pack + 1 Token',              price:'$1.99', durationMs:2*60*60*1000}
 };
+
+// v7.3 §13 — Flash offer transparency detail
+const FLASH_OFFER_DETAILS = {
+  comeback:  {items:[{ic:'🪙',name:'Coins',qty:900,tier:'silver'},{ic:'🧪',name:'Mixed Booster',qty:3,tier:'bronze'}], breakdown:['900 coins','3 mixed boosters (Bronze/Silver weighted)','Coin-equiv value: ~1,500 coins'], disclaim:'Comeback bundle triggered after a loss streak.'},
+  promotion: {items:[{ic:'🪙',name:'Coins',qty:2500,tier:'gold'},{ic:'📦',name:'Gold Pack',qty:1,tier:'gold'},{ic:'🧪',name:'Mixed Booster',qty:5,tier:'silver'},{ic:'🖼️',name:'Arena Frame',qty:1,tier:'gold'}], breakdown:['2,500 coins','1 Gold Sticker Pack (5 pulls, guaranteed Gold)','5 mixed boosters','Arena-promotion exclusive frame','Coin-equiv: ~5,500 coins'], disclaim:'Triggered when you promote to a new arena.'},
+  refill:    {items:[{ic:'🪙',name:'Coins',qty:1000,tier:'silver'},{ic:'🧪',name:'Mixed Booster',qty:2,tier:'bronze'}], breakdown:['1,000 coins','2 mixed boosters','Coin-equiv: ~1,200 coins'], disclaim:'Triggered when coin balance drops low.'},
+  sticker:   {items:[{ic:'📦',name:'Big Pack (10 pulls)',qty:1,tier:'gold'},{ic:'🎟️',name:'Sticker Token',qty:1,tier:'gold'}], breakdown:['1 Big Pack (10 pulls, guaranteed Gold)','1 Sticker Token','Coin-equiv: ~2,500 coins'], disclaim:'Triggered after 3 packs without a Gold sticker.'}
+};
+
+function showFlashOfferDetails(id){
+  const f = FLASH_OFFERS[id]; if(!f) return;
+  const d = FLASH_OFFER_DETAILS[id] || {items:[],breakdown:[],disclaim:''};
+  openOfferModal(`${f.title} · ${f.price}`, d.items, d.breakdown, d.disclaim);
+}
 
 function triggerFlashOffer(id){
   if(s.activeFlashOffer && s.activeFlashOffer.expiresAt > Date.now()) return;
@@ -4222,14 +5268,21 @@ function triggerFlashOffer(id){
 function init(){
   loadSave();
   document.querySelectorAll('.nav-btn').forEach(b=>{ b.onclick = ()=>showScreen(b.dataset.screen); });
+  // v7.3 §14 — home right-side buttons
+  document.querySelectorAll('.home-sbtn').forEach(b=>{ b.onclick = ()=>showScreen(b.dataset.screen); });
+  // Profile opened by tapping player avatar (HUD)
+  const avatarEl = $('hud-avatar');
+  if(avatarEl){ avatarEl.style.cursor = 'pointer'; avatarEl.title = 'Profile'; avatarEl.onclick = ()=>showScreen('profile'); }
+  const hudName = document.querySelector('.hud-name-block');
+  if(hudName){ hudName.style.cursor = 'pointer'; hudName.onclick = ()=>showScreen('profile'); }
   $('play-btn').onclick = onPlayPressed;
   $('luckybox-btn').onclick = claimLuckyBox;
   $('missions-fab').onclick = openMissions;
-  $('starchest-btn').onclick = ()=>{
-    if(!s.starChestPending) return;
-    rollStarChest(currentArenaId());
-    renderAll();
-  };
+  $('arena-switch').onclick = openArenaModal;
+  // v7.3 §4 — Star Race modal
+  $('star-race-btn').onclick = openStarRace;
+  // v7.3 §7 — Home district picker
+  if($('hvp-district-btn')) $('hvp-district-btn').onclick = openDistrictPicker;
 
   // Match UI wiring
   $('btn-spawn').addEventListener('click', useSpawn);

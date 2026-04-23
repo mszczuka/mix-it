@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Mix-It — Design Review Conversation</title>
+<style>
+  @page { size: A4; margin: 18mm 16mm; }
+  * { box-sizing: border-box; }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body {
+    font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 10.5pt;
+    line-height: 1.45;
+    color: #1a1a1a;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 24px;
+  }
+  h1 { font-size: 22pt; border-bottom: 3px solid #333; padding-bottom: 6px; margin-top: 0; }
+  h2 { font-size: 16pt; border-bottom: 1px solid #bbb; padding-bottom: 4px; margin-top: 28px; page-break-after: avoid; }
+  h3 { font-size: 13pt; margin-top: 20px; page-break-after: avoid; }
+  h4 { font-size: 11.5pt; margin-top: 14px; page-break-after: avoid; }
+  p { margin: 6px 0; }
+  ul, ol { margin: 6px 0; padding-left: 22px; }
+  li { margin: 2px 0; }
+  code { background: #f2f2f2; padding: 1px 4px; border-radius: 3px; font-size: 9.5pt; }
+  pre { background: #f6f6f6; padding: 8px; border-radius: 4px; font-size: 9pt; overflow-x: auto; }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 10px 0;
+    font-size: 9.5pt;
+    page-break-inside: auto;
+  }
+  tr { page-break-inside: avoid; page-break-after: auto; }
+  th, td {
+    border: 1px solid #c8c8c8;
+    padding: 5px 7px;
+    text-align: left;
+    vertical-align: top;
+  }
+  th { background: #ececec; font-weight: 600; }
+  tr:nth-child(even) td { background: #fafafa; }
+  blockquote { border-left: 3px solid #aaa; padding: 4px 10px; margin: 8px 0; color: #444; background: #f8f8f8; }
+  .turn {
+    border-top: 2px solid #333;
+    margin-top: 32px;
+    padding-top: 8px;
+    page-break-before: auto;
+  }
+  .turn.user { border-top-color: #2a6fbf; }
+  .turn.assistant { border-top-color: #2a9d8f; }
+  .role-label {
+    display: inline-block;
+    font-size: 9pt;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    padding: 2px 8px;
+    border-radius: 3px;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+  }
+  .user .role-label { background: #2a6fbf; color: white; }
+  .assistant .role-label { background: #2a9d8f; color: white; }
+  .meta { color: #666; font-size: 9.5pt; margin-bottom: 14px; }
+  .toc { background: #f6f6f6; padding: 10px 16px; border-radius: 4px; margin: 16px 0; }
+  .toc ol { margin: 4px 0; }
+  .kbd { font-family: Consolas, monospace; background: #eee; border: 1px solid #ccc; border-radius: 3px; padding: 1px 5px; font-size: 9pt; }
+  @media print {
+    body { padding: 0; }
+    h2 { page-break-before: auto; }
+    .turn { page-break-before: auto; }
+  }
+</style>
+</head>
+<body>
+
+<h1>Mix-It — Design Review Conversation</h1>
+<div class="meta">
+  <strong>Project:</strong> Mix-It (casual PvP arena, water-sort + shared-queue plugin)<br>
+  <strong>Design state reviewed:</strong> v7.0 → v7.2 (MM-faithful refactor arc) + v6 for plugin core<br>
+  <strong>Framework:</strong> Archetype + Plugin lens, GameRefinery player motivations, time-scale loops<br>
+  <strong>Date:</strong> 2026-04-22<br>
+  <strong>Reviewer:</strong> gs-prototype-designer / gs-prototype-review (Claude Opus 4.7)
+</div>
+
+<div class="toc">
+  <strong>Contents</strong>
+  <ol>
+    <li>Turn 1 — Request: review Mix-It prototype</li>
+    <li>Turn 2 — Full Archetype + Plugin review (tagged tables, time-scale analysis, player-archetype fit)</li>
+    <li>Turn 3 — Clarification: v7 focus</li>
+    <li>Turn 4 — Headline findings summary</li>
+    <li>Turn 5 — Request: detailed archetype element table</li>
+    <li>Turn 6 — Detailed archetype audit (14 category tables, priority-sorted gaps)</li>
+    <li>Turn 7 — 5 proposed gameplay modifications</li>
+    <li>Turn 8 — Per-idea verdict with reasoning</li>
+  </ol>
+</div>
+
+<!-- ================== TURN 1 ================== -->
+<div class="turn user">
+<span class="role-label">User — Turn 1</span>
+<p>Review <code>D:\ProjectsClaude\mix-it\mix-it</code> Mix-It game</p>
+</div>
+
+<!-- ================== TURN 2 ================== -->
+<div class="turn assistant">
+<span class="role-label">Assistant — Turn 2 (Full Review)</span>
+
+<h2>Mix-It — Prototype Design Review</h2>
+<p><strong>Reviewed against:</strong> <code>design-v6.md</code> + patches v6.1 through v7.2 (latest: <code>design-v7.2-patch-mm-fidelity.md</code>, 2026-04-21)</p>
+<p><strong>Framework:</strong> Archetype + Plugin lens, time-scale loops (moment / minute / hour / day), GameRefinery player archetypes</p>
+<p><strong>Reviewed:</strong> 2026-04-22 — read-only, no files edited</p>
+
+<h3>Definitions used in this review</h3>
+<ul>
+  <li><strong>Aligned (🟢)</strong> — matches the archetype's proven pattern 1:1 or with cosmetic deviation only.</li>
+  <li><strong>Hybrid (🟡)</strong> — partial match; deviates in a way that is not clearly cosmetic and not clearly considered innovation.</li>
+  <li><strong>Innovation – plugin (🟣)</strong> — deliberate new/different element in the moment-to-moment core. Correct place for innovation.</li>
+  <li><strong>Innovation – archetype (🔴)</strong> — new/different element inside the meta/archetype shell. Framework-flagged as risky.</li>
+  <li><strong>Missing (⚫)</strong> — archetype reference has this, design does not.</li>
+  <li><strong>Paused / Deferred (⏸)</strong> — consciously deferred to later phase.</li>
+  <li><strong>Problematic (⚠️)</strong> — conflicts with the archetype's motivations or with the time-scale contract.</li>
+  <li><strong>Unknown (❔)</strong> — design does not state enough to classify.</li>
+</ul>
+
+<h3>1. Framing</h3>
+<ul>
+  <li><strong>Working title:</strong> mix-it</li>
+  <li><strong>Designer-declared target archetype:</strong> Casual PvP Arena / Match-Masters-style asynchronous 1v1 arena. The meta layer is explicitly refactored (v7.0–v7.2) to copy MM 1:1 — single-soft-currency, Booster Stakes Multiplier, auto-tier arena, sticker collection, pass, chests.</li>
+  <li><strong>Plugin:</strong> a real-time parallel-board water-sort + serve-race. Two players on the same scrambled pour-sort board pour colors into glasses, fill glasses purely, then race to serve a shared 3-customer queue in the middle. 90-second match; Color Spawn recharges on timer; combo window 10s; first-serve bonus + 2s grace window.</li>
+  <li><strong>Scope of review:</strong> v7.2 state as current truth, walking backwards into v7.1/v7.0/v6 for deeper systems.</li>
+  <li><strong>Unknown at review time:</strong> explicit session-length target, FTUE / tutorial spec, early-win-rate target, match-length fidelity.</li>
+</ul>
+
+<h3>2. Archetype reference set (web-verified 2026-04-22)</h3>
+<table>
+<tr><th>Reference game</th><th>Developer</th><th>What it defines here</th><th>Cite / date</th></tr>
+<tr><td><strong>Match Masters</strong></td><td>Candivore</td><td>Single-soft-currency model, Booster Stakes Multiplier (×2/×3/×4/×5), auto-tier arenas, sticker album collection, score-margin star rule, team/gift social (absent in MVP)</td><td>Candivore Zendesk — Booster Stakes Multiplier (accessed 2026-04-21); Naavik — Match Masters deconstruction; Candivore Zendesk — Coins</td></tr>
+<tr><td><strong>8 Ball Pool</strong></td><td>Miniclip</td><td>Coin ante per match, dual currency (Coins + Pool Cash), VIP ladder, Clubs + canned chat, weekly leaderboards</td><td>Miniclip Support — Pool Pass; Sensor Tower 2020</td></tr>
+<tr><td><strong>Golf Clash</strong></td><td>Playdemic/EA</td><td>Chest-slot timer economy, trophies → Tours, tournaments with entry fees</td><td>Game Developer 2021 EA acquisition; Playdemic Help — Trophies</td></tr>
+<tr><td><strong>Bowling Crew</strong></td><td>Wargaming</td><td>Simultaneous-turn real-time 1v1, chip ante, trophy alleys, weekly league reset</td><td>Bowling Crew FAQ</td></tr>
+<tr><td><strong>Trophy Hunter</strong></td><td>Ten Square Games (2025-07-03 global)</td><td>Base-hub meta (Hunter Lodge), rewarded-video ads, structural reference for the Venue</td><td>TSG press 2025-07-03</td></tr>
+</table>
+
+<p><strong>Conclusion on archetype fit:</strong> MM is the correct primary reference. The design team has correctly identified that the meta layer is a non-innovation zone and has refactored aggressively over v7.0→v7.2 to collapse to MM's actual shape.</p>
+
+<p><strong>Caveat:</strong> v7.2 §22 notes that "MM has no coin entry fee on regular 1v1" could not be re-confirmed directly from primary Candivore sources. The claim is load-bearing for the "no ante" decision and is currently unverified-pending-recheck.</p>
+
+<h3>3. Archetype layer — element-by-element</h3>
+<table>
+<tr><th>Element</th><th>What Mix-It v7.2 does</th><th>MM reference pattern</th><th>Tag</th><th>Note</th></tr>
+<tr><td>Meta-loop spine</td><td>Play match → coins/trophies/stars → spend on boosters & sticker packs → trophy road ticks → arena promo → bigger stakes</td><td>Same in MM</td><td>🟢 Aligned</td><td>MM-faithful one-liner matches in v7.2 §21</td></tr>
+<tr><td>Currencies</td><td>1 soft (Coins) + Stars (accumulator) + 2 side tokens (Venue Tokens, Sticker Tokens)</td><td>MM: Coins only + event tokens</td><td>🟢 Aligned</td><td>Gold currency deleted in v7.1. Correct.</td></tr>
+<tr><td>Hard currency (gems)</td><td>None</td><td>MM has none; 8BP/GC have gems</td><td>🟢 Aligned to MM</td><td>Explicitly MM-faithful. Caps monetization ceiling vs Clash-lineage titles.</td></tr>
+<tr><td>Wager / stake mechanic</td><td>Booster Stakes Multiplier ×1/×2/×3/×4 (×5 future), Gold-only, 0–4 slots</td><td>MM: same ladder, Diamond/Legendary/Special only</td><td>🟢 Aligned</td><td>v7.2 fidelity correction brought this to 1:1</td></tr>
+<tr><td>Per-match entry fee</td><td>None</td><td>MM: claim unverified; 8BP/BC have ante</td><td>🟡 Hybrid</td><td>Load-bearing decision riding on unverified MM claim</td></tr>
+<tr><td>Arena tiering</td><td>6 trophy-band arenas, auto-tier, no selector</td><td>MM: auto-tier, no selector</td><td>🟢 Aligned</td><td>Arena Selector deleted in v7.2 §8</td></tr>
+<tr><td>Trophy cap per tier</td><td>Absent (monotonic)</td><td>MM: absent; GC/BC: present</td><td>🟢 Aligned to MM</td><td>Correct</td></tr>
+<tr><td>Trophy Road</td><td>20 milestones, 0→4000, mix of coins + cosmetics + arena promos + Gold booster grants</td><td>MM: ranking ladder with milestone gifts</td><td>🟢 Aligned</td><td>#7 Cocktail doubles as staking unlock</td></tr>
+<tr><td>Star Meter → Star Chest</td><td>25-star accumulator → arena-tiered chest</td><td>MM: equivalent star meter</td><td>🟢 Aligned</td><td>Standard MM structure</td></tr>
+<tr><td>Chest-slot timer system</td><td>Absent; replaced by Lucky Box 4h + Star Meter + Daily Chest</td><td>MM: no 3-slot; GC/8BP: present</td><td>🟢 Aligned to MM</td><td>Trade-off: losing dual-gate session stop-out</td></tr>
+<tr><td>Lucky Box (4h timer)</td><td>4 boosters + 80 coins + 1 sticker</td><td>MM-equivalent 4h gift</td><td>🟢 Aligned</td><td></td></tr>
+<tr><td>Daily Missions</td><td>3/day from 8-mission pool; Daily Chest on 3/3</td><td>MM: similar 3/day</td><td>🟢 Aligned</td><td>Gate logic (re-roll below Cocktail) is clean</td></tr>
+<tr><td>Booster roster</td><td>9 identities × 3 tiers, flat power, per-arena unlock</td><td>MM: 30+ staked, flat per-tier</td><td>🟢 Aligned</td><td>Scoped down from 30+ — correct MVP cut</td></tr>
+<tr><td>Sticker rarity bands</td><td>White/Silver/Gold/Diamond 60/28/10/2</td><td>MM: same names, similar weights</td><td>🟢 Aligned</td><td>v7.2 fixed naming ("Common" → "White")</td></tr>
+<tr><td>Sticker collection</td><td>3 Regular Albums (20 each) + 1 Seasonal (20)</td><td>MM: 5 album types</td><td>🟢 Aligned</td><td>2 of 5 MM album types shipped — proper MVP scope</td></tr>
+<tr><td>Venue hub</td><td>Trophy-Hunter-style 6 districts × 29 buildings × 3 levels</td><td>TH Hunter Lodge</td><td>🟡 Hybrid</td><td>Deliberate second-reference graft. Sized ~2–3 months engaged.</td></tr>
+<tr><td>Bar Pass (seasonal)</td><td>30-day, Free + Premium ($9.99), 30 tiers</td><td>Genre-default Battle Pass</td><td>🟢 Aligned</td><td>Upper end of $5–15 range but defensible</td></tr>
+<tr><td>Shop structure</td><td>Sections A/B/C/D/F (boosters, coins, $ bundles, BP, sticker packs)</td><td>MM-equivalent</td><td>🟢 Aligned</td><td>Single-currency reflow correctly propagated</td></tr>
+<tr><td>Flash offers</td><td>4 triggers (loss streak, arena promo, low coins, 3rd pack w/o Gold)</td><td>Genre-standard</td><td>🟢 Aligned</td><td></td></tr>
+<tr><td>Weekly league / leaderboard</td><td><strong>Absent</strong></td><td>GC + BC ship; MM has soft-leagues</td><td>⚫ Missing</td><td>Self-comparison flags this as a gap</td></tr>
+<tr><td>Clubs / Teams / Chat</td><td>Absent — deferred</td><td>MM-defining; 8BP-defining</td><td>⏸ Paused</td><td>Correctly deferred; post-MVP plan needed</td></tr>
+<tr><td>Leaderboards</td><td>Absent</td><td>8BP/GC/TH common</td><td>⚫ Missing</td><td>Even a flat weekly leaderboard supports competitive motivation</td></tr>
+<tr><td>VIP / loyalty ladder</td><td>Absent</td><td>8BP-signature</td><td>⚫ Missing</td><td>Whale-retention lever. Post-MVP.</td></tr>
+<tr><td>Rewarded-video ads</td><td>Not specced</td><td>MM/TH/SG confirmed</td><td>⚫ Missing</td><td>Cheap add before launch</td></tr>
+<tr><td>Starter Pack</td><td>$2.99, 48h</td><td>Genre-standard</td><td>🟢 Aligned</td><td></td></tr>
+<tr><td>Whale SKU ($49.99–$99.99)</td><td>Top SKU $19.99</td><td>8BP/GC ship to $99.99</td><td>⚫ Missing</td><td>Prototype scope; soft-launch reopen</td></tr>
+<tr><td>Tournaments / LTMs</td><td>Reserved post-MVP</td><td>GC/8BP ship; MM events</td><td>⏸ Paused</td><td></td></tr>
+<tr><td>Score-margin star rule</td><td>3/2/1 based on margin ratio ≥ 0.35</td><td>MM: 2–3 on win by margin, 1 on loss</td><td>🟢 Aligned</td><td>0.35 threshold labelled as Mix-It design choice</td></tr>
+</table>
+
+<p><strong>Archetype-layer summary:</strong> The meta shell is in strong MM-faithful shape. The v7.0→v7.2 arc is a textbook example of <em>removing</em> archetype-layer innovation (Gold currency, per-match ante, bet-tier concept, Arena Selector, diminishing-returns table, stake-survival star rule) rather than adding.</p>
+
+<h3>4. Plugin layer — element-by-element</h3>
+<table>
+<tr><th>Element</th><th>What Mix-It does</th><th>Closest reference</th><th>Tag</th><th>Note</th></tr>
+<tr><td>Match structure</td><td>Parallel boards, shared customer queue, real-time simultaneous</td><td>MM turn-based; BC simultaneous-turn; GC alternates</td><td>🟣 Innovation (plugin)</td><td>Core invention. Does NOT copy MM plugin. Framework-correct place to innovate.</td></tr>
+<tr><td>Input skill</td><td>Pour routing + timing + combo window</td><td>MM's skill is match-3 routing</td><td>🟣 Innovation (plugin)</td><td>Skill-vs-RNG mix is genre-legible</td></tr>
+<tr><td>Match length</td><td>90s (v6 §6.1)</td><td>2–5 min range; MM 4 rounds</td><td>🟢 Aligned</td><td>v7 docs should re-assert</td></tr>
+<tr><td>Customer queue</td><td>3 shared customers, 20s patience, first-serve bonus +50, 2s grace window</td><td>No direct genre analog</td><td>🟣 Innovation (plugin)</td><td>Distinctive competitive hook — "steal the customer"</td></tr>
+<tr><td>Combo window</td><td>10s rolling, additive (50/100/150…)</td><td>Match-3 combos in MM but not rolling</td><td>🟣 Innovation (plugin)</td><td>Feeds moment-to-moment dopamine</td></tr>
+<tr><td>Color Spawn</td><td>Recharge-timed material injection, both players</td><td>—</td><td>🟣 Innovation (plugin)</td><td>Anti-stall + second tactical axis</td></tr>
+<tr><td>Pour rules</td><td>Standard water-sort top-layer-to-empty-or-matching</td><td>Water-sort genre</td><td>🟢 Aligned</td><td>Known-good core</td></tr>
+<tr><td>Board generation</td><td>Shuffle-deal; rejects already-pure starts</td><td>Standard water-sort</td><td>🟢 Aligned</td><td></td></tr>
+<tr><td>Boosters in-match</td><td>Equipped + up to 4 Gold stakes pre-chosen; 2 Perk slots</td><td>MM: equipped + stake slots</td><td>🟢 Aligned</td><td>Post-v7.2 mirrors MM almost exactly</td></tr>
+<tr><td>Perks</td><td>Second Look / Steady Hand / Pour Read, 2-3 uses, never lost</td><td>Mild-booster layer not MM-analog</td><td>🟣 Innovation (plugin)</td><td>Useful always-on support so stakes stay scarce</td></tr>
+<tr><td>AI stake generation</td><td>Probabilistic table based on player stake count</td><td>MM opponent-stake symmetry</td><td>🟢 Aligned</td><td></td></tr>
+<tr><td>Named AI personas + Rematch</td><td>~12 personas/arena, preserves selection</td><td>Genre bot-fill convention</td><td>🟢 Aligned</td><td></td></tr>
+<tr><td>On Fire streak</td><td>2 wins → next match ×2 coins + ×2 trophies, stacks with stake</td><td>MM-signature streak multiplier</td><td>🟢 Aligned</td><td></td></tr>
+<tr><td>Match-end resolve</td><td>Score when timer expires</td><td>Genre-standard</td><td>🟢 Aligned</td><td></td></tr>
+<tr><td>Tutorial / FTUE</td><td>Not specified in v7 docs</td><td>Genre: forced-win vs bot, 60-70% early WR</td><td>❔ Unknown</td><td>Biggest plugin-layer hole</td></tr>
+<tr><td>Session-length target</td><td>Not explicit</td><td>5-15 min common</td><td>❔ Unknown</td><td></td></tr>
+<tr><td>"60-sec first-minute" test</td><td>No playtest data cited</td><td>—</td><td>❔ Unknown</td><td>The golden-rule question</td></tr>
+</table>
+
+<p><strong>Plugin-layer summary:</strong> Genuinely novel, coherent, correctly placed — innovation where innovation belongs. Risks: (a) no retention evidence cited yet, (b) no FTUE spec, (c) parallel-board simultaneous real-time is a category the genre mostly doesn't ship — first-match cognitive load is a known unknown.</p>
+
+<h3>5. Time-scale table</h3>
+<table>
+<tr><th>Loop</th><th>What's designed</th><th>Reference for archetype</th><th>Tag</th><th>Note</th></tr>
+<tr><td><strong>Moment (seconds)</strong></td><td>Pour → glass fills → serve → combo within 10s → juice → customer replaced → Color Spawn → booster press</td><td>MM: tap-to-match, combos, On Fire</td><td>🟣 Innovation</td><td>Dense tactile loop. Combo + first-serve give clean "every few seconds" payoffs.</td></tr>
+<tr><td><strong>Minute (match)</strong></td><td>90s: entry → stake → countdown → race-serve → spike → result screen cascade (stars, stake, sticker, progress)</td><td>MM: 4-round match with stake rewards</td><td>🟢 Aligned</td><td>Result cascade (8 steps) is reward-dense</td></tr>
+<tr><td><strong>Hour (session)</strong></td><td>2–4 matches; Lucky Box 4h pull-back; daily mission chase; spend decision; Star Meter fill</td><td>MM: 2–4 matches + chest + pass tick</td><td>🟡 Hybrid</td><td><strong>Weak session stop-out</strong> — no chest-slot saturation, no ante, no energy</td></tr>
+<tr><td><strong>Day (mega)</strong></td><td>Lucky Box × 3-6, Daily Missions, Trophy Road, Star Chest ~1/2 days, Venue Tokens, Bar Pass, Flash Offers</td><td>MM daily shape</td><td>🟢 Aligned</td><td>~1,400-1,600 coins/day passive pre-Cocktail, ~2,500 post</td></tr>
+<tr><td><strong>Week</strong></td><td>Bar Pass 30-day arc. Seasonal Album 30-day. <strong>No weekly league or leaderboard.</strong></td><td>GC/BC/8BP: weekly league; MM: seasons</td><td>⚫ Missing</td><td><strong>Largest time-scale gap.</strong> Monthly pass good; no weekly competition peak.</td></tr>
+</table>
+
+<h3>6. Summary tag counts</h3>
+<table>
+<tr><th>Tag</th><th>Count</th></tr>
+<tr><td>🟢 Aligned</td><td>29</td></tr>
+<tr><td>🟡 Hybrid</td><td>4</td></tr>
+<tr><td>🟣 Innovation (plugin)</td><td>8</td></tr>
+<tr><td>🔴 Innovation (archetype)</td><td>0</td></tr>
+<tr><td>⚫ Missing</td><td>6</td></tr>
+<tr><td>⏸ Paused</td><td>4</td></tr>
+<tr><td>⚠️ Problematic</td><td>0</td></tr>
+<tr><td>❔ Unknown</td><td>4</td></tr>
+</table>
+<p><strong>Zero 🔴 archetype innovations</strong> — the framework-desired distribution.</p>
+
+<h3>7. Player-archetype analysis (GameRefinery lens)</h3>
+
+<h4>7.1 Inferred motivation mix of reference games</h4>
+<table>
+<tr><th>Reference</th><th>Inferred primary mix</th><th>Reasoning</th></tr>
+<tr><td>Match Masters</td><td>Thrill Seeker + Treasure Hunter + Networker + Thinker</td><td>Stake risk (TS), sticker album (TH), team gifts + trades (N), match-3 puzzle (T)</td></tr>
+<tr><td>8 Ball Pool</td><td>Skill Master + King of the Hill + Networker</td><td>Angle/spin skill, leaderboards/VIP, clubs/chat</td></tr>
+<tr><td>Golf Clash</td><td>Skill Master + Treasure Hunter + King of the Hill</td><td>2-circle aim, chest/card loop, tour ladder</td></tr>
+<tr><td>Bowling Crew</td><td>Skill Master + King of the Hill</td><td>Aim + power skill, league climb</td></tr>
+<tr><td>Trophy Hunter</td><td>Skill Master + Treasure Hunter + Expressionist</td><td>Aim skill, lodge collection, base decoration</td></tr>
+</table>
+
+<h4>7.2 Mix-It archetype fit</h4>
+<table>
+<tr><th>Archetype</th><th>Does Mix-It serve them?</th><th>Notes</th></tr>
+<tr><td><strong>Skill Master</strong></td><td>✅ Strong</td><td>Routing + combos + time pressure + stake choice support mastery arc</td></tr>
+<tr><td><strong>Thrill Seeker</strong></td><td>✅ Strong</td><td>Booster Stakes Multiplier is built for exactly this audience. MM-overlap here.</td></tr>
+<tr><td><strong>Treasure Hunter</strong></td><td>✅ Strong</td><td>80 stickers + Venue + cosmetics + chest/pack gacha</td></tr>
+<tr><td><strong>Expressionist</strong></td><td>🟡 Partial</td><td>Cosmetics present but not primary. No outfit builder, no photo mode, no showcase.</td></tr>
+<tr><td><strong>King of the Hill</strong></td><td>⚠️ Partial / Weak</td><td>Micro-KotH present. <strong>Macro-KotH missing</strong> — no weekly league, leaderboard, VIP, tournaments.</td></tr>
+<tr><td>Thinker</td><td>🟢 Present</td><td>Board routing</td></tr>
+<tr><td>Strategist</td><td>—</td><td>Not required for arena-genre</td></tr>
+<tr><td>Networker</td><td>⏸ Deferred</td><td>Teams/chat/gifts intentionally deferred</td></tr>
+</table>
+
+<h4>7.3 Audience risk</h4>
+<ul>
+  <li><strong>Primary risk:</strong> Heavy Skill Master + Thrill Seeker + Treasure Hunter (MM-style target), but <strong>KotH layer weak at scale</strong>. No visible mountain to climb past Trophy Road #20 / 4,000 trophies.</li>
+  <li><strong>Secondary risk:</strong> <strong>Expressionist under-serve.</strong> Cosmetics exist as rewards, not identity. For MM's female-leaning casual cohort, customization depth is shallow.</li>
+</ul>
+
+<h3>8. Unknowns</h3>
+<ol>
+  <li>Explicit FTUE plan (first 60 seconds, first 3 matches)</li>
+  <li>Target match length in v7 (still 90s?)</li>
+  <li>Target session length + sessions/day</li>
+  <li>Plugin-only retention test results</li>
+  <li>Week-to-week motivation layer plan</li>
+  <li>v7.2 §22 "MM has no coin ante on 1v1" claim verification</li>
+  <li>Rewarded-video plan for launch</li>
+</ol>
+
+<h3>9. Framework alarms</h3>
+<ol>
+  <li>⚠️ Load-bearing unverified MM claim (no-ante decision)</li>
+  <li>⚠️ Weak session stop-out (day-to-day loop)</li>
+  <li>⚠️ Week-to-week loop thin — no league/leaderboard/tournaments</li>
+  <li>⚠️ FTUE undefined for high-cognitive-load plugin</li>
+  <li>⚠️ Expressionist under-investment</li>
+  <li>🟡 Venue hub scope risk (29×3×6)</li>
+  <li>⚫ No rewarded-video specced</li>
+</ol>
+
+<h3>10. Reviewer opinion</h3>
+<p><strong>Mix-it is on track, meta-side.</strong> The v7.0 → v7.2 arc is rare: three consecutive patches whose purpose is to <em>remove</em> meta-layer invention and collapse to a proven leader's shape. That's strategically correct.</p>
+<p><strong>The plugin is the real question, and it is unresolved.</strong> The water-sort + parallel-board + shared-customer-race + combo-window loop is genuinely novel. That's the correct place for innovation. But no retention evidence is cited in the docs, and no FTUE spec exists for a first-minute with unusually high cognitive load. <strong>If the plugin does not independently retain, the shell cannot save it.</strong></p>
+<p><strong>Weakest layer: the week loop.</strong> Bar Pass covers month; Lucky Box + dailies cover day; plugin covers seconds and minutes; but "what am I climbing this week?" is unanswered for the KotH cohort.</p>
+<p><strong>Single most important question:</strong> Does the plugin (parallel-board, shared-queue, 90s) retain on its own? Everything else is secondary.</p>
+
+</div>
+
+<!-- ================== TURN 3 ================== -->
+<div class="turn user">
+<span class="role-label">User — Turn 3</span>
+<p>its v7 mostly and patches</p>
+</div>
+
+<!-- ================== TURN 4 ================== -->
+<div class="turn assistant">
+<span class="role-label">Assistant — Turn 4 (Headline Summary)</span>
+
+<h2>Mix-It Review — Headline Findings</h2>
+
+<p><strong>Archetype layer (meta): 🟢 On track.</strong> The v7.0 → v7.2 arc is a textbook "remove meta-layer invention and collapse to MM-faithful" refactor. Gold currency, per-match ante, bet tiers, Arena Selector all deleted. Booster Stakes Multiplier, single soft currency, auto-tier arenas, score-margin star rule, sticker albums, seasonal pass — all match MM pattern. <strong>Zero 🔴 archetype-layer innovations remain.</strong></p>
+
+<p><strong>Plugin layer (moment-to-moment): 🟣 Correctly where innovation lives — but unvalidated.</strong> The parallel-board water-sort + shared customer queue + 10s combo window + 90s match is genuinely novel. Right place to innovate. But: no plugin-only retention evidence cited, no FTUE spec.</p>
+
+<h4>Time-scale gaps</h4>
+<ul>
+  <li><strong>Second/minute:</strong> 🟢 dense, dopamine-rich cadence</li>
+  <li><strong>Hour (session):</strong> 🟡 weak stop-out — no ante, no chest-slot timers, no energy</li>
+  <li><strong>Day:</strong> 🟢 Lucky Box 4h + dailies + Star Meter cover it</li>
+  <li><strong>Week:</strong> ⚫ <strong>biggest gap</strong> — no weekly league / leaderboard / tournament</li>
+</ul>
+
+<p><strong>Player-archetype fit:</strong> Strong for Skill Master + Thrill Seeker + Treasure Hunter + Thinker. Weak for King of the Hill (no ladder peak) and Expressionist (cosmetics as rewards only).</p>
+
+<h4>Top 5 flags</h4>
+<ol>
+  <li>⚠️ v7.2 §22's "MM has no 1v1 coin ante" claim is load-bearing but unverified</li>
+  <li>⚠️ Weak session stop-out (no ante + no chest slots + no energy)</li>
+  <li>⚫ No weekly league / leaderboard → thin week-to-week loop</li>
+  <li>⚠️ FTUE undefined for high-cognitive-load plugin</li>
+  <li>⚫ Expressionist cosmetic-identity layer thin; no rewarded video</li>
+</ol>
+
+<p><strong>Single unresolved question:</strong> Does the plugin retain 60 min without meta? Everything else is secondary.</p>
+
+</div>
+
+<!-- ================== TURN 5 ================== -->
+<div class="turn user">
+<span class="role-label">User — Turn 5</span>
+<p>Write more detailed table about what elements of archetype (genre) are we aiming, what we have ok, what we are missing</p>
+</div>
+
+<!-- ================== TURN 6 ================== -->
+<div class="turn assistant">
+<span class="role-label">Assistant — Turn 6 (Detailed Archetype Audit)</span>
+
+<h2>Mix-It — Detailed Archetype Element Audit</h2>
+<p><strong>Archetype targeted:</strong> Casual PvP Arena, MM-faithful variant<br>
+<strong>Reference set:</strong> Match Masters (primary), 8 Ball Pool, Golf Clash, Bowling Crew, Trophy Hunter<br>
+<strong>State:</strong> v7.2-patch-mm-fidelity (2026-04-21)</p>
+
+<p><strong>Legend:</strong> 🟢 Have & aligned · 🟡 Have but partial/hybrid · 🔴 Have but diverges · ⚫ Missing · ⏸ Deferred · ❔ Unspecified</p>
+
+<h3>A. Core Loop & Match Structure</h3>
+<table>
+<tr><th>#</th><th>Element</th><th>Reference pattern</th><th>Mix-It state</th><th>Status</th><th>Priority</th></tr>
+<tr><td>A1</td><td>Async 1v1 PvP core</td><td>All 5 refs</td><td>Async 1v1, 90s</td><td>🟢</td><td>—</td></tr>
+<tr><td>A2</td><td>Match length</td><td>2–5 min (MM ~3–4, BC ~2, GC ~3)</td><td>90s</td><td>🟢</td><td>Re-assert in v7 docs</td></tr>
+<tr><td>A3</td><td>Matchmaking by trophies</td><td>MM/BC/GC</td><td>Trophy-banded auto-tier</td><td>🟢</td><td>—</td></tr>
+<tr><td>A4</td><td>Bot fill / named AI personas</td><td>Genre norm</td><td>~12 personas/arena + Rematch</td><td>🟢</td><td>—</td></tr>
+<tr><td>A5</td><td>Result screen cascade</td><td>MM (stars → stake → coins → pass → chest)</td><td>8-step cascade v7.2 §14.1</td><td>🟢</td><td>—</td></tr>
+<tr><td>A6</td><td>Forfeit / timeout rules</td><td>Genre norm</td><td>Timer-expire resolve</td><td>🟢</td><td>—</td></tr>
+<tr><td>A7</td><td>Reconnection handling</td><td>Genre norm</td><td>❔</td><td>❔</td><td>Low (prototype)</td></tr>
+</table>
+
+<h3>B. Currencies & Economy</h3>
+<table>
+<tr><th>#</th><th>Element</th><th>Reference</th><th>Mix-It</th><th>Status</th><th>Priority</th></tr>
+<tr><td>B1</td><td>Single soft currency (Coins)</td><td>MM</td><td>Coins</td><td>🟢</td><td>—</td></tr>
+<tr><td>B2</td><td>Hard / premium currency (gems)</td><td>8BP/GC have, MM doesn't</td><td>None</td><td>🟢 to MM</td><td>Caps ceiling</td></tr>
+<tr><td>B3</td><td>Event/side tokens</td><td>MM has</td><td>Venue Tokens + Sticker Tokens</td><td>🟢</td><td>—</td></tr>
+<tr><td>B4</td><td>Star accumulator (non-wallet)</td><td>MM Star Meter</td><td>25-star → Star Chest</td><td>🟢</td><td>—</td></tr>
+<tr><td>B5</td><td>Per-match coin ante</td><td>MM unverified; 8BP/BC have</td><td>None</td><td>🟡</td><td><strong>HIGH — re-verify MM</strong></td></tr>
+<tr><td>B6</td><td>Starter Pack ($2.99, 48h)</td><td>Genre std</td><td>Present</td><td>🟢</td><td>—</td></tr>
+<tr><td>B7</td><td>Bundle SKU ladder to $99.99</td><td>8BP/GC</td><td>Tops at $19.99</td><td>⚫</td><td>Post-soft-launch</td></tr>
+<tr><td>B8</td><td>Daily login calendar</td><td>Genre common</td><td>Fused into Lucky Box</td><td>🟡</td><td>Watch DAU</td></tr>
+<tr><td>B9</td><td>Flash / triggered offers</td><td>Genre std</td><td>4 triggers specced</td><td>🟢</td><td>—</td></tr>
+<tr><td>B10</td><td>Dupe → coins conversion</td><td>MM</td><td>Stickers → coins</td><td>🟢</td><td>—</td></tr>
+</table>
+
+<h3>C. Wager / Stake Layer (MM signature)</h3>
+<table>
+<tr><th>#</th><th>Element</th><th>Reference</th><th>Mix-It</th><th>Status</th><th>Priority</th></tr>
+<tr><td>C1</td><td>Booster Stakes Multiplier ×2/×3/×4/×5</td><td>MM exact</td><td>×1/×2/×3/×4 (×5 future)</td><td>🟢</td><td>—</td></tr>
+<tr><td>C2</td><td>Staked-only currency</td><td>MM Gold boosters</td><td>Gold boosters only</td><td>🟢</td><td>—</td></tr>
+<tr><td>C3</td><td>Stakes unlock threshold</td><td>MM arena-gated</td><td>Cocktail arena (TR #7)</td><td>🟢</td><td>—</td></tr>
+<tr><td>C4</td><td>Higher multiplier arena-gated</td><td>MM</td><td>×4 at 1,000 trophies</td><td>🟢</td><td>—</td></tr>
+<tr><td>C5</td><td>On Fire / streak multiplier</td><td>MM</td><td>2-win → ×2 next match, stacks</td><td>🟢</td><td>—</td></tr>
+<tr><td>C6</td><td>AI opponent stake symmetry</td><td>MM</td><td>Probabilistic stake table</td><td>🟢</td><td>—</td></tr>
+<tr><td>C7</td><td>Stake keep/lose visualization</td><td>MM</td><td>Result-screen cascade</td><td>🟢</td><td>—</td></tr>
+</table>
+
+<h3>D. Progression & Arena Ladder</h3>
+<table>
+<tr><th>#</th><th>Element</th><th>Reference</th><th>Mix-It</th><th>Status</th><th>Priority</th></tr>
+<tr><td>D1</td><td>Trophy-banded arenas</td><td>MM/BC/GC</td><td>6 arenas (Juice Stand → Grand Hotel)</td><td>🟢</td><td>—</td></tr>
+<tr><td>D2</td><td>Auto-tier on cross (no selector)</td><td>MM</td><td>Yes, selector deleted v7.2</td><td>🟢</td><td>—</td></tr>
+<tr><td>D3</td><td>Trophy cap per tier</td><td>GC/BC have, MM doesn't</td><td>None</td><td>🟢 to MM</td><td>—</td></tr>
+<tr><td>D4</td><td>Trophy Road / milestone ladder</td><td>MM Clash-lineage</td><td>20 milestones 0→4000</td><td>🟢</td><td>—</td></tr>
+<tr><td>D5</td><td>Arena-themed cosmetics unlocked</td><td>MM</td><td>Booster skins, frames, titles</td><td>🟢</td><td>—</td></tr>
+<tr><td>D6</td><td>Staking-unlocked milestone</td><td>MM</td><td>TR #7 Cocktail</td><td>🟢</td><td>—</td></tr>
+<tr><td>D7</td><td>Score-margin star rule</td><td>MM Naavik-cited</td><td>3/2/1 at margin ≥0.35</td><td>🟢</td><td>—</td></tr>
+<tr><td>D8</td><td>Post-cap prestige / seasonal reset</td><td>Genre split</td><td>❔</td><td>❔</td><td>Post-MVP decision</td></tr>
+</table>
+
+<h3>E. Collection (Stickers / Albums)</h3>
+<table>
+<tr><th>#</th><th>Element</th><th>Reference</th><th>Mix-It</th><th>Status</th><th>Priority</th></tr>
+<tr><td>E1</td><td>Sticker album structure</td><td>MM 5 album types</td><td>3 Regular + 1 Seasonal</td><td>🟡</td><td>MVP-sized; 3 reserved</td></tr>
+<tr><td>E2</td><td>Rarity bands</td><td>MM White/Silver/Gold/Diamond</td><td>60/28/10/2 weights</td><td>🟢</td><td>—</td></tr>
+<tr><td>E3</td><td>Force-unlock via Sticker Tokens</td><td>MM</td><td>Present</td><td>🟢</td><td>—</td></tr>
+<tr><td>E4</td><td>Duplicate compensation</td><td>MM</td><td>Dupes → coins</td><td>🟢</td><td>—</td></tr>
+<tr><td>E5</td><td>Sticker trading (peer-to-peer)</td><td>MM-signature</td><td>Absent</td><td>⏸</td><td>Bundle with social</td></tr>
+<tr><td>E6</td><td>Seasonal album rotation</td><td>MM</td><td>30-day</td><td>🟢</td><td>—</td></tr>
+<tr><td>E7</td><td>Album completion reward</td><td>MM</td><td>Specced</td><td>🟢</td><td>—</td></tr>
+</table>
+
+<h3>F. Chests, Gifts & Session Return Hooks</h3>
+<table>
+<tr><th>#</th><th>Element</th><th>Reference</th><th>Mix-It</th><th>Status</th><th>Priority</th></tr>
+<tr><td>F1</td><td>3-slot chest-timer system</td><td>8BP/GC signature</td><td>Absent</td><td>🟢 to MM</td><td>—</td></tr>
+<tr><td>F2</td><td>Scheduled gift box (timer)</td><td>MM-style 4h</td><td>Lucky Box 4h</td><td>🟢</td><td>—</td></tr>
+<tr><td>F3</td><td>Star-meter → arena chest</td><td>MM</td><td>25-star Star Chest</td><td>🟢</td><td>—</td></tr>
+<tr><td>F4</td><td>Daily Chest from missions</td><td>MM</td><td>3/3 mission → Daily Chest</td><td>🟢</td><td>—</td></tr>
+<tr><td>F5</td><td>Arena promotion chest</td><td>MM/BC</td><td>Specced on arena-cross</td><td>🟢</td><td>—</td></tr>
+<tr><td>F6</td><td>Trophy Road chest milestones</td><td>Clash-lineage</td><td>20 TR milestones w/ gifts</td><td>🟢</td><td>—</td></tr>
+</table>
+
+<h3>G. Boosters / In-Match Powers</h3>
+<table>
+<tr><th>#</th><th>Element</th><th>Reference</th><th>Mix-It</th><th>Status</th><th>Priority</th></tr>
+<tr><td>G1</td><td>Roster of staked boosters</td><td>MM ~30+</td><td>9 identities × 3 tiers</td><td>🟡</td><td>Scaled MVP; fine</td></tr>
+<tr><td>G2</td><td>Rarity tiers (Bronze/Silver/Gold)</td><td>MM</td><td>Flat power per tier</td><td>🟢</td><td>—</td></tr>
+<tr><td>G3</td><td>Equipped (always-used) slot</td><td>MM</td><td>Present</td><td>🟢</td><td>—</td></tr>
+<tr><td>G4</td><td>Pre-match stake slots</td><td>MM (0–4)</td><td>0–4 stake slots</td><td>🟢</td><td>—</td></tr>
+<tr><td>G5</td><td>Never-lost utility "perks"</td><td>Not MM-native</td><td>3 Perks (Second Look / Steady Hand / Pour Read)</td><td>🟣 plugin-layer</td><td>Reasonable</td></tr>
+<tr><td>G6</td><td>Per-arena booster unlocks</td><td>MM</td><td>Present</td><td>🟢</td><td>—</td></tr>
+</table>
+
+<h3>H. Seasonal Pass</h3>
+<table>
+<tr><th>#</th><th>Element</th><th>Reference</th><th>Mix-It</th><th>Status</th><th>Priority</th></tr>
+<tr><td>H1</td><td>Free + Premium tracks</td><td>Genre std</td><td>Bar Pass, 30-day</td><td>🟢</td><td>—</td></tr>
+<tr><td>H2</td><td>Tier count</td><td>30–50 typical</td><td>30 tiers</td><td>🟢</td><td>—</td></tr>
+<tr><td>H3</td><td>Price point</td><td>$5–$15 range</td><td>$9.99</td><td>🟢</td><td>Upper band</td></tr>
+<tr><td>H4</td><td>XP sources (match played/won)</td><td>Genre std</td><td>BPP from match</td><td>🟢</td><td>—</td></tr>
+<tr><td>H5</td><td>Catch-up tier purchase</td><td>Genre common</td><td>❔</td><td>❔</td><td>Add before launch</td></tr>
+<tr><td>H6</td><td>Premium+ / deluxe tier</td><td>Genre-split</td><td>⚫</td><td>⚫</td><td>Post-MVP</td></tr>
+</table>
+
+<h3>I. Weekly / Competitive Peak (BIGGEST GAP)</h3>
+<table>
+<tr><th>#</th><th>Element</th><th>Reference</th><th>Mix-It</th><th>Status</th><th>Priority</th></tr>
+<tr><td>I1</td><td>Weekly league / Clash-style reset</td><td>BC/GC standard</td><td>Absent</td><td>⚫</td><td><strong>HIGH</strong></td></tr>
+<tr><td>I2</td><td>Country leaderboard</td><td>8BP/TH</td><td>Absent</td><td>⚫</td><td>HIGH</td></tr>
+<tr><td>I3</td><td>Global leaderboard</td><td>8BP</td><td>Absent</td><td>⚫</td><td>MEDIUM</td></tr>
+<tr><td>I4</td><td>Friends / club leaderboard</td><td>8BP</td><td>Absent</td><td>⏸</td><td>Bundle w/ social</td></tr>
+<tr><td>I5</td><td>Tournaments (entry + prize pool)</td><td>GC/8BP</td><td>Absent</td><td>⏸</td><td>Post-MVP</td></tr>
+<tr><td>I6</td><td>Weekly reset reward tier</td><td>BC</td><td>Absent</td><td>⚫</td><td><strong>HIGH</strong></td></tr>
+<tr><td>I7</td><td>Limited-time events (LTMs)</td><td>MM/GC/8BP</td><td>Absent</td><td>⏸</td><td>Post-MVP</td></tr>
+</table>
+
+<h3>J. Social / Community</h3>
+<table>
+<tr><th>#</th><th>Element</th><th>Reference</th><th>Mix-It</th><th>Status</th><th>Priority</th></tr>
+<tr><td>J1</td><td>Teams / Clubs / Guilds</td><td>MM/8BP signature</td><td>Absent</td><td>⏸</td><td>Soft-launch window</td></tr>
+<tr><td>J2</td><td>Team gifts (daily booster share)</td><td>MM signature</td><td>Absent</td><td>⏸</td><td>With teams</td></tr>
+<tr><td>J3</td><td>Canned chat / emotes</td><td>8BP signature</td><td>Absent</td><td>⏸</td><td>Cheap add</td></tr>
+<tr><td>J4</td><td>Friend system</td><td>Genre std</td><td>Absent</td><td>⏸</td><td>With teams</td></tr>
+<tr><td>J5</td><td>Match replay / spectating</td><td>8BP/GC</td><td>Absent</td><td>⏸</td><td>Post-MVP</td></tr>
+<tr><td>J6</td><td>Shareable result / social post</td><td>Genre std</td><td>❔</td><td>❔</td><td>Low cost</td></tr>
+</table>
+
+<h3>K. Retention Ladders</h3>
+<table>
+<tr><th>#</th><th>Element</th><th>Reference</th><th>Mix-It</th><th>Status</th><th>Priority</th></tr>
+<tr><td>K1</td><td>VIP / loyalty ladder</td><td>8BP signature</td><td>Absent</td><td>⚫</td><td>Post-MVP whale lever</td></tr>
+<tr><td>K2</td><td>Daily missions</td><td>MM/genre std</td><td>3/day, 8-pool rotation</td><td>🟢</td><td>—</td></tr>
+<tr><td>K3</td><td>Weekly missions</td><td>Genre common</td><td>Absent</td><td>⚫</td><td>MEDIUM</td></tr>
+<tr><td>K4</td><td>Achievement / medal system</td><td>Genre common</td><td>Absent</td><td>⚫</td><td>LOW</td></tr>
+<tr><td>K5</td><td>Return-player offer</td><td>Genre std</td><td>❔</td><td>❔</td><td>LOW</td></tr>
+<tr><td>K6</td><td>Comeback mechanic (after losses)</td><td>MM-style</td><td>Flash offer on 3-loss streak</td><td>🟢</td><td>—</td></tr>
+</table>
+
+<h3>L. Cosmetics & Identity (Expressionist)</h3>
+<table>
+<tr><th>#</th><th>Element</th><th>Reference</th><th>Mix-It</th><th>Status</th><th>Priority</th></tr>
+<tr><td>L1</td><td>Avatar</td><td>Genre std</td><td>Present</td><td>🟢</td><td>—</td></tr>
+<tr><td>L2</td><td>Avatar frames</td><td>MM</td><td>Present</td><td>🟢</td><td>—</td></tr>
+<tr><td>L3</td><td>Titles</td><td>MM</td><td>Present</td><td>🟢</td><td>—</td></tr>
+<tr><td>L4</td><td>Booster skins</td><td>MM</td><td>Present</td><td>🟢</td><td>—</td></tr>
+<tr><td>L5</td><td>Base/hub cosmetic decoration</td><td>TH / Hunter Lodge</td><td>Venue 29 × 3 × 6</td><td>🟡</td><td>Scope risk</td></tr>
+<tr><td>L6</td><td>Showcase / profile feed</td><td>8BP</td><td>⚫</td><td>⚫</td><td>MEDIUM — identity gap</td></tr>
+<tr><td>L7</td><td>Outfit / character editor</td><td>Expressionist-primary</td><td>Absent</td><td>⚫</td><td>Consider</td></tr>
+<tr><td>L8</td><td>Photo / share mode</td><td>—</td><td>Absent</td><td>⚫</td><td>LOW</td></tr>
+</table>
+
+<h3>M. Monetization Plumbing</h3>
+<table>
+<tr><th>#</th><th>Element</th><th>Reference</th><th>Mix-It</th><th>Status</th><th>Priority</th></tr>
+<tr><td>M1</td><td>Rewarded video</td><td>MM/TH/SG confirmed</td><td>⚫</td><td>⚫</td><td><strong>HIGH — cheap</strong></td></tr>
+<tr><td>M2</td><td>Interstitial ads</td><td>Genre-split</td><td>⚫</td><td>⚫</td><td>Decision needed</td></tr>
+<tr><td>M3</td><td>Value-labeled bundles</td><td>Genre std</td><td>Present</td><td>🟢</td><td>—</td></tr>
+<tr><td>M4</td><td>Subscription</td><td>Genre common (8BP)</td><td>⚫</td><td>⚫</td><td>Post-MVP</td></tr>
+<tr><td>M5</td><td>First-time purchase offer</td><td>Genre std</td><td>Starter Pack</td><td>🟢</td><td>—</td></tr>
+<tr><td>M6</td><td>Piggy bank / save-up SKU</td><td>Genre common</td><td>⚫</td><td>⚫</td><td>MEDIUM</td></tr>
+</table>
+
+<h3>N. Onboarding / FTUE</h3>
+<table>
+<tr><th>#</th><th>Element</th><th>Reference</th><th>Mix-It</th><th>Status</th><th>Priority</th></tr>
+<tr><td>N1</td><td>Forced-win first match</td><td>Genre std</td><td>❔</td><td>❔</td><td><strong>HIGH</strong></td></tr>
+<tr><td>N2</td><td>Early tutorial bot WR ~60–70%</td><td>Genre std</td><td>❔</td><td>❔</td><td>HIGH</td></tr>
+<tr><td>N3</td><td>Sequential mechanic unlocks</td><td>Genre std</td><td>❔</td><td>❔</td><td>HIGH</td></tr>
+<tr><td>N4</td><td>Free starter rewards</td><td>Genre std</td><td>❔</td><td>❔</td><td>MEDIUM</td></tr>
+<tr><td>N5</td><td>Day-1 / Day-2 return hook</td><td>Genre std</td><td>Lucky Box 4h + dailies</td><td>🟢</td><td>—</td></tr>
+<tr><td>N6</td><td>First-purchase popup timing</td><td>Genre std</td><td>Starter Pack (48h)</td><td>🟢</td><td>—</td></tr>
+</table>
+
+<h3>Priority-sorted gap list</h3>
+
+<h4>🚨 HIGH (must resolve before soft-launch)</h4>
+<ul>
+  <li><strong>N1–N3</strong> FTUE spec — first 60s for a high-cognitive-load parallel-board plugin</li>
+  <li><strong>I1 / I6</strong> Weekly league with reset & reward tier — fills week-scale gap</li>
+  <li><strong>B5</strong> Re-verify MM's actual 1v1 ante — load-bearing</li>
+  <li><strong>M1</strong> Rewarded video — cheap, genre-standard</li>
+</ul>
+
+<h4>⚠ MEDIUM (ship-or-decide before launch)</h4>
+<ul>
+  <li><strong>I2</strong> Country leaderboard</li>
+  <li><strong>K3</strong> Weekly missions</li>
+  <li><strong>L6</strong> Profile / showcase feed</li>
+  <li><strong>H5</strong> Catch-up tier purchase</li>
+  <li><strong>M6</strong> Piggy bank SKU</li>
+</ul>
+
+<h4>⏸ DEFERRED (post-MVP, but plan now)</h4>
+<ul>
+  <li><strong>J1–J5</strong> Social layer (teams, gifts, chat) — MM-signature, biggest deferred chunk</li>
+  <li><strong>K1</strong> VIP ladder</li>
+  <li><strong>B7</strong> Whale SKU ladder</li>
+  <li><strong>I5/I7</strong> Tournaments & LTMs</li>
+</ul>
+
+<h4>❓ UNKNOWNS BLOCKING REVIEW</h4>
+<ul>
+  <li>Match length reaffirmation (90s still target?)</li>
+  <li>Session length + sessions/day target</li>
+  <li>FTUE full spec</li>
+  <li>Reconnection / anti-cheat handling</li>
+  <li>Plugin-only retention evidence</li>
+</ul>
+
+</div>
+
+<!-- ================== TURN 7 ================== -->
+<div class="turn user">
+<span class="role-label">User — Turn 7</span>
+<p>Give your opinion on these gameplay modifications:</p>
+<ol>
+  <li>Special liquid layer that can be mixed with other layer of the same type (not every layer, just marked as "mixable")</li>
+  <li>Special thick liquid layer that can be poured to every bottle, no matter the color beneath it</li>
+  <li>Discovery/PvE mode, where you can mix what you want and make drinks (that will be "achieved" in collection — e.g. 4-colored blue drink is 1*, 4-colored with different colors is 3*, etc.)</li>
+  <li>PvP guild mode, like in Football Rivals — serve drinks to gain points for the guild match in real time</li>
+  <li>Social casino, where you watch random 3 bottles — win on right combo of colors from 3 bottles</li>
+</ol>
+</div>
+
+<!-- ================== TURN 8 ================== -->
+<div class="turn assistant">
+<span class="role-label">Assistant — Turn 8 (Per-Idea Verdicts)</span>
+
+<h2>Verdicts on 5 Proposed Modifications</h2>
+
+<h3>1. Mixable liquid layers ✅ Good idea — plugin-layer, right place</h3>
+<p><strong>What it does:</strong> Adds a second rule to a tight rule-set (water-sort).</p>
+<p><strong>Verdict:</strong> Keep it, but as a <strong>feature of specific colors or events</strong>, not a universal rule.</p>
+<p><strong>Pros:</strong></p>
+<ul>
+  <li>Adds tactical axis — "do I pour now or wait for the second mixable to merge?"</li>
+  <li>Creates new booster vectors: "Mark top layer as mixable," "Consolidate all mixables"</li>
+  <li>Expands skill ceiling without changing the archetype</li>
+</ul>
+<p><strong>Watch-outs:</strong></p>
+<ul>
+  <li>Plugin is already cognitively loaded. FTUE must teach it in a separate beat.</li>
+  <li>Rule: if a player can't explain "mixable" in one sentence after their second match, it's too much.</li>
+  <li>Visual legibility critical — mixable needs an instantly-readable shader (bubbles? stripes? glow?).</li>
+</ul>
+<p><strong>Tag:</strong> 🟣 Plugin innovation — framework-correct place.</p>
+
+<h3>2. Thick liquid (pour anywhere) ✅ Yes, but as a rare resource — not a baseline color</h3>
+<p><strong>What it does:</strong> Breaks the fundamental water-sort constraint (top-layer-match or empty).</p>
+<p><strong>Verdict:</strong> Too powerful to be a regular color. But excellent as:</p>
+<ul>
+  <li>A <strong>booster</strong> ("Thickener" — turns your next pour into thick)</li>
+  <li>A <strong>Color Spawn rare drop</strong> (1-in-N spawns is thick)</li>
+  <li>A <strong>Gold-tier stake reward</strong></li>
+</ul>
+<p><strong>Why not baseline:</strong> Water-sort is fun because the constraint is tight. Remove the constraint for one color and every strategic decision collapses to "use the thick first." Dominant strategy kills it.</p>
+<p><strong>Why as a booster:</strong> Match Masters uses exactly this pattern — "special" pieces that break normal match-3 rules, gated behind boosters. Scales with Stakes Multiplier naturally.</p>
+<p><strong>Tag:</strong> 🟣 Plugin innovation, scoped as booster/rare.</p>
+
+<h3>3. Discovery / PvE drink collection ⚠️ I have reservations — hold this one</h3>
+<p><strong>The concern:</strong> You just finished v7.0 → v7.2 aggressively <strong>removing</strong> archetype-layer invention to become MM-faithful. MM is <strong>PvP-only</strong>. 8BP has Practice Mode but it's a training ground, not a collection meta. A PvE discovery mode is a <strong>different archetype's feature</strong> — it belongs to merge games, cooking games, or idle/collection games.</p>
+<p><strong>The risk:</strong></p>
+<ul>
+  <li><strong>Attention split.</strong> Every PvE minute is a PvP minute not played. Your retention math, monetization, and matchmaking pool all assume PvP-primary.</li>
+  <li><strong>Recipe collection competes with Sticker collection.</strong> A second collection system dilutes both.</li>
+  <li><strong>Scope.</strong> Recipe database, combination detection, drink art per combo, naming, UI, gates — a second game.</li>
+</ul>
+<p><strong>When it could work:</strong></p>
+<ul>
+  <li>As a <strong>tutorial sandbox / first-session mode</strong> — new players mix freely for 2–3 minutes before PvP. Solves FTUE gap, doesn't compete long-term.</li>
+  <li>As a <strong>daily challenge</strong> — "make a drink with exactly 3 colors today" → small coin reward.</li>
+  <li>As <strong>a feature of the Venue</strong> — each building unlocks a signature drink recipe. Ties PvE into existing meta instead of creating a parallel one.</li>
+</ul>
+<p><strong>What I'd disagree with:</strong> Shipping it as a full standalone mode in MVP. Two games' worth of scope.</p>
+<p><strong>Tag:</strong> 🔴 Archetype-layer innovation — framework-flagged as risky. Reopen only if it serves FTUE or folds into Venue.</p>
+<p><strong>What would change my mind:</strong> Playtest data showing new players bounce in the first 3 matches of full PvP. Then PvE sandbox as FTUE becomes a solution to a measured problem.</p>
+
+<h3>4. Guild PvP (Football Rivals-style real-time team match) ✅ Strong idea — but phasing matters</h3>
+<p><strong>What it does:</strong> Solves TWO of the biggest flagged gaps — the week-scale King-of-the-Hill loop <strong>and</strong> the social/teams layer.</p>
+<p><strong>Pros:</strong></p>
+<ul>
+  <li>Football Rivals' guild-match pattern (serve drinks → contribute to guild score → real-time tally) is basically <strong>Clash Royale Clan Wars adapted for casual-skill genre</strong>. Proven pattern.</li>
+  <li>Natural fit for Mix-It plugin: "serve X drinks in the next 48h to fill the guild's Gala meter" reads instantly.</li>
+  <li>Fills the <strong>week peak</strong> currently missing.</li>
+  <li>Drives session frequency — guild obligation is the stickiest retention lever in the genre.</li>
+</ul>
+<p><strong>But — phase-2, not MVP.</strong> Reasons:</p>
+<ol>
+  <li>Needs <strong>Teams system first</strong> (currently ⏸ deferred). No guild wars without guilds.</li>
+  <li><strong>Real-time guild infrastructure</strong> is heavy tech — scoreboards, server-side aggregation, timers, anti-cheat. Clash Royale took 2 years post-launch to ship Clan Wars.</li>
+  <li><strong>Matchmaking a guild match</strong> requires a large active population — doesn't work pre-scale.</li>
+</ol>
+<p><strong>Suggested phasing:</strong></p>
+<ul>
+  <li>MVP: solo game, stickers, Bar Pass</li>
+  <li>Post-MVP v1: Teams + team gifts (MM-pattern) + team chat</li>
+  <li>Post-MVP v2: Guild Match / Guild Gala (Football Rivals pattern)</li>
+</ul>
+<p><strong>Tag:</strong> 🟢 Archetype-aligned, ⏸ phase correctly.</p>
+
+<h3>5. Social casino — watch 3 bottles, bet on color combo ❌ I'd drop this</h3>
+<p>Direct opinion: <strong>Bad idea for Mix-It.</strong></p>
+<p><strong>Structural problems:</strong></p>
+<ol>
+  <li><strong>It's literally a slot machine</strong> — 3 random bottles, win on specific combos. That's the textbook slot-machine loop (3 reels, line matches, reveal, payout). Mix-It's positioning is "casual skill arena" — slot mechanics are a different archetype (SG / Coin Master lineage) with different audience, CPI math, LTV model, regulatory posture.</li>
+  <li><strong>App store / regulatory risk.</strong> Watching random reels for prize payouts approaches social-casino territory. Apple and Google both scrutinize this in non-casino-positioned apps.</li>
+  <li><strong>Breaks skill positioning.</strong> Your plugin is Skill Master + Thrill Seeker + Thinker food. A zero-skill passive gamble trains the opposite behavior and attracts a different cohort than your arena matchmaking needs.</li>
+  <li><strong>Monetization cannibalization.</strong> If players passively win via bottle spin, they play fewer matches. Your entire economy is tuned to match-count — breaking that axis breaks the whole model.</li>
+  <li><strong>Not in the archetype.</strong> None of your reference games (MM, 8BP, GC, BC, TH) ships a social casino. Adding one is a 🔴 archetype innovation without an evidence base.</li>
+</ol>
+<p><strong>What would change my mind:</strong></p>
+<ul>
+  <li>If this is meant as a <strong>"free spin daily" with cosmetic-only rewards</strong> (frame, avatar, emoji) — it's a lightweight re-engagement hook, not a gambling loop. Same pattern as MM's lucky wheel. That's fine.</li>
+</ul>
+<p><strong>Tag:</strong> 🔴 Archetype innovation in the wrong direction. Recommend drop, or neuter to "daily cosmetic wheel" (genre-standard).</p>
+
+<h3>Summary — priority call</h3>
+<table>
+<tr><th>Idea</th><th>Verdict</th><th>Where it goes</th></tr>
+<tr><td>1. Mixable layers</td><td>✅ Yes</td><td>Plugin layer, gated behind FTUE, legible art</td></tr>
+<tr><td>2. Thick liquid</td><td>✅ Yes — as booster/rare</td><td>Plugin layer, not baseline</td></tr>
+<tr><td>3. PvE discovery</td><td>⚠️ Hold — fold into FTUE or Venue</td><td>Don't ship as standalone mode</td></tr>
+<tr><td>4. Guild Match (Football Rivals)</td><td>✅ Yes — post-MVP v2</td><td>Needs Teams first</td></tr>
+<tr><td>5. Social casino</td><td>❌ Drop, or neuter to daily cosmetic wheel</td><td>Wrong archetype</td></tr>
+</table>
+
+<p><strong>The pattern:</strong> Plugin-layer additions (1, 2) are low-risk and additive. Archetype-layer additions (3, 5) fight the MM-faithful stance. Archetype-layer additions that MATCH the genre (4 — teams/guilds exist in MM and 8BP) are fine but need phasing.</p>
+
+</div>
+
+<hr style="margin-top: 40px;">
+<p style="color: #666; font-size: 9pt; text-align: center;">
+  End of conversation · Mix-It design review · 2026-04-22<br>
+  Generated by Claude Code gs-prototype-designer / gs-prototype-review
+</p>
+
+</body>
+</html>
