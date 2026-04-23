@@ -2797,21 +2797,55 @@ function renderShopB(){
 
 function renderShopC(){
   // v7.4 §15.H — Premium bundles: Happy Hour / Mixologist / Grand Service.
+  // Item chips show contents at a glance so player sees value before buying.
   const bundles = [
-    {name:'Happy Hour',    ic:'🍸', desc:'4,500🪙 · 3 Silver + 1 Gold booster · 5 Silver mixed', price:'$4.99',  value:'~8,250🪙 (3.3× vs Stack)'},
-    {name:'Mixologist',    ic:'🧪', desc:'9,000🪙 · 3 Silver + 3 Gold · 3 Gold + 5 Silver boosters · seasonal frame', price:'$9.99',  value:'~19,500🪙 (3.5× vs Pile)'},
-    {name:'Grand Service', ic:'🎩', desc:'18,000🪙 · 4 Silver + 6 Gold · 10 Gold + 5 Silver boosters · exclusive emote + frame', price:'$19.99', value:'~39,000🪙 (3.9× vs Vault)'}
+    {name:'Happy Hour', ic:'🍸', price:'$4.99', value:'~8,250🪙', multiplier:'3.3× vs Stack', items:[
+      {ic:'🪙', label:'4,500 Coins'},
+      {ic:'🥈', label:'3 Silver stickers'},
+      {ic:'🥇', label:'1 Gold sticker'},
+      {ic:'🧪', label:'5 Silver boosters'}
+    ]},
+    {name:'Mixologist', ic:'🧪', price:'$9.99', value:'~19,500🪙', multiplier:'3.5× vs Pile', best:true, items:[
+      {ic:'🪙', label:'9,000 Coins'},
+      {ic:'🥈', label:'3 Silver stickers'},
+      {ic:'🥇', label:'3 Gold stickers'},
+      {ic:'🧪', label:'5 Silver boosters'},
+      {ic:'⚡', label:'3 Gold boosters'},
+      {ic:'🖼️', label:'Seasonal frame'}
+    ]},
+    {name:'Grand Service', ic:'🎩', price:'$19.99', value:'~39,000🪙', multiplier:'3.9× vs Vault', items:[
+      {ic:'🪙', label:'18,000 Coins'},
+      {ic:'🥈', label:'4 Silver stickers'},
+      {ic:'🥇', label:'6 Gold stickers'},
+      {ic:'🧪', label:'5 Silver boosters'},
+      {ic:'⚡', label:'10 Gold boosters'},
+      {ic:'🎭', label:'Exclusive emote'},
+      {ic:'🖼️', label:'Exclusive frame'}
+    ]}
   ];
-  const grid = document.createElement('div');
-  grid.className='shop-grid';
+  const wrap = document.createElement('div');
   bundles.forEach(b=>{
-    const c = document.createElement('div');
-    c.className='shop-card';
-    c.innerHTML = `<div class="sc-ic">${b.ic}</div><div class="sc-name">${b.name}</div><div class="sc-desc">${b.desc}<br><span style="font-size:9px;color:#ffd700">${b.value}</span></div><div class="sc-owned">&nbsp;</div><button class="sc-buy dollar">${b.price}</button>`;
-    c.querySelector('.sc-buy').onclick = ()=>toast('Coming soon');
-    grid.appendChild(c);
+    const card = document.createElement('div');
+    card.style.cssText = 'margin:8px 8px 12px;padding:12px;background:linear-gradient(180deg,rgba(255,215,0,0.10),rgba(255,215,0,0.02));border:1px solid '+(b.best?'rgba(255,215,0,0.55)':'rgba(255,255,255,0.12)')+';border-radius:14px;position:relative';
+    const chips = b.items.map(it => `
+      <div style="display:flex;align-items:center;gap:6px;padding:6px 8px;background:rgba(0,0,0,0.35);border:1px solid rgba(255,255,255,0.08);border-radius:8px;font-size:11px;color:#fff">
+        <span style="font-size:14px">${it.ic}</span><span>${it.label}</span>
+      </div>`).join('');
+    card.innerHTML = `
+      ${b.best?'<div style="position:absolute;top:-8px;right:12px;background:linear-gradient(180deg,#ffd700,#ff9500);color:#1a0e00;font-family:\'Paytone One\',\'Lilita One\',system-ui,sans-serif;font-size:10px;letter-spacing:1px;padding:3px 8px;border-radius:6px;box-shadow:0 2px 0 rgba(0,0,0,0.3)">BEST VALUE</div>':''}
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+        <div style="font-size:34px">${b.ic}</div>
+        <div style="flex:1">
+          <div style="font-family:'Paytone One','Lilita One',system-ui,sans-serif;font-size:17px;color:#fff">${b.name}</div>
+          <div style="font-size:10px;color:#ffd700">${b.value} value · ${b.multiplier}</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px">${chips}</div>
+      <button class="bundle-buy" style="width:100%;padding:11px;background:linear-gradient(180deg,#4db8ff,#2e84c9);border:none;border-radius:10px;color:#fff;font-family:'Paytone One','Lilita One',system-ui,sans-serif;font-size:14px;letter-spacing:0.5px;cursor:pointer;box-shadow:0 3px 0 #1a4d79">${b.price}</button>`;
+    card.querySelector('.bundle-buy').onclick = ()=>toast('Coming soon');
+    wrap.appendChild(card);
   });
-  return grid;
+  return wrap;
 }
 
 function renderShopD(){
@@ -4872,11 +4906,21 @@ function placeTutorialArrow(lvl){
     label.textContent='Tap here to spawn!';
     arrow.style.display='block'; label.style.display='block';
   } else if(!lvl.showSpawn && !lvl.showSplash){
-    // Level 1: point at a source bottle
+    // Level 1: point at source first; once selected, jump to center bottle (destination hint)
     setTimeout(()=>{
-      const gel = document.querySelectorAll('#tutorial-board .glass')[0];
+      const bottles = document.querySelectorAll('#tutorial-board .glass');
       const sc = $('screen-tutorial');
-      if(!gel || !sc) return;
+      if(!bottles.length || !sc) return;
+      // Pick target: if nothing selected → source (0); else → a non-selected bottle (prefer center)
+      let targetIdx = 0;
+      let labelText = 'Tap a bottle to pour';
+      if(T.selected !== null){
+        const centerIdx = Math.floor(bottles.length/2);
+        targetIdx = (T.selected === centerIdx) ? (centerIdx+1 < bottles.length ? centerIdx+1 : centerIdx-1) : centerIdx;
+        labelText = 'Now tap here!';
+      }
+      const gel = bottles[targetIdx];
+      if(!gel) return;
       const gr = gel.getBoundingClientRect(), sr = sc.getBoundingClientRect();
       arrow.style.left = (gr.left - sr.left + gr.width/2 - 16) + 'px';
       arrow.style.top  = (gr.top  - sr.top  - 42) + 'px';
@@ -4884,7 +4928,7 @@ function placeTutorialArrow(lvl){
       label.style.left = (gr.left - sr.left + gr.width/2 - 52) + 'px';
       label.style.top  = (gr.top  - sr.top  - 62) + 'px';
       label.style.bottom='auto';
-      label.textContent='Pour, then tap to serve!';
+      label.textContent=labelText;
       arrow.style.display='block'; label.style.display='block';
     }, 30);
   } else {
@@ -5051,17 +5095,19 @@ function handleTutorialTap(index){
     }, 500);
     return;
   }
-  if(T.selected===null){ if(g.layers.length>0){ T.selected=index; renderTutorialBoard(); } }
-  else if(T.selected===index){ T.selected=null; renderTutorialBoard(); }
+  if(T.selected===null){ if(g.layers.length>0){ T.selected=index; renderTutorialBoard(); placeTutorialArrow(TUTORIAL_LEVELS[T.level]); } }
+  else if(T.selected===index){ T.selected=null; renderTutorialBoard(); placeTutorialArrow(TUTORIAL_LEVELS[T.level]); }
   else {
     if(canPourRaw(T.glasses, T.selected, index)){
       const moved = doPourRaw(T.glasses, T.selected, index);
       T.pourTarget = {glassIndex:index, layerCount:moved};
       T.selected = null;
       renderTutorialBoard();
+      placeTutorialArrow(TUTORIAL_LEVELS[T.level]);
     } else {
       T.selected = g.layers.length>0 ? index : null;
       renderTutorialBoard();
+      placeTutorialArrow(TUTORIAL_LEVELS[T.level]);
     }
   }
 }
@@ -5540,15 +5586,19 @@ function validateUsername(name){
 function openAccountSetup(){
   let suggestion = generateUsernameSuggestion();
   const body = $('account-modal-body');
+  // Shared in-game button styles (green primary = go, blue secondary = alt, grey = disabled)
+  const BTN_PRIMARY   = 'width:100%;padding:12px;margin-bottom:8px;background:linear-gradient(180deg,#4ae35f,#2ab14a);border:none;border-radius:10px;color:#fff;font-family:"Paytone One","Lilita One",system-ui,sans-serif;font-size:15px;letter-spacing:0.5px;cursor:pointer;box-shadow:0 4px 0 #1a7a2e;text-shadow:0 1px 0 rgba(0,0,0,0.3)';
+  const BTN_SECONDARY = 'width:100%;padding:12px;margin-bottom:4px;background:linear-gradient(180deg,#4db8ff,#2e84c9);border:none;border-radius:10px;color:#fff;font-family:"Paytone One","Lilita One",system-ui,sans-serif;font-size:15px;letter-spacing:0.5px;cursor:pointer;box-shadow:0 4px 0 #1a4d79;text-shadow:0 1px 0 rgba(0,0,0,0.3)';
+  const BTN_DISABLED  = 'background:#3a3f4d;box-shadow:0 4px 0 #1e2029;color:rgba(255,255,255,0.5);cursor:not-allowed';
   const render = (mode)=>{
     if(mode==='change'){
       body.innerHTML = `
         <div style="font-size:12px;color:rgba(255,255,255,0.75);line-height:1.4;margin-bottom:10px">Pick your username. 3–16 characters; letters, numbers, and underscore only.</div>
         <input id="acc-username-input" type="text" maxlength="16" placeholder="YourName"
-               style="width:100%;padding:10px;font-size:14px;background:rgba(0,0,0,0.5);border:1px solid rgba(154,212,255,0.3);border-radius:8px;color:#fff;margin-bottom:8px" />
-        <div id="acc-username-err" style="font-size:11px;color:#ff6666;min-height:14px;margin-bottom:8px"></div>
-        <button class="sc-buy" id="acc-confirm-custom" style="width:100%;margin-bottom:6px">Confirm name</button>
-        <button class="sc-buy" id="acc-back" style="width:100%;background:rgba(255,255,255,0.1)">Back to suggestion</button>`;
+               style="width:100%;padding:12px;font-size:15px;font-weight:700;background:rgba(0,0,0,0.5);border:2px solid rgba(154,212,255,0.4);border-radius:10px;color:#fff;margin-bottom:6px;box-sizing:border-box;text-align:center" />
+        <div id="acc-username-err" style="font-size:11px;color:#ff6666;min-height:14px;margin-bottom:8px;text-align:center"></div>
+        <button id="acc-confirm-custom" style="${BTN_PRIMARY}">CONFIRM NAME</button>
+        <button id="acc-back" style="${BTN_SECONDARY}">← BACK</button>`;
       const inp = $('acc-username-input');
       inp.value = '';
       inp.focus();
@@ -5561,20 +5611,23 @@ function openAccountSetup(){
       $('acc-back').onclick = ()=>render('suggestion');
     } else {
       body.innerHTML = `
-        <div style="font-size:12px;color:rgba(255,255,255,0.75);line-height:1.4;margin-bottom:12px">Choose your bartender name. You can change it now — after setup, rename requires support.</div>
-        <div style="padding:14px;background:linear-gradient(180deg,rgba(154,212,255,0.15),rgba(154,212,255,0.04));border:1px solid rgba(154,212,255,0.35);border-radius:10px;text-align:center;margin-bottom:10px">
-          <div style="font-size:10px;color:rgba(255,255,255,0.55);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Suggested</div>
-          <div style="font-size:18px;font-weight:900;color:#fff">${suggestion}</div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.75);line-height:1.4;margin-bottom:12px;text-align:center">Choose your bartender name. After setup, rename requires support.</div>
+        <div style="padding:16px;background:linear-gradient(180deg,rgba(154,212,255,0.18),rgba(154,212,255,0.05));border:1px solid rgba(154,212,255,0.4);border-radius:12px;text-align:center;margin-bottom:12px">
+          <div style="font-size:10px;color:rgba(255,255,255,0.55);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:6px;font-weight:800">Suggested</div>
+          <div style="font-family:'Paytone One','Lilita One',system-ui,sans-serif;font-size:22px;color:#fff;text-shadow:0 2px 0 rgba(0,0,0,0.4)">${suggestion}</div>
         </div>
         <label style="display:flex;gap:8px;align-items:flex-start;font-size:11px;color:rgba(255,255,255,0.75);line-height:1.4;margin-bottom:12px;cursor:pointer">
-          <input id="acc-eula" type="checkbox" style="margin-top:2px" />
-          <span>I accept the <a href="#" onclick="event.preventDefault();toast('EULA stub — post-MVP regional copy')" style="color:#9ad4ff">EULA</a> and <a href="#" onclick="event.preventDefault();toast('Privacy stub — post-MVP regional copy')" style="color:#9ad4ff">Privacy Policy</a>.</span>
+          <input id="acc-eula" type="checkbox" style="margin-top:2px;width:16px;height:16px" />
+          <span>I accept the <a href="#" onclick="event.preventDefault();toast('EULA stub — post-MVP regional copy')" style="color:#9ad4ff;font-weight:700">EULA</a> and <a href="#" onclick="event.preventDefault();toast('Privacy stub — post-MVP regional copy')" style="color:#9ad4ff;font-weight:700">Privacy Policy</a>.</span>
         </label>
-        <button class="sc-buy" id="acc-use-this" style="width:100%;margin-bottom:6px" disabled>Use this name</button>
-        <button class="sc-buy" id="acc-change" style="width:100%;background:rgba(255,255,255,0.1)">Change</button>`;
+        <button id="acc-use-this" style="${BTN_PRIMARY};${BTN_DISABLED}" disabled>USE THIS NAME</button>
+        <button id="acc-change" style="${BTN_SECONDARY}">CHANGE</button>`;
       const eulaCb = $('acc-eula');
       const btn = $('acc-use-this');
-      eulaCb.onchange = ()=>{ btn.disabled = !eulaCb.checked; };
+      eulaCb.onchange = ()=>{
+        btn.disabled = !eulaCb.checked;
+        btn.style.cssText = eulaCb.checked ? BTN_PRIMARY : (BTN_PRIMARY+';'+BTN_DISABLED);
+      };
       btn.onclick = ()=>{ if(!eulaCb.checked) return; finishAccountSetup(suggestion, false); };
       $('acc-change').onclick = ()=>render('change');
     }
