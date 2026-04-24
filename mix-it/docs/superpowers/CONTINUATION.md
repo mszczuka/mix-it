@@ -1,6 +1,6 @@
 # Continuation Guide
 
-Last updated: 2026-04-24
+Last updated: 2026-04-24 (post-3.5)
 Resume the Unity port of Mix It prototype from any device.
 
 ## Repos
@@ -36,14 +36,13 @@ Both repos need to be cloned side by side.
 - **Phase 3.2** — Analytics event bus (in-memory buffer + Debug.Log, 2 emit points in FlowController)
 - **Phase 3.3** — Coins + Boosters + Shop + FlashOffer (Gold→Coins rename, 9-item catalog, 4 flash triggers)
 - **Phase 3.4** — TrophyRoad + BarPass + DailyMissions (25 milestones, 30 tiers, 3-daily rotation)
+- **Phase 3.5** — Venue + Album + PackOpener (3 districts, 4 albums × 10 stickers, rarity-weighted rolls, sticker tokens)
 
 ### Test count
-- **120 EditMode tests green**
-- 0 compile errors / warnings
-- Play Mode smoke: Boot OK, no exceptions
+- **141 EditMode tests expected** (compile verification pending — Unity Editor not run at end of 3.5 session; target ≥135)
+- Play Mode smoke: Boot OK, no exceptions (last verified at 3.4)
 
 ### Deferred
-- **Phase 3.5** — Venue + Album (spec not yet written)
 - **Phase 3.6** — FTUE (spec not yet written)
 - **Phase 4** — UI surface (panels for BP, TR, Shop, Missions, trophy/reward display)
 - **Phase 5** — polish (audio, VFX, animation)
@@ -56,7 +55,8 @@ MixIt.Archetype.Contracts    — pure interfaces + records (engine-optional)
 MixIt.Archetype.Runtime      — services: UIRouter, WalletService/CoinService,
                                RatingService, MatchmakingService, AnalyticsService,
                                BoosterInventory/Shop, FlashOffer, TrophyRoad,
-                               BarPass, DailyMission, SaveProfile/JsonSaveStore,
+                               BarPass, DailyMission, Venue, Album, PackOpener,
+                               SaveProfile/JsonSaveStore,
                                DefaultMatchIntroPresenter, FlowController
 MixIt.Archetype.UI           — panel MonoBehaviours (Home, MM, Match, Result, Loading)
 MixIt.Plugin.LiquidPuzzles.Runtime  — Model/, Simulation/, Config/, Avatar/ (pure C# + UniTask + UGUI + TMP)
@@ -77,7 +77,7 @@ Single JSON blob in PlayerPrefs key `mixit.save.v1`. Schema: `SaveProfile.cs` at
 - Clone both repos
 - Open MixIt in Unity 6000.3.14f1
 - Let packages resolve (~30s first time)
-- Run `run-tests.bat` — expect 120 green
+- Run `run-tests.bat` — expect ≥135 green (141 after 3.5; compile verification of 3.5 pending)
 
 ### 2. Context bootstrap for agent
 Point agent at these files in order:
@@ -90,12 +90,11 @@ Point agent at these files in order:
 ### 3. Pick next phase
 
 **Option A: Continue Phase 3 (headless services)**
-Next: Phase 3.5 Venue + Album.
-- Write spec: `docs/superpowers/specs/2026-04-24-phase-3-5-venue-album-design.md`
-- Follow pattern from 3.3/3.4 spec
-- Source material: `index-v7.html` (Albums, Venue systems), `design-v7.3-patch-mvp-completion.md`
+Next: Phase 3.6 FTUE (tutorial state machine + FlowController hooks).
+- Spec not yet written. Source material: `index-v7.html` (FTUE flow), design docs.
+- Pattern from 3.3/3.4/3.5 specs.
 
-Then Phase 3.6 FTUE (tutorial state machine + FlowController hooks).
+**Before 3.6:** verify 3.5 compile + tests in Unity — 3.5b was committed without running Editor (DONE_WITH_CONCERNS status). Target ≥135 green; 141 expected.
 
 **Option B: Jump to Phase 4 (UI surface)**
 Higher user-visible impact. Risk: meta systems not fully shipped.
