@@ -128,6 +128,7 @@ public record MatchResult(
 | `FtueService` | Scripted first 60min — session state, next-step hinting |
 | `SaveService` | Aggregates all persisted subsystems via `ISaveBackend` |
 | `AnalyticsService` | Event sink; `IAnalytics` → no-op / Unity Analytics / future |
+| `UIRouter` | Panel navigation, Top/Bottom menu visibility, overlays, transitions (see §4.9.2) |
 
 ### 4.6 Abstraction points (swap seams)
 
@@ -176,26 +177,80 @@ save.json
 
 Plugin gets an opaque `string` slot to persist its own state — archetype never parses it.
 
-### 4.9 Screen ownership
+### 4.9 Scene + UI architecture
 
-| Screen | Owner | Note |
+**Single scene `Main`.** All UI is panels on one persistent root canvas, not separate scenes. Scene loads = one boot; everything else is panel show/hide driven by a `UIRouter` service.
+
+Canvas layout (top to bottom, layered):
+
+```
+MainCanvas
+├── TopMenuPanel           (persistent, archetype — currencies + player avatar)
+├── ContentRoot            (panel host — only one active at a time)
+│   ├── LoadingPanel       (splash)
+│   ├── HomePanel
+│   ├── MatchmakingPanel
+│   ├── LoadoutPanel       (frame = archetype; items = plugin via ILoadoutSlotProvider)
+│   ├── MatchPanel         (plugin — plugin's SceneRoot is parented here)
+│   ├── TutorialOverlay    (plugin)
+│   ├── ResultPanel
+│   ├── ShopPanel
+│   ├── TrophyRoadPanel
+│   ├── BarPassPanel
+│   ├── VenuePanel
+│   ├── AlbumsPanel
+│   ├── TeamsPanel
+│   ├── RankingPanel
+│   ├── VipPanel
+│   └── ProfilePanel
+├── BottomMenuPanel        (persistent, archetype — primary navigation)
+└── OverlayRoot            (modals, toasts, FTUE pointers — on top)
+```
+
+**Persistent panels** (`TopMenuPanel`, `BottomMenuPanel`) live for the whole session. They are archetype-owned and *universal across archetypes in principle* — different archetypes might supply different instances, but the slot in the canvas is always there. For v1 they are fixed prefabs; archetype-level customization is a later concern.
+
+**Panel visibility rules** (owned by `UIRouter`):
+- `LoadingPanel` hides Top + Bottom menus.
+- `MatchPanel` hides Top + Bottom menus (full-screen gameplay).
+- All other panels show both menus.
+- Overlays sit above everything on `OverlayRoot`.
+
+**Plugin integration point**: when the archetype routes to `MatchPanel`, it calls `IPlugin.StartMatch(...)` and parents the returned `IMatchSession.SceneRoot` under `MatchPanel`'s content node. The plugin owns everything inside that subtree; the archetype owns nothing.
+
+### 4.9.1 Screen ownership
+
+| Panel | Owner | Note |
 |---|---|---|
-| Splash | Archetype | |
-| Home | Archetype | Hosts plugin preview widget via `IPlugin.Manifest` |
-| Matchmaking | Archetype | |
-| Loadout | **Shared** | Archetype renders slot frame; plugin supplies `ILoadoutSlotProvider` with items |
-| Match | Plugin | |
-| Tutorial | Plugin | Via `ITutorialScript` |
-| Result | Archetype | Consumes `MatchResult` |
-| Shop | Archetype | |
-| Trophy Road | Archetype | |
-| Bar Pass (BP) | Archetype | |
-| Venue | Archetype | |
-| Albums | Archetype | |
-| Teams | Archetype | |
-| Ranking | Archetype | |
-| VIP | Archetype | |
-| Profile | Archetype | |
+| TopMenuPanel | Archetype (persistent) | Currencies + avatar; listens to `WalletService` + `ProfileService` |
+| BottomMenuPanel | Archetype (persistent) | Nav buttons → `UIRouter.GoTo(...)` |
+| LoadingPanel (Splash) | Archetype | |
+| HomePanel | Archetype | Hosts plugin preview widget via `IPlugin.Manifest` |
+| MatchmakingPanel | Archetype | |
+| LoadoutPanel | **Shared** | Archetype renders slot frame; plugin supplies `ILoadoutSlotProvider` with items |
+| MatchPanel | Archetype frame + Plugin content | Archetype provides the host; plugin parents its `SceneRoot` inside |
+| TutorialOverlay | Plugin | Via `ITutorialScript` |
+| ResultPanel | Archetype | Consumes `MatchResult` |
+| ShopPanel | Archetype | |
+| TrophyRoadPanel | Archetype | |
+| BarPassPanel | Archetype | |
+| VenuePanel | Archetype | |
+| AlbumsPanel | Archetype | |
+| TeamsPanel | Archetype | |
+| RankingPanel | Archetype | |
+| VipPanel | Archetype | |
+| ProfilePanel | Archetype | |
+
+### 4.9.2 `UIRouter` service
+
+Archetype-owned. API:
+```csharp
+public interface IUIRouter {
+    UniTask GoTo(PanelId id, object args = null);
+    void ShowOverlay(OverlayId id, object args = null);
+    void HideOverlay(OverlayId id);
+}
+```
+Handles panel stack, back-navigation, Top/Bottom menu visibility rules, and transitions (DOTween fade/slide). BottomMenuPanel buttons call `GoTo(...)` directly; no screen hardcodes navigation to another screen.
 
 ### 4.10 DI / composition root
 
@@ -234,7 +289,9 @@ Each phase ends with a demoable done-criterion. Phases 3–4 are parallelizable 
 - Create all asmdefs with dependency rules wired.
 - Add VContainer + UniTask via UPM.
 - `GameLifetimeScope` registers stub services (empty implementations).
-- `BootScene` loads, shows a blank canvas, logs "Boot OK".
+- `Main` scene loads with `MainCanvas` root (TopMenuPanel, ContentRoot, BottomMenuPanel, OverlayRoot empty-shell hierarchy per §4.9).
+- `UIRouter` service registered in VContainer, capable of toggling panel visibility (even with empty panels).
+- Console logs "Boot OK".
 - CI: Unity command-line build of `BootScene` succeeds.
 
 **Done criterion:** `UnityEditor` opens, enter Play, console shows "Boot OK", no exceptions.
@@ -277,7 +334,9 @@ Each lands with unit tests against SO fixtures.
 ### Phase 4 — Archetype screens UI (parallelizable, one session per screen)
 **Goal:** 1:1 visual + UX parity with v7.4 HTML per screen.
 
-Per-screen sub-tasks (one session each): Splash, Home, Matchmaking, Loadout-frame, Result, Shop, Trophy Road, Bar Pass, Venue, Albums, Teams, Ranking, VIP, Profile.
+Per-panel sub-tasks (one session each): TopMenuPanel, BottomMenuPanel, LoadingPanel, HomePanel, MatchmakingPanel, LoadoutPanel (frame), ResultPanel, ShopPanel, TrophyRoadPanel, BarPassPanel, VenuePanel, AlbumsPanel, TeamsPanel, RankingPanel, VipPanel, ProfilePanel.
+
+TopMenuPanel + BottomMenuPanel land first — every other panel depends on them being in the canvas.
 
 Each screen sub-task:
 - Prefab in `_Archetype/UI/`.
