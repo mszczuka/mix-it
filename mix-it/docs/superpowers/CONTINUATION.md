@@ -1,6 +1,6 @@
 # Continuation Guide
 
-Last updated: 2026-04-24 (post-3.6, Phase 3 complete)
+Last updated: 2026-04-24 (post-Phase-4, UI surface complete)
 Resume the Unity port of Mix It prototype from any device.
 
 ## Repos
@@ -38,6 +38,7 @@ Both repos need to be cloned side by side.
 - **Phase 3.4** — TrophyRoad + BarPass + DailyMissions (25 milestones, 30 tiers, 3-daily rotation)
 - **Phase 3.5** — Venue + Album + PackOpener (3 districts, 4 albums × 10 stickers, rarity-weighted rolls, sticker tokens)
 - **Phase 3.6** — FTUE (v7.5 M1-M5 match progression, headless state machine, rewards per stage, M5 ×2 stake tutorial)
+- **Phase 4** — UI surface (prefab infra + 7 sub-projects: HUD, TR, BP, Missions, Shop, Venue, Album, FTUE popups, Avatar frame)
 
 ### Test count
 - **162 EditMode tests green** (verified 2026-04-24 end of Phase 3.6)
@@ -90,11 +91,18 @@ Point agent at these files in order:
 
 ### 3. Pick next phase
 
-**Phase 3 complete.** Next: Phase 4 (UI surface).
+**Phase 4 complete.** Next: Phase 5 (polish: real art, VFX, animation, audio) + Phase 6 (launch: IAP, backend, build pipelines).
 
-Phase 4 scope: panels for TrophyRoad, BarPass, DailyMissions, Shop, Venue, Album, FTUE overlays (M5 stake tutorial, Starter Pack popup, album welcome pack). Spec not yet written.
+Phase 5 candidates:
+- Replace placeholder colors with real sprite/frame art
+- Lucky Box starter chest UI (currently 250c stub in FtueService)
+- Solo puzzle scene for M1/M2 FTUE tutorials
+- M5 stake tutorial overlay + result cascade animations
+- Stake button UI on Matchmaking (×2/×3/×4)
+- Juice/particle VFX for serves, combo, claims
+- Audio: SFX + music
 
-Before Phase 4: decide if UI uses UGUI (same as Phase 0-2 panels) or UIToolkit. Current pattern is UGUI.
+Phase 6 candidates: IAP Starter Pack, rewarded video placements, analytics backend, iOS/Android build pipelines, server-authoritative M5 rage-quit.
 
 **Option B: Jump to Phase 4 (UI surface)**
 Higher user-visible impact. Risk: meta systems not fully shipped.
