@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Mix-It Unity Port — Brainstorm Conversation Log (2026-04-24)</title>
+<style>
+  :root {
+    --bg: #faf9f7;
+    --fg: #1a202c;
+    --muted: #6b7280;
+    --accent: #D4845A;
+    --accent2: #2E8B8B;
+    --border: #e5e7eb;
+    --user-bg: #eef4f8;
+    --user-border: #2E8B8B;
+    --asst-bg: #fff;
+    --asst-border: #D4845A;
+    --code-bg: #1e293b;
+    --code-fg: #e5e7eb;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg); color: var(--fg);
+    margin: 0; padding: 0; line-height: 1.6;
+  }
+  .wrap { max-width: 920px; margin: 0 auto; padding: 40px 32px 80px; }
+  header {
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 24px; margin-bottom: 32px;
+  }
+  h1 {
+    font-size: 32px; font-weight: 700; letter-spacing: -0.03em;
+    margin: 0 0 8px;
+  }
+  .subtitle { color: var(--muted); font-size: 15px; }
+  .meta {
+    margin-top: 16px; font-size: 13px; color: var(--muted);
+    display: flex; flex-wrap: wrap; gap: 18px;
+  }
+  .meta a { color: var(--accent2); text-decoration: none; }
+  .meta a:hover { text-decoration: underline; }
+  .toc {
+    background: #fff; border: 1px solid var(--border); border-radius: 10px;
+    padding: 20px 24px; margin-bottom: 40px;
+  }
+  .toc h2 { font-size: 13px; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--muted); margin: 0 0 12px; }
+  .toc ol { margin: 0; padding-left: 20px; }
+  .toc li { margin: 4px 0; }
+  .toc a { color: var(--fg); text-decoration: none; }
+  .toc a:hover { color: var(--accent); }
+  .turn {
+    margin: 24px 0; padding: 20px 24px;
+    border-radius: 10px; border-left: 4px solid;
+  }
+  .turn.user { background: var(--user-bg); border-left-color: var(--user-border); }
+  .turn.asst { background: var(--asst-bg); border-left-color: var(--asst-border);
+    border: 1px solid var(--border); border-left-width: 4px; }
+  .role {
+    font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+    font-weight: 700; margin-bottom: 10px;
+  }
+  .user .role { color: var(--user-border); }
+  .asst .role { color: var(--asst-border); }
+  .turn p { margin: 10px 0; }
+  .turn h3 { font-size: 17px; margin: 18px 0 8px; font-weight: 700; letter-spacing: -0.01em; }
+  .turn h4 { font-size: 14px; margin: 14px 0 6px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 1px; color: var(--muted); }
+  .turn ul, .turn ol { padding-left: 22px; }
+  .turn li { margin: 4px 0; }
+  .turn code {
+    background: #f1f3f5; color: #c06a3a;
+    padding: 1px 6px; border-radius: 4px;
+    font-family: 'SF Mono', Consolas, monospace; font-size: 13px;
+  }
+  .turn pre {
+    background: var(--code-bg); color: var(--code-fg);
+    padding: 14px 18px; border-radius: 8px; overflow-x: auto;
+    font-family: 'SF Mono', Consolas, monospace; font-size: 12.5px; line-height: 1.5;
+    margin: 10px 0;
+  }
+  .turn pre code { background: transparent; color: inherit; padding: 0; font-size: inherit; }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 13.5px; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--border); }
+  th { background: #f5f0ec; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); }
+  blockquote {
+    border-left: 3px solid var(--accent);
+    background: #fff5f0; padding: 12px 18px; margin: 12px 0;
+    font-style: italic; border-radius: 0 8px 8px 0;
+  }
+  .artifact {
+    background: #fff4e6; border: 1px dashed var(--accent);
+    border-radius: 8px; padding: 14px 18px; margin: 16px 0;
+    font-size: 13px;
+  }
+  .artifact strong { color: var(--accent); }
+  .divider {
+    height: 1px; background: var(--border);
+    margin: 32px 0; border: 0;
+  }
+  .footer {
+    margin-top: 48px; padding-top: 20px; border-top: 1px solid var(--border);
+    text-align: center; font-size: 12px; color: var(--muted);
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>Mix-It Unity Port — Brainstorm Conversation Log</h1>
+  <div class="subtitle">Session on <strong>2026-04-24</strong> — design and plan for porting the mix-it HTML prototype to Unity 6.3 under the archetype + plugin framework.</div>
+  <div class="meta">
+    <span>Model: Claude Opus 4.7 (1M context)</span>
+    <span>User: mszczuka@gamesture.com</span>
+    <span>Auto mode: on</span>
+  </div>
+</header>
+
+<div class="toc">
+  <h2>Session artifacts (committed to git)</h2>
+  <ol>
+    <li><a href="specs/2026-04-24-unity-port-archetype-plugin-design.md">Spec — archetype + plugin design</a></li>
+    <li><a href="plans/README.md">Plans index — 7-phase roadmap</a></li>
+    <li><a href="plans/2026-04-24-phase-0-infrastructure-skeleton.md">Phase 0 plan — infrastructure skeleton (11 tasks)</a></li>
+  </ol>
+</div>
+
+<div class="toc">
+  <h2>Conversation map</h2>
+  <ol>
+    <li><a href="#t1">User opens — attached archetype/plugin framework HTML + port request</a></li>
+    <li><a href="#t2">Q1 — Unity starting point</a></li>
+    <li><a href="#t3">Q2 — What's in the Unity project</a></li>
+    <li><a href="#t4">Q3 — Multiplayer reality</a></li>
+    <li><a href="#t5">Q4 — Plugin-swap horizon</a></li>
+    <li><a href="#t6">Q5 — VContainer + UniTask explanation</a></li>
+    <li><a href="#t7">Design presentation</a></li>
+    <li><a href="#t8">User feedback — single Main scene + persistent TopMenu/BottomMenu</a></li>
+    <li><a href="#t9">Spec finalized + writing-plans invoked</a></li>
+    <li><a href="#t10">Phase 0 plan + index delivered</a></li>
+    <li><a href="#t11">Continuing on another device</a></li>
+  </ol>
+</div>
+
+<!-- TURN 1 -->
+<div class="turn user" id="t1">
+  <div class="role">User</div>
+  <p><em>(Attached: <code>archetype-plugin-gs.html</code> — the Archetype + Plugin framework doc, Polish, 10 sections covering the two-layer model, four 2025 archetypes, moment/minute/hour/day layer model, GameRefinery player types, Hole.io → All-in-Hole case study, sonda test playbook, decision matrix, FTUE 60s vs 60min, data sources.)</em></p>
+  <p>We have a complicated prototype of the game written in HTML. The design is implemented without 7.5 (current version is 7.4). We need to port this game to Unity (using our Unity MCP). Major considerations:</p>
+  <ul>
+    <li>game contains 2 layers: archetype and plugin. Archetype elements should be separate. We need to prepare this in the way of quickly changing plugin. Our archetype is casual pvp arena. Our plugin are liquid puzzles.</li>
+    <li>it should be made in a way of easy making branch and implementing different plugin without damage to the archetype functionalities</li>
+    <li>it is possible that we will implement other types of archetypes!</li>
+    <li>the files responsible for design (currencies and so on) should be separate from the screens itself (for example in configs or so)</li>
+  </ul>
+  <p>How can we approach this port? Its a lot. I thought about making a complete list of tasks with your description so i can make this merge in other sessions of claude code also.</p>
+</div>
+
+<div class="turn asst">
+  <div class="role">Assistant — context scan</div>
+  <p>Explored project: HTML prototype <code>index-v7.html</code> (~5700 lines) + design docs v6 → v7.5 at <code>d:/ProjectsClaude/mix-it/mix-it/</code>. Empty <code>Assets/</code> folder — no Unity project yet. Before proposing approaches, asked questions one at a time.</p>
+</div>
+
+<!-- TURN 2 -->
+<div class="turn asst" id="t2">
+  <div class="role">Assistant — Question 1</div>
+  <p><strong>Unity starting point:</strong></p>
+  <ol type="A">
+    <li>Completely fresh Unity project — specify version, pipeline, scaffold.</li>
+    <li>You already have a Unity project / template in mind.</li>
+    <li>There's a reference Unity project from another game at your studio to mirror.</li>
+  </ol>
+</div>
+<div class="turn user">
+  <div class="role">User</div>
+  <p>I have Unity project and repository ready.</p>
+</div>
+
+<!-- TURN 3 -->
+<div class="turn asst" id="t3">
+  <div class="role">Assistant — Question 2</div>
+  <p>What's in that Unity project right now? Unity version, pipeline, DI framework, UI system, packages, folder convention, repo path?</p>
+</div>
+<div class="turn user">
+  <div class="role">User</div>
+  <p>Unity 6.3 — <code>D:\Projects\mix-it</code> — this is all I have right now.</p>
+</div>
+<div class="turn asst">
+  <div class="role">Assistant — inspection</div>
+  <p>Checked the project: <code>MixIt/Assets</code>, <code>MixIt/Packages</code>, <code>MixIt/ProjectSettings</code>. Clean URP 17.3 template — uGUI, Input System, no DI, no addressables, no DOTween, no netcode, no analytics. Effectively a blank slate.</p>
+  <p>Then peeked at HTML to inventory screens. Found ~15 screens: splash, home, matchmaking, loadout, match, tutorial, result, shop, trophyroad, venue, albums, teams, ranking, vip, profile. Clean mapping to archetype (meta screens) vs plugin (match + tutorial).</p>
+</div>
+
+<!-- TURN 4 -->
+<div class="turn asst" id="t4">
+  <div class="role">Assistant — Question 3</div>
+  <p><strong>Multiplayer reality:</strong></p>
+  <ol type="A">
+    <li>Async/simulated PvP (bots + fake matchmaking, same as HTML).</li>
+    <li>Real-time netcode (Netcode for GameObjects, Mirror, Photon Fusion).</li>
+    <li>Hybrid — async now, architected to bolt on real netcode later.</li>
+  </ol>
+</div>
+<div class="turn user">
+  <div class="role">User</div>
+  <p>A for now.</p>
+</div>
+
+<!-- TURN 5 -->
+<div class="turn asst" id="t5">
+  <div class="role">Assistant — Question 4</div>
+  <p><strong>Plugin-swap horizon:</strong></p>
+  <ol type="A">
+    <li>1-2 swaps, low abstraction cost.</li>
+    <li>3-5 swaps/year, Homa-style sonda process — strict <code>IPlugin</code>, DI, config-only comms.</li>
+    <li>Full platform — archetype as versioned in-house UPM package across multiple titles.</li>
+  </ol>
+  <p>Also: <strong>Fidelity</strong> — 1:1 with v7.5 or MVP-first? <strong>Art</strong> — Unity-ready coming or placeholder?</p>
+</div>
+<div class="turn user">
+  <div class="role">User</div>
+  <p>C. Fidelity — yes (plus 7.5 to implement). Art — don't worry about it. HTML is just a prototype, I'll prepare whole look myself.</p>
+</div>
+
+<!-- TURN 6 -->
+<div class="turn user" id="t6">
+  <div class="role">User</div>
+  <p>VContainer + UniTask OK? (or Zenject / plain Task / something else) — what is that? And: truly all screens at v7.5 fidelity.</p>
+</div>
+<div class="turn asst">
+  <div class="role">Assistant — primer on VContainer &amp; UniTask</div>
+  <h4>VContainer</h4>
+  <p>A dependency injection (DI) framework for Unity. Instead of every script calling <code>FindObjectOfType&lt;Wallet&gt;()</code> or manually wiring references in the Inspector, a single "composition root" registers services and Unity injects them into constructors/fields automatically. Why it matters for us: swapping the plugin (liquid puzzles → something else) becomes a one-line change in registration instead of hunting through prefabs. Alternatives: Zenject (older, heavier, more magic), plain Microsoft DI (painful in Unity), manual DI (fine for small projects). VContainer is the modern Unity-idiomatic pick: lightweight, fast, no reflection voodoo.</p>
+  <h4>UniTask</h4>
+  <p>A replacement for <code>Task</code>/<code>async-await</code> optimized for Unity. Unity's main thread + frame loop doesn't play nicely with .NET's <code>Task</code> (allocations, threadpool assumptions, no frame-aware awaits). UniTask gives you <code>await NextFrame()</code>, <code>await DelaySeconds(1)</code>, zero-alloc awaits, and proper cancellation on scene unload. Industry standard in Unity 2020+. Alternative is coroutines — works but can't return values, hard to compose, no try/catch across yields. For <code>IMatchSession.Run()</code> returning a <code>MatchResult</code>, async is dramatically cleaner.</p>
+  <p>Both are free, open-source, well-maintained, and used across virtually every serious Unity studio. <strong>Going with VContainer + UniTask.</strong></p>
+</div>
+
+<!-- TURN 7 -->
+<div class="turn asst" id="t7">
+  <div class="role">Assistant — Design proposal</div>
+
+  <h3>Approaches considered</h3>
+  <ol type="A">
+    <li><strong>Scaffolding-first</strong> — all boundaries, DI, contracts first; nothing playable for weeks.</li>
+    <li><strong>Vertical slice MVP</strong> — play loop in 2 weeks with loose boundaries, refactor later. But the "C" (full platform) choice makes this the wrong trap.</li>
+    <li><strong>Contract-first + vertical execution</strong> ← <strong>recommended.</strong> Pay boundary cost early where cheap (asmdefs, <code>IPlugin</code>, SO config skeleton, DI — all shells). Prove with a vertical slice (home → match → result → home). Then parallelize remaining screens against stable contract.</li>
+  </ol>
+
+  <h3>Architecture highlights</h3>
+
+  <h4>Repo layout</h4>
+<pre><code>MixIt/Assets/
+├── _Archetype/      Contracts / Data / Runtime / UI
+├── _Plugins/LiquidPuzzles/   Runtime / UI / Data
+├── _Game/           Bootstrap / Config / Scenes (composition root)
+└── _Tests/          EditMode + PlayMode</code></pre>
+
+  <h4>8 assembly definitions — compiler-enforced boundary</h4>
+  <table>
+    <thead><tr><th>asmdef</th><th>Depends on</th></tr></thead>
+    <tbody>
+      <tr><td>MixIt.Archetype.Contracts</td><td>(none)</td></tr>
+      <tr><td>MixIt.Archetype.Data</td><td>Contracts</td></tr>
+      <tr><td>MixIt.Archetype.Runtime</td><td>Contracts, Data</td></tr>
+      <tr><td>MixIt.Archetype.UI</td><td>Runtime</td></tr>
+      <tr><td>MixIt.Plugin.LiquidPuzzles.Runtime</td><td><strong>Archetype.Contracts only</strong></td></tr>
+      <tr><td>MixIt.Plugin.LiquidPuzzles.UI</td><td>Plugin.Runtime + Contracts</td></tr>
+      <tr><td>MixIt.Game</td><td>everything (composition root)</td></tr>
+      <tr><td>Tests</td><td>per target</td></tr>
+    </tbody>
+  </table>
+  <p>Plugin <strong>never</strong> references <code>Archetype.Runtime</code> or <code>Archetype.UI</code>. Compiler guards the boundary.</p>
+
+  <h4>IPlugin contract — the single most important file</h4>
+<pre><code>public interface IPlugin {
+    PluginManifest Manifest { get; }
+    IMatchSession StartMatch(MatchRequest request);
+    ILoadoutSlotProvider LoadoutProvider { get; }
+    ITutorialScript Tutorial { get; }
+}
+public interface IMatchSession {
+    UniTask&lt;MatchResult&gt; Run(CancellationToken ct);
+    GameObject SceneRoot { get; }
+}
+public record MatchResult(bool Win, int Score,
+    IReadOnlyDictionary&lt;string, float&gt; Telemetry);</code></pre>
+  <p>Plugin reports raw facts. Archetype translates to currency/rating/BP/album drops via <code>RewardTranslator</code> in <code>_Game/Config/</code>. Plugin knows nothing about meta.</p>
+
+  <h4>Core services (archetype)</h4>
+  <p>Wallet, Matchmaking, Rating, BattlePass, TrophyRoad, Venue, Album, Shop, FTUE, Save, Analytics. Plus <code>UIRouter</code> (added after user feedback — see turn 8).</p>
+
+  <h4>Swap seams</h4>
+  <table>
+    <thead><tr><th>Interface</th><th>v1</th><th>Future swap</th></tr></thead>
+    <tbody>
+      <tr><td>IPlugin</td><td>LiquidPuzzlesPlugin</td><td>any future plugin</td></tr>
+      <tr><td>IOpponentProvider</td><td>BotOpponentProvider</td><td>real matchmaking</td></tr>
+      <tr><td>ISaveBackend</td><td>LocalJsonSaveBackend</td><td>PlayFab / Nakama / custom</td></tr>
+      <tr><td>IAnalytics</td><td>NoOpAnalytics</td><td>Unity Analytics / GameAnalytics</td></tr>
+      <tr><td>ITimeProvider</td><td>SystemTimeProvider</td><td>server-authoritative time</td></tr>
+    </tbody>
+  </table>
+
+  <h4>Data/config model</h4>
+  <p>Every balance number from HTML JS → ScriptableObject <code>.asset</code> in <code>_Game/Config/</code>. Categories: currencies, shop bundles, BP tiers, trophy road, venue tree, albums, league bands, rating tables, FTUE script, flash offers. Plugin-owned configs (items, difficulty curves) live in <code>_Plugins/LiquidPuzzles/Data/</code>.</p>
+
+  <h4>6-phase execution plan</h4>
+  <ol start="0">
+    <li><strong>Infra skeleton</strong> — asmdefs + DI + empty scene, "Boot OK".</li>
+    <li><strong>Vertical slice</strong> — stub plugin, one currency, home→match→result→home.</li>
+    <li><strong>Liquid Puzzles to v7.5 fidelity</strong> — full core gameplay.</li>
+    <li><strong>Archetype meta systems</strong> (parallelizable, 5 sub-units).</li>
+    <li><strong>Archetype panels UI</strong> (parallelizable, 16 sub-units).</li>
+    <li><strong>v7.5 polish + FTUE + flash offers</strong>.</li>
+    <li><strong>Promote _Archetype to UPM package</strong>.</li>
+  </ol>
+</div>
+
+<!-- TURN 8 -->
+<div class="turn user" id="t8">
+  <div class="role">User</div>
+  <p>We should have one scene <code>Main</code> on which there will be whole UI. LoadingPanel — with a splash. HomePanel and so on. There should be <strong>TopMenuPanel</strong> with currencies and player avatar (universal, but changeable between archetypes — not a concern for now). <strong>BottomMenuPanel</strong> (universal).</p>
+</div>
+<div class="turn asst">
+  <div class="role">Assistant — spec §4.9 updated</div>
+  <p>Added to spec:</p>
+  <ul>
+    <li>Single <code>Main</code> scene, no scene loads after boot.</li>
+    <li><code>MainCanvas</code> hierarchy: TopMenuPanel (persistent), ContentRoot (panel host), BottomMenuPanel (persistent), OverlayRoot (modals/toasts/FTUE).</li>
+    <li>TopMenu + BottomMenu owned by archetype, visible always except during LoadingPanel and MatchPanel (full-screen gameplay).</li>
+    <li>Plugin's <code>IMatchSession.SceneRoot</code> is parented under MatchPanel's content node.</li>
+    <li>New service <code>IUIRouter</code> with <code>GoTo(PanelId)</code> / <code>ShowOverlay</code> — handles panel stack, menu visibility, transitions. BottomMenuPanel buttons route through it; no panel hardcodes nav to another panel.</li>
+    <li>Phase 0 now includes <code>Main</code> scene + canvas hierarchy + <code>UIRouter</code> registration.</li>
+    <li>Phase 4 sequenced: TopMenu + BottomMenu land first (every other panel depends on them).</li>
+  </ul>
+</div>
+<div class="turn user">
+  <div class="role">User</div>
+  <p>no, lets go</p>
+</div>
+
+<!-- TURN 9 -->
+<div class="turn asst" id="t9">
+  <div class="role">Assistant — writing-plans invoked</div>
+  <p>Invoked <code>superpowers:writing-plans</code> skill. Scope reasoning: writing 25+ detailed plans upfront (including 16 screens + 5 services) goes stale fast. Right shape: one fully detailed plan for the phase that blocks everything else (Phase 0), plus an index documenting the per-phase just-in-time cadence. Later phase plans get written against the then-current repo state after the prior phase lands.</p>
+</div>
+
+<!-- TURN 10 -->
+<div class="turn asst" id="t10">
+  <div class="role">Assistant — deliverables committed</div>
+
+  <div class="artifact">
+    <strong>Plans index:</strong> <code>docs/superpowers/plans/README.md</code><br>
+    7-phase roadmap + status table, fresh-session execution prompt, sub-unit lists for parallelizable phases (5 services in Phase 3, 16 panels in Phase 4).
+  </div>
+
+  <div class="artifact">
+    <strong>Phase 0 plan:</strong> <code>docs/superpowers/plans/2026-04-24-phase-0-infrastructure-skeleton.md</code><br>
+    11 tasks, TDD where possible, each task with exact file paths + complete code + commit command. Unity Editor manual work marked <code>[manual in Editor]</code>; pure file edits marked with exact paths. Includes appendix with troubleshooting table and post-execution self-review checklist.
+  </div>
+
+  <h4>Phase 0 task list (overview)</h4>
+  <ol>
+    <li>Update <code>Packages/manifest.json</code> — add VContainer + UniTask</li>
+    <li>Archetype Contracts asmdef + core interfaces (IPlugin, IUIRouter, DTOs)</li>
+    <li>Archetype Data + UI asmdef shells</li>
+    <li>Archetype Runtime asmdef + UIRouter implementation</li>
+    <li>Plugin.LiquidPuzzles asmdefs + stub plugin (contract-only deps)</li>
+    <li>MixIt.Game asmdef + Bootstrapper</li>
+    <li>EditMode tests for UIRouter (4 tests)</li>
+    <li><code>Main</code> scene with MainCanvas hierarchy [manual]</li>
+    <li>GameLifetimeScope wired into scene — smoke test "Boot OK"</li>
+    <li>Headless test runner script (<code>run-tests.bat</code>)</li>
+    <li>Phase 0 done-criterion checklist</li>
+  </ol>
+
+  <h4>Execution options offered</h4>
+  <ol>
+    <li><strong>Subagent-Driven (recommended)</strong> — fresh subagent per task, two-stage review between tasks.</li>
+    <li><strong>Inline Execution</strong> — run in current session with checkpoint reviews.</li>
+  </ol>
+  <p>User did not select — asked about device portability next.</p>
+</div>
+
+<!-- TURN 11 -->
+<div class="turn user" id="t11">
+  <div class="role">User</div>
+  <p>How can I continue this conversation on other device?</p>
+</div>
+<div class="turn asst">
+  <div class="role">Assistant</div>
+  <p>Claude Code conversations are <strong>local to the machine</strong> — stored at <code>~/.claude/projects/...</code>. No cloud sync. But all substantive state is already committed to git:</p>
+  <ul>
+    <li>Spec — <code>docs/superpowers/specs/2026-04-24-unity-port-archetype-plugin-design.md</code></li>
+    <li>Plans index — <code>docs/superpowers/plans/README.md</code></li>
+    <li>Phase 0 plan — <code>docs/superpowers/plans/2026-04-24-phase-0-infrastructure-skeleton.md</code></li>
+  </ul>
+  <p><strong>To continue on another device:</strong> <code>git pull</code>, start fresh Claude Code session, paste the execution prompt from the plans README — fresh session reads spec + plan and has everything needed.</p>
+  <p>Also push <code>D:\Projects\mix-it\MixIt</code> (the Unity project itself, separate repo) to a remote if not already.</p>
+</div>
+
+<hr class="divider">
+
+<div class="artifact">
+  <strong>Next step when resuming:</strong> execute Phase 0 using <code>superpowers:executing-plans</code> (or subagent-driven-development) skill, passing the Phase 0 plan path. Once Phase 0 lands and <code>PHASE_0_DONE.md</code> is committed, re-invoke <code>superpowers:writing-plans</code> to generate the Phase 1 plan against the updated repo state.
+</div>
+
+<div class="footer">
+  Conversation log generated 2026-04-24 &middot; Mix-It Unity Port &middot; Archetype + Plugin framework
+</div>
+
+</div>
+</body>
+</html>
