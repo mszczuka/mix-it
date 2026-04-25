@@ -71,10 +71,22 @@ Add panels still empty in PanelRegistry:
 - v7 has stake selector pre-match
 - For 6.4 (folded into Loadout 6.3): same behavior. Confirmation: skip if redundant after 6.3 ships.
 
-### 6.5 — Lucky Box second-chance
-- Match loss → "Watch ad to retry?" popup (uses IAdService)
-- For 6.5: post-loss popup on ResultPanel "Watch ad for second chance" button → ShowRewardedAd → on Completed reset match state? Too invasive for prototype. **Defer to Phase 7.**
-- Instead: Result panel ad button only doubles coins (already in 6.2).
+### 6.3g — LuckyBox meter
+- Persistent reward chest fills from match activity. M3 FTUE pre-fills 50%.
+- `ILuckyBoxService`: `Progress (int 0..100)`, `OnMatchCompleted(reward)` adds delta, `IsFull`, `Open()` grants reward bundle (coins + booster), `LastReward` snapshot
+- SaveProfile: `LuckyBoxProgress` int, `LuckyBoxFtuePrefilled` bool
+- FlowController hook: after CompleteMatch call `_luckyBox.OnMatchCompleted(LastReward)`. M3 stage in FtueService sets prefilled=50% on first M3 entry.
+- Home UI: chip on HudBar OR side-button on Home shows "🎁 N%" + "OPEN!" CTA when full → opens LuckyBoxRevealOverlay
+- Reward bundle: 200 coins + 1 random Bronze booster
+- Tests: 5 (progress accumulation, threshold open, reward grant, M3 prefill, persist)
+
+### 6.3h — Second chance (post-loss ad refund)
+- Match loss → ResultPanel shows "Watch ad to refund streak" button (only on Loss). Win → "Double coins" (existing).
+- Click → IAdService.ShowRewardedAd("second_chance") → on Completed: FlowController.RefundLastMatch() reverts ConsecLosses increment + restores trophy delta (re-credit lost trophies). NOT full match rerun — surgical state restore.
+- FlowController: snapshot pre-match Trophies + ConsecLosses; expose RefundLastMatch() method that re-applies snapshot.
+- Tests: 3 (refund restores trophies, refund clears ConsecLosses, single-use per match)
+
+## Out of scope (definitive Phase 7 only)
 
 ## Acceptance — playability
 - New profile boots → FTUE M1 plays → progresses through M2-M5 → Completed
