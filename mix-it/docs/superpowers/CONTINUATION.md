@@ -1,6 +1,6 @@
 # Continuation Guide
 
-Last updated: 2026-04-24 (post-Phase-4, UI surface complete)
+Last updated: 2026-04-25 (post-Phase-5-layout — v7 HTML layout ported)
 Resume the Unity port of Mix It prototype from any device.
 
 ## Repos
@@ -38,7 +38,8 @@ Both repos need to be cloned side by side.
 - **Phase 3.4** — TrophyRoad + BarPass + DailyMissions (25 milestones, 30 tiers, 3-daily rotation)
 - **Phase 3.5** — Venue + Album + PackOpener (3 districts, 4 albums × 10 stickers, rarity-weighted rolls, sticker tokens)
 - **Phase 3.6** — FTUE (v7.5 M1-M5 match progression, headless state machine, rewards per stage, M5 ×2 stake tutorial)
-- **Phase 4** — UI surface (prefab infra + 7 sub-projects: HUD, TR, BP, Missions, Shop, Venue, Album, FTUE popups, Avatar frame)
+- **Phase 4** — UI surface (prefab infra + 7 sub-projects: HUD, TR, BP, Missions, Shop, Venue, Album, FTUE popups, Avatar frame, persistent HUD/BottomNav overlay)
+- **Phase 5 layout port** — v7 HTML layout ported across all panels (HudBar/BottomNav/Home/TR/BP/Shop/Venue/Album/DM/MM/Result/StarterPack/StakeTeaser overlays). Solid colors + Image proxies; gradients/sprites/fonts deferred to polish.
 
 ### Test count
 - **162 EditMode tests green** (verified 2026-04-24 end of Phase 3.6)
