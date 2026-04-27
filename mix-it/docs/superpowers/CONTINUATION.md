@@ -1,6 +1,6 @@
 # Continuation Guide
 
-Last updated: 2026-04-25 (post-Phase-5-layout — v7 HTML layout ported)
+Last updated: 2026-04-27 (post-Phase-7B — meta-loop parity, weekly cadence shipped)
 Resume the Unity port of Mix It prototype from any device.
 
 ## Repos
@@ -40,9 +40,12 @@ Both repos need to be cloned side by side.
 - **Phase 3.6** — FTUE (v7.5 M1-M5 match progression, headless state machine, rewards per stage, M5 ×2 stake tutorial)
 - **Phase 4** — UI surface (prefab infra + 7 sub-projects: HUD, TR, BP, Missions, Shop, Venue, Album, FTUE popups, Avatar frame, persistent HUD/BottomNav overlay)
 - **Phase 5 layout port** — v7 HTML layout ported across all panels (HudBar/BottomNav/Home/TR/BP/Shop/Venue/Album/DM/MM/Result/StarterPack/StakeTeaser overlays). Solid colors + Image proxies; gradients/sprites/fonts deferred to polish.
+- **Phase 6** — fake IAP + fake ad service, LoadoutPanel + booster equip + stake selector, M5 stake tutorial, PackReveal, StickerDetail, Mail panel, DM Daily/Weekly tabs, LuckyBox, SecondChance refund.
+- **Phase 7A** — v7 functional parity: per-arena cushion (TargetPlayerWinRate 0.70→0.50 across 8 arenas), StarRace lite, DailyLogin, spawn-refill ad, weighted customer queue.
+- **Phase 7B** — meta-loop parity (commit `b988637`): MM trophy-only audit, IUtcClock+IsoWeek, Weekly Missions service, Weekly Reset chest via mail, Star Race v2 (per-arena leaderboard + rank rewards), FTUE M5 forced-win, HudBar/BottomNav reactivity (Stars + Star Race chip + Mail badge + OnCoinsChanged/OnUnclaimedCountChanged events).
 
 ### Test count
-- **162 EditMode tests green** (verified 2026-04-24 end of Phase 3.6)
+- **289 EditMode tests green** (verified 2026-04-27 end of Phase 7B, commit `b988637`)
 - 0 compile errors / warnings
 - Play Mode smoke: Boot OK (last verified at 3.4)
 
