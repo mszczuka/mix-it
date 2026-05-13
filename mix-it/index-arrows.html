@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Arrows GO! — Level 1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Paytone+One&family=Fredoka:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden;font-family:"Fredoka","Nunito",system-ui,sans-serif;font-weight:700;background:#0a0e1a;color:#fff;user-select:none;-webkit-user-select:none;touch-action:manipulation;display:flex;justify-content:center}
+#game{position:relative;width:420px;max-width:100vw;height:100vh;height:100dvh;margin:0 auto;overflow:hidden;display:flex;flex-direction:column;background:linear-gradient(180deg,#1a1f3a 0%,#0e1226 50%,#1a1f3a 100%)}
+
+/* HUD */
+#hud{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:rgba(0,0,0,0.3);border-bottom:1px solid rgba(255,255,255,0.06)}
+.hud-side{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:1px}
+.hud-side.left{color:#ff5566}
+.hud-side.right{color:#3aa8ff}
+.hud-side .av{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;border:2px solid currentColor;background:rgba(0,0,0,0.4)}
+.hud-title{font-family:"Paytone One",sans-serif;font-size:14px;letter-spacing:2px;color:#ffd34a;text-shadow:0 2px 0 #000}
+
+/* MATCH AREA */
+#match{flex:1;display:flex;flex-direction:column;align-items:center;padding:10px 8px;gap:8px;overflow:hidden}
+
+.player-label{font-size:10px;text-transform:uppercase;letter-spacing:2px;font-weight:900;opacity:0.7}
+.opp-label{color:#ff8090}
+.you-label{color:#7ec6ff}
+
+/* BOARD */
+.board{width:300px;max-width:96%;aspect-ratio:1;display:grid;gap:3px;background:rgba(0,0,0,0.45);padding:6px;border-radius:12px;border:1px solid rgba(255,255,255,0.07);position:relative}
+.board.opp{opacity:0.92}
+.board.opp .cell{pointer-events:none}
+.cell{position:relative;background:rgba(255,255,255,0.025);border-radius:6px;display:flex;align-items:center;justify-content:center;transition:background 0.15s}
+.cell.empty{background:rgba(255,255,255,0.015)}
+.arrow{width:88%;height:88%;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:900;cursor:pointer;background:linear-gradient(180deg,#3a4d7a,#1f2a4e);box-shadow:0 2px 0 #0a0e1f,inset 0 1px 0 rgba(255,255,255,0.18);color:#fff;transition:transform 0.12s,box-shadow 0.12s}
+.arrow:active{transform:translateY(1px);box-shadow:0 1px 0 #0a0e1f,inset 0 1px 0 rgba(255,255,255,0.18)}
+.arrow.up{background:linear-gradient(180deg,#5277d4,#2545a0)}
+.arrow.down{background:linear-gradient(180deg,#d45252,#a02525)}
+.arrow.left{background:linear-gradient(180deg,#ffba4a,#cc8a1a)}
+.arrow.right{background:linear-gradient(180deg,#52d47a,#258545)}
+.arrow.flying{pointer-events:none;z-index:50;position:absolute;transition:transform 0.5s cubic-bezier(.4,.0,.6,1),opacity 0.5s}
+.arrow.invalid{animation:shake 0.4s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px) rotate(-3deg)}75%{transform:translateX(4px) rotate(3deg)}}
+
+.cell.spawn-flash{animation:spawnpop 0.4s}
+@keyframes spawnpop{0%{transform:scale(0.5);opacity:0}100%{transform:scale(1);opacity:1}}
+
+/* TUG BAR */
+.tug-wrap{width:96%;max-width:340px;display:flex;flex-direction:column;gap:4px;align-items:center}
+.tug-bar{width:100%;height:22px;border-radius:11px;background:#0a0e1f;border:2px solid rgba(255,255,255,0.1);position:relative;overflow:hidden;box-shadow:inset 0 2px 4px rgba(0,0,0,0.5)}
+.tug-fill-red{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(180deg,#ff5566,#c0222e);transition:width 0.5s cubic-bezier(.2,.8,.3,1);width:50%;border-right:2px solid #ffe;box-shadow:0 0 10px rgba(255,90,100,0.5)}
+.tug-fill-blue{position:absolute;right:0;top:0;bottom:0;background:linear-gradient(180deg,#3aa8ff,#1660c4);transition:width 0.5s cubic-bezier(.2,.8,.3,1);width:50%;box-shadow:0 0 10px rgba(60,160,255,0.5)}
+.tug-marker{position:absolute;top:-4px;bottom:-4px;width:3px;background:#fff;left:50%;transform:translateX(-50%);box-shadow:0 0 6px rgba(255,255,255,0.8)}
+.tug-scores{display:flex;justify-content:space-between;width:100%;font-size:11px;font-weight:900}
+.tug-scores .l{color:#ff8090}.tug-scores .r{color:#7ec6ff}
+
+/* FLOATING SCORE */
+.float-score{position:absolute;font-size:22px;font-weight:900;pointer-events:none;animation:floatup 1s ease-out forwards;text-shadow:0 2px 0 #000,0 0 8px currentColor;z-index:100}
+@keyframes floatup{0%{opacity:1;transform:translate(-50%,0)}100%{opacity:0;transform:translate(-50%,-50px)}}
+
+/* OVERLAY */
+.overlay{position:absolute;inset:0;background:rgba(0,0,0,0.7);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:200;backdrop-filter:blur(4px)}
+.overlay.hidden{display:none}
+.overlay h1{font-family:"Paytone One",sans-serif;font-size:38px;letter-spacing:3px;color:#ffd34a;text-shadow:0 4px 0 #000,0 0 20px rgba(255,211,74,0.5);margin-bottom:10px}
+.overlay h2{font-size:18px;font-weight:800;margin-bottom:24px;color:#fff}
+.overlay h2.win{color:#7eff8c}.overlay h2.lose{color:#ff7e8c}
+.btn{padding:12px 28px;background:linear-gradient(180deg,#ffac04,#cc7d00);color:#1a1a1a;border:none;border-radius:14px;font-family:inherit;font-weight:900;font-size:16px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;box-shadow:0 4px 0 #6e4400;transition:transform 0.1s,box-shadow 0.1s}
+.btn:active{transform:translateY(2px);box-shadow:0 2px 0 #6e4400}
+.overlay .intro-rules{max-width:340px;text-align:center;font-size:13px;font-weight:600;line-height:1.5;margin-bottom:24px;color:rgba(255,255,255,0.85);padding:0 20px}
+.overlay .intro-rules b{color:#ffd34a}
+
+/* SPAWN INDICATOR */
+.spawn-info{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;font-weight:800;color:rgba(255,255,255,0.5);display:flex;align-items:center;gap:8px}
+.spawn-info .dot{width:6px;height:6px;border-radius:50%;background:#ffd34a;box-shadow:0 0 6px #ffd34a;animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:0.4}50%{opacity:1}}
+
+</style>
+</head>
+<body>
+<div id="game">
+
+  <div id="hud">
+    <div class="hud-side left">
+      <div class="av">🤖</div>
+      <span id="opp-name">Bot Lv1</span>
+    </div>
+    <div class="hud-title">ARROWS GO!</div>
+    <div class="hud-side right">
+      <span>YOU</span>
+      <div class="av">😎</div>
+    </div>
+  </div>
+
+  <div id="match">
+    <div class="player-label opp-label">↑ OPPONENT</div>
+    <div class="board opp" id="board-opp"></div>
+
+    <div class="tug-wrap">
+      <div class="tug-scores"><span class="l" id="score-opp">0</span><span class="spawn-info"><span class="dot"></span><span id="spawn-timer">SPAWN 5s</span></span><span class="r" id="score-you">0</span></div>
+      <div class="tug-bar">
+        <div class="tug-fill-red" id="tug-red"></div>
+        <div class="tug-fill-blue" id="tug-blue"></div>
+        <div class="tug-marker"></div>
+      </div>
+    </div>
+
+    <div class="board" id="board-you"></div>
+    <div class="player-label you-label">↓ YOU — TAP AN ARROW</div>
+  </div>
+
+  <!-- Intro -->
+  <div class="overlay" id="overlay-intro">
+    <h1>ARROWS GO!</h1>
+    <h2>Level 1 — Bot Match</h2>
+    <div class="intro-rules">
+      Tap an arrow to release it. It flies in the direction it points.<br>
+      Path must be <b>completely clear</b> — longer flight = <b>more points</b>.<br>
+      Blocked arrow = <b>wasted turn</b>. New arrows <b>spawn</b> every few seconds.<br><br>
+      <b style="color:#ff5566;">Bot fills left side.</b> <b style="color:#3aa8ff;">You fill right side.</b><br>
+      Push the bar to <b>your edge</b> to win!
+    </div>
+    <button class="btn" id="btn-start">START</button>
+  </div>
+
+  <!-- Result -->
+  <div class="overlay hidden" id="overlay-result">
+    <h1 id="result-title">VICTORY</h1>
+    <h2 id="result-sub" class="win">You pushed the bar all the way!</h2>
+    <button class="btn" id="btn-rematch">REMATCH</button>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const GRID = 5;
+  const TARGET_SCORE = 30;       // first to push tug bar this far wins
+  const SPAWN_INTERVAL = 4500;   // ms between spawns
+  const BOT_THINK_MIN = 1100;
+  const BOT_THINK_MAX = 2200;
+  const BOT_MISTAKE_CHANCE = 0.18;
+
+  const DIRS = {
+    up:    { dx: 0, dy:-1, glyph:'▲' },
+    down:  { dx: 0, dy: 1, glyph:'▼' },
+    left:  { dx:-1, dy: 0, glyph:'◀' },
+    right: { dx: 1, dy: 0, glyph:'▶' },
+  };
+  const DIR_KEYS = Object.keys(DIRS);
+
+  const $ = id => document.getElementById(id);
+  const boardEls = { you: $('board-you'), opp: $('board-opp') };
+
+  const state = {
+    you:  { grid: null, score: 0, cellEls: [] },
+    opp:  { grid: null, score: 0, cellEls: [] },
+    running: false,
+    spawnAt: 0,
+    botThinkAt: 0,
+  };
+
+  function makeGrid() {
+    // Level 1 layout: a hand-crafted, mostly-solvable opening.
+    // 1 = arrow direction key; null = empty
+    const proto = [
+      ['right','down', null, 'left','left'],
+      [null,   'up',  'right','down', null ],
+      ['down', null,  'left', null,  'up'  ],
+      [null,   'right','up',  null,  'left'],
+      ['up',   null,  'down','right','up'  ],
+    ];
+    return proto.map(row => row.map(d => d ? { dir: d, id: Math.random().toString(36).slice(2,8) } : null));
+  }
+
+  function renderBoard(side) {
+    const el = boardEls[side];
+    el.style.gridTemplateColumns = `repeat(${GRID},1fr)`;
+    el.style.gridTemplateRows = `repeat(${GRID},1fr)`;
+    el.innerHTML = '';
+    state[side].cellEls = [];
+    const grid = state[side].grid;
+    for (let y = 0; y < GRID; y++) {
+      const row = [];
+      for (let x = 0; x < GRID; x++) {
+        const cell = document.createElement('div');
+        cell.className = 'cell';
+        cell.dataset.x = x; cell.dataset.y = y;
+        const arr = grid[y][x];
+        if (arr) {
+          const a = makeArrowEl(arr, side);
+          cell.appendChild(a);
+        } else {
+          cell.classList.add('empty');
+        }
+        el.appendChild(cell);
+        row.push(cell);
+      }
+      state[side].cellEls.push(row);
+    }
+  }
+
+  function makeArrowEl(arr, side) {
+    const a = document.createElement('div');
+    a.className = 'arrow ' + arr.dir;
+    a.dataset.id = arr.id;
+    a.textContent = DIRS[arr.dir].glyph;
+    if (side === 'you') {
+      a.addEventListener('click', () => onPlayerTap(arr));
+    }
+    return a;
+  }
+
+  function pathClear(grid, x, y, dir) {
+    const { dx, dy } = DIRS[dir];
+    let cx = x + dx, cy = y + dy, steps = 1;
+    while (cx >= 0 && cx < GRID && cy >= 0 && cy < GRID) {
+      if (grid[cy][cx]) return { clear: false, steps: 0 };
+      cx += dx; cy += dy; steps++;
+    }
+    return { clear: true, steps };
+  }
+
+  function findArrowCoord(side, id) {
+    const grid = state[side].grid;
+    for (let y = 0; y < GRID; y++) for (let x = 0; x < GRID; x++) {
+      if (grid[y][x] && grid[y][x].id === id) return { x, y };
+    }
+    return null;
+  }
+
+  function onPlayerTap(arr) {
+    if (!state.running) return;
+    const coord = findArrowCoord('you', arr.id);
+    if (!coord) return;
+    tryRelease('you', coord.x, coord.y);
+  }
+
+  function tryRelease(side, x, y) {
+    const grid = state[side].grid;
+    const arr = grid[y][x];
+    if (!arr) return false;
+    const { clear, steps } = pathClear(grid, x, y, arr.dir);
+    const cellEl = state[side].cellEls[y][x];
+    const arrowEl = cellEl.querySelector('.arrow');
+
+    if (!clear) {
+      if (arrowEl) {
+        arrowEl.classList.add('invalid');
+        setTimeout(() => arrowEl.classList.remove('invalid'), 400);
+      }
+      // wasted turn — small penalty for player only? Keep neutral, just no score.
+      return false;
+    }
+
+    // Score = number of cells traveled (steps to leave board)
+    const pts = steps;
+    grid[y][x] = null;
+    animateFly(side, x, y, arr.dir, steps, arrowEl, cellEl, pts);
+    addScore(side, pts);
+    return true;
+  }
+
+  function animateFly(side, x, y, dir, steps, arrowEl, cellEl, pts) {
+    if (!arrowEl) return;
+    const rect = arrowEl.getBoundingClientRect();
+    const boardRect = boardEls[side].getBoundingClientRect();
+    const { dx, dy } = DIRS[dir];
+    const cellSize = rect.width + 3;
+    const tx = dx * cellSize * steps;
+    const ty = dy * cellSize * steps;
+
+    const clone = arrowEl.cloneNode(true);
+    clone.classList.add('flying');
+    clone.style.left = (rect.left - boardRect.left) + 'px';
+    clone.style.top  = (rect.top  - boardRect.top)  + 'px';
+    clone.style.width = rect.width + 'px';
+    clone.style.height = rect.height + 'px';
+    boardEls[side].appendChild(clone);
+    arrowEl.remove();
+    cellEl.classList.add('empty');
+
+    requestAnimationFrame(() => {
+      clone.style.transform = `translate(${tx}px,${ty}px) scale(1.1)`;
+      clone.style.opacity = '0';
+    });
+    setTimeout(() => clone.remove(), 520);
+
+    // Floating score
+    showFloatScore(side, x, y, pts);
+  }
+
+  function showFloatScore(side, x, y, pts) {
+    const cellEl = state[side].cellEls[y][x];
+    const rect = cellEl.getBoundingClientRect();
+    const boardRect = boardEls[side].getBoundingClientRect();
+    const f = document.createElement('div');
+    f.className = 'float-score';
+    f.style.color = side === 'you' ? '#3aa8ff' : '#ff5566';
+    f.style.left = (rect.left - boardRect.left + rect.width/2) + 'px';
+    f.style.top  = (rect.top  - boardRect.top) + 'px';
+    f.textContent = '+' + pts;
+    boardEls[side].appendChild(f);
+    setTimeout(() => f.remove(), 1000);
+  }
+
+  function addScore(side, pts) {
+    state[side].score += pts;
+    updateTug();
+    if (state[side].score >= TARGET_SCORE) {
+      endGame(side);
+    }
+  }
+
+  function updateTug() {
+    const total = state.you.score + state.opp.score;
+    // Bar represents "share" of total; default center if no scores.
+    let oppPct, youPct;
+    if (total === 0) { oppPct = 50; youPct = 50; }
+    else {
+      // Skew center toward whoever has more — capped so both edges progress visibly.
+      const diff = state.you.score - state.opp.score;
+      const max = TARGET_SCORE;
+      const pct = 50 + (diff / max) * 50; // 0..100, 50 = neutral
+      youPct = Math.max(5, Math.min(95, pct));
+      oppPct = 100 - youPct;
+    }
+    $('tug-red').style.width  = oppPct + '%';
+    $('tug-blue').style.width = youPct + '%';
+    $('score-opp').textContent = state.opp.score;
+    $('score-you').textContent = state.you.score;
+  }
+
+  // ----- BOT -----
+  function botFindBestMove() {
+    const grid = state.opp.grid;
+    const moves = [];
+    for (let y = 0; y < GRID; y++) for (let x = 0; x < GRID; x++) {
+      const arr = grid[y][x];
+      if (!arr) continue;
+      const { clear, steps } = pathClear(grid, x, y, arr.dir);
+      if (clear) moves.push({ x, y, steps });
+    }
+    if (!moves.length) return null;
+    moves.sort((a,b) => b.steps - a.steps);
+    if (Math.random() < BOT_MISTAKE_CHANCE && moves.length > 1) {
+      // sometimes pick a weaker move
+      return moves[Math.min(moves.length-1, 1 + Math.floor(Math.random()*2))];
+    }
+    return moves[0];
+  }
+
+  function botTryBlocked() {
+    // If no clear moves, pick a random arrow and "fail" to simulate a wasted turn
+    const grid = state.opp.grid;
+    const arrows = [];
+    for (let y = 0; y < GRID; y++) for (let x = 0; x < GRID; x++) if (grid[y][x]) arrows.push({x,y});
+    if (!arrows.length) return;
+    const pick = arrows[Math.floor(Math.random()*arrows.length)];
+    const cellEl = state.opp.cellEls[pick.y][pick.x];
+    const arrowEl = cellEl.querySelector('.arrow');
+    if (arrowEl) {
+      arrowEl.classList.add('invalid');
+      setTimeout(() => arrowEl.classList.remove('invalid'), 400);
+    }
+  }
+
+  function botStep() {
+    if (!state.running) return;
+    const move = botFindBestMove();
+    if (move) tryRelease('opp', move.x, move.y);
+    else botTryBlocked();
+    state.botThinkAt = performance.now() + BOT_THINK_MIN + Math.random() * (BOT_THINK_MAX - BOT_THINK_MIN);
+  }
+
+  // ----- SPAWN -----
+  function spawnArrow(side) {
+    const grid = state[side].grid;
+    const empties = [];
+    for (let y = 0; y < GRID; y++) for (let x = 0; x < GRID; x++) if (!grid[y][x]) empties.push({x,y});
+    if (!empties.length) return;
+    const { x, y } = empties[Math.floor(Math.random()*empties.length)];
+    const dir = DIR_KEYS[Math.floor(Math.random()*DIR_KEYS.length)];
+    const arr = { dir, id: Math.random().toString(36).slice(2,8) };
+    grid[y][x] = arr;
+    const cellEl = state[side].cellEls[y][x];
+    cellEl.classList.remove('empty');
+    cellEl.innerHTML = '';
+    const a = makeArrowEl(arr, side);
+    a.classList.add('spawn-flash');
+    cellEl.appendChild(a);
+  }
+
+  // ----- GAME LOOP -----
+  function tick(now) {
+    if (!state.running) return;
+    if (now >= state.spawnAt) {
+      spawnArrow('you');
+      spawnArrow('opp');
+      state.spawnAt = now + SPAWN_INTERVAL;
+    }
+    if (now >= state.botThinkAt) {
+      botStep();
+    }
+    const remain = Math.max(0, Math.ceil((state.spawnAt - now) / 1000));
+    $('spawn-timer').textContent = 'SPAWN ' + remain + 's';
+    requestAnimationFrame(tick);
+  }
+
+  function startMatch() {
+    state.you.grid = makeGrid();
+    state.opp.grid = makeGrid();
+    state.you.score = 0; state.opp.score = 0;
+    renderBoard('you'); renderBoard('opp');
+    updateTug();
+    state.running = true;
+    state.spawnAt = performance.now() + SPAWN_INTERVAL;
+    state.botThinkAt = performance.now() + BOT_THINK_MIN + Math.random() * (BOT_THINK_MAX - BOT_THINK_MIN);
+    requestAnimationFrame(tick);
+  }
+
+  function endGame(winner) {
+    state.running = false;
+    const isYou = winner === 'you';
+    $('result-title').textContent = isYou ? 'VICTORY' : 'DEFEAT';
+    const sub = $('result-sub');
+    sub.textContent = isYou
+      ? `You pushed all the way! ${state.you.score} vs ${state.opp.score}`
+      : `The bot beat you. ${state.opp.score} vs ${state.you.score}`;
+    sub.className = isYou ? 'win' : 'lose';
+    $('overlay-result').classList.remove('hidden');
+  }
+
+  $('btn-start').addEventListener('click', () => {
+    $('overlay-intro').classList.add('hidden');
+    startMatch();
+  });
+  $('btn-rematch').addEventListener('click', () => {
+    $('overlay-result').classList.add('hidden');
+    startMatch();
+  });
+
+})();
+</script>
+</body>
+</html>

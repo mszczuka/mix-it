@@ -1,0 +1,967 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Arrows GO! v5 — Match Masters Style</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Paytone+One&family=Fredoka:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden;font-family:"Fredoka",system-ui,sans-serif;font-weight:700;background:#0a0e1a;color:#1a1a2e;user-select:none;-webkit-user-select:none;touch-action:manipulation;display:flex;justify-content:center}
+#game{position:relative;width:420px;max-width:100vw;height:100vh;height:100dvh;margin:0 auto;overflow:hidden;display:flex;flex-direction:column;background:linear-gradient(180deg,#f4ede0 0%,#e8dfc8 100%)}
+
+/* HUD */
+#hud{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:#1a1a2e;color:#fff;gap:8px}
+.hud-side{display:flex;align-items:center;gap:8px;font-weight:800;flex:0 0 auto}
+.hud-side.opp{color:#ff5566}.hud-side.you{color:#7ec6ff}
+.hud-side .av{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:900;border:2px solid currentColor;background:rgba(0,0,0,0.35)}
+.hud-side.you{flex-direction:row-reverse}
+.hud-name{display:flex;flex-direction:column;line-height:1.1;gap:1px}
+.hud-name .nm{font-size:11px;text-transform:uppercase;letter-spacing:1px}
+.hud-name .sc{font-size:14px;font-weight:900;color:#fff}
+.hud-side.you .hud-name{align-items:flex-end}
+.hud-center{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0}
+.hud-title{font-family:"Paytone One",sans-serif;font-size:11px;letter-spacing:2px;color:#ffd34a;text-shadow:0 2px 0 #000;line-height:1}
+.hud-timer{font-family:"Paytone One",sans-serif;font-size:18px;color:#fff;letter-spacing:1px;text-shadow:0 2px 0 #000;line-height:1}
+.hud-timer.warn{color:#ffac04;animation:pulseWarn 0.6s infinite alternate}
+.hud-timer.crit{color:#ff5566;animation:pulseWarn 0.3s infinite alternate}
+@keyframes pulseWarn{from{transform:scale(1)}to{transform:scale(1.12)}}
+
+/* TURN ROW */
+.turn-row{flex-shrink:0;padding:6px 12px 0;display:flex;flex-direction:column;gap:5px;background:#fff8ec;border-bottom:1px solid rgba(0,0,0,0.05)}
+.turn-row-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.turn-label{font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:1.5px;color:#1a1a2e}
+.turn-label.opp-turn{color:#c0223a}
+.turn-label.you-turn{color:#1660c4}
+.moves-dots{display:flex;gap:4px}
+.move-dot{width:14px;height:14px;border-radius:50%;background:rgba(0,0,0,0.1);border:2px solid currentColor}
+.move-dot.used{background:transparent;opacity:0.3}
+.you-turn .move-dot{color:#1660c4;background:#1660c4}
+.opp-turn .move-dot{color:#c0223a;background:#c0223a}
+.move-dot.bonus{color:#ffac04 !important;background:linear-gradient(180deg,#ffd34a,#ffac04) !important;box-shadow:0 0 8px rgba(255,172,4,0.7);animation:bonusPulse 0.6s ease-out}
+@keyframes bonusPulse{0%{transform:scale(0.3)}60%{transform:scale(1.35)}100%{transform:scale(1)}}
+.turn-timer-bar{width:100%;height:5px;background:rgba(0,0,0,0.08);border-radius:0;overflow:hidden}
+.turn-timer-fill{height:100%;width:100%;background:#1660c4;transition:width 0.1s linear}
+.opp-turn .turn-timer-fill{background:#c0223a}
+.turn-timer-fill.warn{background:#ffac04}
+.turn-timer-fill.crit{background:#ff3030;animation:pulseCrit 0.4s infinite alternate}
+@keyframes pulseCrit{from{opacity:0.6}to{opacity:1}}
+
+/* BOARD */
+#match{flex:1;display:flex;flex-direction:column;align-items:center;padding:10px 8px;gap:8px;overflow:hidden;justify-content:center}
+.board-wrap{width:380px;max-width:96%;aspect-ratio:1;position:relative}
+.board{position:absolute;inset:0;display:grid;background:#fff;border-radius:14px;border:2px solid #1a1a2e;box-shadow:0 4px 0 #1a1a2e;overflow:hidden}
+.cell{position:relative;background:transparent;border-right:1px dashed rgba(0,0,0,0.07);border-bottom:1px dashed rgba(0,0,0,0.07)}
+.board .center-mark{position:absolute;inset:38%;border-radius:50%;background:radial-gradient(circle,rgba(255,211,74,0.18) 0%,rgba(255,211,74,0) 70%);pointer-events:none;z-index:1}
+
+.arrow-svg{position:absolute;inset:0;pointer-events:none;width:100%;height:100%;z-index:3}
+.arrow-svg.invalid{animation:shake 0.4s}
+.arrow-hit{position:absolute;cursor:pointer;z-index:5}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-3px) rotate(-2deg)}75%{transform:translateX(3px) rotate(2deg)}}
+.arrow-svg.spawn-pop{animation:spawnpop 0.18s ease-out}
+@keyframes spawnpop{0%{transform:scale(0.7);opacity:0}100%{transform:scale(1);opacity:1}}
+
+.float-score{position:absolute;font-size:24px;font-weight:900;pointer-events:none;animation:floatup 1s ease-out forwards;text-shadow:0 2px 0 #fff,0 0 8px currentColor;z-index:100}
+@keyframes floatup{0%{opacity:1;transform:translate(-50%,0)}100%{opacity:0;transform:translate(-50%,-50px)}}
+
+/* TURN BANNER */
+.turn-banner{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:rgba(26,26,46,0.92);color:#fff;font-family:"Paytone One",sans-serif;font-size:30px;letter-spacing:3px;padding:14px 40px;border-radius:14px;z-index:150;animation:turnFlash 1s ease-out;pointer-events:none;text-shadow:0 3px 0 #000}
+.turn-banner.you{color:#7ec6ff}
+.turn-banner.opp{color:#ff8090}
+@keyframes turnFlash{0%{opacity:0;transform:translate(-50%,-50%) scale(0.7)}25%{opacity:1;transform:translate(-50%,-50%) scale(1.05)}80%{opacity:1;transform:translate(-50%,-50%) scale(1)}100%{opacity:0;transform:translate(-50%,-80%) scale(1)}}
+
+/* BONUS BANNER */
+.bonus-banner{position:absolute;left:50%;top:38%;transform:translate(-50%,-50%);background:linear-gradient(180deg,#5db84d,#3a8e2e);color:#fff;font-family:"Paytone One",sans-serif;font-size:18px;letter-spacing:2px;padding:10px 22px;border-radius:12px;z-index:160;pointer-events:none;text-shadow:0 2px 0 rgba(0,0,0,0.4);box-shadow:0 4px 20px rgba(82,163,90,0.6),inset 0 1px 0 rgba(255,255,255,0.3);animation:bonusFlash 1.6s ease-out;white-space:nowrap;text-align:center}
+.bonus-banner .small{font-family:"Fredoka",sans-serif;font-size:11px;letter-spacing:1px;display:block;margin-top:2px;opacity:0.9}
+@keyframes bonusFlash{0%{opacity:0;transform:translate(-50%,-20%) scale(0.7)}20%{opacity:1;transform:translate(-50%,-50%) scale(1.08)}80%{opacity:1;transform:translate(-50%,-50%) scale(1)}100%{opacity:0;transform:translate(-50%,-90%) scale(1)}}
+
+/* OVERLAY */
+.overlay{position:absolute;inset:0;background:rgba(26,26,46,0.92);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:200;padding:20px;color:#fff}
+.overlay.hidden{display:none}
+.overlay h1{font-family:"Paytone One",sans-serif;font-size:34px;letter-spacing:3px;color:#ffd34a;text-shadow:0 4px 0 #000,0 0 20px rgba(255,211,74,0.5);margin-bottom:10px;text-align:center}
+.overlay h2{font-size:16px;font-weight:800;margin-bottom:20px;color:#fff;text-align:center}
+.overlay h2.win{color:#7eff8c}.overlay h2.lose{color:#ff7e8c}
+.btn{padding:12px 28px;background:linear-gradient(180deg,#ffac04,#cc7d00);color:#1a1a1a;border:none;border-radius:14px;font-family:inherit;font-weight:900;font-size:16px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;box-shadow:0 4px 0 #6e4400}
+.btn:active{transform:translateY(2px);box-shadow:0 2px 0 #6e4400}
+.intro-rules{max-width:340px;text-align:center;font-size:13px;font-weight:600;line-height:1.55;margin-bottom:20px;color:rgba(255,255,255,0.88)}
+.intro-rules b{color:#ffd34a}
+
+#board.locked .arrow-hit{cursor:not-allowed}
+</style>
+</head>
+<body>
+<div id="game">
+
+  <div id="hud">
+    <div class="hud-side opp">
+      <div class="av">🤖</div>
+      <div class="hud-name"><span class="nm">Bot</span><span class="sc" id="score-opp">0</span></div>
+    </div>
+    <div class="hud-center">
+      <span class="hud-title">ARROWS GO!</span>
+      <span class="hud-timer" id="hud-timer">1:00</span>
+    </div>
+    <div class="hud-side you">
+      <div class="av">😎</div>
+      <div class="hud-name"><span class="nm">You</span><span class="sc" id="score-you">0</span></div>
+    </div>
+  </div>
+
+  <div class="turn-row" id="turn-row">
+    <div class="turn-row-top">
+      <span class="turn-label" id="turn-label">YOUR TURN</span>
+      <div class="moves-dots" id="moves-dots"></div>
+    </div>
+    <div class="turn-timer-bar"><div class="turn-timer-fill" id="turn-timer-fill"></div></div>
+  </div>
+
+  <div id="match">
+    <div class="board-wrap">
+      <div class="board" id="board"><div class="center-mark"></div></div>
+    </div>
+  </div>
+
+  <div class="overlay" id="overlay-intro">
+    <h1>ARROWS GO!</h1>
+    <h2>Level 1</h2>
+    <div class="intro-rules">
+      One shared board. Each player gets <b>3 moves per turn</b>.<br><br>
+      Tap an arrow to release it. <b>Only arrows that fully leave the board score points!</b> Partially blocked arrows slide until they hit something and stay on the board — useful to open paths.<br><br>
+      <b>Flat points per tier</b> (the higher the tier, the more blocked the arrow tends to spawn):<br>
+      <span style="color:#52a35a">●</span> common <b>1pt</b> &nbsp; <span style="color:#3a7adb">●</span> rare <b>2pt</b> &nbsp; <span style="color:#a35adb">●</span> epic <b>3pt</b> &nbsp; <span style="color:#f5b324">●</span> legendary <b>5pt</b><br><br>
+      After 3 minutes, the higher score wins.
+    </div>
+    <button class="btn" id="btn-start">START</button>
+  </div>
+
+  <div class="overlay hidden" id="overlay-result">
+    <h1 id="result-title">VICTORY</h1>
+    <h2 id="result-sub" class="win"></h2>
+    <button class="btn" id="btn-rematch">REMATCH</button>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const GRID = 14;
+  const MOVES_PER_TURN = 3;
+  const MATCH_DURATION_MS = 3 * 60 * 1000;
+  const TURN_DURATION_MS = 15 * 1000;
+  const BOT_MOVE_DELAY_MIN = 700, BOT_MOVE_DELAY_MAX = 1200;
+  const SPAWN_PER_TURN = 3;
+
+  // Arrow tiers — color & point multiplier. Common is frequent, Legendary is rare.
+  const TIERS = [
+    { name:'common',    color:'#52a35a', mult:1, weight:55 },  // green
+    { name:'rare',      color:'#3a7adb', mult:2, weight:27 },  // blue
+    { name:'epic',      color:'#a35adb', mult:3, weight:13 },  // purple
+    { name:'legendary', color:'#f5b324', mult:5, weight:5  },  // gold
+  ];
+  function pickTierIdx(){
+    const total = TIERS.reduce((s,t)=>s+t.weight,0);
+    let r = Math.random()*total;
+    for (let i=0;i<TIERS.length;i++){ r -= TIERS[i].weight; if (r<=0) return i; }
+    return 0;
+  }
+
+  const TEMPLATES = [
+    { len:2, cells:[[-1,0],[0,0]] },
+    { len:3, cells:[[-2,0],[-1,0],[0,0]] },
+    { len:4, cells:[[-3,0],[-2,0],[-1,0],[0,0]] },
+    { len:3, cells:[[-1,-1],[-1,0],[0,0]] },
+    { len:3, cells:[[-1,1],[-1,0],[0,0]] },
+    { len:4, cells:[[-2,-1],[-2,0],[-1,0],[0,0]] },
+    { len:4, cells:[[-2,1],[-2,0],[-1,0],[0,0]] },
+    { len:4, cells:[[-1,-2],[-1,-1],[-1,0],[0,0]] },
+    { len:4, cells:[[-1,2],[-1,1],[-1,0],[0,0]] },
+    { len:5, cells:[[-2,-2],[-2,-1],[-2,0],[-1,0],[0,0]] },
+    { len:5, cells:[[-2,2],[-2,1],[-2,0],[-1,0],[0,0]] },
+  ];
+
+  function rotateCell([x,y], dir) {
+    switch(dir) {
+      case 'right': return [x,y];
+      case 'down':  return [-y,x];
+      case 'left':  return [-x,-y];
+      case 'up':    return [y,-x];
+    }
+  }
+  function shapeCells(template, dir) { return template.cells.map(c => rotateCell(c, dir)); }
+
+  const DIRS = {
+    up:    { dx: 0, dy:-1 },
+    down:  { dx: 0, dy: 1 },
+    left:  { dx:-1, dy: 0 },
+    right: { dx: 1, dy: 0 },
+  };
+  const DIR_KEYS = Object.keys(DIRS);
+
+  const $ = id => document.getElementById(id);
+  const boardEl = $('board');
+
+  const state = {
+    grid: null,
+    arrows: {},
+    cellEls: [],
+    scoreYou: 0,
+    scoreOpp: 0,
+    greenStreakYou: 0,
+    greenStreakOpp: 0,
+    turn: 'you',
+    movesLeft: MOVES_PER_TURN,
+    bonusMovesYou: 0,
+    bonusMovesOpp: 0,
+    running: false,
+    matchEndAt: 0,
+    botActAt: 0,
+    turnEndAt: 0,
+    inputLocked: false,
+  };
+
+  const CENTER = (GRID-1)/2;
+  function emptyGrid(){ return Array.from({length:GRID},()=>Array(GRID).fill(null)); }
+  function arrowCells(hx, hy, arrTpl){ return shapeCells(TEMPLATES[arrTpl.tplIdx], arrTpl.dir).map(([dx,dy])=>({x:hx+dx,y:hy+dy})); }
+  function canPlace(grid, hx, hy, arrTpl){
+    const cells = arrowCells(hx, hy, arrTpl);
+    for (const c of cells){
+      if (c.x<0||c.x>=GRID||c.y<0||c.y>=GRID) return false;
+      if (grid[c.y][c.x]) return false;
+    }
+    return true;
+  }
+  // Two cases:
+  //   A) Head's firing path is clear all the way off-board → arrow exits (snake animation,
+  //      body follows the arrow's own path; perpendicular obstacles don't matter).
+  //   B) Head is blocked before leaving → arrow can still partially slide RIGIDLY forward,
+  //      but every body cell at the new position must be empty (otherwise we'd overlap).
+  function slideDistance(grid, arr){
+    const {dx, dy} = DIRS[arr.dir];
+    // A) Head firing path
+    let headSteps = 0;
+    let cx = arr.headX + dx, cy = arr.headY + dy;
+    while (cx >= 0 && cx < GRID && cy >= 0 && cy < GRID){
+      const occ = grid[cy][cx];
+      if (occ && occ !== arr.id) break;
+      headSteps++;
+      cx += dx; cy += dy;
+    }
+    const offBoard = !(cx >= 0 && cx < GRID && cy >= 0 && cy < GRID);
+    if (offBoard) return { steps: headSteps, offBoard: true };
+    // Path-based slide: body cells follow the arrow's own track. All path positions are either
+    // own body cells or verified-clear exit cells (up to headSteps), so slide is always valid
+    // up to headSteps cells.
+    return { steps: headSteps, offBoard: false };
+  }
+
+  function buildBoardDom(){
+    boardEl.style.gridTemplateColumns = `repeat(${GRID},1fr)`;
+    boardEl.style.gridTemplateRows = `repeat(${GRID},1fr)`;
+    const center = boardEl.querySelector('.center-mark');
+    boardEl.innerHTML = '';
+    if (center) boardEl.appendChild(center);
+    state.cellEls = [];
+    for (let y=0;y<GRID;y++){
+      const row=[];
+      for (let x=0;x<GRID;x++){
+        const cell = document.createElement('div');
+        cell.className = 'cell';
+        cell.dataset.x = x; cell.dataset.y = y;
+        boardEl.appendChild(cell);
+        row.push(cell);
+      }
+      state.cellEls.push(row);
+    }
+  }
+
+  function getCellSize(){ return boardEl.clientWidth / GRID; }
+
+  function arrowColor(arr){ return TIERS[arr.tierIdx || 0].color; }
+  function arrowMult(arr){ return TIERS[arr.tierIdx || 0].mult; }
+
+  function buildArrowSvgPath(arrow){
+    const cells = arrow.bodyCells || arrowCells(arrow.headX, arrow.headY, arrow);
+    const pts = cells.map(c=>({x:c.x+0.5,y:c.y+0.5}));
+    const head = pts[pts.length-1];
+    const {dx,dy} = DIRS[arrow.dir];
+    const headTip = { x: head.x + dx*0.42, y: head.y + dy*0.42 };
+    const allPts = pts.slice(0,-1).concat([head, headTip]);
+    let d = `M ${allPts[0].x} ${allPts[0].y}`;
+    for (let i=1;i<allPts.length;i++) d += ` L ${allPts[i].x} ${allPts[i].y}`;
+    const ah = 0.30;
+    const px = -dy, py = dx;
+    const baseX = headTip.x - dx*ah, baseY = headTip.y - dy*ah;
+    const tri = `M ${headTip.x + dx*0.06} ${headTip.y + dy*0.06}
+                 L ${baseX + px*ah*0.95} ${baseY + py*ah*0.95}
+                 L ${baseX - px*ah*0.95} ${baseY - py*ah*0.95} Z`;
+    return { line: d, head: tri };
+  }
+
+  function renderArrow(arrow, animPop){
+    let svg = boardEl.querySelector(`svg.arrow-svg[data-id="${arrow.id}"]`);
+    const color = arrowColor(arrow);
+    const mult = arrowMult(arrow);
+    const { line, head } = buildArrowSvgPath(arrow);
+    if (!svg){
+      svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
+      svg.classList.add('arrow-svg');
+      svg.setAttribute('data-id', arrow.id);
+      svg.setAttribute('viewBox', `0 0 ${GRID} ${GRID}`);
+      svg.setAttribute('preserveAspectRatio','none');
+      boardEl.appendChild(svg);
+    }
+    // Tier badge — small circle with multiplier near the TAIL (mult > 1 only).
+    let badge = '';
+    if (mult > 1){
+      const tail = (arrow.bodyCells || arrowCells(arrow.headX, arrow.headY, arrow))[0];
+      const bx = tail.x + 0.5, by = tail.y + 0.5;
+      badge = `
+        <circle cx="${bx}" cy="${by}" r="0.22" fill="#fff" stroke="${color}" stroke-width="0.05"/>
+        <text x="${bx}" y="${by + 0.085}" text-anchor="middle" font-size="0.30" font-weight="900" font-family="Paytone One, Fredoka, sans-serif" fill="${color}">${mult}</text>`;
+    }
+    svg.innerHTML = `
+      <path d="${line}" fill="none" stroke="${color}" stroke-width="0.30" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="${head}" fill="${color}" stroke="${color}" stroke-width="0.06" stroke-linejoin="round"/>
+      ${badge}`;
+    if (animPop){ svg.classList.remove('spawn-pop'); void svg.offsetWidth; svg.classList.add('spawn-pop'); }
+
+    const cells = arrow.bodyCells || arrowCells(arrow.headX, arrow.headY, arrow);
+    const cs = getCellSize();
+    // Per-cell hit areas. Bounding-box hit boxes overlap for L-shapes; cell-precise ones don't.
+    boardEl.querySelectorAll(`.arrow-hit[data-id="${arrow.id}"]`).forEach(h => h.remove());
+    for (const cell of cells){
+      const hit = document.createElement('div');
+      hit.className = 'arrow-hit';
+      hit.dataset.id = arrow.id;
+      hit.style.left = (cell.x * cs) + 'px';
+      hit.style.top  = (cell.y * cs) + 'px';
+      hit.style.width  = cs + 'px';
+      hit.style.height = cs + 'px';
+      hit.addEventListener('click', (e) => { e.stopPropagation(); onArrowTap(arrow.id); });
+      boardEl.appendChild(hit);
+    }
+  }
+
+  function removeArrowDom(id){
+    const svg = boardEl.querySelector(`svg.arrow-svg[data-id="${id}"]`);
+    if (svg) svg.remove();
+    boardEl.querySelectorAll(`.arrow-hit[data-id="${id}"]`).forEach(h => h.remove());
+  }
+
+  // --- SPAWN ---
+  function cellCenterDist(x,y){ return Math.max(Math.abs(x-CENTER), Math.abs(y-CENTER)); }
+  function avgCenterDist(cells){ return cells.reduce((s,c)=>s+cellCenterDist(c.x,c.y),0)/cells.length; }
+  function touchesExisting(grid, cells){
+    for (const c of cells){
+      for (const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){
+        const nx=c.x+dx, ny=c.y+dy;
+        if (nx<0||nx>=GRID||ny<0||ny>=GRID) continue;
+        if (grid[ny][nx]) return true;
+      }
+    }
+    return false;
+  }
+  function isCenterArea(x,y){
+    const lo = Math.floor(CENTER), hi = Math.ceil(CENTER);
+    return (x===lo||x===hi) && (y===lo||y===hi);
+  }
+
+  function firingLineBlockers(grid, arr){
+    const {dx,dy} = DIRS[arr.dir];
+    const blockers = new Set();
+    let cx = arr.headX+dx, cy = arr.headY+dy;
+    while (cx>=0&&cx<GRID&&cy>=0&&cy<GRID){
+      const occ = grid[cy][cx];
+      if (occ && occ !== arr.id) blockers.add(occ);
+      cx += dx; cy += dy;
+    }
+    return Array.from(blockers);
+  }
+
+  function wouldCreateBlockingCycle(hx, hy, arrTpl){
+    const grid = state.grid;
+    const arrows = state.arrows;
+    const tempId = '___probe___';
+    const tempArr = { id:tempId, tplIdx:arrTpl.tplIdx, dir:arrTpl.dir, len:arrTpl.len, headX:hx, headY:hy };
+    const cells = arrowCells(hx, hy, arrTpl);
+    cells.forEach(c => grid[c.y][c.x] = tempId);
+    const all = Object.assign({}, arrows, { [tempId]: tempArr });
+    const adj = {};
+    for (const id in all) adj[id] = firingLineBlockers(grid, all[id]);
+    cells.forEach(c => grid[c.y][c.x] = null);
+    const W=0,G=1,B=2; const color = {};
+    for (const id in all) color[id] = W;
+    let cyclic = false;
+    function dfs(id){
+      color[id] = G;
+      for (const b of adj[id]){
+        if (!all[b]) continue;
+        if (color[b] === G){ cyclic = true; return; }
+        if (color[b] === W){ dfs(b); if (cyclic) return; }
+      }
+      color[id] = B;
+    }
+    for (const id in all){ if (color[id]===W) dfs(id); if (cyclic) return true; }
+    return false;
+  }
+
+  // After hypothetically placing the probe, would there still be at least one arrow
+  // anywhere on the board that can release (offBoard=true)? Prevents a spawn from
+  // killing every fireable option.
+  function probeKeepsBoardPlayable(grid, arrows, candCells, probeId, probeTplIdx, probeDir, probeX, probeY){
+    let anyFireable = false;
+    for (const id in arrows){
+      const A = arrows[id];
+      const { offBoard } = slideDistance(grid, A);
+      if (offBoard){ anyFireable = true; break; }
+    }
+    if (!anyFireable){
+      const probeArr = { id: probeId, tplIdx: probeTplIdx, dir: probeDir, len: TEMPLATES[probeTplIdx].len, headX: probeX, headY: probeY };
+      const { offBoard } = slideDistance(grid, probeArr);
+      if (offBoard) anyFireable = true;
+    }
+    return anyFireable;
+  }
+
+  function trySpawn(lengthBias){
+    const grid = state.grid;
+    const arrows = state.arrows;
+    const hasArrows = Object.keys(arrows).length > 0;
+    const tierIdx = hasArrows ? pickTierIdx() : 0;
+    // Higher tier → strictly more blockers in firing line required.
+    // common 0, rare 1, epic 2, legendary 3.
+    const targetBlockers = tierIdx;
+    const lb = (typeof lengthBias === 'number') ? lengthBias : 0;
+
+    const cands = [];
+    for (let tplIdx=0; tplIdx<TEMPLATES.length; tplIdx++){
+      for (const dir of DIR_KEYS){
+        const arrTpl = { tplIdx, dir, len: TEMPLATES[tplIdx].len };
+        for (let y=0;y<GRID;y++) for (let x=0;x<GRID;x++){
+          if (!canPlace(grid, x, y, arrTpl)) continue;
+          const cells = arrowCells(x, y, arrTpl);
+          if (!hasArrows){
+            if (!cells.some(c => isCenterArea(c.x, c.y))) continue;
+          } else {
+            if (!touchesExisting(grid, cells)) continue;
+          }
+          if (wouldCreateBlockingCycle(x, y, arrTpl)) continue;
+
+          const probeId = '___probe___';
+          cells.forEach(c => grid[c.y][c.x] = probeId);
+          const probeArr = { id: probeId, tplIdx, dir, len: TEMPLATES[tplIdx].len, headX: x, headY: y };
+          const blockersInFront = firingLineBlockers(grid, probeArr).length;
+          const blocksExisting = countCandidateInteractions(grid, arrows, cells, probeId);
+          const playable = probeKeepsBoardPlayable(grid, arrows, cells, probeId, tplIdx, dir, x, y);
+          cells.forEach(c => grid[c.y][c.x] = null);
+
+          cands.push({ tplIdx, dir, x, y, blockersInFront, blocksExisting, playable });
+        }
+      }
+    }
+    if (!cands.length) return false;
+
+    // Filter: never spawn a configuration where NO arrow can fire (would deadlock the player).
+    const playableCands = cands.filter(c => c.playable);
+    let usable = playableCands.length ? playableCands : cands;
+
+    // HARD constraint by tier: each tier requires AT LEAST `tierIdx` blockers in front.
+    // common 0 (clear ok), rare ≥1, epic ≥2, legendary ≥3.
+    // If no candidate matches the required count, gradually downgrade the tier (and the bar) until we find one.
+    let finalTierIdx = tierIdx;
+    while (finalTierIdx > 0){
+      const blocked = usable.filter(c => c.blockersInFront >= finalTierIdx);
+      if (blocked.length){
+        usable = blocked;
+        break;
+      }
+      finalTierIdx--;
+    }
+
+    const effectiveTarget = finalTierIdx;
+    usable.forEach(c => {
+      const tierMatch = -Math.abs(c.blockersInFront - effectiveTarget) * 2;
+      const interferes = Math.min(c.blocksExisting, 2);
+      // Length preference for this refill: positive lb favors long, negative favors short.
+      const len = TEMPLATES[c.tplIdx].len;
+      const lenScore = lb * (len - 3);
+      c.score = tierMatch + interferes + lenScore;
+    });
+    usable.sort((a,b) => b.score - a.score);
+    const top = usable.slice(0, Math.max(1, Math.ceil(usable.length * 0.30)));
+    const pick = top[Math.floor(Math.random()*top.length)];
+
+    placeArrow(pick.x, pick.y, { tplIdx: pick.tplIdx, dir: pick.dir, len: TEMPLATES[pick.tplIdx].len }, true, finalTierIdx);
+    return true;
+  }
+
+  function placeArrow(hx, hy, arrTpl, animPop, tierIdx){
+    const id = Math.random().toString(36).slice(2,8);
+    const bodyCells = arrowCells(hx, hy, arrTpl);
+    const arr = {
+      id,
+      tierIdx: (tierIdx != null) ? tierIdx : pickTierIdx(),
+      tplIdx: arrTpl.tplIdx,
+      dir: arrTpl.dir,
+      len: arrTpl.len,
+      headX: hx, headY: hy,
+      bodyCells,
+    };
+    state.arrows[id] = arr;
+    bodyCells.forEach(c => state.grid[c.y][c.x] = id);
+    renderArrow(arr, animPop);
+    return arr;
+  }
+
+  // How many existing arrows would have any cell of `candidateCells` in their firing line?
+  function countCandidateInteractions(grid, arrows, candidateCells, excludeId){
+    const cellSet = new Set(candidateCells.map(c => c.x + ',' + c.y));
+    let count = 0;
+    for (const id in arrows){
+      if (id === excludeId) continue;
+      const A = arrows[id];
+      const {dx, dy} = DIRS[A.dir];
+      let cx = A.headX + dx, cy = A.headY + dy;
+      while (cx >= 0 && cx < GRID && cy >= 0 && cy < GRID){
+        if (cellSet.has(cx + ',' + cy)){ count++; break; }
+        cx += dx; cy += dy;
+      }
+    }
+    return count;
+  }
+
+  // --- RELEASE (with partial slide) ---
+  function onArrowTap(id){
+    if (!state.running || state.inputLocked) return;
+    if (state.turn !== 'you') return;
+    tryRelease(id, 'you');
+  }
+
+  function tryRelease(id, byPlayer){
+    const arr = state.arrows[id];
+    if (!arr) return false;
+    const { steps, offBoard } = slideDistance(state.grid, arr);
+    // Movement: head moves `steps` cells; if offBoard, +1 extra so it actually leaves.
+    const moveDist = offBoard ? steps + 1 : steps;
+    if (moveDist === 0){
+      const svg = boardEl.querySelector(`svg.arrow-svg[data-id="${id}"]`);
+      if (svg){ svg.classList.add('invalid'); setTimeout(()=>svg.classList.remove('invalid'), 400); }
+      return false; // no move consumed
+    }
+    const {dx, dy} = DIRS[arr.dir];
+    const oldBodyCells = arr.bodyCells.slice();
+    arr.bodyCells.forEach(c => state.grid[c.y][c.x] = null);
+    const oldHead = { x: arr.headX, y: arr.headY };
+
+    // Scoring: ONLY arrows that fully leave the board score points. Flat per tier — no length/distance multiplier.
+    let pts = 0;
+    if (offBoard){
+      pts = arrowMult(arr);
+      const isCommon = (arr.tierIdx || 0) === 0;
+      if (byPlayer === 'you'){
+        state.scoreYou += pts;
+        state.greenStreakYou = isCommon ? state.greenStreakYou + 1 : 0;
+        if (state.greenStreakYou >= 3){
+          state.greenStreakYou = 0;
+          if (state.turn === 'you'){
+            state.movesLeft++;
+            showBonusBanner('you');
+          }
+        }
+      } else {
+        state.scoreOpp += pts;
+        state.greenStreakOpp = isCommon ? state.greenStreakOpp + 1 : 0;
+        if (state.greenStreakOpp >= 3){
+          state.greenStreakOpp = 0;
+          if (state.turn === 'opp'){
+            state.movesLeft++;
+            showBonusBanner('opp');
+          }
+        }
+      }
+      updateScores();
+    }
+
+    if (offBoard){
+      delete state.arrows[id];
+      animateFlyOff(arr, oldHead, moveDist, pts, oldBodyCells);
+    } else {
+      // Path-based slide: each cell moves along the arrow's own track. L-shapes straighten
+      // as they slide forward (after enough steps the body unfolds into a straight line).
+      const path = buildExitPath(arr, oldHead, steps, oldBodyCells);
+      const newBodyCells = [];
+      for (let i = 0; i < arr.len; i++){
+        const p = path[steps + i];
+        newBodyCells.push({ x: Math.floor(p.x), y: Math.floor(p.y) });
+      }
+      arr.bodyCells = newBodyCells;
+      arr.headX = newBodyCells[arr.len - 1].x;
+      arr.headY = newBodyCells[arr.len - 1].y;
+      newBodyCells.forEach(c => state.grid[c.y][c.x] = id);
+      animateSlide(arr, oldHead, steps, oldBodyCells);
+    }
+    consumeMove();
+    return true;
+  }
+
+  function consumeMove(){
+    state.movesLeft--;
+    updateMovesDots();
+    if (state.movesLeft <= 0){
+      // End of turn
+      state.inputLocked = true;
+      setTimeout(() => switchTurn(), 650);
+    }
+  }
+
+  function switchTurn(){
+    state.turn = state.turn === 'you' ? 'opp' : 'you';
+    state.movesLeft = MOVES_PER_TURN;
+    state.inputLocked = false;
+    state.turnEndAt = performance.now() + TURN_DURATION_MS;
+    updateTurnLabel();
+    updateMovesDots();
+    updateTurnTimer(performance.now());
+    showTurnBanner(state.turn);
+    refillBoard();
+    if (state.turn === 'opp') scheduleBotMove();
+  }
+
+  function countOccupiedCells(){
+    let n = 0;
+    for (let y = 0; y < GRID; y++)
+      for (let x = 0; x < GRID; x++)
+        if (state.grid[y][x]) n++;
+    return n;
+  }
+
+  // Smart refill — only top up if the board has too much empty space; otherwise leave room
+  // so the player can actually clear paths to high-tier arrows in the middle.
+  // Each refill also picks a random length-bias so some turns add 1 big arrow, others several small ones.
+  function refillBoard(isSeed){
+    const lengthBias = (Math.random() * 4) - 2;
+    const total = GRID * GRID;
+    // Seed: pretty full so the board is interesting from frame 1.
+    // Mid-game refill: only top up to ~55% — leaves breathing room.
+    const targetRatio = isSeed
+      ? (0.78 + Math.random()*0.08)         // 78-86% at seed (dense start)
+      : (0.60 + Math.random()*0.10);        // 60-70% during play
+    const targetCells = Math.floor(total * targetRatio);
+    let safety = 300;
+    while (safety-- > 0){
+      if (countOccupiedCells() >= targetCells) break;
+      if (!trySpawn(lengthBias)) break;
+    }
+  }
+
+  function showTurnBanner(turn){
+    const banner = document.createElement('div');
+    banner.className = 'turn-banner ' + turn;
+    banner.textContent = turn === 'you' ? 'YOUR TURN' : 'BOT TURN';
+    boardEl.appendChild(banner);
+    setTimeout(() => banner.remove(), 1000);
+  }
+
+  function updateTurnLabel(){
+    const el = $('turn-label');
+    el.textContent = state.turn === 'you' ? 'YOUR TURN' : 'BOT TURN';
+    $('turn-row').classList.toggle('you-turn', state.turn === 'you');
+    $('turn-row').classList.toggle('opp-turn', state.turn === 'opp');
+  }
+  function updateMovesDots(){
+    const wrap = $('moves-dots');
+    wrap.innerHTML = '';
+    // Show MOVES_PER_TURN base dots + any extra bonus dots earned this turn.
+    const total = Math.max(MOVES_PER_TURN, state.movesLeft);
+    for (let i = 0; i < total; i++){
+      const d = document.createElement('div');
+      let cls = 'move-dot' + (i >= state.movesLeft ? ' used' : '');
+      if (i >= MOVES_PER_TURN) cls += ' bonus';
+      d.className = cls;
+      wrap.appendChild(d);
+    }
+  }
+
+  function showBonusBanner(player){
+    const banner = document.createElement('div');
+    banner.className = 'bonus-banner';
+    banner.innerHTML = '+1 MOVE<span class="small">3 GREEN STREAK</span>';
+    boardEl.appendChild(banner);
+    setTimeout(() => banner.remove(), 1600);
+    updateMovesDots();
+  }
+
+  // --- ANIMATIONS ---
+  function buildExitPath(arr, oldHead, moveDist, oldBodyCells){
+    const bodyCells = oldBodyCells || arr.bodyCells || arrowCells(oldHead.x, oldHead.y, arr);
+    const path = bodyCells.map(c => ({ x: c.x + 0.5, y: c.y + 0.5 }));
+    const {dx,dy} = DIRS[arr.dir];
+    const exitCount = moveDist + arr.len + 1;
+    for (let i = 1; i <= exitCount; i++){
+      path.push({ x: oldHead.x + dx*i + 0.5, y: oldHead.y + dy*i + 0.5 });
+    }
+    return path;
+  }
+
+  function animateAlongPath(arr, oldHead, moveDist, pts, oldBodyCells){
+    const color = arrowColor(arr);
+    const mult = arrowMult(arr);
+    const {dx,dy} = DIRS[arr.dir];
+    const path = buildExitPath(arr, oldHead, moveDist, oldBodyCells);
+    const L = arr.len;
+    // tail must fully exit: travel through body (L-1) then off the board (moveDist).
+    const totalT = (L - 1) + moveDist;
+    const duration = Math.max(180, 55 * totalT);
+    const t0 = performance.now();
+    // Remove static rendering of the arrow at old position; will be re-rendered at new pos after anim.
+    removeArrowDom(arr.id);
+
+    const animSvg = document.createElementNS('http://www.w3.org/2000/svg','svg');
+    animSvg.classList.add('arrow-svg');
+    animSvg.setAttribute('viewBox', `0 0 ${GRID} ${GRID}`);
+    animSvg.setAttribute('preserveAspectRatio','none');
+    animSvg.style.overflow = 'visible';
+    boardEl.appendChild(animSvg);
+
+    function pointAt(d){
+      d = Math.max(0, d);
+      const maxIdx = path.length - 1;
+      if (d >= maxIdx){
+        const last = path[maxIdx];
+        const over = d - maxIdx;
+        return { x: last.x + dx*over, y: last.y + dy*over };
+      }
+      const i = Math.floor(d), f = d - i;
+      return { x: path[i].x + (path[i+1].x - path[i].x) * f, y: path[i].y + (path[i+1].y - path[i].y) * f };
+    }
+
+    function frame(now){
+      const progress = Math.min(1, (now - t0) / duration);
+      const t = progress * totalT;
+      const tailP = pointAt(t);
+      const headP = pointAt(t + (L - 1));
+      const polyline = [tailP];
+      const sI = Math.ceil(t), eI = Math.floor(t + (L-1));
+      for (let i = sI; i <= eI; i++){
+        if (i >= 0 && i < path.length){
+          const pt = path[i];
+          const lp = polyline[polyline.length-1];
+          if (Math.abs(pt.x-lp.x) + Math.abs(pt.y-lp.y) > 0.0001) polyline.push(pt);
+        }
+      }
+      const lp = polyline[polyline.length-1];
+      if (Math.abs(headP.x-lp.x) + Math.abs(headP.y-lp.y) > 0.0001) polyline.push(headP);
+
+      const headTip = { x: headP.x + dx*0.42, y: headP.y + dy*0.42 };
+      let d = `M ${polyline[0].x} ${polyline[0].y}`;
+      for (let i=1;i<polyline.length;i++) d += ` L ${polyline[i].x} ${polyline[i].y}`;
+      d += ` L ${headTip.x} ${headTip.y}`;
+      const ah=0.30, px=-dy, py=dx;
+      const baseX = headTip.x - dx*ah, baseY = headTip.y - dy*ah;
+      const tri = `M ${headTip.x + dx*0.06} ${headTip.y + dy*0.06}
+                   L ${baseX + px*ah*0.95} ${baseY + py*ah*0.95}
+                   L ${baseX - px*ah*0.95} ${baseY - py*ah*0.95} Z`;
+
+      animSvg.innerHTML = `
+        <path d="${d}" fill="none" stroke="${color}" stroke-width="0.30" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="${tri}" fill="${color}" stroke="${color}" stroke-width="0.06" stroke-linejoin="round"/>`;
+
+      if (progress < 1) requestAnimationFrame(frame);
+      else animSvg.remove();
+    }
+    requestAnimationFrame(frame);
+
+    // Float score at old head
+    const cs = getCellSize();
+    const f = document.createElement('div');
+    f.className = 'float-score';
+    f.style.color = color;
+    f.style.left = ((oldHead.x + 0.5) * cs) + 'px';
+    f.style.top  = (oldHead.y * cs) + 'px';
+    f.textContent = '+' + pts;
+    boardEl.appendChild(f);
+    setTimeout(() => f.remove(), 1000);
+  }
+
+  // Partial slide — body follows its own path. Head leads, tail trails with stagger.
+  // L-shapes naturally unfold/straighten as they slide forward.
+  function animateSlide(arr, oldHead, steps, oldBodyCells){
+    const color = arrowColor(arr);
+    const mult = arrowMult(arr);
+    const {dx, dy} = DIRS[arr.dir];
+    const oldCells = oldBodyCells;
+    const newCells = arr.bodyCells;
+    const L = arr.len;
+    removeArrowDom(arr.id);
+
+    const cellDuration = Math.max(120, 70 * steps);
+    const stagger = 55;
+    const totalDuration = cellDuration + (L - 1) * stagger;
+
+    const animSvg = document.createElementNS('http://www.w3.org/2000/svg','svg');
+    animSvg.classList.add('arrow-svg');
+    animSvg.setAttribute('viewBox', `0 0 ${GRID} ${GRID}`);
+    animSvg.setAttribute('preserveAspectRatio','none');
+    animSvg.style.overflow = 'visible';
+    boardEl.appendChild(animSvg);
+
+    const t0 = performance.now();
+    function frame(now){
+      const elapsed = now - t0;
+      const prog = Math.min(1, elapsed / totalDuration);
+      const pts = [];
+      for (let i = 0; i < L; i++){
+        const delay = (L - 1 - i) * stagger;
+        const localElapsed = elapsed - delay;
+        let localT = 0;
+        if (localElapsed > 0) localT = Math.min(1, localElapsed / cellDuration);
+        const eased = 1 - Math.pow(1 - localT, 2);
+        const ox = oldCells[i].x + 0.5, oy = oldCells[i].y + 0.5;
+        const nx = newCells[i].x + 0.5, ny = newCells[i].y + 0.5;
+        pts.push({ x: ox + (nx - ox) * eased, y: oy + (ny - oy) * eased });
+      }
+      const head = pts[L-1];
+      const headTip = { x: head.x + dx*0.42, y: head.y + dy*0.42 };
+      let d = `M ${pts[0].x} ${pts[0].y}`;
+      for (let i = 1; i < L; i++) d += ` L ${pts[i].x} ${pts[i].y}`;
+      d += ` L ${headTip.x} ${headTip.y}`;
+      const ah=0.30, px=-dy, py=dx;
+      const baseX = headTip.x - dx*ah, baseY = headTip.y - dy*ah;
+      const tri = `M ${headTip.x + dx*0.06} ${headTip.y + dy*0.06}
+                   L ${baseX + px*ah*0.95} ${baseY + py*ah*0.95}
+                   L ${baseX - px*ah*0.95} ${baseY - py*ah*0.95} Z`;
+      let badge = '';
+      if (mult > 1){
+        const tail = pts[0];
+        badge = `
+          <circle cx="${tail.x}" cy="${tail.y}" r="0.22" fill="#fff" stroke="${color}" stroke-width="0.05"/>
+          <text x="${tail.x}" y="${tail.y + 0.085}" text-anchor="middle" font-size="0.30" font-weight="900" font-family="Paytone One, Fredoka, sans-serif" fill="${color}">${mult}</text>`;
+      }
+      animSvg.innerHTML = `
+        <path d="${d}" fill="none" stroke="${color}" stroke-width="0.30" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="${tri}" fill="${color}" stroke="${color}" stroke-width="0.06" stroke-linejoin="round"/>
+        ${badge}`;
+      if (prog < 1) requestAnimationFrame(frame);
+      else {
+        animSvg.remove();
+        renderArrow(arr, false);
+      }
+    }
+    requestAnimationFrame(frame);
+  }
+
+  // Full off-board exit — snake along path (body traces through bends as it exits).
+  function animateFlyOff(arr, oldHead, moveDist, pts, oldBodyCells){
+    animateAlongPath(arr, oldHead, moveDist, pts, oldBodyCells);
+  }
+
+  // --- TUG / TIMER ---
+  function updateScores(){
+    $('score-opp').textContent = state.scoreOpp;
+    $('score-you').textContent = state.scoreYou;
+  }
+  function updateTurnTimer(now){
+    const remain = Math.max(0, state.turnEndAt - now);
+    const pct = (remain / TURN_DURATION_MS) * 100;
+    const fill = $('turn-timer-fill');
+    fill.style.width = pct + '%';
+    fill.classList.toggle('warn', remain <= 6000 && remain > 3000);
+    fill.classList.toggle('crit', remain <= 3000);
+  }
+  function updateTimer(now){
+    const remainMs = Math.max(0, state.matchEndAt - now);
+    const total = Math.ceil(remainMs / 1000);
+    const m = Math.floor(total/60), s = total%60;
+    const el = $('hud-timer');
+    el.textContent = m + ':' + (s<10?'0':'') + s;
+    el.classList.toggle('warn', total<=15 && total>5);
+    el.classList.toggle('crit', total<=5);
+  }
+
+  // --- BOT ---
+  function scheduleBotMove(){
+    state.botActAt = performance.now() + BOT_MOVE_DELAY_MIN + Math.random()*(BOT_MOVE_DELAY_MAX-BOT_MOVE_DELAY_MIN);
+  }
+  function botPickAndMove(){
+    if (!state.running || state.turn !== 'opp') return;
+    let bestScoring = null, bestSlide = null;
+    for (const id in state.arrows){
+      const arr = state.arrows[id];
+      const { steps, offBoard } = slideDistance(state.grid, arr);
+      const moveDist = offBoard ? steps + 1 : steps;
+      if (moveDist === 0) continue;
+      if (offBoard){
+        const pts = arrowMult(arr); // flat tier points
+        if (!bestScoring || pts > bestScoring.pts) bestScoring = { id, pts };
+      } else {
+        if (!bestSlide || steps > bestSlide.steps) bestSlide = { id, steps };
+      }
+    }
+    const pick = bestScoring || bestSlide;
+    if (pick) tryRelease(pick.id, 'opp');
+    else consumeMove();
+    if (state.turn === 'opp' && state.movesLeft > 0) scheduleBotMove();
+  }
+
+  // --- LOOP ---
+  function tick(now){
+    if (!state.running) return;
+    updateTimer(now);
+    updateTurnTimer(now);
+    if (!state.inputLocked && now >= state.turnEndAt){
+      // Time ran out for this turn — skip remaining moves and switch.
+      state.inputLocked = true;
+      setTimeout(() => switchTurn(), 350);
+    }
+    if (state.turn === 'opp' && !state.inputLocked && now >= state.botActAt) botPickAndMove();
+    if (now >= state.matchEndAt){ endByTimeout(); return; }
+    requestAnimationFrame(tick);
+  }
+
+  function endByTimeout(){
+    state.running = false;
+    const winner = state.scoreYou >= state.scoreOpp ? 'you' : 'opp';
+    const isYou = winner === 'you';
+    $('result-title').textContent = isYou ? 'VICTORY' : 'DEFEAT';
+    const sub = $('result-sub');
+    sub.textContent = `Time's up! ${state.scoreYou} – ${state.scoreOpp}`;
+    sub.className = isYou ? 'win' : 'lose';
+    $('overlay-result').classList.remove('hidden');
+  }
+
+  function startMatch(){
+    state.grid = emptyGrid();
+    state.arrows = {};
+    state.scoreYou = 0; state.scoreOpp = 0;
+    state.greenStreakYou = 0; state.greenStreakOpp = 0;
+    state.turn = 'you';
+    state.movesLeft = MOVES_PER_TURN;
+    state.inputLocked = false;
+    buildBoardDom();
+    updateScores();
+    updateTurnLabel();
+    updateMovesDots();
+    state.running = true;
+    const now = performance.now();
+    state.matchEndAt = now + MATCH_DURATION_MS;
+    state.turnEndAt = now + TURN_DURATION_MS;
+    updateTimer(now);
+    updateTurnTimer(now);
+    // Seed: fill the board (variety baked in via lengthBias inside refillBoard).
+    refillBoard(true);
+    requestAnimationFrame(tick);
+  }
+
+  $('btn-start').addEventListener('click', () => { $('overlay-intro').classList.add('hidden'); startMatch(); });
+  $('btn-rematch').addEventListener('click', () => { $('overlay-result').classList.add('hidden'); startMatch(); });
+
+  window.addEventListener('resize', () => {
+    if (!state.running) return;
+    Object.values(state.arrows).forEach(a => renderArrow(a, false));
+  });
+
+})();
+</script>
+</body>
+</html>

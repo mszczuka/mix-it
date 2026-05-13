@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Arrows GO! v2 — Spawn & Length</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Paytone+One&family=Fredoka:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden;font-family:"Fredoka","Nunito",system-ui,sans-serif;font-weight:700;background:#0a0e1a;color:#fff;user-select:none;-webkit-user-select:none;touch-action:manipulation;display:flex;justify-content:center}
+#game{position:relative;width:420px;max-width:100vw;height:100vh;height:100dvh;margin:0 auto;overflow:hidden;display:flex;flex-direction:column;background:linear-gradient(180deg,#1a1f3a 0%,#0e1226 50%,#1a1f3a 100%)}
+
+/* HUD */
+#hud{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:8px 14px;background:rgba(0,0,0,0.3);border-bottom:1px solid rgba(255,255,255,0.06)}
+.hud-side{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px}
+.hud-side.left{color:#ff5566}
+.hud-side.right{color:#3aa8ff}
+.hud-side .av{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;border:2px solid currentColor;background:rgba(0,0,0,0.4)}
+.hud-title{font-family:"Paytone One",sans-serif;font-size:13px;letter-spacing:2px;color:#ffd34a;text-shadow:0 2px 0 #000}
+
+/* MATCH AREA */
+#match{flex:1;display:flex;flex-direction:column;align-items:center;padding:6px 8px;gap:6px;overflow:hidden}
+
+.player-label{font-size:9px;text-transform:uppercase;letter-spacing:2px;font-weight:900;opacity:0.7}
+.opp-label{color:#ff8090}
+.you-label{color:#7ec6ff}
+
+/* BOARD */
+.board{width:280px;max-width:96%;aspect-ratio:1;display:grid;gap:2px;background:rgba(0,0,0,0.45);padding:5px;border-radius:10px;border:1px solid rgba(255,255,255,0.07);position:relative}
+.board.opp .cell{pointer-events:none}
+.cell{position:relative;background:rgba(255,255,255,0.025);border-radius:4px;transition:background 0.15s;cursor:pointer}
+.cell.empty.targetable{background:rgba(126,198,255,0.12);box-shadow:inset 0 0 0 1px rgba(126,198,255,0.4)}
+.cell.invalid-target{background:rgba(255,90,100,0.25);animation:shake 0.4s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-3px)}75%{transform:translateX(3px)}}
+
+/* Arrow body — variable length, absolutely positioned inside board */
+.arrow{position:absolute;display:flex;align-items:center;justify-content:flex-end;padding:0 4px;border-radius:5px;cursor:pointer;background:linear-gradient(180deg,#3a4d7a,#1f2a4e);box-shadow:0 2px 0 #0a0e1f,inset 0 1px 0 rgba(255,255,255,0.18);color:#fff;transition:transform 0.12s,box-shadow 0.12s,opacity 0.5s;font-size:18px;font-weight:900;z-index:5;overflow:hidden}
+.arrow:active{transform:scale(0.96)}
+.arrow.up{background:linear-gradient(180deg,#5277d4,#2545a0);flex-direction:column;justify-content:flex-start;padding:4px 0 0}
+.arrow.down{background:linear-gradient(180deg,#d4527a,#a02555);flex-direction:column;justify-content:flex-end;padding:0 0 4px}
+.arrow.left{background:linear-gradient(180deg,#ffba4a,#cc8a1a);justify-content:flex-start;padding:0 0 0 4px}
+.arrow.right{background:linear-gradient(180deg,#52d47a,#258545);justify-content:flex-end;padding:0 4px 0 0}
+.arrow .glyph{font-size:20px;line-height:1;text-shadow:0 1px 2px rgba(0,0,0,0.4)}
+.arrow .len-badge{position:absolute;top:2px;left:3px;font-size:9px;background:rgba(0,0,0,0.5);border-radius:6px;padding:1px 4px;line-height:1;font-weight:900;color:#fff}
+.arrow.flying{pointer-events:none;z-index:50}
+.arrow.invalid{animation:shake 0.4s}
+.arrow.tail-segments::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(var(--stripe-angle,90deg),transparent 0,transparent calc(var(--seg-px) - 1px),rgba(0,0,0,0.25) calc(var(--seg-px) - 1px),rgba(0,0,0,0.25) var(--seg-px));pointer-events:none}
+
+/* TUG BAR */
+.tug-wrap{width:96%;max-width:340px;display:flex;flex-direction:column;gap:3px;align-items:center}
+.tug-bar{width:100%;height:20px;border-radius:10px;background:#0a0e1f;border:2px solid rgba(255,255,255,0.1);position:relative;overflow:hidden;box-shadow:inset 0 2px 4px rgba(0,0,0,0.5)}
+.tug-fill-red{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(180deg,#ff5566,#c0222e);transition:width 0.5s cubic-bezier(.2,.8,.3,1);width:50%;border-right:2px solid #ffe;box-shadow:0 0 10px rgba(255,90,100,0.5)}
+.tug-fill-blue{position:absolute;right:0;top:0;bottom:0;background:linear-gradient(180deg,#3aa8ff,#1660c4);transition:width 0.5s cubic-bezier(.2,.8,.3,1);width:50%;box-shadow:0 0 10px rgba(60,160,255,0.5)}
+.tug-marker{position:absolute;top:-4px;bottom:-4px;width:3px;background:#fff;left:50%;transform:translateX(-50%);box-shadow:0 0 6px rgba(255,255,255,0.8)}
+.tug-scores{display:flex;justify-content:space-between;align-items:center;width:100%;font-size:11px;font-weight:900;gap:8px}
+.tug-scores .l{color:#ff8090;min-width:40px;text-align:left}
+.tug-scores .r{color:#7ec6ff;min-width:40px;text-align:right}
+.tug-mid{font-size:9px;text-transform:uppercase;letter-spacing:1px;font-weight:800;color:rgba(255,255,255,0.5);text-align:center;flex:1}
+
+/* SPAWN TRAY */
+.tray{width:280px;max-width:96%;display:flex;gap:6px;justify-content:center;align-items:stretch;padding:6px;background:rgba(0,0,0,0.35);border-radius:10px;border:1px solid rgba(255,255,255,0.07);min-height:60px}
+.tray-slot{flex:1;height:50px;border-radius:8px;background:rgba(255,255,255,0.04);border:1px dashed rgba(255,255,255,0.1);position:relative;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform 0.12s,box-shadow 0.12s}
+.tray-slot.has-arrow{border-style:solid;border-color:rgba(255,255,255,0.2);background:rgba(255,255,255,0.06)}
+.tray-slot.selected{transform:translateY(-3px);box-shadow:0 0 0 2px #ffd34a,0 6px 14px rgba(255,211,74,0.4)}
+.tray-slot .tarrow{position:relative;height:32px;border-radius:5px;display:flex;align-items:center;justify-content:flex-end;padding:0 6px;color:#fff;font-weight:900;font-size:16px;box-shadow:0 2px 0 rgba(0,0,0,0.3),inset 0 1px 0 rgba(255,255,255,0.2);min-width:24px}
+.tray-slot .tarrow.up   {background:linear-gradient(180deg,#5277d4,#2545a0);width:18px;height:42px;flex-direction:column;justify-content:flex-start;padding:3px 0 0}
+.tray-slot .tarrow.down {background:linear-gradient(180deg,#d4527a,#a02555);width:18px;height:42px;flex-direction:column;justify-content:flex-end;padding:0 0 3px}
+.tray-slot .tarrow.left {background:linear-gradient(180deg,#ffba4a,#cc8a1a);justify-content:flex-start;padding:0 0 0 6px}
+.tray-slot .tarrow.right{background:linear-gradient(180deg,#52d47a,#258545)}
+.tray-slot .len-badge{position:absolute;top:2px;left:3px;font-size:9px;background:rgba(0,0,0,0.55);border-radius:5px;padding:1px 4px;line-height:1;font-weight:900;color:#fff;z-index:2}
+.tray-title{font-size:9px;text-transform:uppercase;letter-spacing:2px;font-weight:900;color:rgba(255,255,255,0.5);text-align:center}
+
+/* FLOATING SCORE */
+.float-score{position:absolute;font-size:22px;font-weight:900;pointer-events:none;animation:floatup 1s ease-out forwards;text-shadow:0 2px 0 #000,0 0 8px currentColor;z-index:100}
+@keyframes floatup{0%{opacity:1;transform:translate(-50%,0)}100%{opacity:0;transform:translate(-50%,-50px)}}
+
+/* OVERLAY */
+.overlay{position:absolute;inset:0;background:rgba(0,0,0,0.75);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:200;backdrop-filter:blur(4px);padding:20px}
+.overlay.hidden{display:none}
+.overlay h1{font-family:"Paytone One",sans-serif;font-size:34px;letter-spacing:3px;color:#ffd34a;text-shadow:0 4px 0 #000,0 0 20px rgba(255,211,74,0.5);margin-bottom:10px;text-align:center}
+.overlay h2{font-size:16px;font-weight:800;margin-bottom:20px;color:#fff;text-align:center}
+.overlay h2.win{color:#7eff8c}.overlay h2.lose{color:#ff7e8c}
+.btn{padding:12px 28px;background:linear-gradient(180deg,#ffac04,#cc7d00);color:#1a1a1a;border:none;border-radius:14px;font-family:inherit;font-weight:900;font-size:16px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;box-shadow:0 4px 0 #6e4400;transition:transform 0.1s,box-shadow 0.1s}
+.btn:active{transform:translateY(2px);box-shadow:0 2px 0 #6e4400}
+.intro-rules{max-width:340px;text-align:center;font-size:13px;font-weight:600;line-height:1.55;margin-bottom:20px;color:rgba(255,255,255,0.88)}
+.intro-rules b{color:#ffd34a}
+.intro-rules .demo{display:inline-flex;gap:4px;margin:6px 0;align-items:center;justify-content:center;flex-wrap:wrap}
+.intro-rules .demo .a{height:18px;border-radius:3px;display:inline-block;color:#fff;font-size:11px;padding:0 4px;line-height:18px;font-weight:900}
+.intro-rules .demo .a1{background:#52d47a;width:24px}
+.intro-rules .demo .a2{background:#52d47a;width:42px}
+.intro-rules .demo .a3{background:#52d47a;width:60px}
+
+</style>
+</head>
+<body>
+<div id="game">
+
+  <div id="hud">
+    <div class="hud-side left">
+      <div class="av">🤖</div>
+      <span>Bot Lv1</span>
+    </div>
+    <div class="hud-title">ARROWS GO!</div>
+    <div class="hud-side right">
+      <span>YOU</span>
+      <div class="av">😎</div>
+    </div>
+  </div>
+
+  <div id="match">
+    <div class="player-label opp-label">↑ OPPONENT</div>
+    <div class="board opp" id="board-opp"></div>
+
+    <div class="tug-wrap">
+      <div class="tug-scores">
+        <span class="l" id="score-opp">0</span>
+        <span class="tug-mid">TUG OF WAR</span>
+        <span class="r" id="score-you">0</span>
+      </div>
+      <div class="tug-bar">
+        <div class="tug-fill-red" id="tug-red"></div>
+        <div class="tug-fill-blue" id="tug-blue"></div>
+        <div class="tug-marker"></div>
+      </div>
+    </div>
+
+    <div class="board" id="board-you"></div>
+    <div class="player-label you-label">↓ YOUR BOARD — tap arrow to release</div>
+
+    <div class="tray-title">SPAWN TRAY — tap arrow, then tap a cell</div>
+    <div class="tray" id="tray"></div>
+  </div>
+
+  <!-- Intro -->
+  <div class="overlay" id="overlay-intro">
+    <h1>ARROWS GO!</h1>
+    <h2>Level 1 — Spawn &amp; Release</h2>
+    <div class="intro-rules">
+      <b>1.</b> Pick an arrow from the <b>spawn tray</b>, then tap an empty cell on <b>your board</b> to place it.<br><br>
+      <b>2.</b> Tap a placed arrow to <b>release</b> it — flies in its direction. Path must be <b>fully clear</b>.<br><br>
+      <b>3.</b> Arrows come in lengths:
+      <div class="demo">
+        <span class="a a1">1</span><span class="a a2">2</span><span class="a a3">3</span>
+      </div>
+      Longer = harder to fit, but <b>way more points</b> (length × distance).<br><br>
+      First to push the <b>tug bar</b> to their edge wins.
+    </div>
+    <button class="btn" id="btn-start">START</button>
+  </div>
+
+  <!-- Result -->
+  <div class="overlay hidden" id="overlay-result">
+    <h1 id="result-title">VICTORY</h1>
+    <h2 id="result-sub" class="win">You pushed the bar all the way!</h2>
+    <button class="btn" id="btn-rematch">REMATCH</button>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const GRID = 6;
+  const TRAY_SIZE = 3;
+  const TARGET_SCORE = 50;
+  const BOT_THINK_MIN = 1400;
+  const BOT_THINK_MAX = 2400;
+  const BOT_MISTAKE_CHANCE = 0.15;
+  // Length weights: 1 is common, 3 is rare
+  const LENGTH_POOL = [1,1,1,1,2,2,2,3,3];
+
+  const DIRS = {
+    up:    { dx: 0, dy:-1, glyph:'▲' },
+    down:  { dx: 0, dy: 1, glyph:'▼' },
+    left:  { dx:-1, dy: 0, glyph:'◀' },
+    right: { dx: 1, dy: 0, glyph:'▶' },
+  };
+  const DIR_KEYS = Object.keys(DIRS);
+
+  const $ = id => document.getElementById(id);
+  const boardEls = { you: $('board-you'), opp: $('board-opp') };
+  const trayEl = $('tray');
+
+  // Each side: grid stores arrow id per occupied cell; arrows stored by id with full info
+  // Arrow: { id, dir, len, headX, headY }  (head = front-of-arrow cell, tail extends opposite of dir)
+  const state = {
+    you: { grid: null, arrows: {}, score: 0, tray: [] },
+    opp: { grid: null, arrows: {}, score: 0, tray: [] },
+    running: false,
+    selectedTrayIdx: -1,
+    botThinkAt: 0,
+    botSpawnAt: 0,
+  };
+
+  function emptyGrid() {
+    return Array.from({length: GRID}, () => Array(GRID).fill(null));
+  }
+
+  function randomArrow() {
+    const dir = DIR_KEYS[Math.floor(Math.random()*DIR_KEYS.length)];
+    const len = LENGTH_POOL[Math.floor(Math.random()*LENGTH_POOL.length)];
+    return { dir, len };
+  }
+
+  function fillTray(side) {
+    const t = state[side].tray;
+    while (t.length < TRAY_SIZE) t.push(randomArrow());
+    if (side === 'you') renderTray();
+  }
+
+  function renderTray() {
+    trayEl.innerHTML = '';
+    state.you.tray.forEach((a, i) => {
+      const slot = document.createElement('div');
+      slot.className = 'tray-slot has-arrow' + (state.selectedTrayIdx === i ? ' selected' : '');
+      slot.dataset.idx = i;
+      const tA = document.createElement('div');
+      tA.className = 'tarrow ' + a.dir;
+      // width grows with length for horizontal arrows
+      if (a.dir === 'left' || a.dir === 'right') {
+        tA.style.width = (16 + a.len * 14) + 'px';
+      } else {
+        tA.style.height = (24 + a.len * 8) + 'px';
+      }
+      tA.innerHTML = `<span class="len-badge">${a.len}</span><span class="glyph">${DIRS[a.dir].glyph}</span>`;
+      slot.appendChild(tA);
+      slot.addEventListener('click', () => selectTraySlot(i));
+      trayEl.appendChild(slot);
+    });
+    // pad empty
+    for (let i = state.you.tray.length; i < TRAY_SIZE; i++) {
+      const slot = document.createElement('div');
+      slot.className = 'tray-slot';
+      trayEl.appendChild(slot);
+    }
+  }
+
+  function selectTraySlot(i) {
+    if (!state.running) return;
+    state.selectedTrayIdx = (state.selectedTrayIdx === i) ? -1 : i;
+    renderTray();
+    refreshCellTargetableHints();
+  }
+
+  function refreshCellTargetableHints() {
+    const youCells = boardEls.you.querySelectorAll('.cell');
+    youCells.forEach(c => c.classList.remove('targetable'));
+    if (state.selectedTrayIdx < 0) return;
+    const arrow = state.you.tray[state.selectedTrayIdx];
+    if (!arrow) return;
+    for (let y = 0; y < GRID; y++) for (let x = 0; x < GRID; x++) {
+      if (canPlace(state.you.grid, x, y, arrow.dir, arrow.len)) {
+        const cell = state.you.cellEls[y][x];
+        cell.classList.add('targetable');
+      }
+    }
+  }
+
+  function buildBoardDom(side) {
+    const el = boardEls[side];
+    el.style.gridTemplateColumns = `repeat(${GRID},1fr)`;
+    el.style.gridTemplateRows = `repeat(${GRID},1fr)`;
+    el.innerHTML = '';
+    state[side].cellEls = [];
+    for (let y = 0; y < GRID; y++) {
+      const row = [];
+      for (let x = 0; x < GRID; x++) {
+        const cell = document.createElement('div');
+        cell.className = 'cell empty';
+        cell.dataset.x = x; cell.dataset.y = y;
+        if (side === 'you') {
+          cell.addEventListener('click', () => onCellTap(x, y));
+        }
+        el.appendChild(cell);
+        row.push(cell);
+      }
+      state[side].cellEls.push(row);
+    }
+  }
+
+  // Tail extends opposite of direction from head: head at (hx,hy) for length L, body cells are head, head-dx, head-2dx ... (L cells total)
+  function arrowCells(headX, headY, dir, len) {
+    const { dx, dy } = DIRS[dir];
+    const cells = [];
+    for (let i = 0; i < len; i++) {
+      cells.push({ x: headX - dx * i, y: headY - dy * i });
+    }
+    return cells;
+  }
+
+  function canPlace(grid, headX, headY, dir, len) {
+    const cells = arrowCells(headX, headY, dir, len);
+    for (const c of cells) {
+      if (c.x < 0 || c.x >= GRID || c.y < 0 || c.y >= GRID) return false;
+      if (grid[c.y][c.x]) return false;
+    }
+    return true;
+  }
+
+  function placeArrow(side, headX, headY, dir, len) {
+    const id = Math.random().toString(36).slice(2,8);
+    const arr = { id, dir, len, headX, headY };
+    state[side].arrows[id] = arr;
+    const cells = arrowCells(headX, headY, dir, len);
+    cells.forEach(c => state[side].grid[c.y][c.x] = id);
+    renderArrow(side, arr);
+    return arr;
+  }
+
+  function renderArrow(side, arr) {
+    const boardEl = boardEls[side];
+    const a = document.createElement('div');
+    a.className = 'arrow ' + arr.dir;
+    a.dataset.id = arr.id;
+    // determine bounding box of the arrow in cells
+    const cells = arrowCells(arr.headX, arr.headY, arr.dir, arr.len);
+    const xs = cells.map(c => c.x), ys = cells.map(c => c.y);
+    const minX = Math.min(...xs), maxX = Math.max(...xs);
+    const minY = Math.min(...ys), maxY = Math.max(...ys);
+    // Position via percentages: cells = GRID; each cell takes 100/GRID % of inner area approximately
+    const padding = 5;
+    const gap = 2;
+    const innerW = boardEl.clientWidth - padding*2;
+    const cellSize = (innerW - gap*(GRID-1)) / GRID;
+    const leftPx = padding + minX * (cellSize + gap);
+    const topPx  = padding + minY * (cellSize + gap);
+    const widthPx  = (maxX - minX + 1) * cellSize + (maxX - minX) * gap;
+    const heightPx = (maxY - minY + 1) * cellSize + (maxY - minY) * gap;
+    a.style.left = leftPx + 'px';
+    a.style.top  = topPx + 'px';
+    a.style.width = widthPx + 'px';
+    a.style.height = heightPx + 'px';
+    a.style.setProperty('--seg-px', cellSize + 'px');
+    a.style.setProperty('--stripe-angle', (arr.dir === 'up' || arr.dir === 'down') ? '0deg' : '90deg');
+    if (arr.len > 1) a.classList.add('tail-segments');
+    a.innerHTML = `<span class="len-badge">${arr.len}</span><span class="glyph">${DIRS[arr.dir].glyph}</span>`;
+    if (side === 'you') a.addEventListener('click', (e) => { e.stopPropagation(); onArrowTap(arr.id); });
+    boardEl.appendChild(a);
+  }
+
+  function clearArrowDom(side, id) {
+    const a = boardEls[side].querySelector(`.arrow[data-id="${id}"]`);
+    if (a) a.remove();
+  }
+
+  function getArrowEl(side, id) {
+    return boardEls[side].querySelector(`.arrow[data-id="${id}"]`);
+  }
+
+  function pathClear(grid, arr) {
+    const { dx, dy } = DIRS[arr.dir];
+    // From head, step forward until off-board. Each cell in front must be empty (not part of this arrow, but since head moves forward it won't overlap own body anyway).
+    let cx = arr.headX + dx, cy = arr.headY + dy, steps = 1;
+    while (cx >= 0 && cx < GRID && cy >= 0 && cy < GRID) {
+      const occ = grid[cy][cx];
+      if (occ && occ !== arr.id) return { clear: false, steps: 0 };
+      cx += dx; cy += dy; steps++;
+    }
+    return { clear: true, steps };
+  }
+
+  function onCellTap(x, y) {
+    if (!state.running) return;
+    // First: if cell occupied by player's arrow → treat as arrow tap
+    const occId = state.you.grid[y][x];
+    if (occId) { onArrowTap(occId); return; }
+    // If tray slot selected → try place
+    if (state.selectedTrayIdx >= 0) {
+      const arr = state.you.tray[state.selectedTrayIdx];
+      if (!arr) return;
+      if (canPlace(state.you.grid, x, y, arr.dir, arr.len)) {
+        placeArrow('you', x, y, arr.dir, arr.len);
+        state.you.tray.splice(state.selectedTrayIdx, 1);
+        state.selectedTrayIdx = -1;
+        fillTray('you');
+        refreshCellTargetableHints();
+      } else {
+        const cell = state.you.cellEls[y][x];
+        cell.classList.add('invalid-target');
+        setTimeout(() => cell.classList.remove('invalid-target'), 400);
+      }
+    }
+  }
+
+  function onArrowTap(id) {
+    if (!state.running) return;
+    tryRelease('you', id);
+  }
+
+  function tryRelease(side, id) {
+    const arr = state[side].arrows[id];
+    if (!arr) return false;
+    const { clear, steps } = pathClear(state[side].grid, arr);
+    const el = getArrowEl(side, id);
+    if (!clear) {
+      if (el) {
+        el.classList.add('invalid');
+        setTimeout(() => el.classList.remove('invalid'), 400);
+      }
+      return false;
+    }
+    // Score = length * distance steps
+    const pts = arr.len * steps;
+    // Free cells
+    arrowCells(arr.headX, arr.headY, arr.dir, arr.len).forEach(c => state[side].grid[c.y][c.x] = null);
+    delete state[side].arrows[id];
+    animateFly(side, arr, steps, el, pts);
+    addScore(side, pts);
+    if (side === 'you') refreshCellTargetableHints();
+    return true;
+  }
+
+  function animateFly(side, arr, steps, el, pts) {
+    if (!el) return;
+    const { dx, dy } = DIRS[arr.dir];
+    const boardEl = boardEls[side];
+    const padding = 5, gap = 2;
+    const innerW = boardEl.clientWidth - padding*2;
+    const cellSize = (innerW - gap*(GRID-1)) / GRID;
+    const tx = dx * (cellSize + gap) * steps;
+    const ty = dy * (cellSize + gap) * steps;
+    el.classList.add('flying');
+    requestAnimationFrame(() => {
+      el.style.transition = 'transform 0.45s cubic-bezier(.3,.1,.5,1), opacity 0.45s';
+      el.style.transform = `translate(${tx}px,${ty}px)`;
+      el.style.opacity = '0';
+    });
+    setTimeout(() => el.remove(), 500);
+    // float score near head
+    const headLeft = padding + arr.headX * (cellSize + gap) + cellSize/2;
+    const headTop  = padding + arr.headY * (cellSize + gap);
+    const f = document.createElement('div');
+    f.className = 'float-score';
+    f.style.color = side === 'you' ? '#3aa8ff' : '#ff5566';
+    f.style.left = headLeft + 'px';
+    f.style.top = headTop + 'px';
+    f.textContent = '+' + pts;
+    boardEl.appendChild(f);
+    setTimeout(() => f.remove(), 1000);
+  }
+
+  function addScore(side, pts) {
+    state[side].score += pts;
+    updateTug();
+    if (state[side].score >= TARGET_SCORE) endGame(side);
+  }
+
+  function updateTug() {
+    const diff = state.you.score - state.opp.score;
+    const pct = 50 + (diff / TARGET_SCORE) * 50;
+    const youPct = Math.max(5, Math.min(95, pct));
+    const oppPct = 100 - youPct;
+    $('tug-red').style.width = oppPct + '%';
+    $('tug-blue').style.width = youPct + '%';
+    $('score-opp').textContent = state.opp.score;
+    $('score-you').textContent = state.you.score;
+  }
+
+  // ---- BOT ----
+  function botPickPlacement() {
+    // For each tray arrow, find any valid placement; prefer placements where the path will be clear immediately (instant release potential)
+    const candidates = [];
+    state.opp.tray.forEach((arrTpl, idx) => {
+      for (let y = 0; y < GRID; y++) for (let x = 0; x < GRID; x++) {
+        if (canPlace(state.opp.grid, x, y, arrTpl.dir, arrTpl.len)) {
+          // Simulate clear path test from head (x,y)
+          const { dx, dy } = DIRS[arrTpl.dir];
+          let cx = x + dx, cy = y + dy, steps = 1, clear = true;
+          while (cx >= 0 && cx < GRID && cy >= 0 && cy < GRID) {
+            if (state.opp.grid[cy][cx]) { clear = false; break; }
+            cx += dx; cy += dy; steps++;
+          }
+          const score = (clear ? arrTpl.len * steps : 0);
+          candidates.push({ idx, x, y, score, clear });
+        }
+      }
+    });
+    if (!candidates.length) return null;
+    candidates.sort((a,b) => b.score - a.score);
+    if (Math.random() < BOT_MISTAKE_CHANCE) return candidates[Math.floor(Math.random()*candidates.length)];
+    return candidates[0];
+  }
+
+  function botPickRelease() {
+    // Best clear release among placed arrows
+    const list = Object.values(state.opp.arrows).map(arr => {
+      const { clear, steps } = pathClear(state.opp.grid, arr);
+      return clear ? { arr, pts: arr.len * steps } : null;
+    }).filter(Boolean);
+    list.sort((a,b) => b.pts - a.pts);
+    return list[0] || null;
+  }
+
+  function botStep() {
+    if (!state.running) return;
+    // Strategy: prefer release if there's a juicy one (len*steps >= 4), else place.
+    const release = botPickRelease();
+    if (release && release.pts >= 4) {
+      tryRelease('opp', release.arr.id);
+    } else {
+      const place = botPickPlacement();
+      if (place) {
+        const tpl = state.opp.tray[place.idx];
+        placeArrow('opp', place.x, place.y, tpl.dir, tpl.len);
+        state.opp.tray.splice(place.idx, 1);
+        fillTray('opp');
+      } else if (release) {
+        tryRelease('opp', release.arr.id);
+      }
+    }
+    state.botThinkAt = performance.now() + BOT_THINK_MIN + Math.random() * (BOT_THINK_MAX - BOT_THINK_MIN);
+  }
+
+  function tick(now) {
+    if (!state.running) return;
+    if (now >= state.botThinkAt) botStep();
+    requestAnimationFrame(tick);
+  }
+
+  function startMatch() {
+    state.you.grid = emptyGrid(); state.opp.grid = emptyGrid();
+    state.you.arrows = {}; state.opp.arrows = {};
+    state.you.score = 0; state.opp.score = 0;
+    state.you.tray = []; state.opp.tray = [];
+    state.selectedTrayIdx = -1;
+    buildBoardDom('you'); buildBoardDom('opp');
+    fillTray('you'); fillTray('opp');
+    updateTug();
+    state.running = true;
+    state.botThinkAt = performance.now() + 1500;
+    requestAnimationFrame(tick);
+  }
+
+  function endGame(winner) {
+    state.running = false;
+    const isYou = winner === 'you';
+    $('result-title').textContent = isYou ? 'VICTORY' : 'DEFEAT';
+    const sub = $('result-sub');
+    sub.textContent = isYou
+      ? `You pushed all the way! ${state.you.score} vs ${state.opp.score}`
+      : `The bot beat you. ${state.opp.score} vs ${state.you.score}`;
+    sub.className = isYou ? 'win' : 'lose';
+    $('overlay-result').classList.remove('hidden');
+  }
+
+  $('btn-start').addEventListener('click', () => {
+    $('overlay-intro').classList.add('hidden');
+    startMatch();
+  });
+  $('btn-rematch').addEventListener('click', () => {
+    $('overlay-result').classList.add('hidden');
+    startMatch();
+  });
+
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Arrows GO! v3 — Bent Arrows</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Paytone+One&family=Fredoka:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden;font-family:"Fredoka",system-ui,sans-serif;font-weight:700;background:#0a0e1a;color:#fff;user-select:none;-webkit-user-select:none;touch-action:manipulation;display:flex;justify-content:center}
+#game{position:relative;width:420px;max-width:100vw;height:100vh;height:100dvh;margin:0 auto;overflow:hidden;display:flex;flex-direction:column;background:linear-gradient(180deg,#f4ede0 0%,#e8dfc8 100%);color:#1a1a2e}
+
+#hud{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:8px 14px;background:#1a1a2e;color:#fff}
+.hud-side{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px}
+.hud-side.left{color:#ff5566}.hud-side.right{color:#3aa8ff}
+.hud-side .av{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;border:2px solid currentColor;background:rgba(0,0,0,0.4)}
+.hud-title{font-family:"Paytone One",sans-serif;font-size:13px;letter-spacing:2px;color:#ffd34a;text-shadow:0 2px 0 #000}
+
+#match{flex:1;display:flex;flex-direction:column;align-items:center;padding:6px 8px;gap:6px;overflow:hidden}
+.player-label{font-size:9px;text-transform:uppercase;letter-spacing:2px;font-weight:900;opacity:0.7}
+.opp-label{color:#c0223a}.you-label{color:#1660c4}
+
+.board-wrap{width:300px;max-width:96%;aspect-ratio:1;position:relative}
+.board{position:absolute;inset:0;display:grid;gap:0;background:#fff;padding:0;border-radius:14px;border:2px solid #1a1a2e;box-shadow:0 4px 0 #1a1a2e;overflow:hidden}
+.board.opp{background:#fff8f4}
+.cell{position:relative;background:transparent;cursor:pointer;border-right:1px dashed rgba(0,0,0,0.07);border-bottom:1px dashed rgba(0,0,0,0.07)}
+.cell.targetable{background:rgba(60,160,255,0.15)}
+.cell.invalid-target{background:rgba(255,90,100,0.25);animation:shake 0.4s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-3px)}75%{transform:translateX(3px)}}
+
+.arrow-svg{position:absolute;inset:0;pointer-events:none;width:100%;height:100%}
+.arrow-hit{position:absolute;cursor:pointer;z-index:5}
+.arrow-hit.invalid .hit-inner{animation:shake 0.4s}
+
+/* TUG */
+.tug-wrap{width:96%;max-width:340px;display:flex;flex-direction:column;gap:3px;align-items:center}
+.tug-bar{width:100%;height:22px;border-radius:11px;background:#1a1a2e;border:2px solid #1a1a2e;position:relative;overflow:hidden}
+.tug-fill-red{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(180deg,#ff5566,#c0222e);transition:width 0.5s cubic-bezier(.2,.8,.3,1);width:50%;border-right:2px solid #fff}
+.tug-fill-blue{position:absolute;right:0;top:0;bottom:0;background:linear-gradient(180deg,#3aa8ff,#1660c4);transition:width 0.5s cubic-bezier(.2,.8,.3,1);width:50%}
+.tug-marker{position:absolute;top:-4px;bottom:-4px;width:3px;background:#ffd34a;left:50%;transform:translateX(-50%);box-shadow:0 0 6px rgba(255,211,74,0.8)}
+.tug-scores{display:flex;justify-content:space-between;align-items:center;width:100%;font-size:11px;font-weight:900;gap:8px;color:#1a1a2e}
+.tug-scores .l{color:#c0223a;min-width:40px;text-align:left}
+.tug-scores .r{color:#1660c4;min-width:40px;text-align:right}
+.tug-mid{font-size:9px;text-transform:uppercase;letter-spacing:1px;font-weight:800;opacity:0.6;flex:1;text-align:center}
+
+/* TRAY */
+.tray-title{font-size:9px;text-transform:uppercase;letter-spacing:2px;font-weight:900;color:rgba(26,26,46,0.55);text-align:center}
+.tray{width:300px;max-width:96%;display:flex;gap:8px;justify-content:center;padding:6px;background:#fff;border:2px solid #1a1a2e;border-radius:12px;box-shadow:0 3px 0 #1a1a2e;min-height:80px;align-items:stretch}
+.tray-slot{flex:1;min-height:64px;border-radius:8px;background:#f4ede0;border:2px dashed rgba(26,26,46,0.18);position:relative;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:6px;transition:transform 0.12s,box-shadow 0.12s}
+.tray-slot.has-arrow{border-style:solid;border-color:#1a1a2e;background:#fff}
+.tray-slot.selected{transform:translateY(-3px);box-shadow:0 0 0 3px #ffd34a,0 6px 14px rgba(255,211,74,0.4)}
+.tray-slot svg{width:100%;height:100%}
+.tray-slot .len-badge{position:absolute;top:3px;left:4px;font-size:10px;background:#1a1a2e;color:#fff;border-radius:5px;padding:1px 5px;line-height:1;font-weight:900;z-index:2}
+
+/* FLOAT */
+.float-score{position:absolute;font-size:22px;font-weight:900;pointer-events:none;animation:floatup 1s ease-out forwards;text-shadow:0 2px 0 #fff,0 0 8px currentColor;z-index:100}
+@keyframes floatup{0%{opacity:1;transform:translate(-50%,0)}100%{opacity:0;transform:translate(-50%,-50px)}}
+
+.fly-svg{position:absolute;pointer-events:none;z-index:50;transition:transform 0.5s cubic-bezier(.3,.1,.5,1),opacity 0.5s}
+
+/* OVERLAY */
+.overlay{position:absolute;inset:0;background:rgba(26,26,46,0.92);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:200;padding:20px;color:#fff}
+.overlay.hidden{display:none}
+.overlay h1{font-family:"Paytone One",sans-serif;font-size:34px;letter-spacing:3px;color:#ffd34a;text-shadow:0 4px 0 #000,0 0 20px rgba(255,211,74,0.5);margin-bottom:10px;text-align:center}
+.overlay h2{font-size:16px;font-weight:800;margin-bottom:20px;color:#fff;text-align:center}
+.overlay h2.win{color:#7eff8c}.overlay h2.lose{color:#ff7e8c}
+.btn{padding:12px 28px;background:linear-gradient(180deg,#ffac04,#cc7d00);color:#1a1a1a;border:none;border-radius:14px;font-family:inherit;font-weight:900;font-size:16px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;box-shadow:0 4px 0 #6e4400}
+.btn:active{transform:translateY(2px);box-shadow:0 2px 0 #6e4400}
+.intro-rules{max-width:340px;text-align:center;font-size:13px;font-weight:600;line-height:1.55;margin-bottom:20px;color:rgba(255,255,255,0.88)}
+.intro-rules b{color:#ffd34a}
+
+</style>
+</head>
+<body>
+<div id="game">
+
+  <div id="hud">
+    <div class="hud-side left"><div class="av">🤖</div><span>Bot Lv1</span></div>
+    <div class="hud-title">ARROWS GO!</div>
+    <div class="hud-side right"><span>YOU</span><div class="av">😎</div></div>
+  </div>
+
+  <div id="match">
+    <div class="player-label opp-label">↑ OPPONENT</div>
+    <div class="board-wrap"><div class="board opp" id="board-opp"></div></div>
+
+    <div class="tug-wrap">
+      <div class="tug-scores">
+        <span class="l" id="score-opp">0</span>
+        <span class="tug-mid">TUG OF WAR</span>
+        <span class="r" id="score-you">0</span>
+      </div>
+      <div class="tug-bar">
+        <div class="tug-fill-red" id="tug-red"></div>
+        <div class="tug-fill-blue" id="tug-blue"></div>
+        <div class="tug-marker"></div>
+      </div>
+    </div>
+
+    <div class="board-wrap"><div class="board" id="board-you"></div></div>
+    <div class="player-label you-label">↓ YOUR BOARD — tap arrow to release</div>
+
+    <div class="tray-title">SPAWN TRAY — tap arrow, then tap a cell</div>
+    <div class="tray" id="tray"></div>
+  </div>
+
+  <div class="overlay" id="overlay-intro">
+    <h1>ARROWS GO!</h1>
+    <h2>Level 1</h2>
+    <div class="intro-rules">
+      Pick an arrow from the <b>spawn tray</b>, tap an empty cell to place it. Arrows have <b>different shapes and lengths</b> — straight, L-bend.<br><br>
+      Tap a placed arrow to <b>release it</b>. Path in front of the <b>arrowhead</b> must be fully clear.<br><br>
+      Score = <b>length × distance</b> traveled. First to push the tug bar to their edge wins.
+    </div>
+    <button class="btn" id="btn-start">START</button>
+  </div>
+
+  <div class="overlay hidden" id="overlay-result">
+    <h1 id="result-title">VICTORY</h1>
+    <h2 id="result-sub" class="win"></h2>
+    <button class="btn" id="btn-rematch">REMATCH</button>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const GRID = 6;
+  const TRAY_SIZE = 3;
+  const TARGET_SCORE = 60;
+  const BOT_THINK_MIN = 1400, BOT_THINK_MAX = 2400;
+  const BOT_MISTAKE_CHANCE = 0.15;
+
+  // Each shape template is a list of cells relative to head (0,0) and head dir = 'right' (head at the right end of body).
+  // Cells go from tail (back) toward head. Head is the last cell in array. dir = 'right' canonical.
+  // After rotation/mirroring we generate all variants.
+  const TEMPLATES = [
+    { len:1, cells:[[0,0]] },                              // single
+    { len:2, cells:[[-1,0],[0,0]] },                       // straight 2
+    { len:3, cells:[[-2,0],[-1,0],[0,0]] },                // straight 3
+    { len:4, cells:[[-3,0],[-2,0],[-1,0],[0,0]] },         // straight 4
+    { len:3, cells:[[-1,-1],[-1,0],[0,0]] },               // L: up-then-right (tail goes up, then turns right to head)
+    { len:3, cells:[[-1,1],[-1,0],[0,0]] },                // L: down-then-right
+    { len:4, cells:[[-2,-1],[-2,0],[-1,0],[0,0]] },        // longer L up
+    { len:4, cells:[[-2,1],[-2,0],[-1,0],[0,0]] },         // longer L down
+  ];
+
+  // Rotate a (dx,dy) so that "right" maps to the given new direction
+  // Mapping: right=(1,0), down=(0,1), left=(-1,0), up=(0,-1)
+  function rotateCell([x,y], dir) {
+    switch(dir) {
+      case 'right': return [x,y];
+      case 'down':  return [-y,x];
+      case 'left':  return [-x,-y];
+      case 'up':    return [y,-x];
+    }
+  }
+
+  function makeShape(template, dir) {
+    return template.cells.map(c => rotateCell(c, dir));
+  }
+
+  const DIRS = {
+    up:    { dx: 0, dy:-1 },
+    down:  { dx: 0, dy: 1 },
+    left:  { dx:-1, dy: 0 },
+    right: { dx: 1, dy: 0 },
+  };
+  const DIR_KEYS = Object.keys(DIRS);
+
+  const $ = id => document.getElementById(id);
+  const boardEls = { you: $('board-you'), opp: $('board-opp') };
+
+  const state = {
+    you: { grid:null, arrows:{}, score:0, tray:[], cellEls:[] },
+    opp: { grid:null, arrows:{}, score:0, tray:[], cellEls:[] },
+    running:false,
+    selectedTrayIdx:-1,
+    botThinkAt:0,
+  };
+
+  function emptyGrid() { return Array.from({length:GRID},()=>Array(GRID).fill(null)); }
+
+  function randomArrowTpl() {
+    const tpl = TEMPLATES[Math.floor(Math.random()*TEMPLATES.length)];
+    const dir = DIR_KEYS[Math.floor(Math.random()*DIR_KEYS.length)];
+    return { tplIdx: TEMPLATES.indexOf(tpl), dir, len: tpl.len };
+  }
+  function tplOf(a) { return TEMPLATES[a.tplIdx]; }
+
+  function fillTray(side) {
+    const t = state[side].tray;
+    while (t.length < TRAY_SIZE) t.push(randomArrowTpl());
+    if (side === 'you') renderTray();
+  }
+
+  function renderTray() {
+    const trayEl = $('tray');
+    trayEl.innerHTML = '';
+    state.you.tray.forEach((a, i) => {
+      const slot = document.createElement('div');
+      slot.className = 'tray-slot has-arrow' + (state.selectedTrayIdx === i ? ' selected' : '');
+      slot.innerHTML = `<span class="len-badge">${a.len}</span>` + svgPreview(a, '#1660c4');
+      slot.addEventListener('click', () => selectTraySlot(i));
+      trayEl.appendChild(slot);
+    });
+    for (let i = state.you.tray.length; i < TRAY_SIZE; i++) {
+      const slot = document.createElement('div');
+      slot.className = 'tray-slot';
+      trayEl.appendChild(slot);
+    }
+  }
+
+  function selectTraySlot(i) {
+    if (!state.running) return;
+    state.selectedTrayIdx = (state.selectedTrayIdx === i) ? -1 : i;
+    renderTray();
+    refreshTargetableHints();
+  }
+
+  function refreshTargetableHints() {
+    state.you.cellEls.flat().forEach(c => c.classList.remove('targetable'));
+    if (state.selectedTrayIdx < 0) return;
+    const a = state.you.tray[state.selectedTrayIdx];
+    if (!a) return;
+    for (let y = 0; y < GRID; y++) for (let x = 0; x < GRID; x++) {
+      if (canPlace(state.you.grid, x, y, a)) state.you.cellEls[y][x].classList.add('targetable');
+    }
+  }
+
+  function arrowCells(headX, headY, arrowTpl) {
+    const shape = makeShape(tplOf(arrowTpl), arrowTpl.dir);
+    return shape.map(([dx,dy]) => ({ x: headX+dx, y: headY+dy }));
+  }
+
+  function canPlace(grid, headX, headY, arrowTpl) {
+    const cells = arrowCells(headX, headY, arrowTpl);
+    for (const c of cells) {
+      if (c.x < 0 || c.x >= GRID || c.y < 0 || c.y >= GRID) return false;
+      if (grid[c.y][c.x]) return false;
+    }
+    return true;
+  }
+
+  function pathClear(grid, arr) {
+    const {dx,dy} = DIRS[arr.dir];
+    let cx = arr.headX + dx, cy = arr.headY + dy, steps = 1;
+    while (cx >= 0 && cx < GRID && cy >= 0 && cy < GRID) {
+      const occ = grid[cy][cx];
+      if (occ && occ !== arr.id) return { clear:false, steps:0 };
+      cx += dx; cy += dy; steps++;
+    }
+    return { clear:true, steps };
+  }
+
+  function buildBoardDom(side) {
+    const el = boardEls[side];
+    el.style.gridTemplateColumns = `repeat(${GRID},1fr)`;
+    el.style.gridTemplateRows = `repeat(${GRID},1fr)`;
+    el.innerHTML = '';
+    state[side].cellEls = [];
+    for (let y = 0; y < GRID; y++) {
+      const row = [];
+      for (let x = 0; x < GRID; x++) {
+        const cell = document.createElement('div');
+        cell.className = 'cell';
+        cell.dataset.x = x; cell.dataset.y = y;
+        if (side === 'you') cell.addEventListener('click', () => onCellTap(x,y));
+        el.appendChild(cell);
+        row.push(cell);
+      }
+      state[side].cellEls.push(row);
+    }
+  }
+
+  function getCellGeom(side) {
+    const el = boardEls[side];
+    const w = el.clientWidth;
+    return { cs: w/GRID, w };
+  }
+
+  // Build SVG path data for the arrow body following its cell centers, with arrowhead.
+  function buildArrowSvg(arrow, color) {
+    // We want a path from tail center to head center, then arrowhead.
+    const cells = arrowCells(arrow.headX, arrow.headY, arrow);
+    // points = cell centers, but in unit grid coords (cellSize=1)
+    const pts = cells.map(c => ({ x: c.x + 0.5, y: c.y + 0.5 }));
+    // The head is last cell. We push the final point slightly forward toward the cell edge to make arrowhead clearly point out.
+    const head = pts[pts.length-1];
+    const {dx,dy} = DIRS[arrow.dir];
+    const headTip = { x: head.x + dx*0.42, y: head.y + dy*0.42 };
+    const ptsAll = pts.slice(0,-1).concat([head, headTip]);
+
+    let d = `M ${ptsAll[0].x} ${ptsAll[0].y}`;
+    for (let i = 1; i < ptsAll.length; i++) d += ` L ${ptsAll[i].x} ${ptsAll[i].y}`;
+
+    // Arrowhead triangle at headTip pointing in dir
+    const ah = 0.28; // size
+    // perpendicular
+    const px = -dy, py = dx;
+    const baseX = headTip.x - dx*ah, baseY = headTip.y - dy*ah;
+    const tri = `M ${headTip.x + dx*0.05} ${headTip.y + dy*0.05}
+                 L ${baseX + px*ah*0.9} ${baseY + py*ah*0.9}
+                 L ${baseX - px*ah*0.9} ${baseY - py*ah*0.9} Z`;
+
+    return `
+      <path d="${d}" fill="none" stroke="${color}" stroke-width="0.28" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="${tri}" fill="${color}" stroke="${color}" stroke-width="0.05" stroke-linejoin="round"/>
+    `;
+  }
+
+  function svgPreview(arrow, color) {
+    // bounding box of shape
+    const cells = arrowCells(0, 0, arrow); // relative
+    const xs = cells.map(c=>c.x), ys = cells.map(c=>c.y);
+    const minX = Math.min(...xs), maxX = Math.max(...xs);
+    const minY = Math.min(...ys), maxY = Math.max(...ys);
+    // Translate so headX=-minX etc.
+    const shifted = { ...arrow, headX: -minX, headY: -minY };
+    const w = maxX - minX + 1, h = maxY - minY + 1;
+    // Pad
+    const pad = 0.3;
+    const vbW = w + pad*2, vbH = h + pad*2;
+    return `<svg viewBox="${-pad} ${-pad} ${vbW} ${vbH}" preserveAspectRatio="xMidYMid meet">
+      ${buildArrowSvg(shifted, color)}
+    </svg>`;
+  }
+
+  function renderArrowOnBoard(side, arrow) {
+    const board = boardEls[side];
+    // SVG covering whole board
+    let svg = board.querySelector(`svg.arrow-svg[data-id="${arrow.id}"]`);
+    if (!svg) {
+      svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
+      svg.classList.add('arrow-svg');
+      svg.setAttribute('data-id', arrow.id);
+      svg.setAttribute('viewBox', `0 0 ${GRID} ${GRID}`);
+      svg.setAttribute('preserveAspectRatio','none');
+      board.appendChild(svg);
+    } else svg.innerHTML = '';
+    const color = side === 'you' ? '#1660c4' : '#c0223a';
+    svg.innerHTML = buildArrowSvg(arrow, color);
+
+    // Hit area: invisible div covering bounding box for tap
+    const cells = arrowCells(arrow.headX, arrow.headY, arrow);
+    const xs = cells.map(c=>c.x), ys = cells.map(c=>c.y);
+    const minX = Math.min(...xs), maxX = Math.max(...xs);
+    const minY = Math.min(...ys), maxY = Math.max(...ys);
+    const { cs } = getCellGeom(side);
+    let hit = board.querySelector(`.arrow-hit[data-id="${arrow.id}"]`);
+    if (!hit) {
+      hit = document.createElement('div');
+      hit.className = 'arrow-hit';
+      hit.dataset.id = arrow.id;
+      hit.innerHTML = '<div class="hit-inner" style="position:absolute;inset:0"></div>';
+      if (side === 'you') hit.addEventListener('click', (e) => { e.stopPropagation(); onArrowTap(arrow.id); });
+      board.appendChild(hit);
+    }
+    hit.style.left = (minX * cs) + 'px';
+    hit.style.top = (minY * cs) + 'px';
+    hit.style.width = ((maxX-minX+1) * cs) + 'px';
+    hit.style.height = ((maxY-minY+1) * cs) + 'px';
+  }
+
+  function placeArrow(side, headX, headY, arrowTpl) {
+    const id = Math.random().toString(36).slice(2,8);
+    const arr = { id, tplIdx: arrowTpl.tplIdx, dir: arrowTpl.dir, len: arrowTpl.len, headX, headY };
+    state[side].arrows[id] = arr;
+    arrowCells(headX, headY, arr).forEach(c => state[side].grid[c.y][c.x] = id);
+    renderArrowOnBoard(side, arr);
+    return arr;
+  }
+
+  function removeArrowDom(side, id) {
+    const svg = boardEls[side].querySelector(`svg.arrow-svg[data-id="${id}"]`);
+    if (svg) svg.remove();
+    const hit = boardEls[side].querySelector(`.arrow-hit[data-id="${id}"]`);
+    if (hit) hit.remove();
+  }
+
+  function onCellTap(x, y) {
+    if (!state.running) return;
+    const occ = state.you.grid[y][x];
+    if (occ) { onArrowTap(occ); return; }
+    if (state.selectedTrayIdx >= 0) {
+      const a = state.you.tray[state.selectedTrayIdx];
+      if (canPlace(state.you.grid, x, y, a)) {
+        placeArrow('you', x, y, a);
+        state.you.tray.splice(state.selectedTrayIdx, 1);
+        state.selectedTrayIdx = -1;
+        fillTray('you');
+        refreshTargetableHints();
+      } else {
+        const c = state.you.cellEls[y][x];
+        c.classList.add('invalid-target');
+        setTimeout(() => c.classList.remove('invalid-target'), 400);
+      }
+    }
+  }
+
+  function onArrowTap(id) { if (state.running) tryRelease('you', id); }
+
+  function tryRelease(side, id) {
+    const arr = state[side].arrows[id];
+    if (!arr) return false;
+    const { clear, steps } = pathClear(state[side].grid, arr);
+    if (!clear) {
+      const hit = boardEls[side].querySelector(`.arrow-hit[data-id="${id}"]`);
+      if (hit) {
+        hit.classList.add('invalid');
+        setTimeout(() => hit.classList.remove('invalid'), 400);
+      }
+      return false;
+    }
+    const pts = arr.len * steps;
+    arrowCells(arr.headX, arr.headY, arr).forEach(c => state[side].grid[c.y][c.x] = null);
+    delete state[side].arrows[id];
+    animateFly(side, arr, steps, pts);
+    addScore(side, pts);
+    if (side === 'you') refreshTargetableHints();
+    return true;
+  }
+
+  function animateFly(side, arr, steps, pts) {
+    const board = boardEls[side];
+    const svg = board.querySelector(`svg.arrow-svg[data-id="${arr.id}"]`);
+    const hit = board.querySelector(`.arrow-hit[data-id="${arr.id}"]`);
+    if (hit) hit.remove();
+    const {dx,dy} = DIRS[arr.dir];
+    const { cs } = getCellGeom(side);
+    const tx = dx * cs * steps;
+    const ty = dy * cs * steps;
+    if (svg) {
+      svg.style.transition = 'transform 0.5s cubic-bezier(.3,.1,.5,1), opacity 0.5s';
+      requestAnimationFrame(() => {
+        svg.style.transform = `translate(${tx}px,${ty}px)`;
+        svg.style.opacity = '0';
+      });
+      setTimeout(() => svg.remove(), 520);
+    }
+    // float score
+    const f = document.createElement('div');
+    f.className = 'float-score';
+    f.style.color = side === 'you' ? '#1660c4' : '#c0223a';
+    f.style.left = ((arr.headX + 0.5) * cs) + 'px';
+    f.style.top = (arr.headY * cs) + 'px';
+    f.textContent = '+' + pts;
+    board.appendChild(f);
+    setTimeout(() => f.remove(), 1000);
+  }
+
+  function addScore(side, pts) {
+    state[side].score += pts;
+    updateTug();
+    if (state[side].score >= TARGET_SCORE) endGame(side);
+  }
+
+  function updateTug() {
+    const diff = state.you.score - state.opp.score;
+    const pct = 50 + (diff / TARGET_SCORE) * 50;
+    const youPct = Math.max(5, Math.min(95, pct));
+    $('tug-red').style.width = (100 - youPct) + '%';
+    $('tug-blue').style.width = youPct + '%';
+    $('score-opp').textContent = state.opp.score;
+    $('score-you').textContent = state.you.score;
+  }
+
+  // ---- BOT ----
+  function botBestPlacement() {
+    const cands = [];
+    state.opp.tray.forEach((tpl, idx) => {
+      for (let y = 0; y < GRID; y++) for (let x = 0; x < GRID; x++) {
+        if (canPlace(state.opp.grid, x, y, tpl)) {
+          // simulate path clear from head
+          const {dx,dy} = DIRS[tpl.dir];
+          let cx = x+dx, cy = y+dy, steps = 1, clear = true;
+          while (cx>=0&&cx<GRID&&cy>=0&&cy<GRID) {
+            if (state.opp.grid[cy][cx]) { clear = false; break; }
+            cx+=dx; cy+=dy; steps++;
+          }
+          cands.push({ idx, x, y, score: clear ? tpl.len*steps : 0 });
+        }
+      }
+    });
+    if (!cands.length) return null;
+    cands.sort((a,b) => b.score - a.score);
+    if (Math.random() < BOT_MISTAKE_CHANCE) return cands[Math.floor(Math.random()*cands.length)];
+    return cands[0];
+  }
+  function botBestRelease() {
+    const list = Object.values(state.opp.arrows).map(arr => {
+      const { clear, steps } = pathClear(state.opp.grid, arr);
+      return clear ? { arr, pts: arr.len*steps } : null;
+    }).filter(Boolean);
+    list.sort((a,b) => b.pts - a.pts);
+    return list[0] || null;
+  }
+  function botStep() {
+    if (!state.running) return;
+    const release = botBestRelease();
+    if (release && release.pts >= 6) tryRelease('opp', release.arr.id);
+    else {
+      const place = botBestPlacement();
+      if (place) {
+        const tpl = state.opp.tray[place.idx];
+        placeArrow('opp', place.x, place.y, tpl);
+        state.opp.tray.splice(place.idx, 1);
+        fillTray('opp');
+      } else if (release) tryRelease('opp', release.arr.id);
+    }
+    state.botThinkAt = performance.now() + BOT_THINK_MIN + Math.random()*(BOT_THINK_MAX-BOT_THINK_MIN);
+  }
+
+  function tick(now) {
+    if (!state.running) return;
+    if (now >= state.botThinkAt) botStep();
+    requestAnimationFrame(tick);
+  }
+
+  function startMatch() {
+    state.you.grid = emptyGrid(); state.opp.grid = emptyGrid();
+    state.you.arrows = {}; state.opp.arrows = {};
+    state.you.score = 0; state.opp.score = 0;
+    state.you.tray = []; state.opp.tray = [];
+    state.selectedTrayIdx = -1;
+    buildBoardDom('you'); buildBoardDom('opp');
+    fillTray('you'); fillTray('opp');
+    updateTug();
+    state.running = true;
+    state.botThinkAt = performance.now() + 1500;
+    requestAnimationFrame(tick);
+  }
+
+  function endGame(winner) {
+    state.running = false;
+    const isYou = winner === 'you';
+    $('result-title').textContent = isYou ? 'VICTORY' : 'DEFEAT';
+    const sub = $('result-sub');
+    sub.textContent = isYou ? `You pushed all the way! ${state.you.score} vs ${state.opp.score}` : `Bot wins. ${state.opp.score} vs ${state.you.score}`;
+    sub.className = isYou ? 'win' : 'lose';
+    $('overlay-result').classList.remove('hidden');
+  }
+
+  $('btn-start').addEventListener('click', () => { $('overlay-intro').classList.add('hidden'); startMatch(); });
+  $('btn-rematch').addEventListener('click', () => { $('overlay-result').classList.add('hidden'); startMatch(); });
+
+  window.addEventListener('resize', () => {
+    if (!state.running) return;
+    Object.values(state.you.arrows).forEach(a => renderArrowOnBoard('you', a));
+    Object.values(state.opp.arrows).forEach(a => renderArrowOnBoard('opp', a));
+  });
+
+})();
+</script>
+</body>
+</html>
