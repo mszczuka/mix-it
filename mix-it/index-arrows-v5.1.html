@@ -29,7 +29,8 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:"Fredoka",system-ui
 @keyframes pulseWarn{from{transform:scale(1)}to{transform:scale(1.12)}}
 
 /* TURN ROW */
-.turn-row{flex-shrink:0;padding:6px 12px 0;display:flex;flex-direction:column;gap:5px;background:#fff8ec;border-bottom:1px solid rgba(0,0,0,0.05)}
+.turn-row{position:relative;flex-shrink:0;padding:6px 12px 0;display:flex;flex-direction:column;gap:5px;background:#fff8ec;border-bottom:1px solid rgba(0,0,0,0.05)}
+.streak-inline-host{position:absolute;left:50%;top:100%;transform:translateX(-50%);display:flex;gap:4px;z-index:60;pointer-events:none;padding-top:3px;white-space:nowrap}
 .turn-row-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .turn-label{font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:1.5px;color:#1a1a2e}
 .turn-label.opp-turn{color:#c0223a}
@@ -54,7 +55,7 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:"Fredoka",system-ui
 .streak-tick{position:absolute;top:-1px;bottom:-1px;width:2px;background:rgba(0,0,0,0.25);pointer-events:none}
 .streak-fill.pulse{animation:streakPulse 0.5s ease-out}
 @keyframes streakPulse{0%{filter:brightness(1)}50%{filter:brightness(1.7) saturate(1.5);box-shadow:0 0 8px currentColor}100%{filter:brightness(1)}}
-.streak-mini{display:inline-block;margin-left:6px;font-size:10px;font-weight:900;letter-spacing:1px;padding:2px 6px;border-radius:8px;background:linear-gradient(180deg,#ffd34a,#ffac04);color:#1a1a1a;animation:miniPop 0.7s ease-out}
+.streak-mini{display:inline-block;font-size:10px;font-weight:900;letter-spacing:1px;padding:2px 8px;border-radius:8px;background:linear-gradient(180deg,#ffd34a,#ffac04);color:#1a1a1a;animation:miniPop 0.7s ease-out;box-shadow:0 2px 6px rgba(0,0,0,0.25)}
 @keyframes miniPop{0%{transform:scale(0.5);opacity:0}40%{transform:scale(1.15);opacity:1}100%{transform:scale(1);opacity:1}}
 
 /* BOARD */
@@ -125,10 +126,7 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:"Fredoka",system-ui
   <div class="turn-row" id="turn-row">
     <div class="turn-row-top">
       <span class="turn-label" id="turn-label">YOUR TURN</span>
-      <div class="moves-dots-wrap" style="display:flex;align-items:center;gap:6px">
-        <span id="streak-inline"></span>
-        <div class="moves-dots" id="moves-dots"></div>
-      </div>
+      <div class="moves-dots" id="moves-dots"></div>
     </div>
     <div class="turn-timer-bar"><div class="turn-timer-fill" id="turn-timer-fill"></div></div>
     <div class="streak-bar">
@@ -137,6 +135,7 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:"Fredoka",system-ui
       <div class="streak-tick" style="left:60%"></div>
       <div class="streak-tick" style="left:80%"></div>
     </div>
+    <div id="streak-inline" class="streak-inline-host"></div>
   </div>
 
   <div id="match">
@@ -153,7 +152,7 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:"Fredoka",system-ui
       Tap an arrow to release it. <b>Only arrows that fully leave the board score points!</b> Partially blocked arrows slide until they hit something and stay on the board — useful to open paths.<br><br>
       <b>Flat points per tier</b> (the higher the tier, the more blocked the arrow tends to spawn):<br>
       <span style="color:#52a35a">●</span> common <b>1pt</b> &nbsp; <span style="color:#3a7adb">●</span> rare <b>2pt</b> &nbsp; <span style="color:#a35adb">●</span> epic <b>3pt</b> &nbsp; <span style="color:#f5b324">●</span> legendary <b>5pt</b><br><br>
-      <b>CASCADE</b> — releasing an arrow that frees others auto-fires them in a chain with ×2, ×3, ×4 multipliers.<br>
+      <b>CASCADE</b> — releasing an arrow auto-fires those <b>behind it on the same line, same direction</b>, with ×2, ×3, ×4 multipliers.<br>
       <b>STREAK</b> — chain successful exits within a turn: ×2 boost, +1 move at ×3, double points at ×4, FIRESTORM ×3 at ×5.<br><br>
       After 3 minutes, the higher score wins.
     </div>
@@ -632,12 +631,18 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:"Fredoka",system-ui
       resetStreak(byPlayer);
     }
 
-    // Detect cascade candidates (arrows that just became free).
+    // Detect cascade candidates: same direction + colinear behind trigger head (firing axis).
     let freed = [];
     if (offBoard){
+      const triggerDir = arr.dir;
+      const td = DIRS[triggerDir];
       for (const aid of blockedBefore){
         const a = state.arrows[aid];
         if (!a) continue;
+        if (a.dir !== triggerDir) continue;
+        const vx = oldHead.x - a.headX, vy = oldHead.y - a.headY;
+        if (vx * td.dy - vy * td.dx !== 0) continue;       // not colinear with firing axis
+        if (vx * td.dx + vy * td.dy <= 0) continue;        // not behind trigger
         if (slideDistance(state.grid, a).offBoard){
           const dist = Math.abs(a.headX - oldHead.x) + Math.abs(a.headY - oldHead.y);
           freed.push({ id: aid, dist, tier: a.tierIdx || 0 });
@@ -765,12 +770,18 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:"Fredoka",system-ui
 
     addStreak(state.cascadeOwner, STREAK_CASCADE_WEIGHT);
 
-    // Append newly freed at depth+1.
+    // Append newly freed at depth+1 — same dir + colinear behind trigger head.
     if (depth + 1 <= CASCADE_HARD_LIMIT){
+      const triggerDir = arr.dir;
+      const td = DIRS[triggerDir];
       const newlyFreed = [];
       for (const aid of blockedBefore){
         const a = state.arrows[aid];
         if (!a) continue;
+        if (a.dir !== triggerDir) continue;
+        const vx = oldHead.x - a.headX, vy = oldHead.y - a.headY;
+        if (vx * td.dy - vy * td.dx !== 0) continue;
+        if (vx * td.dx + vy * td.dy <= 0) continue;
         if (slideDistance(state.grid, a).offBoard){
           const dist = Math.abs(a.headX - oldHead.x) + Math.abs(a.headY - oldHead.y);
           newlyFreed.push({ id: aid, dist, tier: a.tierIdx || 0 });
@@ -1165,10 +1176,18 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:"Fredoka",system-ui
     });
     let score = 0;
     // Heuristic: each freed arrow gets mult by chain index (sorted by distance).
+    // Must match cascade gate: same dir + colinear behind trigger head.
+    const triggerDir = trigger.dir;
+    const td = DIRS[triggerDir];
     const freedList = [];
     for (const id of blockedBefore){
       const a = state.arrows[id];
-      if (a && slideDistance(state.grid, a).offBoard){
+      if (!a) continue;
+      if (a.dir !== triggerDir) continue;
+      const vx = trigger.headX - a.headX, vy = trigger.headY - a.headY;
+      if (vx * td.dy - vy * td.dx !== 0) continue;
+      if (vx * td.dx + vy * td.dy <= 0) continue;
+      if (slideDistance(state.grid, a).offBoard){
         const dist = Math.abs(a.headX - trigger.headX) + Math.abs(a.headY - trigger.headY);
         freedList.push({ id, dist, tier: a.tierIdx || 0 });
       }
