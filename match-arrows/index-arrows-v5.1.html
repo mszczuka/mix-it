@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>Arrows GO! v5.1 — Cascade & Turn Streak</title>
+<title>Arrows GO! v5.2 — Boosters</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Paytone+One&family=Fredoka:wght@500;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -120,6 +120,46 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:"Fredoka",system-ui
 /* HINT — best move suggestion after 3s idle */
 .arrow-svg.hint{animation:hintPulse 0.9s ease-in-out infinite alternate}
 @keyframes hintPulse{from{filter:drop-shadow(0 0 2px rgba(126,255,140,0.6))}to{filter:drop-shadow(0 0 6px #7eff8c) drop-shadow(0 0 14px #52a35a)}}
+/* v5.2 BOOSTER UI */
+.booster-slot{display:flex;flex-direction:column;align-items:center;gap:2px;width:46px;flex:0 0 auto}
+.booster-icon{width:40px;height:40px;border-radius:10px;background:rgba(255,255,255,0.08);border:2px solid rgba(255,255,255,0.25);display:flex;align-items:center;justify-content:center;font-size:22px;cursor:default;position:relative;transition:transform 0.15s ease;opacity:0.55}
+.booster-icon.ready{opacity:1;border-color:#ffd34a;background:linear-gradient(180deg,rgba(255,211,74,0.25),rgba(255,172,4,0.35));box-shadow:0 0 14px rgba(255,211,74,0.7);animation:boosterReady 1.1s ease-in-out infinite alternate;cursor:pointer}
+.booster-icon.used{opacity:0.25;filter:grayscale(1)}
+.booster-icon.empty{font-size:14px;font-weight:900;color:rgba(255,255,255,0.5)}
+@keyframes boosterReady{from{box-shadow:0 0 8px rgba(255,211,74,0.5),0 0 16px rgba(255,172,4,0.3);transform:scale(1)}to{box-shadow:0 0 14px rgba(255,211,74,0.9),0 0 28px rgba(255,172,4,0.6);transform:scale(1.06)}}
+.booster-icon:active.ready{transform:scale(0.95)}
+.charge-bar{width:42px;height:5px;background:rgba(0,0,0,0.35);border-radius:3px;overflow:hidden;border:1px solid rgba(255,255,255,0.15)}
+.charge-fill{height:100%;width:0;background:linear-gradient(90deg,#52a35a,#a3db5a,#ffd34a);transition:width 0.35s ease}
+.charge-fill.full{background:linear-gradient(90deg,#ffd34a,#ffac04,#ff7e3a);animation:chargeFull 0.8s ease-in-out infinite alternate}
+@keyframes chargeFull{from{filter:brightness(1)}to{filter:brightness(1.4)}}
+/* Pre-match booster picker */
+#overlay-booster.overlay{padding:14px}
+.picker-title{font-family:"Paytone One",sans-serif;font-size:22px;letter-spacing:2px;color:#ffd34a;text-shadow:0 3px 0 #000;margin-bottom:4px;text-align:center}
+.picker-sub{font-size:12px;color:rgba(255,255,255,0.7);margin-bottom:14px;text-align:center}
+.picker-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;max-width:380px;margin-bottom:14px}
+.picker-card{background:rgba(255,255,255,0.06);border:2px solid rgba(255,255,255,0.2);border-radius:12px;padding:10px 8px;display:flex;flex-direction:column;align-items:center;cursor:pointer;transition:all 0.15s ease;text-align:center}
+.picker-card:hover{border-color:#ffd34a;background:rgba(255,211,74,0.15)}
+.picker-card.selected{border-color:#ffd34a;background:linear-gradient(180deg,rgba(255,211,74,0.3),rgba(255,172,4,0.2));box-shadow:0 0 20px rgba(255,211,74,0.5)}
+.picker-card .icon{font-size:28px;margin-bottom:4px}
+.picker-card .name{font-family:"Paytone One",sans-serif;font-size:13px;letter-spacing:1px;color:#ffd34a;margin-bottom:3px;line-height:1.1}
+.picker-card .desc{font-size:10px;font-weight:600;color:rgba(255,255,255,0.75);line-height:1.25}
+/* Targeting overlay */
+.targeting-overlay{position:absolute;inset:0;background:rgba(0,0,0,0.35);z-index:140;pointer-events:auto;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding-bottom:60px}
+.targeting-help{background:rgba(26,26,46,0.95);color:#ffd34a;padding:8px 16px;border-radius:10px;font-size:12px;font-weight:800;letter-spacing:1px;text-transform:uppercase;text-align:center;box-shadow:0 4px 12px rgba(0,0,0,0.5);margin-bottom:10px;max-width:300px}
+.targeting-cancel{padding:8px 20px;background:#c0223a;color:#fff;border:none;border-radius:10px;font-family:inherit;font-weight:900;font-size:13px;letter-spacing:1px;cursor:pointer;box-shadow:0 3px 0 #6e0010}
+.targeting-cancel:active{transform:translateY(2px);box-shadow:0 1px 0 #6e0010}
+.targeting-rowcol .targeting-line{position:absolute;background:rgba(255,211,74,0.32);border:2px dashed #ffd34a;pointer-events:auto;cursor:pointer;z-index:145;transition:background 0.1s}
+.targeting-rowcol .targeting-line:hover{background:rgba(255,211,74,0.55)}
+.targeting-arrow .arrow-hit{outline:2px dashed #ffd34a;outline-offset:-3px;background:rgba(255,211,74,0.1)}
+.dir-picker{display:flex;flex-direction:column;align-items:center;gap:8px;background:rgba(26,26,46,0.95);padding:14px;border-radius:14px;box-shadow:0 6px 20px rgba(0,0,0,0.5)}
+.dir-row{display:flex;gap:8px}
+.dir-btn{width:54px;height:54px;border-radius:12px;background:linear-gradient(180deg,#ffd34a,#ffac04);color:#1a1a1a;border:none;font-size:24px;font-weight:900;cursor:pointer;box-shadow:0 3px 0 #6e4400}
+.dir-btn:active{transform:translateY(2px);box-shadow:0 1px 0 #6e4400}
+.booster-banner{position:absolute;left:50%;top:48%;transform:translate(-50%,-50%);background:linear-gradient(180deg,#a35adb,#6c2ea8);color:#fff;font-family:"Paytone One",sans-serif;font-size:26px;letter-spacing:2px;padding:12px 28px;border-radius:14px;z-index:170;pointer-events:none;text-shadow:0 2px 0 rgba(0,0,0,0.5);box-shadow:0 6px 24px rgba(163,90,219,0.7),inset 0 1px 0 rgba(255,255,255,0.3);animation:bonusMoveFlash 1.6s ease-out;white-space:nowrap;text-align:center;border:3px solid #1a1a1a}
+.booster-banner.hot{background:linear-gradient(180deg,#ff7e3a,#d63a08)}
+.booster-banner.path{background:linear-gradient(180deg,#3a7adb,#1660c4)}
+.booster-banner.overdrive{background:linear-gradient(180deg,#52a35a,#2e6e3a)}
+.booster-banner .small{font-family:"Fredoka",sans-serif;font-size:12px;letter-spacing:1px;display:block;margin-top:2px;opacity:0.9}
 </style>
 </head>
 <body>
@@ -129,6 +169,10 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:"Fredoka",system-ui
     <div class="hud-side opp">
       <div class="av">🤖</div>
       <div class="hud-name"><span class="nm">Bot</span><span class="sc" id="score-opp">0</span></div>
+      <div class="booster-slot" id="booster-opp">
+        <div class="booster-icon empty" id="booster-icon-opp">?</div>
+        <div class="charge-bar"><div class="charge-fill" id="charge-fill-opp"></div></div>
+      </div>
     </div>
     <div class="hud-center">
       <span class="hud-title">ARROWS GO!</span>
@@ -137,6 +181,10 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:"Fredoka",system-ui
     <div class="hud-side you">
       <div class="av">😎</div>
       <div class="hud-name"><span class="nm">You</span><span class="sc" id="score-you">0</span></div>
+      <div class="booster-slot" id="booster-you">
+        <div class="booster-icon empty" id="booster-icon-you">?</div>
+        <div class="charge-bar"><div class="charge-fill" id="charge-fill-you"></div></div>
+      </div>
     </div>
   </div>
 
@@ -161,6 +209,13 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:"Fredoka",system-ui
     </div>
   </div>
 
+  <div class="overlay hidden" id="overlay-booster">
+    <div class="picker-title">PICK A BOOSTER</div>
+    <div class="picker-sub">One booster per match · single use · charge fills during play</div>
+    <div class="picker-grid" id="booster-grid"></div>
+    <button class="btn" id="btn-booster-confirm" disabled style="opacity:0.45">CONFIRM</button>
+  </div>
+
   <div class="overlay" id="overlay-intro">
     <h1>ARROWS GO!</h1>
     <h2>Level 1</h2>
@@ -179,6 +234,7 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:"Fredoka",system-ui
   <div class="overlay hidden" id="overlay-result">
     <h1 id="result-title">VICTORY</h1>
     <h2 id="result-sub" class="win"></h2>
+    <div id="result-boosters" style="font-size:12px;color:rgba(255,255,255,0.7);margin-bottom:16px;text-align:center;line-height:1.6"></div>
     <button class="btn" id="btn-rematch">REMATCH</button>
   </div>
 
@@ -202,6 +258,25 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:"Fredoka",system-ui
   const STREAK_T2_BONUS = 0.20;         // +20% on next manual exit
   const STREAK_T4_MULT = 2;             // ×2 retroactive on remaining exits
   const STREAK_T5_MULT = 3;             // ×3 firestorm
+
+  // v5.2 — Booster tuning knobs
+  const BOOSTER_CHARGE_MAX        = 100;
+  const CHARGE_PER_EXIT_MANUAL    = 12;
+  const CHARGE_PER_CASCADE_HIT    = 6;
+  const CHARGE_PER_STREAK_TICK    = 8;
+  const CHARGE_PER_PARTIAL_SLIDE  = 0;
+  const CHARGE_PER_TIER_BONUS     = [0,2,4,8];
+  const BOOSTER_OVERDRIVE_CAPS    = { depth:6, hard:8, arrow:12 };
+
+  const BOOSTERS = {
+    PATH_CLEAR:       { name:'LINE SWEEP',  icon:'💥', color:'#3a7adb', desc:'Pick a row/col — all arrows on it that can exit fly out (no cascade, no streak).' },
+    RICOCHET:         { name:'BEND',        icon:'🔀', color:'#a35adb', desc:'Tap an arrow to rotate it 90°. Long-press = counter-clockwise. Free action.' },
+    FIRESTORM_CHARGE: { name:'HOT START',   icon:'🔥', color:'#ff7e3a', desc:'Jump-start streak to ×2 — next exit gets +20%, ×3 in 2 exits instead of 3.' },
+    EXTRA_MOVE:       { name:'ENCORE',      icon:'➕', color:'#ffd34a', desc:'+1 move on this turn. Safety net.' },
+    ROTATE_PAIR:      { name:'TWIST',       icon:'🔄', color:'#52a35a', desc:'Pick 2 adjacent arrows — both rotate 90° clockwise. Setup-only.' },
+    OVERDRIVE:        { name:'OVERDRIVE',   icon:'⚡', color:'#7eff8c', desc:'Pick a direction — cascades from that dir this turn get bigger limits.' },
+  };
+  const BOOSTER_IDS = Object.keys(BOOSTERS);
 
   // Arrow tiers — color & point multiplier. Common is frequent, Legendary is rare.
   const TIERS = [
@@ -269,6 +344,14 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:"Fredoka",system-ui
     pendingBanners: [],     // banners queued during cascade
     pendingTurnSwitch: false,
     pendingMatchEnd: false,
+    cascadeCaps: { depth: 4, hard: 6, arrow: 8 },
+    // v5.2 boosters
+    boosters: {
+      you: { equipped:null, charge:0, used:false, targeting:null, firestormUsed:false, lastChargeTurn:-99 },
+      opp: { equipped:null, charge:0, used:false, targeting:null, firestormUsed:false, lastChargeTurn:-99 },
+    },
+    overdriveDir: null,
+    overdriveOwner: null,
     turn: 'you',
     movesLeft: MOVES_PER_TURN,
     bonusMovesYou: 0,
@@ -745,6 +828,7 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:"Fredoka",system-ui
       updateScores();
       delete state.arrows[id];
       animateFlyOff(arr, oldHead, moveDist, pts, oldBodyCells, false);
+      addCharge(byPlayer, CHARGE_PER_EXIT_MANUAL + (CHARGE_PER_TIER_BONUS[arr.tierIdx || 0] || 0));
       // Streak update (manual exit weight 1.0) — may set new flags & grant bonus move.
       addStreak(byPlayer, 1.0);
     } else {
@@ -779,7 +863,7 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:"Fredoka",system-ui
     consumeMove();
 
     if (freed.length){
-      startCascade(freed.map(f => f.id), byPlayer);
+      startCascade(freed.map(f => f.id), byPlayer, arr.dir);
     }
     return true;
   }
@@ -811,6 +895,7 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:"Fredoka",system-ui
     if (!flags.t2 && newFloor >= 2){
       flags.t2 = true; flags.t2Active = true;
       enqueueStreakBanner('STREAK ×2', 'streak-banner');
+      if (!flags.t2FromBooster) addCharge(player, CHARGE_PER_STREAK_TICK);
     }
     if (!flags.t3 && newFloor >= 3){
       flags.t3 = true;
@@ -818,36 +903,44 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:"Fredoka",system-ui
       updateMovesDots(true);
       flashMovesRow();
       enqueueBonusMoveBanner();
+      addCharge(player, CHARGE_PER_STREAK_TICK);
     }
     if (!flags.t4 && newFloor >= 4){
       flags.t4 = true;
       enqueueStreakBanner('STREAK ×4 — DOUBLE', 'streak-banner');
+      addCharge(player, CHARGE_PER_STREAK_TICK);
     }
     if (!flags.t5 && newFloor >= 5){
       flags.t5 = true;
       enqueueStreakBanner('FIRESTORM ×3', 'streak-banner firestorm');
+      addCharge(player, CHARGE_PER_STREAK_TICK);
     }
     updateStreakBar(true);
   }
   function resetStreak(player){
     const { sKey, fKey } = streakState(player);
     state[sKey] = 0;
-    state[fKey] = { t2:false, t2Active:false, t3:false, t4:false, t5:false };
+    state[fKey] = { t2:false, t2Active:false, t3:false, t4:false, t5:false, t2FromBooster:false };
     updateStreakBar(false);
   }
   function resetAllStreaks(){
     state.streakYou = 0; state.streakOpp = 0;
-    state.streakFlagsYou = { t2:false, t2Active:false, t3:false, t4:false, t5:false };
-    state.streakFlagsOpp = { t2:false, t2Active:false, t3:false, t4:false, t5:false };
+    state.streakFlagsYou = { t2:false, t2Active:false, t3:false, t4:false, t5:false, t2FromBooster:false };
+    state.streakFlagsOpp = { t2:false, t2Active:false, t3:false, t4:false, t5:false, t2FromBooster:false };
     updateStreakBar(false);
   }
 
   // --- CASCADE ---
-  function startCascade(initialIds, byPlayer){
+  function startCascade(initialIds, byPlayer, triggerDir){
     state.cascadeOwner = byPlayer;
     state.cascadeDepth = 1;
     state.cascadeQueue = initialIds.map(id => ({ id, depth: 1 }));
     state.cascadeArrowsReleased = 0;
+    // Overdrive: bigger caps if booster active for this player AND matching trigger dir.
+    const overdriveActive = state.overdriveOwner === byPlayer && state.overdriveDir && triggerDir === state.overdriveDir;
+    state.cascadeCaps = overdriveActive
+      ? { depth: BOOSTER_OVERDRIVE_CAPS.depth, hard: BOOSTER_OVERDRIVE_CAPS.hard, arrow: BOOSTER_OVERDRIVE_CAPS.arrow }
+      : { depth: CASCADE_DEPTH_CAP, hard: CASCADE_HARD_LIMIT, arrow: CASCADE_ARROW_LIMIT };
     state.inputLocked = true;
     setTimeout(processCascadeStep, CASCADE_STAGGER_MS);
   }
@@ -855,8 +948,8 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:"Fredoka",system-ui
     // Drain queue while popping invalid arrows.
     while (state.cascadeQueue.length){
       const next = state.cascadeQueue.shift();
-      if (state.cascadeArrowsReleased >= CASCADE_ARROW_LIMIT) { finishCascade(); return; }
-      if (next.depth > CASCADE_HARD_LIMIT) continue;
+      if (state.cascadeArrowsReleased >= state.cascadeCaps.arrow) { finishCascade(); return; }
+      if (next.depth > state.cascadeCaps.hard) continue;
       const arr = state.arrows[next.id];
       if (!arr) continue;
       const { steps, offBoard } = slideDistance(state.grid, arr);
@@ -884,7 +977,7 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:"Fredoka",system-ui
     arr.bodyCells.forEach(c => state.grid[c.y][c.x] = null);
 
     // depth 1 → ×2, depth 2 → ×3, depth 3+ → ×CAP. Manual tap (depth 0) was ×1.
-    const mult = Math.min(depth + 1, CASCADE_DEPTH_CAP);
+    const mult = Math.min(depth + 1, state.cascadeCaps.depth);
     let pts = arrowMult(arr) * mult;
     pts = applyStreakMultiplier(state.cascadeOwner, pts, false);
     if (state.cascadeOwner === 'you') state.scoreYou += pts; else state.scoreOpp += pts;
@@ -894,10 +987,11 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:"Fredoka",system-ui
     showCascadeBanner(mult, pts);
     state.cascadeArrowsReleased++;
 
+    addCharge(state.cascadeOwner, CHARGE_PER_CASCADE_HIT + (CHARGE_PER_TIER_BONUS[arr.tierIdx || 0] || 0));
     addStreak(state.cascadeOwner, STREAK_CASCADE_WEIGHT);
 
     // Append newly freed at depth+1 — ANY blocked arrow that can now exit.
-    if (depth + 1 <= CASCADE_HARD_LIMIT){
+    if (depth + 1 <= state.cascadeCaps.hard){
       const newlyFreed = [];
       for (const aid of blockedBefore){
         const a = state.arrows[aid];
@@ -963,16 +1057,24 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:"Fredoka",system-ui
 
   function switchTurn(){
     clearHint();
+    cancelTargeting(true);
     state.turn = state.turn === 'you' ? 'opp' : 'you';
     state.movesLeft = MOVES_PER_TURN;
     state.inputLocked = false;
     state.turnEndAt = performance.now() + TURN_DURATION_MS;
+    // Overdrive lapses if its owner isn't the active player anymore.
+    if (state.overdriveOwner && state.overdriveOwner !== state.turn){
+      state.overdriveDir = null;
+      state.overdriveOwner = null;
+    }
     resetAllStreaks();
     updateTurnLabel();
     updateMovesDots();
     updateTurnTimer(performance.now());
     showTurnBanner(state.turn);
     refillBoard();
+    updateBoosterUI('you');
+    updateBoosterUI('opp');
     if (state.turn === 'opp') scheduleBotMove();
     else scheduleHint();
   }
@@ -1379,6 +1481,497 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:"Fredoka",system-ui
     slideCands.sort((a,b) => b.steps - a.steps);
     return slideCands[0] || null;
   }
+  // ============================================================
+  // === v5.2 BOOSTER SYSTEM ===
+  // ============================================================
+  function addCharge(owner, amount){
+    const b = state.boosters[owner];
+    if (!b || !b.equipped || b.used) return;
+    b.charge = Math.min(BOOSTER_CHARGE_MAX, b.charge + amount);
+    updateBoosterUI(owner);
+  }
+  function updateBoosterUI(owner){
+    const b = state.boosters[owner];
+    const icon = document.getElementById('booster-icon-' + owner);
+    const fill = document.getElementById('charge-fill-' + owner);
+    if (!icon || !fill) return;
+    if (!b.equipped){
+      icon.textContent = '?';
+      icon.className = 'booster-icon empty';
+      fill.style.width = '0%';
+      fill.classList.remove('full');
+      return;
+    }
+    const def = BOOSTERS[b.equipped];
+    icon.textContent = def.icon;
+    icon.className = 'booster-icon';
+    icon.title = def.name;
+    fill.style.width = ((b.charge / BOOSTER_CHARGE_MAX) * 100) + '%';
+    const isReady = b.charge >= BOOSTER_CHARGE_MAX && !b.used && state.turn === owner && state.cascadeDepth === 0 && !state.inputLocked;
+    if (b.used){
+      icon.classList.add('used');
+      fill.classList.remove('full');
+    } else if (b.charge >= BOOSTER_CHARGE_MAX){
+      fill.classList.add('full');
+      if (isReady) icon.classList.add('ready');
+    } else {
+      fill.classList.remove('full');
+    }
+  }
+  function finalizeBooster(owner){
+    const b = state.boosters[owner];
+    b.used = true;
+    b.charge = 0;
+    b.targeting = null;
+    cancelTargeting(true);
+    updateBoosterUI(owner);
+  }
+  function activateBooster(owner){
+    const b = state.boosters[owner];
+    if (!b || !b.equipped || b.used) return false;
+    if (b.charge < BOOSTER_CHARGE_MAX) return false;
+    if (state.turn !== owner) return false;
+    if (state.cascadeDepth > 0) return false;
+    if (state.inputLocked) return false;
+    clearHint();
+    switch (b.equipped){
+      case 'EXTRA_MOVE':       applyExtraMove(owner); finalizeBooster(owner); return true;
+      case 'FIRESTORM_CHARGE': applyFirestormCharge(owner); finalizeBooster(owner); return true;
+      case 'PATH_CLEAR':       startTargeting(owner, 'rowcol'); return true;
+      case 'RICOCHET':         startTargeting(owner, 'arrow'); return true;
+      case 'ROTATE_PAIR':      startTargeting(owner, 'pair'); return true;
+      case 'OVERDRIVE':        startTargeting(owner, 'dir'); return true;
+    }
+    return false;
+  }
+  // --- Booster effects ---
+  function applyExtraMove(owner){
+    if (state.turn !== owner) return;
+    state.movesLeft++;
+    updateMovesDots(true);
+    flashMovesRow();
+    showBoosterBanner('+1 MOVE', 'ENCORE', '');
+  }
+  function applyFirestormCharge(owner){
+    const { sKey, fKey } = streakState(owner);
+    state[sKey] = Math.max(state[sKey], 2);
+    const flags = state[fKey];
+    flags.t2 = true;
+    flags.t2Active = true;
+    flags.t2FromBooster = true;
+    state.boosters[owner].firestormUsed = true;
+    updateStreakBar(true);
+    showBoosterBanner('HOT START', 'STREAK PRESET ×2', 'hot');
+  }
+  function applyPathClear(owner, kind, idx){
+    // kind: 'row' or 'col'; idx: row/col index 0..GRID-1
+    const candidates = [];
+    for (const id in state.arrows){
+      const a = state.arrows[id];
+      if (kind === 'row' && a.headY !== idx) continue;
+      if (kind === 'col' && a.headX !== idx) continue;
+      const sd = slideDistance(state.grid, a);
+      if (sd.offBoard) candidates.push({ id, a });
+    }
+    if (!candidates.length){
+      showBoosterBanner('NOTHING TO SWEEP', 'LINE SWEEP', 'path');
+      finalizeBooster(owner);
+      return;
+    }
+    state.inputLocked = true;
+    // Score each as a clean exit, no cascade, no streak.
+    let total = 0;
+    let i = 0;
+    function fireNext(){
+      if (i >= candidates.length){
+        state.inputLocked = false;
+        finalizeBooster(owner);
+        return;
+      }
+      const { id, a } = candidates[i++];
+      if (!state.arrows[id]){ fireNext(); return; }
+      const sd = slideDistance(state.grid, a);
+      if (!sd.offBoard){ fireNext(); return; }
+      const moveDist = sd.steps + 1;
+      const oldBodyCells = a.bodyCells.slice();
+      const oldHead = { x: a.headX, y: a.headY };
+      a.bodyCells.forEach(c => state.grid[c.y][c.x] = null);
+      const pts = arrowMult(a);
+      if (owner === 'you') state.scoreYou += pts; else state.scoreOpp += pts;
+      total += pts;
+      updateScores();
+      delete state.arrows[id];
+      animateFlyOff(a, oldHead, moveDist, pts, oldBodyCells, true);
+      setTimeout(fireNext, 140);
+    }
+    showBoosterBanner('LINE SWEEP', kind.toUpperCase() + ' ' + idx, 'path');
+    fireNext();
+  }
+  function applyRicochet(owner, id){
+    const a = state.arrows[id];
+    if (!a){ cancelTargeting(false); return; }
+    const order = ['up', 'right', 'down', 'left'];
+    const cur = order.indexOf(a.dir);
+    const next = order[(cur + 1) % 4]; // clockwise
+    a.dir = next;
+    renderArrow(a, true);
+    showBoosterBanner('BEND', 'ROTATED 90°', '');
+    finalizeBooster(owner);
+  }
+  function applyRotatePair(owner, firstId, secondId){
+    const a = state.arrows[firstId];
+    const b = state.arrows[secondId];
+    if (!a || !b){ cancelTargeting(false); return; }
+    const order = ['up', 'right', 'down', 'left'];
+    const newDirA = order[(order.indexOf(a.dir) + 1) % 4];
+    const newDirB = order[(order.indexOf(b.dir) + 1) % 4];
+    // Validate: remove both, check if both fit with new dirs (same shape & head).
+    a.bodyCells.forEach(c => state.grid[c.y][c.x] = null);
+    b.bodyCells.forEach(c => state.grid[c.y][c.x] = null);
+    const aOk = canPlace(state.grid, a.headX, a.headY, { tplIdx:a.tplIdx, dir:newDirA, len:a.len });
+    // place A first so B is checked against it
+    let valid = aOk;
+    if (aOk){
+      const aCells = arrowCells(a.headX, a.headY, { tplIdx:a.tplIdx, dir:newDirA, len:a.len });
+      aCells.forEach(c => state.grid[c.y][c.x] = firstId);
+      const bOk = canPlace(state.grid, b.headX, b.headY, { tplIdx:b.tplIdx, dir:newDirB, len:b.len });
+      aCells.forEach(c => state.grid[c.y][c.x] = null);
+      valid = bOk;
+    }
+    if (!valid){
+      // restore
+      a.bodyCells.forEach(c => state.grid[c.y][c.x] = firstId);
+      b.bodyCells.forEach(c => state.grid[c.y][c.x] = secondId);
+      const svgA = boardEl.querySelector(`svg.arrow-svg[data-id="${firstId}"]`);
+      if (svgA){ svgA.classList.add('invalid'); setTimeout(()=>svgA.classList.remove('invalid'), 400); }
+      showBoosterBanner('CANCELLED', 'INVALID ROTATION', '');
+      cancelTargeting(false);
+      return;
+    }
+    a.dir = newDirA;
+    a.bodyCells = arrowCells(a.headX, a.headY, a);
+    a.bodyCells.forEach(c => state.grid[c.y][c.x] = firstId);
+    b.dir = newDirB;
+    b.bodyCells = arrowCells(b.headX, b.headY, b);
+    b.bodyCells.forEach(c => state.grid[c.y][c.x] = secondId);
+    renderArrow(a, true);
+    renderArrow(b, true);
+    showBoosterBanner('TWIST', 'PAIR ROTATED 90°', '');
+    finalizeBooster(owner);
+  }
+  function applyOverdrive(owner, dir){
+    state.overdriveDir = dir;
+    state.overdriveOwner = owner;
+    const arrows = {up:'↑',down:'↓',left:'←',right:'→'};
+    showBoosterBanner('OVERDRIVE ' + arrows[dir], 'BIGGER CASCADES THIS TURN', 'overdrive');
+    finalizeBooster(owner);
+  }
+  function showBoosterBanner(text, sub, cls){
+    const banner = document.createElement('div');
+    banner.className = 'booster-banner ' + (cls || '');
+    banner.innerHTML = text + (sub ? '<span class="small">' + sub + '</span>' : '');
+    boardEl.appendChild(banner);
+    setTimeout(() => banner.remove(), 1600);
+  }
+
+  // --- Targeting overlays ---
+  let targetingState = null;
+  function startTargeting(owner, kind){
+    state.boosters[owner].targeting = kind;
+    targetingState = { owner, kind, first:null };
+    state.inputLocked = true;
+    renderTargetingOverlay();
+    updateBoosterUI(owner);
+  }
+  function cancelTargeting(silent){
+    if (!targetingState) return;
+    const { owner } = targetingState;
+    // Restore booster availability (unless silent on switchTurn).
+    if (!silent && state.boosters[owner]) state.boosters[owner].targeting = null;
+    targetingState = null;
+    document.getElementById('targeting-overlay')?.remove();
+    state.inputLocked = false;
+    if (!silent) updateBoosterUI(owner);
+  }
+  function renderTargetingOverlay(){
+    document.getElementById('targeting-overlay')?.remove();
+    if (!targetingState) return;
+    const { kind } = targetingState;
+    const root = document.createElement('div');
+    root.id = 'targeting-overlay';
+    root.className = 'targeting-overlay targeting-' + kind;
+    if (kind === 'rowcol') buildRowColOverlay(root);
+    else if (kind === 'arrow') buildArrowOverlay(root);
+    else if (kind === 'pair') buildArrowOverlay(root, true);
+    else if (kind === 'dir') buildDirOverlay(root);
+    // Help line + cancel button
+    const help = document.createElement('div');
+    help.className = 'targeting-help';
+    help.textContent = ({
+      rowcol: 'TAP A ROW OR COLUMN',
+      arrow:  'TAP AN ARROW TO ROTATE',
+      pair:   'TAP 2 ADJACENT ARROWS',
+      dir:    'PICK A DIRECTION',
+    })[kind] || '';
+    root.appendChild(help);
+    const cancel = document.createElement('button');
+    cancel.className = 'targeting-cancel';
+    cancel.textContent = 'CANCEL';
+    cancel.addEventListener('click', () => cancelTargeting(false));
+    root.appendChild(cancel);
+    document.getElementById('game').appendChild(root);
+  }
+  function buildRowColOverlay(root){
+    // Show row/col strips overlay on top of board.
+    const bw = boardEl.getBoundingClientRect();
+    const gameRect = document.getElementById('game').getBoundingClientRect();
+    const left = bw.left - gameRect.left;
+    const top  = bw.top  - gameRect.top;
+    const cs = bw.width / GRID;
+    for (let r = 0; r < GRID; r++){
+      const line = document.createElement('div');
+      line.className = 'targeting-line';
+      line.style.left = left + 'px';
+      line.style.top  = (top + r * cs) + 'px';
+      line.style.width = bw.width + 'px';
+      line.style.height = cs + 'px';
+      line.dataset.kind = 'row';
+      line.dataset.idx = r;
+      line.addEventListener('click', () => {
+        applyPathClear(targetingState.owner, 'row', r);
+        targetingState = null;
+        document.getElementById('targeting-overlay')?.remove();
+        state.inputLocked = false;
+      });
+      root.appendChild(line);
+    }
+    for (let c = 0; c < GRID; c++){
+      const line = document.createElement('div');
+      line.className = 'targeting-line';
+      line.style.left = (left + c * cs) + 'px';
+      line.style.top  = top + 'px';
+      line.style.width = cs + 'px';
+      line.style.height = bw.height + 'px';
+      line.dataset.kind = 'col';
+      line.dataset.idx = c;
+      line.addEventListener('click', () => {
+        applyPathClear(targetingState.owner, 'col', c);
+        targetingState = null;
+        document.getElementById('targeting-overlay')?.remove();
+        state.inputLocked = false;
+      });
+      root.appendChild(line);
+    }
+  }
+  function buildArrowOverlay(root, isPair){
+    // Render click overlays on each arrow position so taps hit them above other elements.
+    const bw = boardEl.getBoundingClientRect();
+    const gameRect = document.getElementById('game').getBoundingClientRect();
+    const cs = bw.width / GRID;
+    for (const id in state.arrows){
+      const a = state.arrows[id];
+      for (const c of a.bodyCells){
+        const hit = document.createElement('div');
+        hit.style.cssText = 'position:absolute;cursor:pointer;outline:2px dashed #ffd34a;outline-offset:-3px;background:rgba(255,211,74,0.12);z-index:148';
+        hit.style.left = (bw.left - gameRect.left + c.x * cs) + 'px';
+        hit.style.top  = (bw.top - gameRect.top + c.y * cs) + 'px';
+        hit.style.width = cs + 'px';
+        hit.style.height = cs + 'px';
+        hit.dataset.id = id;
+        hit.addEventListener('click', (e) => {
+          e.stopPropagation();
+          onTargetArrow(id, isPair);
+        });
+        root.appendChild(hit);
+      }
+    }
+  }
+  function onTargetArrow(id, isPair){
+    if (!targetingState) return;
+    if (!isPair){
+      applyRicochet(targetingState.owner, id);
+      targetingState = null;
+      document.getElementById('targeting-overlay')?.remove();
+      state.inputLocked = false;
+      return;
+    }
+    if (!targetingState.first){
+      targetingState.first = id;
+      // Highlight first selection visually
+      document.querySelectorAll('#targeting-overlay [data-id="' + id + '"]').forEach(el => {
+        el.style.background = 'rgba(126,255,140,0.35)';
+        el.style.outlineColor = '#7eff8c';
+      });
+      return;
+    }
+    if (id === targetingState.first) return;
+    // Adjacency check: any cell of `first` 4-neighbor adjacent to any cell of `id`.
+    const a = state.arrows[targetingState.first];
+    const b = state.arrows[id];
+    if (!a || !b){ cancelTargeting(false); return; }
+    const aCells = new Set(a.bodyCells.map(c => c.x + ',' + c.y));
+    let adj = false;
+    for (const c of b.bodyCells){
+      for (const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){
+        if (aCells.has((c.x+dx) + ',' + (c.y+dy))){ adj = true; break; }
+      }
+      if (adj) break;
+    }
+    if (!adj){
+      showBoosterBanner('NOT ADJACENT', 'PICK A NEIGHBOR', '');
+      return;
+    }
+    applyRotatePair(targetingState.owner, targetingState.first, id);
+    targetingState = null;
+    document.getElementById('targeting-overlay')?.remove();
+    state.inputLocked = false;
+  }
+  function buildDirOverlay(root){
+    const wrap = document.createElement('div');
+    wrap.className = 'dir-picker';
+    wrap.style.position = 'absolute';
+    wrap.style.left = '50%';
+    wrap.style.top = '50%';
+    wrap.style.transform = 'translate(-50%,-50%)';
+    const top = document.createElement('div'); top.className = 'dir-row';
+    const mid = document.createElement('div'); mid.className = 'dir-row';
+    const bot = document.createElement('div'); bot.className = 'dir-row';
+    const mk = (label, dir) => {
+      const btn = document.createElement('button');
+      btn.className = 'dir-btn';
+      btn.textContent = label;
+      btn.addEventListener('click', () => {
+        applyOverdrive(targetingState.owner, dir);
+        targetingState = null;
+        document.getElementById('targeting-overlay')?.remove();
+        state.inputLocked = false;
+      });
+      return btn;
+    };
+    top.appendChild(mk('↑','up'));
+    mid.appendChild(mk('←','left'));
+    mid.appendChild(mk('→','right'));
+    bot.appendChild(mk('↓','down'));
+    wrap.appendChild(top); wrap.appendChild(mid); wrap.appendChild(bot);
+    root.appendChild(wrap);
+  }
+
+  // --- Booster picker (pre-match) ---
+  function buildBoosterPicker(){
+    const grid = document.getElementById('booster-grid');
+    if (!grid) return;
+    grid.innerHTML = '';
+    let selected = null;
+    BOOSTER_IDS.forEach(id => {
+      const def = BOOSTERS[id];
+      const card = document.createElement('div');
+      card.className = 'picker-card';
+      card.dataset.id = id;
+      card.innerHTML = `
+        <div class="icon">${def.icon}</div>
+        <div class="name">${def.name}</div>
+        <div class="desc">${def.desc}</div>`;
+      card.addEventListener('click', () => {
+        selected = id;
+        grid.querySelectorAll('.picker-card').forEach(c => c.classList.toggle('selected', c.dataset.id === id));
+        const btn = document.getElementById('btn-booster-confirm');
+        btn.disabled = false;
+        btn.style.opacity = '1';
+      });
+      grid.appendChild(card);
+    });
+    document.getElementById('btn-booster-confirm').onclick = () => {
+      if (!selected) return;
+      state.boosters.you.equipped = selected;
+      // Bot picks randomly.
+      state.boosters.opp.equipped = BOOSTER_IDS[Math.floor(Math.random() * BOOSTER_IDS.length)];
+      document.getElementById('overlay-booster').classList.add('hidden');
+      updateBoosterUI('you');
+      updateBoosterUI('opp');
+      startMatch();
+    };
+  }
+
+  // --- Bot booster AI ---
+  function botMaybeUseBooster(){
+    const b = state.boosters.opp;
+    if (!b || !b.equipped || b.used) return false;
+    if (b.charge < BOOSTER_CHARGE_MAX) return false;
+    if (state.turn !== 'opp') return false;
+    if (state.cascadeDepth > 0) return false;
+    switch (b.equipped){
+      case 'EXTRA_MOVE': {
+        // Use at start of turn if there are exits available — guarantees a 4th turn move.
+        let exits = 0;
+        for (const id in state.arrows){
+          if (slideDistance(state.grid, state.arrows[id]).offBoard){ exits++; if (exits >= 2) break; }
+        }
+        if (exits >= 2){ applyExtraMove('opp'); finalizeBooster('opp'); return true; }
+        return false;
+      }
+      case 'FIRESTORM_CHARGE': {
+        let exits = 0;
+        for (const id in state.arrows){
+          if (slideDistance(state.grid, state.arrows[id]).offBoard) exits++;
+          if (exits >= 2) break;
+        }
+        if (exits >= 2){ applyFirestormCharge('opp'); finalizeBooster('opp'); return true; }
+        return false;
+      }
+      case 'PATH_CLEAR': {
+        // Find row/col with ≥2 exiting arrows.
+        const rows = {}, cols = {};
+        for (const id in state.arrows){
+          const a = state.arrows[id];
+          if (!slideDistance(state.grid, a).offBoard) continue;
+          rows[a.headY] = (rows[a.headY] || 0) + 1;
+          cols[a.headX] = (cols[a.headX] || 0) + 1;
+        }
+        let bestKind = null, bestIdx = -1, bestCount = 1;
+        for (const r in rows) if (rows[r] > bestCount){ bestCount = rows[r]; bestKind='row'; bestIdx=+r; }
+        for (const c in cols) if (cols[c] > bestCount){ bestCount = cols[c]; bestKind='col'; bestIdx=+c; }
+        if (bestKind){ applyPathClear('opp', bestKind, bestIdx); return true; }
+        return false;
+      }
+      case 'RICOCHET': {
+        const order = ['up','right','down','left'];
+        for (const id in state.arrows){
+          const a = state.arrows[id];
+          if (slideDistance(state.grid, a).offBoard) continue; // already fires; rotation wasteful
+          const origDir = a.dir;
+          for (let i = 1; i < 4; i++){
+            a.dir = order[(order.indexOf(origDir) + i) % 4];
+            if (slideDistance(state.grid, a).offBoard){
+              a.dir = origDir;
+              applyRicochet('opp', id);
+              return true;
+            }
+          }
+          a.dir = origDir;
+        }
+        return false;
+      }
+      case 'ROTATE_PAIR': {
+        // Bot heuristic: skip (too complex for MVP) — fall through to time-pressure fallback.
+        return false;
+      }
+      case 'OVERDRIVE': {
+        const counts = { up:0, down:0, left:0, right:0 };
+        for (const id in state.arrows) counts[state.arrows[id].dir]++;
+        let bestDir = null, bestCount = 2;
+        for (const d in counts) if (counts[d] > bestCount){ bestCount = counts[d]; bestDir = d; }
+        if (bestDir){ applyOverdrive('opp', bestDir); return true; }
+        return false;
+      }
+    }
+    return false;
+  }
+  // Player booster click handler
+  document.addEventListener('click', (e) => {
+    const icon = e.target.closest && e.target.closest('#booster-icon-you');
+    if (icon) activateBooster('you');
+  });
+
   function findBotPick(){
     // Bot uses lower cascade weight and occasionally ignores chains entirely.
     const w = (Math.random() < BOT_CASCADE_MISS_CHANCE) ? 0 : BOT_CASCADE_WEIGHT;
@@ -1414,6 +2007,11 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:"Fredoka",system-ui
   }
   function botPickAndMove(){
     if (!state.running || state.turn !== 'opp') return;
+    // Try booster first; if used, give a small pause then continue.
+    if (botMaybeUseBooster()){
+      if (state.turn === 'opp' && state.movesLeft > 0 && !state.inputLocked) scheduleBotMove();
+      return;
+    }
     const pick = findBotPick();
     if (pick) tryRelease(pick.id, 'opp');
     else consumeMove();
@@ -1470,6 +2068,14 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:"Fredoka",system-ui
     const sub = $('result-sub');
     sub.textContent = `Time's up! ${state.scoreYou} – ${state.scoreOpp}`;
     sub.className = isYou ? 'win' : 'lose';
+    const fmt = (b) => {
+      if (!b.equipped) return '<i>none</i>';
+      const def = BOOSTERS[b.equipped];
+      return def.icon + ' ' + def.name + (b.used ? ' (used)' : ' (unused)');
+    };
+    $('result-boosters').innerHTML =
+      'You: ' + fmt(state.boosters.you) +
+      '<br>Bot: ' + fmt(state.boosters.opp);
     $('overlay-result').classList.remove('hidden');
   }
 
@@ -1482,13 +2088,27 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:"Fredoka",system-ui
     state.cascadeQueue = [];
     state.cascadeOwner = null;
     state.cascadeArrowsReleased = 0;
+    state.cascadeCaps = { depth: CASCADE_DEPTH_CAP, hard: CASCADE_HARD_LIMIT, arrow: CASCADE_ARROW_LIMIT };
     state.pendingBanners = [];
     state.pendingTurnSwitch = false;
     state.pendingMatchEnd = false;
     cascadeBannerCount = 0;
+    // Reset booster runtime state (keep equipped from picker).
+    state.boosters.you.charge = 0;
+    state.boosters.you.used = false;
+    state.boosters.you.targeting = null;
+    state.boosters.you.firestormUsed = false;
+    state.boosters.opp.charge = 0;
+    state.boosters.opp.used = false;
+    state.boosters.opp.targeting = null;
+    state.boosters.opp.firestormUsed = false;
+    state.overdriveDir = null;
+    state.overdriveOwner = null;
     state.turn = 'you';
     state.movesLeft = MOVES_PER_TURN;
     state.inputLocked = false;
+    updateBoosterUI('you');
+    updateBoosterUI('opp');
     buildBoardDom();
     updateScores();
     updateTurnLabel();
@@ -1506,8 +2126,16 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:"Fredoka",system-ui
     if (state.turn === 'you') scheduleHint();
   }
 
-  $('btn-start').addEventListener('click', () => { $('overlay-intro').classList.add('hidden'); startMatch(); });
-  $('btn-rematch').addEventListener('click', () => { $('overlay-result').classList.add('hidden'); startMatch(); });
+  $('btn-start').addEventListener('click', () => {
+    $('overlay-intro').classList.add('hidden');
+    buildBoosterPicker();
+    $('overlay-booster').classList.remove('hidden');
+  });
+  $('btn-rematch').addEventListener('click', () => {
+    $('overlay-result').classList.add('hidden');
+    buildBoosterPicker();
+    $('overlay-booster').classList.remove('hidden');
+  });
 
   window.addEventListener('resize', () => {
     if (!state.running) return;
