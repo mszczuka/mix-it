@@ -40,8 +40,12 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:"Fredoka",system-ui
 .move-dot.used{background:transparent;opacity:0.3}
 .you-turn .move-dot{color:#1660c4;background:#1660c4}
 .opp-turn .move-dot{color:#c0223a;background:#c0223a}
-.move-dot.bonus{color:#ffac04 !important;background:linear-gradient(180deg,#ffd34a,#ffac04) !important;box-shadow:0 0 8px rgba(255,172,4,0.7);animation:bonusPulse 0.6s ease-out}
-@keyframes bonusPulse{0%{transform:scale(0.3)}60%{transform:scale(1.35)}100%{transform:scale(1)}}
+.move-dot.bonus{color:#ffac04 !important;background:linear-gradient(180deg,#fff5cc,#ffac04) !important;box-shadow:0 0 12px rgba(255,172,4,0.95),0 0 22px rgba(255,211,74,0.7);animation:bonusPulse 1.6s ease-in-out infinite alternate}
+@keyframes bonusPulse{0%{transform:scale(1);box-shadow:0 0 8px rgba(255,172,4,0.7),0 0 16px rgba(255,211,74,0.5)}50%{transform:scale(1.30);box-shadow:0 0 18px rgba(255,172,4,1),0 0 32px rgba(255,211,74,0.85)}100%{transform:scale(1);box-shadow:0 0 8px rgba(255,172,4,0.7),0 0 16px rgba(255,211,74,0.5)}}
+.move-dot.bonus.arrive{animation:bonusArrive 0.55s ease-out, bonusPulse 1.6s ease-in-out 0.55s infinite alternate}
+@keyframes bonusArrive{0%{transform:scale(0.2) rotate(-45deg);opacity:0;box-shadow:0 0 0 transparent}55%{transform:scale(1.55) rotate(10deg);opacity:1;box-shadow:0 0 26px #ffd34a,0 0 48px #ffac04}100%{transform:scale(1) rotate(0);box-shadow:0 0 12px rgba(255,172,4,0.95)}}
+.moves-dots-wrap.flash{animation:movesRowFlash 0.9s ease-out}
+@keyframes movesRowFlash{0%{filter:none;transform:scale(1)}25%{filter:drop-shadow(0 0 12px #ffd34a) drop-shadow(0 0 24px #ffac04) brightness(1.4);transform:scale(1.18)}60%{filter:drop-shadow(0 0 6px #ffd34a) brightness(1.15);transform:scale(1.06)}100%{filter:none;transform:scale(1)}}
 .turn-timer-bar{width:100%;height:5px;background:rgba(0,0,0,0.08);border-radius:0;overflow:hidden}
 .turn-timer-fill{height:100%;width:100%;background:#1660c4;transition:width 0.1s linear}
 .opp-turn .turn-timer-fill{background:#c0223a}
@@ -90,6 +94,10 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:"Fredoka",system-ui
 @keyframes cascadeFlash{0%{opacity:0;transform:translate(-50%,-20%) scale(0.7)}25%{opacity:1;transform:translate(-50%,-50%) scale(1.1)}80%{opacity:1;transform:translate(-50%,-50%) scale(1)}100%{opacity:0;transform:translate(-50%,-80%) scale(1)}}
 .streak-banner{background:linear-gradient(180deg,#a35adb,#6c2ea8);box-shadow:0 4px 20px rgba(163,90,219,0.6),inset 0 1px 0 rgba(255,255,255,0.3)}
 .streak-banner.firestorm{background:linear-gradient(180deg,#ff7e3a,#d63a08)}
+/* BIG +1 MOVE banner — promoted from inline pill for stronger feedback */
+.bonusmove-banner{position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);background:linear-gradient(180deg,#ffd34a,#cc7d00);color:#1a1a1a;font-family:"Paytone One",sans-serif;font-size:30px;letter-spacing:2px;padding:14px 32px;border-radius:14px;z-index:170;pointer-events:none;text-shadow:0 2px 0 rgba(255,255,255,0.4);box-shadow:0 6px 30px rgba(255,172,4,0.9),0 0 60px rgba(255,211,74,0.7),inset 0 2px 0 rgba(255,255,255,0.5);animation:bonusMoveFlash 2.0s ease-out;white-space:nowrap;text-align:center;border:3px solid #1a1a1a}
+.bonusmove-banner .small{font-family:"Fredoka",sans-serif;font-size:14px;letter-spacing:1px;display:block;margin-top:4px;opacity:0.85;color:#1a1a1a}
+@keyframes bonusMoveFlash{0%{opacity:0;transform:translate(-50%,-20%) scale(0.3) rotate(-8deg)}15%{opacity:1;transform:translate(-50%,-50%) scale(1.25) rotate(3deg)}30%{transform:translate(-50%,-50%) scale(0.95) rotate(-1deg)}45%{transform:translate(-50%,-50%) scale(1.08) rotate(0)}60%{transform:translate(-50%,-50%) scale(1)}85%{opacity:1;transform:translate(-50%,-50%) scale(1)}100%{opacity:0;transform:translate(-50%,-110%) scale(1)}}
 
 /* OVERLAY */
 .overlay{position:absolute;inset:0;background:rgba(26,26,46,0.92);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:200;padding:20px;color:#fff}
@@ -103,6 +111,15 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:"Fredoka",system-ui
 .intro-rules b{color:#ffd34a}
 
 #board.locked .arrow-hit{cursor:not-allowed}
+/* CASCADE PREVIEW — long-press feedback */
+.arrow-svg.preview-trigger{filter:drop-shadow(0 0 5px #fff) drop-shadow(0 0 10px #ffd34a)}
+.arrow-svg.preview-cascade{animation:previewPulse 0.7s ease-in-out infinite alternate}
+@keyframes previewPulse{from{filter:drop-shadow(0 0 3px #ffd34a) drop-shadow(0 0 6px rgba(255,172,4,0.7))}to{filter:drop-shadow(0 0 6px #fff5cc) drop-shadow(0 0 14px #ffac04)}}
+.preview-depth-badge{position:absolute;background:linear-gradient(180deg,#ffd34a,#ffac04);color:#1a1a1a;font-weight:900;font-size:11px;border-radius:8px;padding:1px 5px;border:2px solid #1a1a1a;pointer-events:none;z-index:80;transform:translate(-50%,-50%);box-shadow:0 2px 4px rgba(0,0,0,0.4);animation:badgePop 0.25s ease-out}
+@keyframes badgePop{0%{transform:translate(-50%,-50%) scale(0.4);opacity:0}100%{transform:translate(-50%,-50%) scale(1);opacity:1}}
+/* HINT — best move suggestion after 3s idle */
+.arrow-svg.hint{animation:hintPulse 0.9s ease-in-out infinite alternate}
+@keyframes hintPulse{from{filter:drop-shadow(0 0 2px rgba(126,255,140,0.6))}to{filter:drop-shadow(0 0 6px #7eff8c) drop-shadow(0 0 14px #52a35a)}}
 </style>
 </head>
 <body>
@@ -172,7 +189,7 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:"Fredoka",system-ui
   const GRID = 14;
   const MOVES_PER_TURN = 3;
   const MATCH_DURATION_MS = 3 * 60 * 1000;
-  const TURN_DURATION_MS = 15 * 1000;
+  const TURN_DURATION_MS = 30 * 1000;
   const BOT_MOVE_DELAY_MIN = 700, BOT_MOVE_DELAY_MAX = 1200;
   const SPAWN_PER_TURN = 3;
 
@@ -381,7 +398,10 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:"Fredoka",system-ui
       hit.style.top  = (cell.y * cs) + 'px';
       hit.style.width  = cs + 'px';
       hit.style.height = cs + 'px';
-      hit.addEventListener('click', (e) => { e.stopPropagation(); onArrowTap(arrow.id); });
+      hit.addEventListener('pointerdown', (e) => { e.stopPropagation(); startLongPress(arrow.id, e); });
+      hit.addEventListener('pointerup',   (e) => { e.stopPropagation(); endLongPress(true); });
+      hit.addEventListener('pointerleave',(e) => { endLongPress(false); });
+      hit.addEventListener('pointercancel',(e) => { endLongPress(false); });
       boardEl.appendChild(hit);
     }
   }
@@ -574,11 +594,124 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:"Fredoka",system-ui
     return count;
   }
 
+  // --- LONG-PRESS PREVIEW ---
+  const LONG_PRESS_MS = 350;
+  let lpTimer = null, lpActive = false, lpId = null, lpStart = null;
+  function startLongPress(id, e){
+    if (!state.running || state.inputLocked || state.turn !== 'you') return;
+    clearHint();
+    clearTimeout(lpTimer);
+    lpId = id;
+    lpActive = false;
+    lpStart = { x: e.clientX, y: e.clientY };
+    lpTimer = setTimeout(() => {
+      lpActive = true;
+      showCascadePreview(id);
+    }, LONG_PRESS_MS);
+  }
+  function endLongPress(fire){
+    clearTimeout(lpTimer);
+    lpTimer = null;
+    const wasPreview = lpActive;
+    const id = lpId;
+    lpId = null; lpStart = null; lpActive = false;
+    if (wasPreview){ hideCascadePreview(); return; }
+    if (fire && id) onArrowTap(id);
+  }
+  document.addEventListener('pointermove', (e) => {
+    if (!lpStart) return;
+    const dx = e.clientX - lpStart.x, dy = e.clientY - lpStart.y;
+    if (dx*dx + dy*dy > 100) endLongPress(false);
+  });
+  document.addEventListener('pointerup', () => { if (lpId) endLongPress(false); });
+
+  function computeCascadePreview(triggerId){
+    const trigger = state.arrows[triggerId];
+    if (!trigger) return { triggerExits:false, chain:[] };
+    const { steps, offBoard } = slideDistance(state.grid, trigger);
+    if (steps === 0 && !offBoard) return { triggerExits:false, chain:[] };
+    // Snapshot blocked-before
+    const blockedBefore = new Set();
+    for (const id in state.arrows){
+      if (id === triggerId) continue;
+      if (!slideDistance(state.grid, state.arrows[id]).offBoard) blockedBefore.add(id);
+    }
+    // Simulate clearing trigger.
+    const cleared = [];
+    trigger.bodyCells.forEach(c => { cleared.push({x:c.x, y:c.y, v:state.grid[c.y][c.x]}); state.grid[c.y][c.x] = null; });
+    const chain = []; // [{id, depth}]
+    const visited = new Set();
+    let depth = 1;
+    while (depth <= CASCADE_HARD_LIMIT && chain.length < CASCADE_ARROW_LIMIT){
+      const wave = [];
+      for (const id of blockedBefore){
+        if (visited.has(id)) continue;
+        const a = state.arrows[id];
+        if (a && slideDistance(state.grid, a).offBoard) wave.push(id);
+      }
+      if (!wave.length) break;
+      const triggerHead = { x: trigger.headX, y: trigger.headY };
+      wave.sort((aId, bId) => {
+        const a = state.arrows[aId], b = state.arrows[bId];
+        const da = Math.abs(a.headX - triggerHead.x) + Math.abs(a.headY - triggerHead.y);
+        const db = Math.abs(b.headX - triggerHead.x) + Math.abs(b.headY - triggerHead.y);
+        return da - db || (b.tierIdx||0) - (a.tierIdx||0);
+      });
+      for (const id of wave){
+        if (chain.length >= CASCADE_ARROW_LIMIT) break;
+        visited.add(id);
+        chain.push({ id, depth });
+        const a = state.arrows[id];
+        a.bodyCells.forEach(c => { cleared.push({x:c.x, y:c.y, v:state.grid[c.y][c.x]}); state.grid[c.y][c.x] = null; });
+      }
+      depth++;
+    }
+    // Restore.
+    cleared.forEach(r => state.grid[r.y][r.x] = r.v);
+    return { triggerExits: offBoard, chain };
+  }
+
+  function showCascadePreview(id){
+    hideCascadePreview();
+    const { triggerExits, chain } = computeCascadePreview(id);
+    const trigSvg = boardEl.querySelector(`svg.arrow-svg[data-id="${id}"]`);
+    if (trigSvg) trigSvg.classList.add('preview-trigger');
+    const cs = getCellSize();
+    for (const link of chain){
+      const svg = boardEl.querySelector(`svg.arrow-svg[data-id="${link.id}"]`);
+      if (svg) svg.classList.add('preview-cascade');
+      const a = state.arrows[link.id];
+      if (!a) continue;
+      const mult = Math.min(link.depth + 1, CASCADE_DEPTH_CAP);
+      const badge = document.createElement('div');
+      badge.className = 'preview-depth-badge';
+      badge.dataset.preview = '1';
+      badge.textContent = '×' + mult;
+      badge.style.left = ((a.headX + 0.5) * cs) + 'px';
+      badge.style.top  = ((a.headY + 0.5) * cs) + 'px';
+      boardEl.appendChild(badge);
+    }
+    // Optional indicator on trigger if it doesn't even exit.
+    if (!triggerExits && trigSvg){
+      trigSvg.classList.remove('preview-trigger');
+      trigSvg.classList.add('preview-cascade');
+    }
+  }
+  function hideCascadePreview(){
+    boardEl.querySelectorAll('.arrow-svg.preview-trigger,.arrow-svg.preview-cascade').forEach(el => {
+      el.classList.remove('preview-trigger','preview-cascade');
+    });
+    boardEl.querySelectorAll('.preview-depth-badge').forEach(el => el.remove());
+  }
+
   // --- RELEASE (with partial slide) ---
   function onArrowTap(id){
     if (!state.running || state.inputLocked) return;
     if (state.turn !== 'you') return;
+    clearHint();
     tryRelease(id, 'you');
+    // After a player tap, re-arm hint if still your turn with moves left.
+    if (state.running && state.turn === 'you' && state.movesLeft > 0) scheduleHint();
   }
 
   function tryRelease(id, byPlayer){
@@ -594,13 +727,12 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:"Fredoka",system-ui
     const oldBodyCells = arr.bodyCells.slice();
     const oldHead = { x: arr.headX, y: arr.headY };
 
-    // Snapshot arrows currently NOT able to exit (cascade candidates before clearing).
+    // Snapshot arrows currently NOT able to exit. Any of these that become able-to-exit
+    // after our move (whether we exited the board OR just slid partially) joins the cascade.
     const blockedBefore = new Set();
-    if (offBoard){
-      for (const aid in state.arrows){
-        if (aid === id) continue;
-        if (!slideDistance(state.grid, state.arrows[aid]).offBoard) blockedBefore.add(aid);
-      }
+    for (const aid in state.arrows){
+      if (aid === id) continue;
+      if (!slideDistance(state.grid, state.arrows[aid]).offBoard) blockedBefore.add(aid);
     }
 
     arr.bodyCells.forEach(c => state.grid[c.y][c.x] = null);
@@ -631,25 +763,18 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:"Fredoka",system-ui
       resetStreak(byPlayer);
     }
 
-    // Detect cascade candidates: same direction + colinear behind trigger head (firing axis).
+    // Detect cascade candidates: ANY blocked arrow that becomes able to exit after our
+    // move (whether we fully exited OR partially slid).
     let freed = [];
-    if (offBoard){
-      const triggerDir = arr.dir;
-      const td = DIRS[triggerDir];
-      for (const aid of blockedBefore){
-        const a = state.arrows[aid];
-        if (!a) continue;
-        if (a.dir !== triggerDir) continue;
-        const vx = oldHead.x - a.headX, vy = oldHead.y - a.headY;
-        if (vx * td.dy - vy * td.dx !== 0) continue;       // not colinear with firing axis
-        if (vx * td.dx + vy * td.dy <= 0) continue;        // not behind trigger
-        if (slideDistance(state.grid, a).offBoard){
-          const dist = Math.abs(a.headX - oldHead.x) + Math.abs(a.headY - oldHead.y);
-          freed.push({ id: aid, dist, tier: a.tierIdx || 0 });
-        }
+    for (const aid of blockedBefore){
+      const a = state.arrows[aid];
+      if (!a) continue;
+      if (slideDistance(state.grid, a).offBoard){
+        const dist = Math.abs(a.headX - oldHead.x) + Math.abs(a.headY - oldHead.y);
+        freed.push({ id: aid, dist, tier: a.tierIdx || 0 });
       }
-      freed.sort((a,b) => a.dist - b.dist || b.tier - a.tier || (a.id < b.id ? -1 : 1));
     }
+    freed.sort((a,b) => a.dist - b.dist || b.tier - a.tier || (a.id < b.id ? -1 : 1));
 
     consumeMove();
 
@@ -690,8 +815,9 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:"Fredoka",system-ui
     if (!flags.t3 && newFloor >= 3){
       flags.t3 = true;
       state.movesLeft++;
-      updateMovesDots();
-      enqueueStreakBanner('STREAK ×3 — +1 MOVE', 'streak-banner');
+      updateMovesDots(true);
+      flashMovesRow();
+      enqueueBonusMoveBanner();
     }
     if (!flags.t4 && newFloor >= 4){
       flags.t4 = true;
@@ -770,18 +896,12 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:"Fredoka",system-ui
 
     addStreak(state.cascadeOwner, STREAK_CASCADE_WEIGHT);
 
-    // Append newly freed at depth+1 — same dir + colinear behind trigger head.
+    // Append newly freed at depth+1 — ANY blocked arrow that can now exit.
     if (depth + 1 <= CASCADE_HARD_LIMIT){
-      const triggerDir = arr.dir;
-      const td = DIRS[triggerDir];
       const newlyFreed = [];
       for (const aid of blockedBefore){
         const a = state.arrows[aid];
         if (!a) continue;
-        if (a.dir !== triggerDir) continue;
-        const vx = oldHead.x - a.headX, vy = oldHead.y - a.headY;
-        if (vx * td.dy - vy * td.dx !== 0) continue;
-        if (vx * td.dx + vy * td.dy <= 0) continue;
         if (slideDistance(state.grid, a).offBoard){
           const dist = Math.abs(a.headX - oldHead.x) + Math.abs(a.headY - oldHead.y);
           newlyFreed.push({ id: aid, dist, tier: a.tierIdx || 0 });
@@ -817,8 +937,8 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:"Fredoka",system-ui
       setTimeout(() => requestSwitchTurn(0), 200);
     } else {
       state.inputLocked = false;
-      // If it's bot's turn and bot was mid-turn, re-arm bot.
       if (state.turn === 'opp') scheduleBotMove();
+      else scheduleHint();
     }
   }
 
@@ -842,6 +962,7 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:"Fredoka",system-ui
   }
 
   function switchTurn(){
+    clearHint();
     state.turn = state.turn === 'you' ? 'opp' : 'you';
     state.movesLeft = MOVES_PER_TURN;
     state.inputLocked = false;
@@ -853,6 +974,7 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:"Fredoka",system-ui
     showTurnBanner(state.turn);
     refillBoard();
     if (state.turn === 'opp') scheduleBotMove();
+    else scheduleHint();
   }
 
   function countOccupiedCells(){
@@ -896,17 +1018,42 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:"Fredoka",system-ui
     $('turn-row').classList.toggle('you-turn', state.turn === 'you');
     $('turn-row').classList.toggle('opp-turn', state.turn === 'opp');
   }
-  function updateMovesDots(){
+  function updateMovesDots(markArrive){
     const wrap = $('moves-dots');
     wrap.innerHTML = '';
-    // Show MOVES_PER_TURN base dots + any extra bonus dots earned this turn.
     const total = Math.max(MOVES_PER_TURN, state.movesLeft);
     for (let i = 0; i < total; i++){
       const d = document.createElement('div');
       let cls = 'move-dot' + (i >= state.movesLeft ? ' used' : '');
-      if (i >= MOVES_PER_TURN) cls += ' bonus';
+      if (i >= MOVES_PER_TURN){
+        cls += ' bonus';
+        if (markArrive) cls += ' arrive';
+      }
       d.className = cls;
       wrap.appendChild(d);
+    }
+  }
+  function flashMovesRow(){
+    const wrap = boardEl.parentElement ? document.querySelector('.moves-dots-wrap') : null;
+    const target = document.querySelector('.moves-dots-wrap') || $('moves-dots');
+    if (!target) return;
+    target.classList.remove('flash');
+    void target.offsetWidth;
+    target.classList.add('flash');
+    setTimeout(() => target.classList.remove('flash'), 1000);
+  }
+  function showBonusMoveBanner(){
+    const banner = document.createElement('div');
+    banner.className = 'bonusmove-banner';
+    banner.innerHTML = '+1 MOVE<span class="small">STREAK ×3</span>';
+    boardEl.appendChild(banner);
+    setTimeout(() => banner.remove(), 2000);
+  }
+  function enqueueBonusMoveBanner(){
+    if (state.cascadeDepth > 0){
+      state.pendingBanners.push({ text:'BONUSMOVE', cls:'bonusmove' });
+    } else {
+      showBonusMoveBanner();
     }
   }
 
@@ -945,7 +1092,14 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:"Fredoka",system-ui
   function flushPendingBanners(){
     const queue = state.pendingBanners.slice();
     state.pendingBanners = [];
-    queue.forEach((b, i) => setTimeout(() => showStreakBanner(b.text, b.cls), i * 250));
+    queue.forEach((b, i) => setTimeout(() => {
+      if (b.cls === 'bonusmove'){
+        showBonusMoveBanner();
+        flashMovesRow();
+      } else {
+        showStreakBanner(b.text, b.cls);
+      }
+    }, i * 250));
   }
   function updateStreakBar(pulse){
     const fill = $('streak-fill');
@@ -1175,18 +1329,11 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:"Fredoka",system-ui
       state.grid[c.y][c.x] = null;
     });
     let score = 0;
-    // Heuristic: each freed arrow gets mult by chain index (sorted by distance).
-    // Must match cascade gate: same dir + colinear behind trigger head.
-    const triggerDir = trigger.dir;
-    const td = DIRS[triggerDir];
+    // Match cascade gate (loosened): ANY blocked arrow that can now exit.
     const freedList = [];
     for (const id of blockedBefore){
       const a = state.arrows[id];
       if (!a) continue;
-      if (a.dir !== triggerDir) continue;
-      const vx = trigger.headX - a.headX, vy = trigger.headY - a.headY;
-      if (vx * td.dy - vy * td.dx !== 0) continue;
-      if (vx * td.dx + vy * td.dy <= 0) continue;
       if (slideDistance(state.grid, a).offBoard){
         const dist = Math.abs(a.headX - trigger.headX) + Math.abs(a.headY - trigger.headY);
         freedList.push({ id, dist, tier: a.tierIdx || 0 });
@@ -1205,9 +1352,15 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:"Fredoka",system-ui
     removed.forEach(r => state.grid[r.y][r.x] = r.v);
     return score;
   }
-  function botPickAndMove(){
-    if (!state.running || state.turn !== 'opp') return;
-    let bestComposite = null, bestSlide = null;
+  // Bot weights — separated from hint so we can weaken bot without dulling the player's tip.
+  const BOT_CASCADE_WEIGHT = 0.55;       // was 0.85 — make bot less reliant on chain reads
+  const BOT_TOP_K = 3;                   // pick from top-K offBoard candidates
+  const BOT_TOP_WEIGHTS = [0.55, 0.30, 0.15]; // probability of choosing 1st / 2nd / 3rd best
+  const BOT_CASCADE_MISS_CHANCE = 0.25;  // 25% of the time bot ignores cascade potential entirely
+
+  function findBestMove(cascadeWeight){
+    const w = (typeof cascadeWeight === 'number') ? cascadeWeight : 0.85;
+    const offCands = [], slideCands = [];
     for (const id in state.arrows){
       const arr = state.arrows[id];
       const { steps, offBoard } = slideDistance(state.grid, arr);
@@ -1215,17 +1368,76 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:"Fredoka",system-ui
       if (moveDist === 0) continue;
       if (offBoard){
         const pts = arrowMult(arr);
-        const cascadePot = estimateCascadePotential(id);
-        const composite = pts + cascadePot * 0.85;
-        if (!bestComposite || composite > bestComposite.composite) bestComposite = { id, composite };
+        const cascadePot = w > 0 ? estimateCascadePotential(id) : 0;
+        offCands.push({ id, composite: pts + cascadePot * w });
       } else {
-        if (!bestSlide || steps > bestSlide.steps) bestSlide = { id, steps };
+        slideCands.push({ id, steps });
       }
     }
-    const pick = bestComposite || bestSlide;
+    offCands.sort((a,b) => b.composite - a.composite);
+    if (offCands.length) return offCands[0];
+    slideCands.sort((a,b) => b.steps - a.steps);
+    return slideCands[0] || null;
+  }
+  function findBotPick(){
+    // Bot uses lower cascade weight and occasionally ignores chains entirely.
+    const w = (Math.random() < BOT_CASCADE_MISS_CHANCE) ? 0 : BOT_CASCADE_WEIGHT;
+    const offCands = [], slideCands = [];
+    for (const id in state.arrows){
+      const arr = state.arrows[id];
+      const { steps, offBoard } = slideDistance(state.grid, arr);
+      const moveDist = offBoard ? steps + 1 : steps;
+      if (moveDist === 0) continue;
+      if (offBoard){
+        const pts = arrowMult(arr);
+        const cascadePot = w > 0 ? estimateCascadePotential(id) : 0;
+        offCands.push({ id, composite: pts + cascadePot * w });
+      } else {
+        slideCands.push({ id, steps });
+      }
+    }
+    offCands.sort((a,b) => b.composite - a.composite);
+    if (offCands.length){
+      // Weighted pick from top-K.
+      const top = offCands.slice(0, Math.min(BOT_TOP_K, offCands.length));
+      const weights = BOT_TOP_WEIGHTS.slice(0, top.length);
+      const total = weights.reduce((s,w) => s+w, 0);
+      let r = Math.random() * total;
+      for (let i = 0; i < top.length; i++){
+        r -= weights[i];
+        if (r <= 0) return top[i];
+      }
+      return top[top.length - 1];
+    }
+    slideCands.sort((a,b) => b.steps - a.steps);
+    return slideCands[0] || null;
+  }
+  function botPickAndMove(){
+    if (!state.running || state.turn !== 'opp') return;
+    const pick = findBotPick();
     if (pick) tryRelease(pick.id, 'opp');
     else consumeMove();
     if (state.turn === 'opp' && state.movesLeft > 0 && !state.inputLocked) scheduleBotMove();
+  }
+
+  // --- HINT ---
+  const HINT_DELAY_MS = 3000;
+  let hintTimer = null;
+  function scheduleHint(){
+    clearHint();
+    if (!state.running || state.turn !== 'you' || state.inputLocked || state.cascadeDepth > 0) return;
+    hintTimer = setTimeout(showHint, HINT_DELAY_MS);
+  }
+  function showHint(){
+    if (!state.running || state.turn !== 'you' || state.inputLocked || state.cascadeDepth > 0) return;
+    const best = findBestMove();
+    if (!best) return;
+    const svg = boardEl.querySelector(`svg.arrow-svg[data-id="${best.id}"]`);
+    if (svg) svg.classList.add('hint');
+  }
+  function clearHint(){
+    if (hintTimer){ clearTimeout(hintTimer); hintTimer = null; }
+    boardEl.querySelectorAll('.arrow-svg.hint').forEach(el => el.classList.remove('hint'));
   }
 
   // --- LOOP ---
@@ -1251,6 +1463,7 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:"Fredoka",system-ui
 
   function endByTimeout(){
     state.running = false;
+    clearHint();
     const winner = state.scoreYou >= state.scoreOpp ? 'you' : 'opp';
     const isYou = winner === 'you';
     $('result-title').textContent = isYou ? 'VICTORY' : 'DEFEAT';
@@ -1290,6 +1503,7 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:"Fredoka",system-ui
     // Seed: fill the board (variety baked in via lengthBias inside refillBoard).
     refillBoard(true);
     requestAnimationFrame(tick);
+    if (state.turn === 'you') scheduleHint();
   }
 
   $('btn-start').addEventListener('click', () => { $('overlay-intro').classList.add('hidden'); startMatch(); });
