@@ -1,0 +1,851 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,viewport-fit=cover" />
+<title>Block Blast PvP — Prototype</title>
+<style>
+  :root{
+    --bg:#0f1220;
+    --panel:#171a2e;
+    --panel2:#1f2340;
+    --grid:#262b4d;
+    --grid2:#2f3560;
+    --line:#3a4180;
+    --me:#5dd6ff;
+    --me2:#3aa8d8;
+    --foe:#ff7a7a;
+    --foe2:#d04a4a;
+    --garbage:#9aa0c5;
+    --ghost:rgba(93,214,255,0.35);
+    --bad:rgba(255,90,90,0.45);
+    --text:#e8ecff;
+    --muted:#8a90b8;
+    --accent:#ffd24a;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--text);
+    font:14px/1.3 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+    overscroll-behavior:none;touch-action:none}
+  #app{display:flex;flex-direction:column;align-items:center;
+    min-height:100vh;padding:8px 8px 16px;gap:8px;max-width:480px;margin:0 auto}
+  .hud{width:100%;display:flex;align-items:center;justify-content:space-between;
+    padding:6px 10px;background:var(--panel);border-radius:10px}
+  .hud .timer{font-size:22px;font-weight:700;color:var(--accent);font-variant-numeric:tabular-nums}
+  .hud .lbl{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+  .stat{display:flex;flex-direction:column;align-items:center;min-width:60px}
+  .stat .v{font-weight:700;font-size:15px}
+  .stat.me .v{color:var(--me)}
+  .stat.foe .v{color:var(--foe)}
+
+  .board-wrap{display:flex;flex-direction:column;align-items:center;gap:4px;width:100%}
+  .board-label{font-size:11px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
+  .board-label.me{color:var(--me)}
+  .board-label.foe{color:var(--foe)}
+
+  .board{
+    display:grid;grid-template-columns:repeat(9,1fr);grid-template-rows:repeat(9,1fr);
+    gap:2px;background:var(--panel2);border-radius:8px;padding:4px;
+    position:relative;aspect-ratio:1/1;
+    box-shadow:0 4px 14px rgba(0,0,0,.45);
+  }
+  .board.foe{width:60%}
+  .board.me{width:100%}
+  .cell{
+    background:var(--grid);border-radius:3px;position:relative;
+  }
+  /* sudoku-style 3x3 sub-grid lines */
+  .cell.thickR{box-shadow:inset -2px 0 0 var(--line)}
+  .cell.thickB{box-shadow:inset 0 -2px 0 var(--line)}
+  .cell.thickR.thickB{box-shadow:inset -2px 0 0 var(--line),inset 0 -2px 0 var(--line)}
+  .cell.f-me{background:linear-gradient(160deg,var(--me),var(--me2))}
+  .cell.f-foe{background:linear-gradient(160deg,var(--foe),var(--foe2))}
+  .cell.f-garbage{background:linear-gradient(160deg,#bfc4e0,#7a80a8);animation:garbagePulse 1.6s ease-in-out infinite}
+  .cell.f-garbage.fading{animation:garbageFade .25s linear infinite alternate}
+  @keyframes garbagePulse{0%,100%{filter:brightness(1)}50%{filter:brightness(1.18)}}
+  @keyframes garbageFade{from{filter:brightness(.8)}to{filter:brightness(1.4)}}
+  .cell.ghost{background:var(--ghost);outline:1px dashed rgba(93,214,255,.6)}
+  .cell.ghost-bad{background:var(--bad);outline:1px dashed rgba(255,90,90,.7)}
+  .cell.incoming{animation:flashIn .35s ease-out}
+  .cell.clearing{animation:flashClear .25s ease-out}
+
+  @keyframes flashIn{0%{transform:scale(.4);opacity:0;filter:brightness(2)}100%{transform:scale(1);opacity:1}}
+  @keyframes flashClear{0%{filter:brightness(2.5)}100%{filter:brightness(1);opacity:0;transform:scale(1.15)}}
+
+  .tray{
+    width:100%;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;
+    background:var(--panel);border-radius:10px;padding:10px;min-height:110px
+  }
+  .slot{
+    background:var(--panel2);border-radius:8px;display:flex;align-items:center;justify-content:center;
+    padding:8px;position:relative;min-height:96px;cursor:grab;
+  }
+  .slot.empty{opacity:.25}
+  .slot.dragging{opacity:.35}
+  .slot.disabled{outline:2px solid rgba(255,90,90,.45)}
+  .slot .hint{position:absolute;top:2px;right:4px;font-size:10px;color:var(--muted)}
+  .piece-mini{display:grid;gap:2px}
+  .piece-mini .pc{width:14px;height:14px;border-radius:2px;background:linear-gradient(160deg,var(--me),var(--me2))}
+
+  /* floating dragged piece preview */
+  .drag-ghost{position:fixed;pointer-events:none;display:grid;gap:2px;z-index:50;opacity:.95;
+    filter:drop-shadow(0 6px 10px rgba(0,0,0,.5))}
+  .drag-ghost .pc{border-radius:3px;background:linear-gradient(160deg,var(--me),var(--me2))}
+
+  /* attack travel */
+  .attack-fx{position:fixed;pointer-events:none;z-index:40;width:14px;height:14px;border-radius:3px;
+    background:linear-gradient(160deg,var(--me),var(--me2));box-shadow:0 0 10px var(--me);
+    transition:transform .55s cubic-bezier(.4,.1,.3,1),opacity .55s}
+  .attack-fx.foe{background:linear-gradient(160deg,var(--foe),var(--foe2));box-shadow:0 0 10px var(--foe)}
+
+  .toast{position:fixed;left:50%;top:42%;transform:translate(-50%,-50%);
+    background:rgba(0,0,0,.7);color:#fff;padding:10px 18px;border-radius:24px;
+    font-size:18px;font-weight:700;letter-spacing:.05em;pointer-events:none;
+    animation:toastIn .8s ease-out forwards;z-index:60}
+  @keyframes toastIn{
+    0%{opacity:0;transform:translate(-50%,-30%) scale(.7)}
+    20%{opacity:1;transform:translate(-50%,-50%) scale(1.05)}
+    80%{opacity:1;transform:translate(-50%,-55%) scale(1)}
+    100%{opacity:0;transform:translate(-50%,-70%) scale(.95)}
+  }
+
+  .overlay{position:fixed;inset:0;background:rgba(8,10,22,.85);display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:14px;z-index:100;backdrop-filter:blur(4px)}
+  .overlay.hidden{display:none}
+  .overlay h1{margin:0;font-size:42px;letter-spacing:.05em}
+  .overlay h1.win{color:var(--me)}
+  .overlay h1.lose{color:var(--foe)}
+  .overlay h1.draw{color:var(--accent)}
+  .overlay .stats{background:var(--panel);padding:14px 22px;border-radius:12px;min-width:260px;
+    display:grid;grid-template-columns:1fr auto auto;gap:6px 14px;font-size:14px}
+  .overlay .stats .h{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.05em}
+  .btn{background:var(--accent);color:#222;border:0;padding:12px 24px;border-radius:24px;
+    font-size:16px;font-weight:700;cursor:pointer}
+  .btn.sec{background:var(--panel);color:var(--text)}
+
+  .countdown{font-size:120px;font-weight:800;color:var(--accent);text-shadow:0 0 30px rgba(255,210,74,.5);
+    animation:cdPop .9s ease-out forwards}
+  @keyframes cdPop{0%{transform:scale(.5);opacity:0}30%{opacity:1;transform:scale(1.1)}100%{transform:scale(1);opacity:1}}
+
+  .controls{display:flex;gap:8px;width:100%;justify-content:center}
+  .ctrlbtn{background:var(--panel2);color:var(--text);border:0;padding:6px 12px;border-radius:18px;
+    font-size:12px;cursor:pointer}
+  .occ-bar{flex:1;height:6px;background:var(--panel2);border-radius:3px;overflow:hidden;
+    margin:0 8px;max-width:120px}
+  .occ-bar .fill{height:100%;transition:width .25s}
+  .occ-bar.me .fill{background:var(--me)}
+  .occ-bar.foe .fill{background:var(--foe)}
+
+  .legend{font-size:11px;color:var(--muted);text-align:center;line-height:1.5;margin-top:2px}
+  .legend b{color:var(--text)}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="hud">
+    <div class="stat foe">
+      <div class="lbl">Bot</div>
+      <div class="v"><span id="foeOcc">0</span>%</div>
+    </div>
+    <div class="occ-bar foe"><div class="fill" id="foeBar" style="width:0%"></div></div>
+    <div class="timer" id="timer">3:00</div>
+    <div class="occ-bar me"><div class="fill" id="meBar" style="width:0%"></div></div>
+    <div class="stat me">
+      <div class="lbl">You</div>
+      <div class="v"><span id="meOcc">0</span>%</div>
+    </div>
+  </div>
+
+  <div class="board-wrap">
+    <div class="board-label foe">Opponent · <span id="foeLines">0</span> lines</div>
+    <div class="board foe" id="foeBoard"></div>
+  </div>
+
+  <div class="board-wrap">
+    <div class="board-label me">You · <span id="meLines">0</span> lines</div>
+    <div class="board me" id="meBoard"></div>
+  </div>
+
+  <div class="tray" id="tray"></div>
+
+  <div class="legend">Drag pieces onto your board. <b>Tap</b> a piece to rotate. Clear rows/cols to send garbage.</div>
+</div>
+
+<div class="overlay" id="startOverlay">
+  <div style="color:var(--muted);font-size:11px;letter-spacing:.18em;text-transform:uppercase">Tetris-like Mode</div>
+  <h1 class="win">Block Blast PvP</h1>
+  <div style="color:var(--muted);max-width:320px;text-align:center">
+    9×9 board · 3 minutes · drag pieces, clear lines, send garbage to the bot.
+    Lowest occupancy at the buzzer wins.
+  </div>
+  <div style="display:flex;gap:8px">
+    <button class="btn" data-diff="easy">Easy</button>
+    <button class="btn" data-diff="medium">Medium</button>
+    <button class="btn" data-diff="hard">Hard</button>
+  </div>
+  <a href="index.html" class="btn sec" style="text-decoration:none;display:inline-block;margin-top:4px">← Back to Hub</a>
+</div>
+
+<div class="overlay hidden" id="endOverlay">
+  <h1 id="endTitle">WIN</h1>
+  <div class="stats" id="endStats"></div>
+  <button class="btn" id="playAgain">Play again</button>
+</div>
+
+<div class="overlay hidden" id="cdOverlay">
+  <div class="countdown" id="cdNum">3</div>
+</div>
+
+<script>
+// ============================================================
+// CONFIG
+// ============================================================
+const C = {
+  W:9, H:9, TRAY:3,
+  DURATION:180, COUNTDOWN:3,
+  MULT:[null,0.70,0.80,1.00,1.20,1.20,1.20,1.20,1.20,1.20],
+  COMEBACK_THRESH:0.60, COMEBACK_MULT:1.30,
+  MAX_ATTACK:12,
+  GRAVITY:true,
+  GARBAGE_GRACE:6.0,
+  GARBAGE_FADE:4.0,
+  STALL_THRESHOLD:2.0,
+  GARBAGE_CLEAR_CREDIT:0.30,
+  BOT_DELAY:{easy:[1.4,2.4],medium:[0.8,1.6],hard:[0.35,0.9]},
+};
+
+// ============================================================
+// PIECE DEFINITIONS  (relative cells)
+// ============================================================
+const RAW_PIECES = [
+  {id:'i1', cells:[[0,0]]},
+  {id:'i2', cells:[[0,0],[0,1]]},
+  {id:'i3', cells:[[0,0],[0,1],[0,2]]},
+  {id:'i4', cells:[[0,0],[0,1],[0,2],[0,3]]},
+  {id:'i5', cells:[[0,0],[0,1],[0,2],[0,3],[0,4]]},
+  {id:'o2', cells:[[0,0],[0,1],[1,0],[1,1]]},
+  {id:'o3', cells:[[0,0],[0,1],[0,2],[1,0],[1,1],[1,2],[2,0],[2,1],[2,2]]},
+  {id:'L',  cells:[[0,0],[1,0],[2,0],[2,1]]},
+  {id:'J',  cells:[[0,1],[1,1],[2,0],[2,1]]},
+  {id:'T',  cells:[[0,0],[0,1],[0,2],[1,1]]},
+  {id:'S',  cells:[[0,1],[0,2],[1,0],[1,1]]},
+  {id:'Z',  cells:[[0,0],[0,1],[1,1],[1,2]]},
+  {id:'+',  cells:[[0,1],[1,0],[1,1],[1,2],[2,1]]},
+  {id:'cnr',cells:[[0,0],[0,1],[1,0]]},
+];
+function normalize(cells){
+  const minR=Math.min(...cells.map(c=>c[0])), minC=Math.min(...cells.map(c=>c[1]));
+  return cells.map(([r,c])=>[r-minR,c-minC]).sort((a,b)=>a[0]-b[0]||a[1]-b[1]);
+}
+function key(cells){return cells.map(c=>c[0]+','+c[1]).join(';')}
+function rot(cells){
+  const maxR=Math.max(...cells.map(c=>c[0]));
+  return normalize(cells.map(([r,c])=>[c, maxR-r]));
+}
+function rotationsOf(cells){
+  const out=[normalize(cells)];
+  const seen=new Set([key(out[0])]);
+  let cur=out[0];
+  for(let i=0;i<3;i++){cur=rot(cur);if(!seen.has(key(cur))){seen.add(key(cur));out.push(cur)}}
+  return out;
+}
+// expanded library: each entry has variants (rotations)
+const PIECE_LIB = RAW_PIECES.map(p=>({id:p.id, variants:rotationsOf(p.cells)}));
+
+// ============================================================
+// 7-BAG QUEUE
+// ============================================================
+function mulberry32(seed){
+  return function(){
+    seed|=0; seed=seed+0x6D2B79F5|0;
+    let t=Math.imul(seed^seed>>>15, 1|seed);
+    t=t+Math.imul(t^t>>>7, 61|t)^t; return ((t^t>>>14)>>>0)/4294967296;
+  };
+}
+function makeQueue(seed){
+  const rng=mulberry32(seed);
+  let out=[];
+  function bag(){
+    const ix=PIECE_LIB.map((_,i)=>i);
+    for(let i=ix.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[ix[i],ix[j]]=[ix[j],ix[i]]}
+    return ix;
+  }
+  let pool=[];
+  return {
+    next(){
+      if(pool.length===0) pool=bag();
+      return pool.shift();
+    }
+  };
+}
+
+// ============================================================
+// BOARD HELPERS
+// ============================================================
+function makeBoard(){return Array.from({length:C.H},()=>Array(C.W).fill(0))}
+function makeAges(){return Array.from({length:C.H},()=>Array(C.W).fill(0))}
+function cellsOf(piece, vIdx){return PIECE_LIB[piece].variants[vIdx]}
+function canPlace(board, cells, r, c){
+  for(const [dr,dc] of cells){
+    const rr=r+dr, cc=c+dc;
+    if(rr<0||rr>=C.H||cc<0||cc>=C.W) return false;
+    if(board[rr][cc]) return false;
+  }
+  return true;
+}
+function placeOn(board, cells, r, c, val){
+  for(const [dr,dc] of cells) board[r+dr][c+dc]=val;
+}
+function findClears(board){
+  const rows=[], cols=[];
+  for(let r=0;r<C.H;r++) if(board[r].every(v=>v)) rows.push(r);
+  for(let c=0;c<C.W;c++){let f=true;for(let r=0;r<C.H;r++)if(!board[r][c]){f=false;break} if(f) cols.push(c);}
+  return {rows,cols};
+}
+function clearedCells(rows,cols){
+  const s=new Set();
+  for(const r of rows) for(let c=0;c<C.W;c++) s.add(r+','+c);
+  for(const c of cols) for(let r=0;r<C.H;r++) s.add(r+','+c);
+  return [...s].map(k=>{const [r,c]=k.split(',').map(Number);return [r,c]});
+}
+function occupancy(board){
+  let n=0; for(const row of board) for(const v of row) if(v) n++;
+  return n;
+}
+function hasAnyLegalPlacement(board, trayPieces){
+  for(const p of trayPieces){
+    if(!p) continue;
+    for(const variant of PIECE_LIB[p.id].variants){
+      for(let r=0;r<C.H;r++) for(let c=0;c<C.W;c++){
+        if(canPlace(board, variant, r, c)) return true;
+      }
+    }
+  }
+  return false;
+}
+
+// ============================================================
+// GAME STATE
+// ============================================================
+const G = {
+  diff:'medium',
+  seed:0,
+  queueMe:null, queueFoe:null,
+  me:{ board:makeBoard(), garbageAge:makeAges(), tray:[], lines:0, sent:0, biggest:0, lastPlaceTime:0 },
+  foe:{ board:makeBoard(), garbageAge:makeAges(), tray:[], lines:0, sent:0, biggest:0, lastPlaceTime:0 },
+  startedAt:0, endsAt:0,
+  running:false, ended:false,
+  botTimer:null, decayTimer:null, lastDecayTick:0,
+};
+
+// ============================================================
+// RENDERING
+// ============================================================
+const $ = id => document.getElementById(id);
+const meBoardEl = $('meBoard'), foeBoardEl = $('foeBoard'), trayEl = $('tray');
+
+function buildBoardDOM(el){
+  el.innerHTML='';
+  for(let r=0;r<C.H;r++) for(let c=0;c<C.W;c++){
+    const d=document.createElement('div');
+    d.className='cell';
+    if((c+1)%3===0 && c<C.W-1) d.classList.add('thickR');
+    if((r+1)%3===0 && r<C.H-1) d.classList.add('thickB');
+    d.dataset.r=r; d.dataset.c=c;
+    el.appendChild(d);
+  }
+}
+buildBoardDOM(meBoardEl); buildBoardDOM(foeBoardEl);
+
+function paintBoard(el, board, side){
+  const ages = G[side].garbageAge;
+  const cells=el.children;
+  for(let r=0;r<C.H;r++) for(let c=0;c<C.W;c++){
+    const i=r*C.W+c;
+    const cell=cells[i];
+    const v=board[r][c];
+    cell.classList.remove('f-me','f-foe','f-garbage','fading','ghost','ghost-bad');
+    cell.style.opacity='';
+    if(v===1) cell.classList.add(side==='me'?'f-me':'f-foe');
+    else if(v===2){
+      cell.classList.add('f-garbage');
+      const age=ages[r][c];
+      if(age>C.GARBAGE_GRACE){
+        cell.classList.add('fading');
+        const t=Math.min(1,(age-C.GARBAGE_GRACE)/C.GARBAGE_FADE);
+        cell.style.opacity=String(Math.max(0.18, 1-t*0.82));
+      }
+    }
+  }
+}
+
+function renderTray(){
+  trayEl.innerHTML='';
+  for(let i=0;i<C.TRAY;i++){
+    const p=G.me.tray[i];
+    const slot=document.createElement('div');
+    slot.className='slot'+(p?'':' empty');
+    slot.dataset.idx=i;
+    if(p){
+      const cells=cellsOf(p.id, p.rot);
+      const rows=Math.max(...cells.map(x=>x[0]))+1;
+      const cols=Math.max(...cells.map(x=>x[1]))+1;
+      const mini=document.createElement('div');
+      mini.className='piece-mini';
+      mini.style.gridTemplateColumns=`repeat(${cols},14px)`;
+      mini.style.gridTemplateRows=`repeat(${rows},14px)`;
+      const set=new Set(cells.map(c=>c[0]+','+c[1]));
+      for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){
+        const d=document.createElement('div');
+        if(set.has(r+','+c)) d.className='pc';
+        else d.style.visibility='hidden';
+        d.style.width='14px';d.style.height='14px';
+        mini.appendChild(d);
+      }
+      slot.appendChild(mini);
+      // disabled outline if no legal placement at all
+      let canFit=false;
+      for(let r=0;r<C.H && !canFit;r++) for(let c=0;c<C.W && !canFit;c++)
+        if(canPlace(G.me.board, cells, r, c)) canFit=true;
+      if(!canFit) slot.classList.add('disabled');
+    }
+    trayEl.appendChild(slot);
+  }
+}
+
+function updateStats(){
+  const meOcc=occupancy(G.me.board), foeOcc=occupancy(G.foe.board);
+  const mePct=Math.round(meOcc/81*100), foePct=Math.round(foeOcc/81*100);
+  $('meOcc').textContent=mePct; $('foeOcc').textContent=foePct;
+  $('meBar').style.width=mePct+'%'; $('foeBar').style.width=foePct+'%';
+  $('meLines').textContent=G.me.lines; $('foeLines').textContent=G.foe.lines;
+}
+
+function tickTimer(){
+  if(!G.running) return;
+  const now=performance.now();
+  const ms=Math.max(0,G.endsAt-now);
+  const s=Math.ceil(ms/1000);
+  const m=Math.floor(s/60), ss=s%60;
+  $('timer').textContent=m+':'+String(ss).padStart(2,'0');
+  // decay tick — throttled to ~10Hz
+  if(now-G.lastDecayTick >= 100){
+    const dt=Math.min(0.2,(now-G.lastDecayTick)/1000);
+    G.lastDecayTick=now;
+    decayTickSide('me', dt, now);
+    decayTickSide('foe', dt, now);
+  }
+  if(ms<=0){ endMatch('timer'); return; }
+  requestAnimationFrame(tickTimer);
+}
+
+function decayTickSide(side, dt, now){
+  const P=G[side];
+  // stall pause: if no placement for STALL_THRESHOLD seconds → freeze decay
+  if(P.lastPlaceTime>0 && (now-P.lastPlaceTime)/1000 > C.STALL_THRESHOLD) return;
+  const ages=P.garbageAge, board=P.board;
+  let dirty=false;
+  for(let r=0;r<C.H;r++) for(let c=0;c<C.W;c++){
+    if(board[r][c]!==2) continue;
+    ages[r][c]+=dt;
+    if(ages[r][c] >= C.GARBAGE_GRACE + C.GARBAGE_FADE){
+      board[r][c]=0; ages[r][c]=0;
+      dirty=true;
+    }
+  }
+  // always repaint to update fade opacity
+  paintBoard(side==='me'?meBoardEl:foeBoardEl, board, side);
+  if(dirty) updateStats();
+}
+
+// ============================================================
+// PIECE PLACEMENT / CLEARS / GARBAGE
+// ============================================================
+function refillTrayIfEmpty(side){
+  const P=G[side];
+  const q = side==='me' ? G.queueMe : G.queueFoe;
+  for(let i=0;i<C.TRAY;i++){
+    if(!P.tray[i]) P.tray[i]={id:q.next(),rot:0};
+  }
+}
+
+function placePiece(side, trayIdx, r, c){
+  if(G.ended) return false;
+  const P=G[side];
+  const p=P.tray[trayIdx]; if(!p) return false;
+  const cells=cellsOf(p.id, p.rot);
+  if(!canPlace(P.board, cells, r, c)) return false;
+  placeOn(P.board, cells, r, c, 1);
+  P.tray[trayIdx]=null;
+  P.lastPlaceTime=performance.now();
+
+  const {rows,cols}=findClears(P.board);
+  const totalLines=rows.length+cols.length;
+  if(totalLines>0){
+    P.lines+=totalLines;
+    if(totalLines>P.biggest) P.biggest=totalLines;
+    const cleared=clearedCells(rows,cols);
+    // count own vs garbage BEFORE wiping
+    let ownN=0, garbageN=0;
+    for(const [rr,cc] of cleared){
+      if(P.board[rr][cc]===1) ownN++;
+      else if(P.board[rr][cc]===2) garbageN++;
+    }
+    animateClear(side, cleared);
+    for(const [rr,cc] of cleared){ P.board[rr][cc]=0; P.garbageAge[rr][cc]=0; }
+    const occ=occupancy(P.board)/81;
+    const mult=C.MULT[Math.min(totalLines,9)];
+    const weighted = ownN + garbageN*C.GARBAGE_CLEAR_CREDIT;
+    const base = weighted*mult;
+    const comeback=occ>C.COMEBACK_THRESH?C.COMEBACK_MULT:1.0;
+    let send=Math.min(C.MAX_ATTACK, Math.floor(base*comeback));
+    P.sent+=send;
+    if(side==='me'){
+      if(totalLines>=2) showToast('+'+send+' sent · '+totalLines+'× COMBO');
+      else showToast('+'+send+' sent'+(comeback>1?' · COMEBACK':''));
+    }
+    sendGarbage(side, send, cleared);
+  }
+
+  refillTrayIfEmpty(side);
+
+  paintBoard(side==='me'?meBoardEl:foeBoardEl, P.board, side);
+  if(side==='me') renderTray();
+  updateStats();
+
+  // top-out check on the side that just played (tray refilled)
+  const other = side==='me' ? 'foe' : 'me';
+  // check both — after placement the OPPONENT might already be topped out only if garbage was sent;
+  // top-out on self only matters when their tray pieces can't fit
+  setTimeout(()=>{
+    if(G.ended) return;
+    if(!hasAnyLegalPlacement(G.me.board, G.me.tray.filter(Boolean))) endMatch('topout',  'foe');
+    else if(!hasAnyLegalPlacement(G.foe.board, G.foe.tray.filter(Boolean))) endMatch('topout', 'me');
+  }, 400);
+  return true;
+}
+
+function sendGarbage(senderSide, n, clearedCellsList){
+  if(n<=0) return;
+  const targetSide = senderSide==='me' ? 'foe' : 'me';
+  const targetBoard = G[targetSide].board;
+  const targetEl = targetSide==='me' ? meBoardEl : foeBoardEl;
+  // choose target cells
+  const colsFromClear = clearedCellsList.map(([r,c])=>c);
+  // shuffle, slice to n
+  for(let i=colsFromClear.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[colsFromClear[i],colsFromClear[j]]=[colsFromClear[j],colsFromClear[i]]}
+  const targets=[];
+  if(C.GRAVITY){
+    // drop to lowest empty in column
+    const colsToUse = colsFromClear.slice(0,n);
+    // group multiple in same col → stack upward
+    const stack={};
+    for(const c of colsToUse){
+      let row=-1;
+      for(let r=C.H-1;r>=0;r--){
+        const used = (stack[c]||[]).includes(r);
+        if(!targetBoard[r][c] && !used){row=r;break}
+      }
+      if(row<0){
+        // column full, find any open cell anywhere
+        outer: for(let r=C.H-1;r>=0;r--) for(let cc=0;cc<C.W;cc++){
+          if(!targetBoard[r][cc] && !(stack[cc]||[]).includes(r)){row=r; c=cc; break outer}
+        }
+      }
+      if(row>=0){
+        (stack[c]=stack[c]||[]).push(row);
+        targets.push([row,c]);
+      }
+    }
+  } else {
+    // mirror positions exactly (use cleared cell coords)
+    const candidates=[...clearedCellsList];
+    for(let i=candidates.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[candidates[i],candidates[j]]=[candidates[j],candidates[i]]}
+    for(const [r,c] of candidates){
+      if(targets.length>=n) break;
+      if(!targetBoard[r][c]) targets.push([r,c]);
+    }
+  }
+  // animate travel from sender's board to target cells
+  const senderEl = senderSide==='me' ? meBoardEl : foeBoardEl;
+  const senderRect = senderEl.getBoundingClientRect();
+  const targetRect = targetEl.getBoundingClientRect();
+  targets.forEach(([r,c],i)=>{
+    const fx=document.createElement('div');
+    fx.className='attack-fx'+(senderSide==='foe'?' foe':'');
+    const startX=senderRect.left+senderRect.width/2-7;
+    const startY=senderRect.top+senderRect.height/2-7;
+    fx.style.left=startX+'px'; fx.style.top=startY+'px';
+    document.body.appendChild(fx);
+    const targetCell = targetEl.children[r*C.W+c];
+    const tr = targetCell.getBoundingClientRect();
+    const dx = tr.left+tr.width/2-7 - startX;
+    const dy = tr.top+tr.height/2-7 - startY;
+    requestAnimationFrame(()=>{
+      fx.style.transform=`translate(${dx}px,${dy}px) scale(1.4)`;
+      fx.style.opacity='0.3';
+    });
+    setTimeout(()=>{
+      fx.remove();
+      if(G.ended) return;
+      if(!targetBoard[r][c]){
+        targetBoard[r][c]=2;
+        G[targetSide].garbageAge[r][c]=0;
+      }
+      paintBoard(targetEl, targetBoard, targetSide);
+      const cellEl = targetEl.children[r*C.W+c];
+      cellEl.classList.add('incoming');
+      setTimeout(()=>cellEl.classList.remove('incoming'),350);
+      updateStats();
+    }, 550 + i*40);
+  });
+}
+
+function animateClear(side, cells){
+  const el = side==='me'?meBoardEl:foeBoardEl;
+  for(const [r,c] of cells){
+    const cell=el.children[r*C.W+c];
+    cell.classList.add('clearing');
+    setTimeout(()=>cell.classList.remove('clearing'),250);
+  }
+}
+
+function showToast(text){
+  const t=document.createElement('div');
+  t.className='toast'; t.textContent=text;
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(),900);
+}
+
+// ============================================================
+// DRAG & DROP (pointer events)
+// ============================================================
+let drag=null;
+trayEl.addEventListener('pointerdown', e=>{
+  if(!G.running) return;
+  const slot=e.target.closest('.slot'); if(!slot) return;
+  const idx=+slot.dataset.idx;
+  const p=G.me.tray[idx]; if(!p) return;
+  drag={idx, piece:p, startX:e.clientX, startY:e.clientY, moved:false, ghost:null};
+  slot.setPointerCapture(e.pointerId);
+  slot.classList.add('dragging');
+  e.preventDefault();
+});
+window.addEventListener('pointermove', e=>{
+  if(!drag) return;
+  const dx=e.clientX-drag.startX, dy=e.clientY-drag.startY;
+  if(!drag.moved && Math.hypot(dx,dy)<8) return;
+  drag.moved=true;
+  if(!drag.ghost){
+    const cells=cellsOf(drag.piece.id, drag.piece.rot);
+    const rows=Math.max(...cells.map(x=>x[0]))+1;
+    const cols=Math.max(...cells.map(x=>x[1]))+1;
+    // size matched to player board cell size
+    const cellSize = meBoardEl.getBoundingClientRect().width/9 - 2;
+    const g=document.createElement('div');
+    g.className='drag-ghost';
+    g.style.gridTemplateColumns=`repeat(${cols},${cellSize}px)`;
+    g.style.gridTemplateRows=`repeat(${rows},${cellSize}px)`;
+    const set=new Set(cells.map(c=>c[0]+','+c[1]));
+    for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){
+      const d=document.createElement('div');
+      if(set.has(r+','+c)){d.className='pc';d.style.width=cellSize+'px';d.style.height=cellSize+'px'}
+      else{d.style.width=cellSize+'px';d.style.height=cellSize+'px';d.style.visibility='hidden'}
+      g.appendChild(d);
+    }
+    document.body.appendChild(g);
+    drag.ghost=g; drag.ghostW=cols*cellSize; drag.ghostH=rows*cellSize; drag.cellSize=cellSize;
+  }
+  // position ghost so its top-left aligns to the predicted snap
+  positionGhostAndPreview(e.clientX, e.clientY);
+});
+function positionGhostAndPreview(px, py){
+  const cells=cellsOf(drag.piece.id, drag.piece.rot);
+  const rect=meBoardEl.getBoundingClientRect();
+  const cellSize = drag.cellSize;
+  // offset finger so piece appears slightly above thumb
+  const lift = 40;
+  const localX = px - rect.left - 4;
+  const localY = py - rect.top - 4 - lift;
+  let col = Math.round(localX/(cellSize+2));
+  let row = Math.round(localY/(cellSize+2));
+  // clamp
+  const pieceW=Math.max(...cells.map(c=>c[1]))+1;
+  const pieceH=Math.max(...cells.map(c=>c[0]))+1;
+  col=Math.max(0,Math.min(C.W-pieceW,col));
+  row=Math.max(0,Math.min(C.H-pieceH,row));
+  // ghost position
+  const ghostX = rect.left + 4 + col*(cellSize+2);
+  const ghostY = rect.top + 4 + row*(cellSize+2);
+  drag.ghost.style.left = ghostX+'px';
+  drag.ghost.style.top  = ghostY+'px';
+  drag.targetRow=row; drag.targetCol=col;
+  // preview valid/invalid
+  // first clear previous preview
+  for(const cell of meBoardEl.children){
+    cell.classList.remove('ghost','ghost-bad');
+  }
+  // only show preview if pointer is within board area + reasonable
+  const within = py - rect.top > -120 && py < rect.bottom + 60;
+  if(!within){drag.canPlace=false; return}
+  const ok = canPlace(G.me.board, cells, row, col);
+  drag.canPlace = ok;
+  for(const [dr,dc] of cells){
+    const rr=row+dr, cc=col+dc;
+    if(rr<0||rr>=C.H||cc<0||cc>=C.W) continue;
+    const cell=meBoardEl.children[rr*C.W+cc];
+    cell.classList.add(ok?'ghost':'ghost-bad');
+  }
+}
+function finishDrag(placed){
+  if(!drag) return;
+  for(const cell of meBoardEl.children){cell.classList.remove('ghost','ghost-bad')}
+  const slot = trayEl.querySelector(`[data-idx="${drag.idx}"]`);
+  if(slot) slot.classList.remove('dragging');
+  if(drag.ghost) drag.ghost.remove();
+  const d=drag; drag=null;
+  if(placed && d.moved && d.canPlace){
+    placePiece('me', d.idx, d.targetRow, d.targetCol);
+  } else if(placed && !d.moved){
+    const p=G.me.tray[d.idx];
+    if(p){
+      const variants=PIECE_LIB[p.id].variants.length;
+      p.rot=(p.rot+1)%variants;
+      renderTray();
+    }
+  }
+}
+window.addEventListener('pointerup', ()=>finishDrag(true));
+window.addEventListener('pointercancel', ()=>finishDrag(false));
+window.addEventListener('blur', ()=>finishDrag(false));
+
+// ============================================================
+// BOT
+// ============================================================
+function botScorePlacement(board, cells, r, c){
+  // simulate placement
+  const tmp = board.map(row=>row.slice());
+  for(const [dr,dc] of cells) tmp[r+dr][c+dc]=1;
+  const {rows,cols}=findClears(tmp);
+  const lines=rows.length+cols.length;
+  let occAfter=0;
+  if(lines>0){
+    const cleared=clearedCells(rows,cols);
+    for(const [rr,cc] of cleared) tmp[rr][cc]=0;
+  }
+  for(const row of tmp) for(const v of row) if(v) occAfter++;
+  // heuristic: prefer clears, lower occupancy, slight randomness
+  return lines*40 - occAfter + Math.random()*3;
+}
+function botStep(){
+  if(!G.running || G.ended) return;
+  const tray = G.foe.tray;
+  let best=null;
+  for(let i=0;i<tray.length;i++){
+    const p=tray[i]; if(!p) continue;
+    for(let v=0; v<PIECE_LIB[p.id].variants.length; v++){
+      const cells=PIECE_LIB[p.id].variants[v];
+      for(let r=0;r<C.H;r++) for(let c=0;c<C.W;c++){
+        if(!canPlace(G.foe.board, cells, r, c)) continue;
+        const score=botScorePlacement(G.foe.board, cells, r, c);
+        if(!best || score>best.score){best={score, i, v, r, c}}
+      }
+    }
+  }
+  if(!best){
+    // bot tops out
+    endMatch('topout','me');
+    return;
+  }
+  // apply rotation choice then place
+  G.foe.tray[best.i].rot = best.v;
+  placePiece('foe', best.i, best.r, best.c);
+  // schedule next
+  const [lo,hi] = C.BOT_DELAY[G.diff];
+  const delay = (lo + Math.random()*(hi-lo))*1000;
+  G.botTimer = setTimeout(botStep, delay);
+}
+
+// ============================================================
+// MATCH FLOW
+// ============================================================
+function startMatch(diff){
+  G.diff=diff;
+  G.seed=(Date.now()&0x7fffffff);
+  G.queueMe=makeQueue(G.seed);
+  G.queueFoe=makeQueue(G.seed); // identical mirrored queue
+  G.me={board:makeBoard(),garbageAge:makeAges(),tray:[],lines:0,sent:0,biggest:0,lastPlaceTime:0};
+  G.foe={board:makeBoard(),garbageAge:makeAges(),tray:[],lines:0,sent:0,biggest:0,lastPlaceTime:0};
+  refillTrayIfEmpty('me'); refillTrayIfEmpty('foe');
+  G.ended=false; G.running=false;
+  G.lastDecayTick=performance.now();
+  paintBoard(meBoardEl,G.me.board,'me');
+  paintBoard(foeBoardEl,G.foe.board,'foe');
+  renderTray(); updateStats();
+  $('startOverlay').classList.add('hidden');
+  $('endOverlay').classList.add('hidden');
+  // countdown
+  runCountdown(()=>{
+    G.startedAt=performance.now();
+    G.endsAt=G.startedAt + C.DURATION*1000;
+    G.running=true;
+    tickTimer();
+    const [lo,hi] = C.BOT_DELAY[G.diff];
+    G.botTimer = setTimeout(botStep, (lo + Math.random()*(hi-lo))*1000);
+  });
+}
+function runCountdown(done){
+  const o=$('cdOverlay'), n=$('cdNum');
+  o.classList.remove('hidden');
+  let v=C.COUNTDOWN;
+  n.textContent=v;
+  n.style.animation='none'; void n.offsetWidth; n.style.animation='';
+  const iv=setInterval(()=>{
+    v--;
+    if(v<=0){clearInterval(iv); o.classList.add('hidden'); done(); return}
+    n.textContent=v;
+    n.style.animation='none'; void n.offsetWidth; n.style.animation='';
+  },800);
+}
+function endMatch(reason, winnerSide){
+  if(G.ended) return;
+  G.ended=true; G.running=false;
+  if(G.botTimer){clearTimeout(G.botTimer); G.botTimer=null}
+  let winner=winnerSide;
+  if(!winner){
+    const mo=occupancy(G.me.board), fo=occupancy(G.foe.board);
+    if(mo<fo) winner='me';
+    else if(fo<mo) winner='foe';
+    else if(G.me.lines>G.foe.lines) winner='me';
+    else if(G.foe.lines>G.me.lines) winner='foe';
+    else winner='draw';
+  }
+  const t=$('endTitle');
+  t.className=''; t.classList.add(winner==='me'?'win':winner==='foe'?'lose':'draw');
+  t.textContent= winner==='me'?'YOU WIN':winner==='foe'?'YOU LOSE':'DRAW';
+  const reasonText = reason==='topout' ? (winner==='me'?'Bot topped out':'You topped out') : 'Time up';
+  const stats=$('endStats');
+  stats.innerHTML=`
+    <div class="h"></div><div class="h">You</div><div class="h">Bot</div>
+    <div>Occupancy</div><div>${Math.round(occupancy(G.me.board)/81*100)}%</div><div>${Math.round(occupancy(G.foe.board)/81*100)}%</div>
+    <div>Lines cleared</div><div>${G.me.lines}</div><div>${G.foe.lines}</div>
+    <div>Cells sent</div><div>${G.me.sent}</div><div>${G.foe.sent}</div>
+    <div>Biggest combo</div><div>${G.me.biggest}×</div><div>${G.foe.biggest}×</div>
+    <div class="h" style="grid-column:1/-1;text-align:center;margin-top:6px">${reasonText}</div>
+  `;
+  $('endOverlay').classList.remove('hidden');
+}
+
+// ============================================================
+// MENU BINDINGS
+// ============================================================
+document.querySelectorAll('#startOverlay [data-diff]').forEach(b=>{
+  b.addEventListener('click',()=>startMatch(b.dataset.diff));
+});
+$('playAgain').addEventListener('click',()=>startMatch(G.diff));
+
+// prevent scroll on iOS
+document.body.addEventListener('touchmove', e=>e.preventDefault(),{passive:false});
+</script>
+</body>
+</html>

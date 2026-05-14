@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,viewport-fit=cover" />
+<title>Block Blast PvP — Prototype Hub</title>
+<style>
+  :root{
+    --bg:#0f1220;
+    --panel:#171a2e;
+    --panel2:#1f2340;
+    --grid:#262b4d;
+    --line:#3a4180;
+    --me:#5dd6ff;
+    --me2:#3aa8d8;
+    --foe:#ff7a7a;
+    --foe2:#d04a4a;
+    --text:#e8ecff;
+    --muted:#8a90b8;
+    --accent:#ffd24a;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;min-height:100%;background:
+    radial-gradient(1200px 600px at 50% -10%, #1a1f44 0%, transparent 60%),
+    var(--bg);color:var(--text);
+    font:14px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+  #app{max-width:520px;margin:0 auto;padding:20px 16px 40px;display:flex;flex-direction:column;gap:18px}
+  header{text-align:center;padding-top:8px}
+  header .tag{font-size:11px;color:var(--muted);letter-spacing:.18em;text-transform:uppercase}
+  header h1{margin:6px 0 2px;font-size:30px;letter-spacing:.02em;
+    background:linear-gradient(90deg,var(--me),var(--accent));-webkit-background-clip:text;background-clip:text;color:transparent}
+  header p{margin:0;color:var(--muted);font-size:13px}
+
+  .modes{display:flex;flex-direction:column;gap:14px}
+  .mode{
+    background:var(--panel);border-radius:14px;padding:16px;display:flex;gap:14px;
+    border:1px solid rgba(255,255,255,.05);position:relative;overflow:hidden;
+    box-shadow:0 6px 20px rgba(0,0,0,.35);text-decoration:none;color:var(--text);
+    cursor:pointer;transition:transform .15s ease, border-color .15s ease;
+  }
+  .mode:hover{transform:translateY(-2px);border-color:rgba(93,214,255,.35)}
+  .mode.disabled{opacity:.55;cursor:not-allowed}
+  .mode.disabled:hover{transform:none;border-color:rgba(255,255,255,.05)}
+  .mode .icon{
+    width:74px;height:74px;border-radius:10px;background:var(--panel2);
+    display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);
+    gap:3px;padding:5px;flex-shrink:0
+  }
+  .mode .icon .pc{border-radius:2px;background:var(--grid)}
+  .mode.tetris .icon .pc.a{background:linear-gradient(160deg,var(--me),var(--me2))}
+  .mode.tetris .icon .pc.b{background:linear-gradient(160deg,var(--foe),var(--foe2))}
+  .mode.packers .icon{background:#3a2a18}
+  .mode.packers .icon .pc{background:#5a4226}
+  .mode.packers .icon .pc.a{background:linear-gradient(160deg,#ff7e7e,#d04a4a)}
+  .mode.packers .icon .pc.b{background:linear-gradient(160deg,#ffd24a,#e0a020)}
+  .mode.packers .icon .pc.c{background:linear-gradient(160deg,#5dd6ff,#3aa8d8)}
+  .mode .body{flex:1;min-width:0}
+  .mode .name{font-size:17px;font-weight:700;margin:0;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .mode .desc{margin:4px 0 8px;color:var(--muted);font-size:12.5px;line-height:1.45}
+  .mode .meta{display:flex;gap:8px;flex-wrap:wrap}
+  .chip{font-size:10.5px;padding:3px 8px;border-radius:10px;background:var(--panel2);color:var(--muted);letter-spacing:.04em;text-transform:uppercase}
+  .chip.live{background:rgba(93,214,255,.15);color:var(--me)}
+  .chip.soon{background:rgba(255,210,74,.15);color:var(--accent)}
+  .chip.wip{background:rgba(255,122,122,.15);color:var(--foe)}
+  .mode .arrow{align-self:center;color:var(--muted);font-size:22px;margin-left:6px}
+  .mode:not(.disabled):hover .arrow{color:var(--me)}
+
+  footer{margin-top:8px;text-align:center;color:var(--muted);font-size:11px;line-height:1.6}
+  footer code{background:var(--panel2);padding:2px 6px;border-radius:4px;font-size:11px}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="tag">Prototype Hub</div>
+    <h1>Block Blast PvP</h1>
+    <p>Mobile head-to-head puzzle — pick a mode to try.</p>
+  </header>
+
+  <div class="modes">
+    <a class="mode tetris" href="BLOCK_BLAST_PVP.html">
+      <div class="icon" aria-hidden="true">
+        <div class="pc a"></div><div class="pc a"></div><div class="pc"></div>
+        <div class="pc a"></div><div class="pc"></div><div class="pc b"></div>
+        <div class="pc"></div><div class="pc b"></div><div class="pc b"></div>
+      </div>
+      <div class="body">
+        <h2 class="name">Tetris-like <span class="chip live">Playable</span></h2>
+        <p class="desc">9×9 grid · 3-piece tray · drag &amp; drop polyominoes · clear rows/columns to send garbage. Echo Garbage attack system with decay.</p>
+        <div class="meta">
+          <span class="chip">PvP vs Bot</span>
+          <span class="chip">3 min</span>
+          <span class="chip">Mobile portrait</span>
+        </div>
+      </div>
+      <div class="arrow">›</div>
+    </a>
+
+    <a class="mode packers" href="PERFECT_PACKERS_PVP.html">
+      <div class="icon" aria-hidden="true">
+        <div class="pc a"></div><div class="pc"></div><div class="pc b"></div>
+        <div class="pc a"></div><div class="pc c"></div><div class="pc"></div>
+        <div class="pc"></div><div class="pc c"></div><div class="pc c"></div>
+      </div>
+      <div class="body">
+        <h2 class="name">Perfect Packers <span class="chip live">Playable</span></h2>
+        <p class="desc">6×6 delivery-box race. Pack the box first for a Delivery. Fragile items match same color → Block a cell on the rival's box. Boosters: Repack · Undo · Wreck.</p>
+        <div class="meta">
+          <span class="chip">PvP vs Bot</span>
+          <span class="chip">90 s</span>
+          <span class="chip">Cozy theme</span>
+        </div>
+      </div>
+      <div class="arrow">›</div>
+    </a>
+  </div>
+
+  <footer>
+    Prototype hub · v0.2<br>
+    Spec: <code>BLOCK_BLAST_PVP_PROTOTYPE.md</code>
+  </footer>
+</div>
+
+<script>
+  document.querySelectorAll('.mode.disabled').forEach(el=>{
+    el.addEventListener('click',e=>e.preventDefault());
+  });
+</script>
+</body>
+</html>
