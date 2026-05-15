@@ -416,7 +416,7 @@ const CHIPS = {
   extra_pouch:   { name: "Extra Pouch",   rarity:"common",     cost:10, desc:"+5 Coins in Pouch per floor",         effect: r => r.pouchBonus += 5 },
   lucky_drop:    { name: "Lucky Drop",    rarity:"common",     cost:10, desc:"+10% chance of rare coin spawn",      effect: r => r.rareChance += 0.1 },
   combo_keeper:  { name: "Combo Keeper",  rarity:"rare",       cost:25, desc:"Combo window +50%",                   effect: r => r.comboWindow *= 1.5 },
-  edge_magnet:   { name: "Edge Magnet",   rarity:"common",     cost:10, desc:"Coins drift toward score edge",       effect: r => r.edgeBias += 0.15 },
+  edge_magnet:   { name: "Combo Window",  rarity:"common",     cost:10, desc:"Combo timer +25%",                    effect: r => r.comboWindow *= 1.25 },
   double_coin:   { name: "Double Coin",   rarity:"rare",       cost:25, desc:"+0.5 base multiplier",                effect: r => r.baseMul += 0.5 },
   rare_finder:   { name: "Rare Finder",   rarity:"rare",       cost:25, desc:"+25% rare chance",                    effect: r => r.rareChance += 0.25 },
   boss_shield:   { name: "Boss Shield",   rarity:"legendary",  cost:50, desc:"Survive 1 boss modifier this run",    effect: r => r.bossShield = true },
@@ -727,7 +727,7 @@ function physicsStep(ts){
     if (Math.abs(c.vy) < PHYSICS.minVelocity) c.vy = 0;
 
     // Edge bias (chip): gentle upward pull
-    if (run && run.edgeBias > 0) c.vy -= PHYSICS.edgeBiasPullPx * run.edgeBias * f;
+    // Auto-pull toward score zone removed — was OP, scored without player input
 
     // Integrate
     c.x += c.vx * f;
