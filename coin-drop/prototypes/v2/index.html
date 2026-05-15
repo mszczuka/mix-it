@@ -83,6 +83,14 @@
     letter-spacing: 2px;
   }
   button.cta.throw-btn:active { box-shadow: 0 2px 0 #8B6914, 0 3px 6px rgba(244,196,48,.4); transform: translateY(2px) scale(.98); }
+  button.cta.throw-btn.cooldown { pointer-events: none; filter: grayscale(.5) brightness(.7); position: relative; overflow: hidden; }
+  button.cta.throw-btn.cooldown::after {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(90deg, rgba(0,0,0,.45) 0%, rgba(0,0,0,.45) 100%);
+    transform-origin: left center;
+    animation: cooldownSweep 1s linear forwards;
+  }
+  @keyframes cooldownSweep { from { transform: scaleX(1); } to { transform: scaleX(0); } }
   button.secondary { background: rgba(255,255,255,.1); border: 1px solid var(--c-accent); color: var(--c-accent); }
   button.danger { background: var(--c-danger); }
 
@@ -499,7 +507,7 @@ const BOSS_FLOORS = new Set([3, 7]); // mid-run boss + final boss
 // Hand-tuned difficulty curve. Index = floor - 1.
 // Early floors: gentle teaching. Boss 3: first wall. Floor 4: recovery. Floor 7: climax.
 const FLOOR_THRESHOLDS = [ 25,  45,  95,  70, 105, 145, 210 ];
-const FLOOR_POUCH      = [ 30,  28,  22,  27,  25,  25,  22 ];
+const FLOOR_POUCH      = [ 35,  33,  27,  32,  30,  30,  27 ];
 const FLOOR_PREPOP     = [ 88,  95, 102, 105, 115, 125, 135 ]; // bumped early floors a touch for smoother ramp
 function startRun(){
   const stake = state.characters[state.selectedCharacter].stake;
@@ -562,10 +570,24 @@ aimSlider.addEventListener('pointerdown', e => {
   window.addEventListener('pointermove', move); window.addEventListener('pointerup', up);
 });
 
+const DROP_COOLDOWN_MS = 1000;
+let _lastDropTs = 0;
+function startDropCooldownUI(){
+  const btn = document.getElementById('btn-drop');
+  btn.classList.remove('cooldown'); // restart animation
+  // force reflow so the animation replays
+  void btn.offsetWidth;
+  btn.classList.add('cooldown');
+  setTimeout(() => btn.classList.remove('cooldown'), DROP_COOLDOWN_MS);
+}
 document.getElementById('btn-drop').addEventListener('click', () => { dropCoin(); });
 
 function dropCoin(){
   if (!run || run.pouch <= 0) return;
+  const now = performance.now();
+  if (now - _lastDropTs < DROP_COOLDOWN_MS) return; // anti-spam cooldown
+  _lastDropTs = now;
+  startDropCooldownUI();
   run.pouch -= 1;
   const isRare = rand() < run.rareChance;
   const isMulti = !isRare && rand() < 0.15;
