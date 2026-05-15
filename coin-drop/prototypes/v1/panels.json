@@ -1,0 +1,28 @@
+{
+  "_note": "Plugin-remapped panel inventory. Monopoly GO's 5 nav slots remapped to Coin Tumble Roguelite tabs: Shop, Pass, Home, Album, Quests.",
+  "nav_slots": ["shop", "pass", "home", "album", "quests"],
+  "center_slot": "home",
+  "panels": [
+    { "id": "loading",  "modal": false, "on_nav": false, "entry": ["boot"],            "exit": ["home"] },
+    { "id": "home",     "modal": false, "on_nav": true,  "entry": ["loading","result","shop","pass","album","quests"], "exit": ["match","shop","pass","album","quests"] },
+    { "id": "match",    "modal": false, "on_nav": false, "entry": ["home"],            "exit": ["chip_shop","result"] },
+    { "id": "chip_shop","modal": true,  "on_nav": false, "entry": ["match"],           "exit": ["match"] },
+    { "id": "result",   "modal": false, "on_nav": false, "entry": ["match"],           "exit": ["home"] },
+    { "id": "shop",     "modal": false, "on_nav": true,  "entry": ["home"],            "exit": ["home"] },
+    { "id": "pass",     "modal": false, "on_nav": true,  "entry": ["home"],            "exit": ["home"] },
+    { "id": "album",    "modal": false, "on_nav": true,  "entry": ["home"],            "exit": ["home"] },
+    { "id": "quests",   "modal": false, "on_nav": true,  "entry": ["home"],            "exit": ["home"] }
+  ],
+  "plugin_topbar_currencies": [
+    { "key": "gold",    "icon": "🪙" },
+    { "key": "gems",    "icon": "💎" },
+    { "key": "tickets", "icon": "🎟️" }
+  ],
+  "plugin_tabs": [
+    { "panel": "shop",   "label": "Shop",   "icon": "🛒", "badgeFlag": "shopPending" },
+    { "panel": "pass",   "label": "Pass",   "icon": "🏆", "badgeFlag": "passPending" },
+    { "panel": "home",   "label": "Home",   "icon": "🦝", "badgeFlag": null },
+    { "panel": "album",  "label": "Album",  "icon": "📖", "badgeFlag": "albumPending" },
+    { "panel": "quests", "label": "Quests", "icon": "📋", "badgeFlag": "questsPending" }
+  ]
+}

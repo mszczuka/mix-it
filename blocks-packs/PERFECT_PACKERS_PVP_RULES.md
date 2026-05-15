@@ -1,4 +1,4 @@
-# Perfect Packers PvP — Playable Rules (v0.2)
+# Perfect Packers PvP — Playable Rules (v0.3)
 
 > Condensed reference for playing / playtesting. For full design rationale, see `PERFECT_PACKERS_PVP.md`. This doc is rules only.
 
@@ -14,7 +14,7 @@ Two delivery rabbits, two boxes. Drag odd-shaped items onto a 6×6 grid. **Pack 
 
 - **Delivery box:** 6×6 grid (36 cells) per player
 - **Item tray:** 4 items visible at once
-- **Item queue:** **independent per player** — each rolls their own sequence
+- **Item queue:** **Smart Tray per player** — at every refill, game inspects your board and guarantees **at least 2 of 4 items can be placed**; remaining 1–2 are challenge picks. Fragile coloring (color) is independent random, only the shape is smart.
 - **Match clock:** 90 seconds
 - **Both boxes start empty**
 
@@ -112,9 +112,11 @@ Once a cell is colored on the board (by Fragile placement), it stays colored **u
 
 ---
 
-## Stuck State (Can't Place Anything)
+## Stuck State (Safety Net — rare)
 
-You enter the **Stuck State** when none of the 4 items in your tray has any legal placement on your board, in any rotation.
+You enter the **Stuck State** when none of the items still in your tray has any legal placement on your board, in any rotation.
+
+**Smart Tray makes this rare:** at every tray refill the game guarantees ≥2 fitting items. Stuck State only happens mid-tray, when the 1–2 challenge picks remain and your board state has shifted since the refill so they no longer fit.
 
 **Important:** opponent's Blocks on your board are **ignored** for this check. They expire on their own — they cannot single-handedly cause Stuck State.
 
@@ -152,7 +154,8 @@ In priority order:
 BOARD            6x6 (36 cells)
 TRAY             4 items (max item size: 4 cells)
 MATCH            90 seconds
-ITEM QUEUE       independent per player
+ITEM QUEUE       Smart Tray per player — 2 of 4 guaranteed fit, 1-2 challenge
+                  (shape is smart, fragile color is random)
 FRAGILE          Red / Yellow / Blue, ~25% of items, color persists on board
 LINE CLEARS      none
 
@@ -221,8 +224,11 @@ A: Wreck only blocks the empty cells inside the chosen 2×2. Packed cells are sk
 **Q: Do colors stay on the board after a match?**
 A: Yes. Cells stay colored until the box is delivered. This lets you build clusters and chain blocks off them.
 
-**Q: Why are the queues independent? Won't one player just get luckier?**
-A: Yes, some variance is real. Match-end screen shows fragile count for both players so the variance is visible. Over many matches, it averages out.
+**Q: Why is the tray "smart"? Doesn't that make the game easy?**
+A: Smart Tray only guarantees ≥2 fitting shapes per refill — the other 1–2 can be challenge picks that may need Repack/Undo. It removes "I got handed garbage I literally couldn't place," not difficulty. Variance shifts to fragile color RNG (still random) and how well you pack.
+
+**Q: Why are the queues per-player and not shared?**
+A: Each board has different empty space, so what "fits" differs. Each player gets a tray smart-selected for their own board. Match-end screen shows fragile-match counts so any color RNG variance is visible.
 
 **Q: Do boosters carry between matches?**
 A: Not in the prototype. Each match starts fresh.

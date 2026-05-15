@@ -1,0 +1,1177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Scritchy Scratchy — Prestige-Idle Drag-Reveal Prototype</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: linear-gradient(135deg, #1a1638 0%, #2d1b4e 50%, #1a1638 100%);
+    color: #f0e8ff;
+    min-height: 100vh;
+    user-select: none;
+  }
+  #hud {
+    display: flex; flex-wrap: wrap; gap: 18px;
+    padding: 12px 20px;
+    background: linear-gradient(180deg, rgba(0,0,0,0.45), rgba(0,0,0,0.25));
+    border-bottom: 2px solid #7b5ec7;
+  }
+  .hud-stat { display: flex; flex-direction: column; min-width: 110px; }
+  .hud-label { font-size: 10px; color: #b8a8e8; text-transform: uppercase; letter-spacing: 1px; }
+  .hud-value { font-size: 18px; font-weight: bold; color: #ffe680; }
+  .hud-value.jack { color: #aaf080; }
+  .hud-value.run { color: #88ccff; }
+
+  #screen {
+    padding: 14px;
+    max-width: 900px;
+    margin: 0 auto 80px;     /* bottom margin = tabbar height */
+  }
+  .tab-pane {
+    display: none;
+    animation: fadeIn 0.2s ease-out;
+  }
+  .tab-pane.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* Bottom tab bar */
+  #tabBar {
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    display: flex;
+    justify-content: space-around;
+    align-items: stretch;
+    background: linear-gradient(180deg, #1a1638 0%, #0d0820 100%);
+    border-top: 2px solid #7b5ec7;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.6);
+    z-index: 50;
+    padding: 4px 0 calc(4px + env(safe-area-inset-bottom));
+  }
+  .tab-btn {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: #888aaa;
+    padding: 8px 4px;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    transition: color 0.15s, transform 0.15s;
+  }
+  .tab-btn .icon { font-size: 20px; line-height: 1; }
+  .tab-btn .lbl { font-size: 10px; font-weight: bold; }
+  .tab-btn.active { color: #ffe680; }
+  .tab-btn:hover { color: #ffe680; }
+  .tab-btn.center {
+    position: relative;
+    margin-top: -22px;
+    flex: 0 0 64px;
+  }
+  .tab-btn.center .icon {
+    width: 60px; height: 60px;
+    background: linear-gradient(180deg, #ffe680 0%, #d4af37 60%, #8b6914 100%);
+    color: #1a0a0a;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px;
+    border: 4px solid #1a1638;
+    box-shadow: 0 4px 14px rgba(255,200,80,0.4), inset 0 -3px 6px rgba(0,0,0,0.2);
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .tab-btn.center.active .icon {
+    box-shadow: 0 4px 18px rgba(255,200,80,0.7), inset 0 -3px 6px rgba(0,0,0,0.2);
+    transform: scale(1.05);
+  }
+  .tab-btn.center .lbl { color: #ffe680; margin-top: 2px; }
+
+  /* ============================ MOBILE ============================ */
+  @media (max-width: 900px) {
+    #hud {
+      gap: 10px;
+      padding: 8px 10px;
+      font-size: 11px;
+    }
+    .hud-stat { min-width: 80px; }
+    .hud-label { font-size: 9px; }
+    .hud-value { font-size: 14px; }
+    .hud-value.small { font-size: 12px; }
+    #screen { padding: 10px; margin-bottom: 90px; }
+    .panel { padding: 10px; margin-bottom: 10px; }
+    .panel h2 { font-size: 13px; }
+    #cardArea { min-height: 360px; padding: 10px; }
+    .cardTitle { font-size: 18px; }
+    .cardDescription { font-size: 11px; }
+  }
+  @media (max-width: 520px) {
+    .cardTitle { font-size: 16px; }
+    .cardDescription { font-size: 10px; }
+    .cellContent { font-size: 26px !important; }
+    .btn { font-size: 10px; padding: 6px; }
+    .shopItem { padding: 6px 8px; font-size: 11px; }
+    .shopItem .name { font-size: 12px; }
+    .shopItem .desc { font-size: 9px; }
+    .shopItem .cost { font-size: 10px; }
+    .tab-btn .lbl { display: none; }
+    .tab-btn { padding: 6px 2px; }
+  }
+
+  .panel {
+    background: rgba(0,0,0,0.3);
+    border: 1px solid #7b5ec7;
+    border-radius: 10px;
+    padding: 14px;
+    margin-bottom: 16px;
+  }
+  .panel h2 {
+    font-size: 15px;
+    color: #ffe680;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 10px;
+    border-bottom: 1px solid #4a3580;
+    padding-bottom: 4px;
+  }
+
+  .shopItem {
+    background: linear-gradient(180deg, #2d1b4e, #1a1638);
+    border: 1px solid #4a3580;
+    border-radius: 6px;
+    padding: 8px 10px;
+    margin-bottom: 7px;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-size: 12px;
+  }
+  .shopItem:hover:not(.disabled) { border-color: #ffe680; transform: translateX(-2px); }
+  .shopItem.disabled { opacity: 0.45; cursor: not-allowed; }
+  .shopItem .name { font-weight: bold; color: #ffe680; font-size: 13px; }
+  .shopItem .desc { font-size: 10px; color: #b8a8e8; margin-top: 2px; }
+  .shopItem .cost { font-size: 11px; color: #ffaa66; margin-top: 3px; }
+  .shopItem .meta { float: right; color: #aaf080; font-size: 11px; }
+
+  .risk { display: inline-block; margin-left: 6px; letter-spacing: 1px; }
+  .risk.low { color: #66cc66; }
+  .risk.med { color: #ffcc66; }
+  .risk.high { color: #ff6666; }
+
+  .btn {
+    width: 100%;
+    padding: 8px;
+    background: linear-gradient(180deg, #7b5ec7, #5a3da0);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 5px;
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .btn:hover:not(:disabled) { background: linear-gradient(180deg, #9d80e8, #7b5ec7); }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn.cashout { background: linear-gradient(180deg, #66cc66, #339933); }
+  .btn.danger { background: linear-gradient(180deg, #cc6666, #993333); }
+  .btn.prestige { background: linear-gradient(180deg, #ff66cc, #aa3388); }
+  .btn.talent { background: linear-gradient(180deg, #aaf080, #66bb44); color: #0a1a08; }
+
+  /* Card play area */
+  #cardArea {
+    background: rgba(0,0,0,0.35);
+    border: 2px dashed #4a3580;
+    border-radius: 12px;
+    padding: 16px;
+    min-height: 480px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  #cardArea.empty { color: #888; font-style: italic; }
+
+  .cardTitle {
+    font-size: 22px;
+    font-weight: bold;
+    color: #ffe680;
+    margin-bottom: 6px;
+    text-align: center;
+  }
+  .cardDescription {
+    font-size: 12px;
+    color: #b8a8e8;
+    margin-bottom: 10px;
+    text-align: center;
+    max-width: 460px;
+  }
+  .cardProgressBar {
+    font-size: 13px;
+    color: #b8a8e8;
+    margin: 6px 0;
+  }
+  .cardEarnings {
+    font-size: 16px;
+    font-weight: bold;
+    color: #ffe680;
+    margin-top: 6px;
+    text-align: center;
+  }
+  .cardEarnings.negative { color: #ff6666; }
+
+  /* Card grid */
+  .cardGrid {
+    display: grid;
+    gap: 6px;
+    padding: 14px;
+    background: linear-gradient(135deg, #4a3580, #2d1b4e);
+    border: 4px solid #6b4423;
+    border-radius: 14px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.6);
+    position: relative;
+    grid-template-columns: repeat(var(--cols, 3), var(--cell-w, 100px));
+    grid-template-rows:    repeat(var(--rows, 1), var(--cell-h, 100px));
+  }
+  @media (max-width: 520px) {
+    .cardGrid {
+      --cell-w: 88px !important;
+      --cell-h: 88px !important;
+      padding: 8px;
+      gap: 4px;
+    }
+    .cardGrid.fc-grid {
+      --cell-w: 260px !important;
+      --cell-h: 180px !important;
+    }
+  }
+  .cardCell {
+    position: relative;
+    background: linear-gradient(180deg, #1a1038, #0d0820);
+    border: 2px solid #4a3580;
+    border-radius: 8px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .cellContent {
+    font-size: 40px;
+    z-index: 1;
+    color: #f0e8ff;
+  }
+  .cellContent.penalty { color: #ff6666; }
+  .cellContent.good    { color: #66ff99; }
+  .cellContent.jackpot { color: #ffd700; text-shadow: 0 0 12px #ffe680; }
+  .cellCanvas {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    z-index: 2;
+    cursor: crosshair;
+    touch-action: none;
+    transition: opacity 0.25s ease-out;
+  }
+  .cellCanvas.peeked { opacity: 0.35; }
+  .cellMeta {
+    position: absolute;
+    bottom: 1px; right: 4px;
+    font-size: 9px;
+    color: #ffe680;
+    z-index: 3;
+    text-shadow: 0 0 4px #000;
+    pointer-events: none;
+  }
+  .cellMeta.triggered { color: #66ff99; font-weight: bold; }
+  .cellMeta.penalized { color: #ff6666; font-weight: bold; }
+
+  /* Modals */
+  #modal {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.85);
+    display: none;
+    align-items: center; justify-content: center;
+    z-index: 100;
+  }
+  #modal.show { display: flex; }
+  .modalBox {
+    background: linear-gradient(180deg, #2d1b4e, #1a1638);
+    border: 3px solid #7b5ec7;
+    border-radius: 12px;
+    padding: 24px;
+    max-width: 480px;
+    text-align: center;
+    box-shadow: 0 0 40px rgba(123,94,199,0.5);
+  }
+  .modalBox h2 { color: #ffe680; margin-bottom: 12px; }
+  .modalBox p, .modalBox div { line-height: 1.5; margin-bottom: 10px; }
+
+  .talentNode {
+    background: linear-gradient(180deg, #1a2818, #0d180a);
+    border: 2px solid #4a6b3a;
+    border-radius: 6px;
+    padding: 10px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    text-align: left;
+  }
+  .talentNode.owned { border-color: #aaf080; background: linear-gradient(180deg, #2a4828, #0f2a0a); }
+  .talentNode.locked { opacity: 0.5; cursor: not-allowed; }
+
+  .logRow {
+    font-size: 11px;
+    color: #b8a8e8;
+    padding: 4px 0;
+    border-bottom: 1px dashed #3a2858;
+  }
+  .floatText {
+    position: fixed;
+    font-weight: bold;
+    font-size: 22px;
+    pointer-events: none;
+    text-shadow: 0 0 8px #000;
+    z-index: 80;
+    animation: floatUp 1.4s ease-out forwards;
+  }
+  .floatText.good { color: #66ff99; }
+  .floatText.bad  { color: #ff6666; }
+  @keyframes floatUp {
+    0% { opacity: 1; transform: translateY(0); }
+    100% { opacity: 0; transform: translateY(-90px); }
+  }
+</style>
+</head>
+<body>
+
+<div id="hud">
+  <div class="hud-stat"><span class="hud-label">Cash</span><span class="hud-value" id="cashDisplay">$0</span></div>
+  <div class="hud-stat"><span class="hud-label">Jack Pts (banked)</span><span class="hud-value jack" id="jackDisplay">⭐ 0</span></div>
+  <div class="hud-stat"><span class="hud-label">Run #</span><span class="hud-value run small" id="runDisplay">1</span></div>
+  <div class="hud-stat"><span class="hud-label">Cards Scratched</span><span class="hud-value small" id="cardsCountDisplay">0</span></div>
+  <div class="hud-stat"><span class="hud-label">Biggest Win</span><span class="hud-value small" id="bigWinDisplay">$0</span></div>
+  <div class="hud-stat"><span class="hud-label">Auto-Scratcher</span><span class="hud-value small" id="autoDisplay">OFF</span></div>
+</div>
+
+<div id="screen">
+  <!-- HOME tab — always present, shows card area -->
+  <div class="tab-pane active" data-pane="home">
+    <div id="cardArea" class="empty">Buy a card from the Shop tab to start scratching.</div>
+  </div>
+
+  <!-- SHOP tab -->
+  <div class="tab-pane" data-pane="shop">
+    <div class="panel">
+      <h2>🎴 Card Shop</h2>
+      <div id="cardShop"></div>
+    </div>
+  </div>
+
+  <!-- UPGRADES tab -->
+  <div class="tab-pane" data-pane="upgrades">
+    <div class="panel">
+      <h2>⚙ In-run Upgrades</h2>
+      <div id="upgradeShop"></div>
+    </div>
+  </div>
+
+  <!-- LOG tab -->
+  <div class="tab-pane" data-pane="log">
+    <div class="panel">
+      <h2>📜 Card Log</h2>
+      <div id="cardLog"></div>
+    </div>
+  </div>
+
+  <!-- PRESTIGE tab -->
+  <div class="tab-pane" data-pane="prestige">
+    <div class="panel">
+      <h2>⭐ Prestige</h2>
+      <button class="btn talent" id="btnTalents">Skill Tree</button>
+      <div style="font-size:11px;color:#b8a8e8;margin-top:6px;text-align:center;" id="prestigeInfo"></div>
+      <button class="btn danger" id="btnReset" style="margin-top:10px;font-size:10px;">🗑 Reset Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- BOTTOM TAB BAR (mobile-game style) -->
+<nav id="tabBar">
+  <button class="tab-btn" data-go="shop"><span class="icon">🎴</span><span class="lbl">Shop</span></button>
+  <button class="tab-btn" data-go="upgrades"><span class="icon">⚙</span><span class="lbl">Upgrades</span></button>
+  <button class="tab-btn center active" data-go="home"><span class="icon">🏠</span><span class="lbl">Home</span></button>
+  <button class="tab-btn" data-go="log"><span class="icon">📜</span><span class="lbl">Log</span></button>
+  <button class="tab-btn" data-go="prestige"><span class="icon">⭐</span><span class="lbl">Prestige</span></button>
+</nav>
+
+<div id="modal"><div class="modalBox" id="modalContent"></div></div>
+
+<script>
+// =============================================================
+// CARD-TYPE DEFINITIONS (rulesets)
+// =============================================================
+const CARD_TYPES = [
+  {
+    id: 'quick_cash',
+    name: 'Quick Cash',
+    cost: 5,
+    desc: 'Match 2 of 3 symbols of the same kind. No penalties — safe entry card.',
+    ruleset: 'match_n',
+    grid: { cols: 3, rows: 1 },
+    cellW: 130, cellH: 170,
+    symbols: [
+      { glyph: '$',  type: 'good', value: 8,  weight: 50 },
+      { glyph: '$$', type: 'good', value: 20, weight: 30 },
+      { glyph: '$$$',type: 'good', value: 60, weight: 12 },
+      { glyph: '★',  type: 'jackpot', value: 150, weight: 8 }
+    ],
+    matchPayout: { 2: 1.0, 3: 3.0 }, // payout multiplier
+    risk: 'low'
+  },
+  {
+    id: 'apple_tree',
+    name: 'Apple Tree',
+    cost: 25,
+    desc: 'Apples pay per reveal. Worms penalize if fully exposed — STOP before fully revealing them!',
+    ruleset: 'per_symbol_accumulate',
+    grid: { cols: 3, rows: 3 },
+    cellW: 95, cellH: 95,
+    symbols: [
+      { glyph: '🍎', type: 'good',    value: 12, weight: 45 },
+      { glyph: '🍏', type: 'good',    value: 18, weight: 25 },
+      { glyph: '🌟', type: 'jackpot', value: 120,weight: 10 },
+      { glyph: '🐛', type: 'penalty', value: -50,weight: 20 }
+    ],
+    risk: 'med'
+  },
+  {
+    id: 'snake_eyes',
+    name: 'Snake Eyes',
+    cost: 100,
+    desc: 'Each die scores: 2-6 pays, 1 penalizes. High variance — runs can lose money.',
+    ruleset: 'per_cell_binary',
+    grid: { cols: 3, rows: 2 },
+    cellW: 95, cellH: 95,
+    symbols: [
+      { glyph: '⚀', type: 'penalty', value: -120, weight: 17 },
+      { glyph: '⚁', type: 'good',    value: 45,   weight: 16 },
+      { glyph: '⚂', type: 'good',    value: 60,   weight: 16 },
+      { glyph: '⚃', type: 'good',    value: 80,   weight: 17 },
+      { glyph: '⚄', type: 'good',    value: 110,  weight: 17 },
+      { glyph: '⚅', type: 'jackpot', value: 200,  weight: 17 }
+    ],
+    risk: 'high'
+  },
+  {
+    id: 'scratch_my_back',
+    name: 'Scratch My Back',
+    cost: 60,
+    desc: 'Turtle shell segments. 3 reward, 1 penalty — RNG decides which is which. Catalog 2 only.',
+    ruleset: 'per_symbol_accumulate',
+    grid: { cols: 2, rows: 2 },
+    cellW: 110, cellH: 110,
+    symbols: [
+      { glyph: '🐢', type: 'good',    value: 30, weight: 40 },
+      { glyph: '🦴', type: 'good',    value: 50, weight: 25 },
+      { glyph: '💎', type: 'jackpot', value: 200,weight: 10 },
+      { glyph: '🪤', type: 'penalty', value: -70,weight: 25 }
+    ],
+    risk: 'med'
+  },
+  {
+    id: 'final_chance',
+    name: 'Final Chance',
+    cost: 500,
+    desc: '⚠ Ends the run on reveal. Pays a flat prestige bonus and grants Jack Points.',
+    ruleset: 'final_chance',
+    grid: { cols: 1, rows: 1 },
+    cellW: 280, cellH: 200,
+    symbols: [{ glyph: '⭐', type: 'jackpot', value: 1000, weight: 100 }],
+    risk: 'high'
+  }
+];
+
+// Catalogs — gated by cash high-water-mark, not card count
+const CATALOGS = [
+  { id: 'starter', name: 'Starter Catalog', requiredHWM: 0,   cards: ['quick_cash', 'apple_tree', 'final_chance'] },
+  { id: 'casino',  name: 'Casino Catalog',  requiredHWM: 150, cards: ['snake_eyes', 'scratch_my_back'] }
+];
+
+const UPGRADES = [
+  { id: 'luck',          name: 'Luck',           costBase: 50,   costScale: 1.6,  desc: l => `+${l*5}% chance to roll better symbols` },
+  { id: 'scratchPower',  name: 'Scratch Power',  costBase: 50,   costScale: 1.6,  desc: l => `brush erases ${(1+l*0.2).toFixed(2)}× faster` },
+  { id: 'areaSize',      name: 'Area Size',      costBase: 80,   costScale: 1.5,  desc: l => `brush radius +${l*5}px — faster scratch, but harder to stop precisely on penalties` },
+  { id: 'autoScratcher', name: 'Auto Scratcher', costBase: 1000, costScale: 2.5,  desc: l => l > 0 ? `auto-scratches low-tier cards (1 every ${Math.max(8,30-l*4).toFixed(0)}s) — can't skill-stop!` : 'unlocks auto-scratching low-tier cards' }
+];
+
+const TALENTS = [
+  { id: 'muscle_memory', name: 'Muscle Memory',  cost: 1, desc: '+25% scratch speed permanently' },
+  { id: 'allowance',     name: 'Allowance',      cost: 1, desc: '+$100 starting cash next run' },
+  { id: 'super_lucky',   name: 'Super Lucky',    cost: 2, desc: 'Jackpot symbols 2× more common' },
+  { id: 'time_travel',   name: 'Time Travel',    cost: 3, desc: 'Start each run with Auto Scratcher level 1' },
+  { id: 'tough_skin',    name: 'Tough Skin',     cost: 2, desc: 'Penalty symbols deal 50% damage' },
+  { id: 'generous_tips', name: 'Generous Tips',  cost: 2, desc: 'All cards cost 10% less' }
+];
+
+// Split threshold — good/jackpot snap early for fast pace; penalty needs near-full reveal so skill-stop is real.
+const REVEAL_THRESHOLD_GOOD    = 0.30;
+const REVEAL_THRESHOLD_PENALTY = 0.85;
+function penaltyThreshold() {
+  // Bigger brush overshoots; raise threshold slightly to model the precision tradeoff.
+  return REVEAL_THRESHOLD_PENALTY + Math.min(0.10, state.upgradeLevels.areaSize * 0.025);
+}
+
+// =============================================================
+// STATE
+// =============================================================
+function freshState() {
+  return {
+    cash: 20,
+    cashHighWaterMark: 20,
+    jackPoints: 0,
+    runNumber: 1,
+    cardsScratched: 0,
+    biggestWin: 0,
+    upgradeLevels: { luck: 0, scratchPower: 0, areaSize: 0, autoScratcher: 0 },
+    talentsOwned: {},
+    cardLog: {},
+    runActive: true,
+    lastSaved: 0
+  };
+}
+let state = loadState();
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem('scratchyPrestige');
+    if (!raw) return startNewRun(freshState(), true);
+    const s = Object.assign(freshState(), JSON.parse(raw));
+    return s;
+  } catch (e) { return freshState(); }
+}
+function saveState() { localStorage.setItem('scratchyPrestige', JSON.stringify(state)); }
+
+function startNewRun(s, isFirst) {
+  s.cash = (s.talentsOwned && s.talentsOwned.allowance ? 100 : 20);
+  s.cardsScratched = 0;
+  s.biggestWin = 0;
+  s.upgradeLevels = { luck: 0, scratchPower: 0, areaSize: 0, autoScratcher: 0 };
+  if (s.talentsOwned && s.talentsOwned.time_travel) s.upgradeLevels.autoScratcher = 1;
+  s.runActive = true;
+  if (!isFirst) s.runNumber++;
+  return s;
+}
+
+// =============================================================
+// HELPERS / GETTERS
+// =============================================================
+function discount() { return state.talentsOwned.generous_tips ? 0.9 : 1.0; }
+function speedMult() { return (state.talentsOwned.muscle_memory ? 1.25 : 1.0) * (1 + state.upgradeLevels.scratchPower * 0.2); }
+function brushRadius() { return 15 + state.upgradeLevels.areaSize * 4; }
+function penaltyMult() { return state.talentsOwned.tough_skin ? 0.5 : 1.0; }
+function jackpotBoost() { return state.talentsOwned.super_lucky ? 2.0 : 1.0; }
+function luckBoost() { return 1 + state.upgradeLevels.luck * 0.05; }
+function autoRateSec() {
+  const l = state.upgradeLevels.autoScratcher;
+  if (l <= 0) return 0;
+  return Math.max(8, 30 - l*4);
+}
+function cardCost(c) {
+  if (c.id === 'final_chance') {
+    return Math.ceil(c.cost * Math.pow(1.5, state.runNumber - 1) * discount());
+  }
+  return Math.ceil(c.cost * discount());
+}
+function cheapestNonFinalCost() {
+  return Math.min(...CARD_TYPES.filter(c => c.id !== 'final_chance').map(c => cardCost(c)));
+}
+function maybeWipeOut() {
+  if (state.cash >= cheapestNonFinalCost()) return;
+  document.getElementById('modalContent').innerHTML = `
+    <h2>💀 Wiped Out</h2>
+    <p>You can't afford another card. Your run is over.</p>
+    <div style="display:flex;gap:10px;justify-content:center;margin-top:14px;">
+      <button class="btn prestige" id="btnEmergencyPrestige">⭐ Take 1 JP and Reset</button>
+      <button class="btn danger" id="btnRestartBroke">🗑 Restart at $20</button>
+    </div>
+  `;
+  document.getElementById('modal').classList.add('show');
+  document.getElementById('btnEmergencyPrestige').onclick = () => {
+    state.jackPoints += 1;
+    state.cash = 0;
+    state.cashHighWaterMark = 20;
+    startNewRun(state, false);
+    document.getElementById('modal').classList.remove('show');
+    renderShop(); updateHud(); saveState();
+  };
+  document.getElementById('btnRestartBroke').onclick = () => {
+    state.cash = 20;
+    state.cashHighWaterMark = 20;
+    startNewRun(state, false);
+    document.getElementById('modal').classList.remove('show');
+    renderShop(); updateHud(); saveState();
+  };
+}
+function upgradeCost(u) {
+  return Math.ceil(u.costBase * Math.pow(u.costScale, state.upgradeLevels[u.id]));
+}
+function jackEstimate(cashAtPrestige, cardsThisRun) {
+  const fromCash    = Math.max(0, Math.floor(Math.sqrt(cashAtPrestige / 50)));
+  const fromCards   = Math.floor((cardsThisRun || 0) * 0.05);  // 1 JP per 20 cards
+  const commitBonus = 1;
+  return fromCash + fromCards + commitBonus;
+}
+function fmt(n) {
+  const neg = n < 0;
+  n = Math.abs(n);
+  if (n < 1000) return (neg?'-$':'$') + Math.floor(n);
+  const units = ['', 'K', 'M', 'B', 'T'];
+  let u = 0;
+  while (n >= 1000 && u < units.length - 1) { n /= 1000; u++; }
+  return (neg?'-$':'$') + n.toFixed(2) + units[u];
+}
+function pickWeighted(symbols, isLastPick) {
+  const adjusted = symbols.map(s => {
+    let w = s.weight;
+    if (s.type === 'good' || s.type === 'jackpot') w *= luckBoost();
+    if (s.type === 'jackpot') w *= jackpotBoost();
+    return { ...s, weight: w };
+  });
+  const total = adjusted.reduce((a,b) => a + b.weight, 0);
+  let r = Math.random() * total;
+  for (const s of adjusted) { r -= s.weight; if (r <= 0) return s; }
+  return adjusted[0];
+}
+
+// =============================================================
+// CARD INSTANCE
+// =============================================================
+let currentCard = null;
+
+function startCard(cardType) {
+  if (state.cash < cardCost(cardType)) {
+    showModal('Not Enough Cash', `You need ${fmt(cardCost(cardType))} for ${cardType.name}.`);
+    return;
+  }
+  state.cash -= cardCost(cardType);
+  updateHud();
+
+  const cells = [];
+  const total = cardType.grid.cols * cardType.grid.rows;
+  for (let i = 0; i < total; i++) {
+    cells.push({
+      idx: i,
+      symbol: pickWeighted(cardType.symbols),
+      revealPct: 0,
+      triggered: false,
+      penalized: false
+    });
+  }
+
+  currentCard = {
+    type: cardType,
+    cells,
+    runningPayout: 0,
+    cashedOut: false,
+    autoActive: false
+  };
+  renderCardArea();
+  saveState();
+}
+
+function renderCardArea() {
+  const area = document.getElementById('cardArea');
+  area.classList.remove('empty');
+  if (!currentCard) {
+    area.classList.add('empty');
+    area.innerHTML = 'Buy a card from the shop to start scratching.';
+    return;
+  }
+  const ct = currentCard.type;
+  area.innerHTML = `
+    <div class="cardTitle">${ct.name}</div>
+    <div class="cardDescription">${ct.desc}</div>
+    <div class="cardProgressBar" id="progressLabel">Cells fully revealed: 0 / ${currentCard.cells.length}</div>
+    <div class="cardGrid${ct.id==='final_chance'?' fc-grid':''}" id="cardGrid"
+         style="--cols:${ct.grid.cols}; --rows:${ct.grid.rows}; --cell-w:${ct.cellW}px; --cell-h:${ct.cellH}px;"></div>
+    <div class="cardEarnings" id="earnings">Running gains: $0</div>
+    <div style="margin-top:12px; display: flex; gap: 12px;">
+      <button class="btn cashout" id="btnCashOut">💵 Cash Out</button>
+      <button class="btn danger" id="btnAbandon">✗ Abandon</button>
+    </div>
+  `;
+  const grid = document.getElementById('cardGrid');
+  currentCard.cells.forEach(cell => {
+    const cellEl = document.createElement('div');
+    cellEl.className = 'cardCell';
+    cellEl.dataset.idx = cell.idx;
+    cellEl.innerHTML = `
+      <div class="cellContent ${cell.symbol.type}">${cell.symbol.glyph}</div>
+      <canvas class="cellCanvas" width="${ct.cellW}" height="${ct.cellH}"></canvas>
+      <div class="cellMeta" id="meta-${cell.idx}"></div>
+    `;
+    grid.appendChild(cellEl);
+    initCellCanvas(cellEl.querySelector('.cellCanvas'), cell);
+  });
+
+  document.getElementById('btnCashOut').onclick = cashOut;
+  document.getElementById('btnAbandon').onclick = () => {
+    if (confirm('Abandon this card? You lose any unsecured gains.')) {
+      finishCard(true);
+    }
+  };
+
+  // Auto Scratcher attempt (cannot skill-stop)
+  if (autoRateSec() > 0 && currentCard.type.id !== 'final_chance' && currentCard.type.risk !== 'high') {
+    currentCard.autoActive = true;
+    scheduleAutoScratch();
+  }
+}
+
+function initCellCanvas(canvas, cell) {
+  const ctx = canvas.getContext('2d');
+  const grad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+  grad.addColorStop(0, '#a08858');
+  grad.addColorStop(0.5, '#d4b270');
+  grad.addColorStop(1, '#7a6038');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = 'rgba(0,0,0,0.25)';
+  ctx.font = 'bold 12px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('SCRATCH', canvas.width/2, canvas.height/2 + 4);
+  ctx.globalCompositeOperation = 'destination-out';
+
+  let scratching = false;
+  let lastPt = null;
+  function pt(e) {
+    const r = canvas.getBoundingClientRect();
+    return {
+      x: (e.clientX - r.left) * (canvas.width / r.width),
+      y: (e.clientY - r.top) * (canvas.height / r.height)
+    };
+  }
+  function paintAt(x, y) {
+    const r = brushRadius();
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI*2);
+    ctx.fill();
+    updateCellReveal(canvas, cell);
+  }
+  canvas.onpointerdown = e => {
+    e.preventDefault();
+    if (currentCard.cashedOut) return;
+    scratching = true;
+    const p = pt(e);
+    paintAt(p.x, p.y);
+    lastPt = p;
+  };
+  canvas.onpointermove = e => {
+    if (!scratching || currentCard.cashedOut) return;
+    const p = pt(e);
+    if (lastPt) {
+      // Lerp along the swipe so a fast drag still paints continuously and
+      // updateCellReveal fires per step — gives skill-stop a chance to react.
+      const dx = p.x - lastPt.x, dy = p.y - lastPt.y;
+      const dist = Math.hypot(dx, dy);
+      const r = brushRadius();
+      const steps = Math.max(1, Math.ceil(dist / (r * 0.6)));
+      for (let i = 1; i <= steps; i++) {
+        const t = i / steps;
+        paintAt(lastPt.x + dx * t, lastPt.y + dy * t);
+        if (cell.triggered) break;
+      }
+    } else {
+      paintAt(p.x, p.y);
+    }
+    lastPt = p;
+  };
+  canvas.onpointerup = canvas.onpointerleave = () => { scratching = false; lastPt = null; };
+  cell._canvas = canvas;
+}
+
+function updateCellReveal(canvas, cell) {
+  // sample alpha grid
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width, h = canvas.height;
+  const img = ctx.getImageData(0, 0, w, h);
+  const data = img.data;
+  let sampled = 0, cleared = 0;
+  // 10x10 = 100 samples
+  for (let yy = 0; yy < 10; yy++) {
+    for (let xx = 0; xx < 10; xx++) {
+      const px = Math.floor((xx + 0.5) * w / 10);
+      const py = Math.floor((yy + 0.5) * h / 10);
+      const i = (py * w + px) * 4;
+      sampled++;
+      if (data[i + 3] < 30) cleared++;
+    }
+  }
+  const newPct = cleared / sampled;
+  cell.revealPct = newPct;
+
+  // Split threshold — good snaps at 30%, penalty needs near-full reveal so skill-stop is real.
+  if (!cell.triggered) {
+    const threshold = (cell.symbol.type === 'penalty') ? penaltyThreshold() : REVEAL_THRESHOLD_GOOD;
+    if (newPct >= threshold) triggerSymbol(cell);
+  }
+  refreshCellMeta(cell);
+  refreshProgress();
+}
+
+function refreshCellMeta(cell) {
+  const meta = document.getElementById('meta-' + cell.idx);
+  const cellEl = document.querySelector('.cardCell[data-idx="' + cell.idx + '"]');
+  const contentEl = cellEl ? cellEl.querySelector('.cellContent') : null;
+  // Silhouette fade-in: symbol becomes readable as the cell is uncovered (so player can skill-stop).
+  if (contentEl && !cell.triggered) {
+    contentEl.style.opacity = Math.min(1, 0.2 + cell.revealPct * 1.4);
+  } else if (contentEl) {
+    contentEl.style.opacity = 1;
+  }
+  // Penalty telegraph: red glow when getting close to the 85% trigger.
+  if (cellEl && !cell.triggered && cell.symbol.type === 'penalty' && cell.revealPct > 0.6) {
+    cellEl.style.boxShadow = '0 0 12px rgba(255,102,102,0.7)';
+  } else if (cellEl && !cell.triggered) {
+    cellEl.style.boxShadow = '';
+  }
+  if (!meta) return;
+  if (cell.triggered) {
+    if (cell.penalized) {
+      meta.className = 'cellMeta penalized';
+      meta.textContent = fmt(cell.symbol.value * penaltyMult()).replace('$','');
+    } else {
+      meta.className = 'cellMeta triggered';
+      meta.textContent = '+' + fmt(cell.symbol.value).replace('$','');
+    }
+  } else {
+    meta.className = 'cellMeta';
+    meta.textContent = Math.floor(cell.revealPct * 100) + '%';
+  }
+}
+
+function refreshProgress() {
+  if (!currentCard) return;
+  const total = currentCard.cells.length;
+  const done = currentCard.cells.filter(c => c.triggered).length;
+  const elProg = document.getElementById('progressLabel');
+  if (elProg) elProg.textContent = `Cells fully revealed: ${done} / ${total}`;
+  recomputeRunning();
+  const eEl = document.getElementById('earnings');
+  if (eEl) {
+    eEl.textContent = (currentCard.runningPayout < 0 ? 'Running loss: ' : 'Running gains: ') + fmt(currentCard.runningPayout);
+    eEl.classList.toggle('negative', currentCard.runningPayout < 0);
+  }
+  // auto cash out for Final Chance once fully revealed
+  if (currentCard.type.id === 'final_chance' && done >= total && !currentCard.cashedOut) {
+    cashOut();
+  }
+}
+
+function recomputeRunning() {
+  if (!currentCard) return;
+  const ct = currentCard.type;
+  // Build payout based on ruleset, using ONLY triggered cells (skill-stop preserves untriggered)
+  let p = 0;
+  if (ct.ruleset === 'match_n') {
+    const counts = {};
+    currentCard.cells.forEach(c => {
+      if (c.triggered) counts[c.symbol.glyph] = (counts[c.symbol.glyph] || 0) + 1;
+    });
+    let bestGlyph = null, bestCount = 0, bestSymbol = null;
+    for (const c of currentCard.cells) {
+      const cnt = counts[c.symbol.glyph] || 0;
+      if (cnt >= 2 && cnt > bestCount) {
+        bestCount = cnt;
+        bestGlyph = c.symbol.glyph;
+        bestSymbol = c.symbol;
+      }
+    }
+    if (bestSymbol) {
+      const mult = ct.matchPayout[bestCount] || 0;
+      p = bestSymbol.value * mult;
+    }
+  } else if (ct.ruleset === 'per_symbol_accumulate' || ct.ruleset === 'per_cell_binary') {
+    currentCard.cells.forEach(c => {
+      if (!c.triggered) return;
+      if (c.symbol.type === 'penalty') p += c.symbol.value * penaltyMult();
+      else p += c.symbol.value;
+    });
+  } else if (ct.ruleset === 'final_chance') {
+    currentCard.cells.forEach(c => { if (c.triggered) p += c.symbol.value; });
+  }
+  currentCard.runningPayout = p;
+}
+
+function triggerSymbol(cell) {
+  cell.triggered = true;
+  // No auto-clear — the mask stays where the player left it. Trigger feedback comes from float text + cellMeta.
+  if (cell.symbol.type === 'penalty') {
+    cell.penalized = true;
+    floatFromCell(cell, fmt(cell.symbol.value * penaltyMult()), 'bad');
+  } else {
+    floatFromCell(cell, '+' + fmt(cell.symbol.value), 'good');
+  }
+  refreshCellMeta(cell);
+}
+
+function floatFromCell(cell, text, cls) {
+  const cellEl = document.querySelector('.cardCell[data-idx="' + cell.idx + '"]');
+  if (!cellEl) return;
+  const r = cellEl.getBoundingClientRect();
+  const f = document.createElement('div');
+  f.className = 'floatText ' + cls;
+  f.textContent = text;
+  f.style.left = (r.left + r.width/2 - 30) + 'px';
+  f.style.top = (r.top + 12) + 'px';
+  document.body.appendChild(f);
+  setTimeout(() => f.remove(), 1400);
+}
+
+function cashOut() {
+  if (!currentCard || currentCard.cashedOut) return;
+  currentCard.cashedOut = true;
+  const net = currentCard.runningPayout;
+  state.cash += net;
+  // No floor — Snake Eyes / Apple Tree can produce a net negative result; balance can go negative.
+  if (net > state.biggestWin) state.biggestWin = net;
+  state.cardsScratched++;
+  const log = state.cardLog[currentCard.type.id] || { count: 0, totalNet: 0 };
+  log.count++; log.totalNet += net;
+  state.cardLog[currentCard.type.id] = log;
+
+  if (currentCard.type.id === 'final_chance') {
+    triggerPrestige(net);
+    return;
+  }
+  showModal('💵 Card Result',
+    `<b>${currentCard.type.name}</b><br>Net result: <b style="color:${net>=0?'#66ff99':'#ff6666'}">${fmt(net)}</b><br>` +
+    `Cells fully revealed: ${currentCard.cells.filter(c=>c.triggered).length} / ${currentCard.cells.length}`);
+  finishCard(false);
+  setTimeout(maybeWipeOut, 350);
+}
+
+function finishCard(abandoned) {
+  currentCard = null;
+  renderCardArea();
+  renderCardLog();
+  saveState();
+  updateHud();
+  renderShop();
+}
+
+// =============================================================
+// AUTO SCRATCHER
+// =============================================================
+let autoTimerId = null;
+function scheduleAutoScratch() {
+  if (autoTimerId) clearInterval(autoTimerId);
+  if (autoRateSec() <= 0) return;
+  autoTimerId = setInterval(() => {
+    if (!currentCard || currentCard.cashedOut) return;
+    if (currentCard.type.risk === 'high' || currentCard.type.id === 'final_chance') return;
+    // pick a non-triggered cell with lowest reveal — auto cannot stop, will fully scratch one
+    const candidates = currentCard.cells.filter(c => !c.triggered);
+    if (candidates.length === 0) return;
+    const target = candidates[Math.floor(Math.random() * candidates.length)];
+    const canvas = target._canvas;
+    if (!canvas) return;
+    // fully clear it (cannot skill-stop)
+    const ctx = canvas.getContext('2d');
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.beginPath();
+    ctx.arc(canvas.width/2, canvas.height/2, Math.max(canvas.width, canvas.height), 0, Math.PI*2);
+    ctx.fill();
+    updateCellReveal(canvas, target);
+  }, autoRateSec() * 1000);
+}
+
+// =============================================================
+// PRESTIGE
+// =============================================================
+function triggerPrestige(finalPayout) {
+  const cashAtPrestige = state.cash + finalPayout;
+  const cardsThisRun = state.cardsScratched;
+  const earned = jackEstimate(cashAtPrestige, cardsThisRun);
+  state.jackPoints += earned;
+  state.runNumber++;
+  state.cash = 0;
+  state.cashHighWaterMark = 20;
+  showModal('⭐ Prestige!',
+    `Run ${state.runNumber - 1} complete.<br>` +
+    `Final payout: <b>${fmt(finalPayout)}</b><br>` +
+    `Jack Points earned: <b style="color:#aaf080">${earned}</b><br>` +
+    `<small>(Cash: +${Math.floor(Math.sqrt(cashAtPrestige/50))} · Cards: +${Math.floor(cardsThisRun*0.05)} · Commit: +1)</small>`);
+  startNewRun(state, false);
+  scheduleAutoScratch();
+  currentCard = null;
+  renderCardArea();
+  renderShop();
+  saveState();
+  updateHud();
+}
+
+document.getElementById('btnTalents').onclick = openTalents;
+document.getElementById('btnReset').onclick = () => {
+  if (!confirm('Wipe all progress and start a fresh prototype? This cannot be undone.')) return;
+  localStorage.removeItem('scratchyPrestige');
+  location.reload();
+};
+function openTalents() {
+  let html = `<h2>⭐ Skill Tree</h2><p>Jack Points available: <b>${state.jackPoints}</b></p>`;
+  TALENTS.forEach(t => {
+    const owned = state.talentsOwned[t.id];
+    const can = !owned && state.jackPoints >= t.cost;
+    html += `<div class="talentNode${owned?' owned':(can?'':' locked')}" data-id="${t.id}">
+      <b>${t.name}</b> — <i>${t.desc}</i><br>Cost: ${t.cost} ⭐${owned?' (Owned)':''}
+    </div>`;
+  });
+  html += '<button class="btn" onclick="document.getElementById(\'modal\').classList.remove(\'show\')">Close</button>';
+  document.getElementById('modalContent').innerHTML = html;
+  document.querySelectorAll('.talentNode').forEach(node => {
+    node.onclick = () => {
+      const id = node.dataset.id;
+      const t = TALENTS.find(x => x.id === id);
+      if (state.talentsOwned[id] || state.jackPoints < t.cost) return;
+      state.jackPoints -= t.cost;
+      state.talentsOwned[id] = true;
+      openTalents();
+      updateHud();
+      renderShop();
+      saveState();
+    };
+  });
+  document.getElementById('modal').classList.add('show');
+}
+
+// =============================================================
+// SHOPS & LOG RENDER
+// =============================================================
+function renderShop() {
+  const cs = document.getElementById('cardShop');
+  cs.innerHTML = '';
+  CATALOGS.forEach(cat => {
+    const unlocked = state.cashHighWaterMark >= cat.requiredHWM;
+    const header = document.createElement('div');
+    header.style.cssText = 'font-size:11px;color:#aaf080;text-transform:uppercase;letter-spacing:1.5px;margin:8px 0 4px;border-bottom:1px solid #4a3580;padding-bottom:2px;';
+    header.textContent = unlocked
+      ? `📚 ${cat.name}`
+      : `🔒 ${cat.name} (unlock at ${fmt(cat.requiredHWM)} cash high-water-mark — you've hit ${fmt(state.cashHighWaterMark)})`;
+    cs.appendChild(header);
+    cat.cards.forEach(cardId => {
+      const c = CARD_TYPES.find(x => x.id === cardId);
+      if (!c) return;
+      const cost = cardCost(c);
+      const can = unlocked && state.cash >= cost && !currentCard;
+      const div = document.createElement('div');
+      div.className = 'shopItem' + (can ? '' : ' disabled');
+      const riskLabel = c.risk === 'low' ? '●○○' : c.risk === 'med' ? '●●○' : '●●●';
+      div.innerHTML = `
+        <div class="name">${c.name}<span class="risk ${c.risk}">${riskLabel}</span></div>
+        <div class="desc">${c.desc}</div>
+        <div class="cost">${unlocked ? fmt(cost) : '🔒 Locked'}</div>
+      `;
+      div.onclick = () => { if (can) startCard(c); };
+      cs.appendChild(div);
+    });
+  });
+
+  const us = document.getElementById('upgradeShop');
+  us.innerHTML = '';
+  UPGRADES.forEach(u => {
+    const cost = upgradeCost(u);
+    const lvl = state.upgradeLevels[u.id];
+    const can = state.cash >= cost;
+    const div = document.createElement('div');
+    div.className = 'shopItem' + (can ? '' : ' disabled');
+    div.innerHTML = `
+      <div class="name">${u.name}<span class="meta">Lv ${lvl}</span></div>
+      <div class="desc">${u.desc(lvl)}</div>
+      <div class="cost">Upgrade: ${fmt(cost)}</div>
+    `;
+    div.onclick = () => {
+      if (!can) return;
+      state.cash -= cost;
+      state.upgradeLevels[u.id]++;
+      if (u.id === 'autoScratcher') scheduleAutoScratch();
+      renderShop();
+      updateHud();
+      saveState();
+    };
+    us.appendChild(div);
+  });
+
+  const fc = CARD_TYPES.find(c => c.id === 'final_chance');
+  const projectedCash = state.cash + fc.symbols[0].value;
+  const est = jackEstimate(projectedCash, state.cardsScratched);
+  document.getElementById('prestigeInfo').textContent =
+    `Buying Final Chance now → ~${est} JP (cards played: ${state.cardsScratched}). Banked: ${state.jackPoints} ⭐ · FC cost: ${fmt(cardCost(fc))}`;
+}
+
+function renderCardLog() {
+  const log = document.getElementById('cardLog');
+  log.innerHTML = '';
+  CARD_TYPES.forEach(c => {
+    const entry = state.cardLog[c.id];
+    if (!entry || entry.count === 0) return;
+    const div = document.createElement('div');
+    div.className = 'logRow';
+    div.innerHTML = `<b>${c.name}</b>: ${entry.count}× · net ${fmt(entry.totalNet)}`;
+    log.appendChild(div);
+  });
+  if (!log.children.length) {
+    log.innerHTML = '<div class="logRow" style="font-style:italic;">No cards scratched yet.</div>';
+  }
+}
+
+// =============================================================
+// HUD / MODAL
+// =============================================================
+function updateHud() {
+  if (state.cash > state.cashHighWaterMark) state.cashHighWaterMark = state.cash;
+  document.getElementById('cashDisplay').textContent = fmt(state.cash);
+  document.getElementById('jackDisplay').textContent = '⭐ ' + state.jackPoints;
+  document.getElementById('runDisplay').textContent = state.runNumber;
+  document.getElementById('cardsCountDisplay').textContent = state.cardsScratched;
+  document.getElementById('bigWinDisplay').textContent = fmt(state.biggestWin);
+  document.getElementById('autoDisplay').textContent = state.upgradeLevels.autoScratcher > 0
+    ? 'Lv ' + state.upgradeLevels.autoScratcher + ' (' + autoRateSec().toFixed(0) + 's)'
+    : 'OFF';
+}
+
+function showModal(title, body) {
+  document.getElementById('modalContent').innerHTML = `
+    <h2>${title}</h2><div>${body}</div>
+    <button class="btn" onclick="document.getElementById('modal').classList.remove('show')">OK</button>
+  `;
+  document.getElementById('modal').classList.add('show');
+}
+
+// =============================================================
+// BOTTOM TABS
+// =============================================================
+function switchTab(name) {
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.toggle('active', p.dataset.pane === name));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.go === name));
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => switchTab(btn.dataset.go));
+});
+
+// =============================================================
+// INIT
+// =============================================================
+renderShop();
+renderCardArea();
+renderCardLog();
+updateHud();
+scheduleAutoScratch();
+// If save came in broke, surface the wipe-out modal so player isn't silently stuck.
+setTimeout(maybeWipeOut, 200);
+setInterval(() => { if (Date.now() - state.lastSaved > 5000) { saveState(); state.lastSaved = Date.now(); } }, 1000);
+window.addEventListener('beforeunload', saveState);
+</script>
+</body>
+</html>

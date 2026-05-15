@@ -246,6 +246,7 @@ const C = {
   BLOCK_MAX_ACTIVE:4,
   STALL_THRESHOLD:2.0,
 
+  SMART_TRAY_GUARANTEED_FITS:2,
   REPACK_START:2, REPACK_RECHARGE:25, REPACK_MAX:3, REPACK_CD:3.0,
   UNDO_START:1,   UNDO_RECHARGE:30,   UNDO_MAX:2,   UNDO_CD:2.0,
   WRECK_DURATION:4.0, WRECK_CHARGES_PER_DELIVERY:1, WRECK_ABSORB_THRESHOLD:8, WRECK_MAX:1,
@@ -290,24 +291,65 @@ const PIECE_LIB = RAW_PIECES.map(p=>({id:p.id, variants:rotationsOf(p.cells)}));
 const PIECE_INDEX = Object.fromEntries(PIECE_LIB.map((p,i)=>[p.id,i]));
 
 // ============================================================
-// QUEUE — independent per player, 7-bag (use piece count, here 11)
+// SMART TRAY — per refill, inspect player's board and propose 4 items.
+// At least SMART_TRAY_GUARANTEED_FITS items must have a legal placement
+// on the current board (in any rotation). Remaining slots are "challenge" picks
+// drawn from the full pool (no fit guarantee). Fragile flag (25%) applied
+// independently after shape selection — game doesn't bias toward matchable colors.
 // ============================================================
-function makeQueue(){
-  let pool=[];
-  function bag(){
-    const ix=PIECE_LIB.map((_,i)=>i);
-    for(let i=ix.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[ix[i],ix[j]]=[ix[j],ix[i]]}
-    return ix;
-  }
-  return {
-    next(){
-      if(pool.length===0) pool=bag();
-      const idx=pool.shift();
-      const fragile = Math.random() < C.FRAGILE_RATE;
-      const color = fragile ? C.COLORS[Math.floor(Math.random()*C.COLORS.length)] : null;
-      return {id:PIECE_LIB[idx].id, rot:0, color};
+function pieceFitsOnBoard(idx, board){
+  for(const variant of PIECE_LIB[idx].variants){
+    for(let r=0;r<C.H;r++) for(let c=0;c<C.W;c++){
+      if(canPlace(board, variant, r, c)) return true;
     }
-  };
+  }
+  return false;
+}
+function shuffleInPlace(a){
+  for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}
+  return a;
+}
+function pickSmartPiece(board){
+  // Pick a single piece that fits on the current board. Fallback to any piece
+  // if nothing fits (extreme edge case — Stuck State will trigger).
+  const allIdx = PIECE_LIB.map((_,i)=>i);
+  const fittingIdx = allIdx.filter(i => pieceFitsOnBoard(i, board));
+  const pool = fittingIdx.length>0 ? fittingIdx : allIdx;
+  const idx = pool[Math.floor(Math.random()*pool.length)];
+  const fragile = Math.random() < C.FRAGILE_RATE;
+  const color = fragile ? C.COLORS[Math.floor(Math.random()*C.COLORS.length)] : null;
+  return {id:PIECE_LIB[idx].id, rot:0, color};
+}
+function smartTray(board){
+  // Spec gives MIN guarantee (2 fits of 4), not max. We prefer fitting pieces for
+  // all slots when the fitting pool is large enough — falling back to "challenge"
+  // (non-fitting) picks only when fitting pool is short. Still complies with spec
+  // ("at least 2 fits") while reducing brittleness reported in playtests.
+  const allIdx = PIECE_LIB.map((_,i)=>i);
+  const fittingIdx = allIdx.filter(i => pieceFitsOnBoard(i, board));
+  const fitOrder = shuffleInPlace(fittingIdx.slice());
+  const nonFitOrder = shuffleInPlace(allIdx.filter(i => !fittingIdx.includes(i)));
+  const picks = [];
+  // (1) Fill from fitting pool as much as possible (with repetition if needed
+  // so the player isn't constrained to ≤fittingPool unique shapes).
+  let fi = 0;
+  while(picks.length < C.TRAY && fitOrder.length > 0){
+    picks.push(fitOrder[fi % fitOrder.length]);
+    fi++;
+  }
+  // (2) Fallback: if fitting pool is empty (edge case — board nearly full),
+  // fill with challenge pieces. This will trigger Stuck State per spec.
+  for(const idx of nonFitOrder){
+    if(picks.length>=C.TRAY) break;
+    picks.push(idx);
+  }
+  while(picks.length<C.TRAY) picks.push(allIdx[Math.floor(Math.random()*allIdx.length)]);
+  // Map to tray items with independent fragile coloring
+  return picks.slice(0,C.TRAY).map(idx => {
+    const fragile = Math.random() < C.FRAGILE_RATE;
+    const color = fragile ? C.COLORS[Math.floor(Math.random()*C.COLORS.length)] : null;
+    return {id:PIECE_LIB[idx].id, rot:0, color};
+  });
 }
 
 // ============================================================
@@ -394,7 +436,6 @@ function newSideState(){
 }
 const G = {
   diff:'medium',
-  queueMe:null, queueFoe:null,
   me:newSideState(), foe:newSideState(),
   startedAt:0, endsAt:0,
   running:false, ended:false,
@@ -594,12 +635,17 @@ function updateStuckBanner(){
 // PLACEMENT, DELIVERY, FRAGILE MATCH
 // ============================================================
 function refillTrayIfEmpty(side){
+  // Continuous slot refill (deviates from spec's "refill when all 4 placed" rule —
+  // playtest showed mid-tray stuck was too frequent because stale picks from earlier
+  // board state stopped fitting). Each empty slot gets a fresh fitting pick based
+  // on current board. Per-slot Smart Tray still respects the fit-when-possible
+  // principle from §3 of the spec.
   const P=G[side];
-  // tray refills only when ALL slots are empty (spec)
-  if(P.tray.some(p=>p)) return false;
-  const q=side==='me'?G.queueMe:G.queueFoe;
-  for(let i=0;i<C.TRAY;i++) P.tray[i]=q.next();
-  return true;
+  let refilled=false;
+  for(let i=0;i<C.TRAY;i++){
+    if(!P.tray[i]){ P.tray[i] = pickSmartPiece(P.board); refilled=true; }
+  }
+  return refilled;
 }
 
 function placePiece(side, idx, r, c){
@@ -1006,7 +1052,15 @@ window.addEventListener('blur', ()=>finishDrag(false));
 // ============================================================
 // BOT
 // ============================================================
-function botScore(board, cells, r, c, color){
+function pieceFitsOnBoardLocal(idx, board){
+  for(const variant of PIECE_LIB[idx].variants){
+    for(let r=0;r<C.H;r++) for(let c=0;c<C.W;c++){
+      if(canPlace(board, variant, r, c)) return true;
+    }
+  }
+  return false;
+}
+function botScore(board, cells, r, c, color, otherPieces){
   const tmp=board.map(row=>row.slice());
   for(const [dr,dc] of cells) tmp[r+dr][c+dc]= color || 1;
   // count fills + holes
@@ -1042,7 +1096,16 @@ function botScore(board, cells, r, c, color){
     }
   }
   const deliveryBonus = packed===C.W*C.H ? 60 : 0;
-  return deliveryBonus + matchBonus + packed*0.8 - holes*1.5 + Math.random()*1.5;
+  // LOOKAHEAD: penalty if this placement strands other tray pieces
+  // (heavy weight — avoiding self-imposed stuck-state is critical)
+  let strandPenalty = 0;
+  if(otherPieces && otherPieces.length){
+    for(const op of otherPieces){
+      if(!op) continue;
+      if(!pieceFitsOnBoardLocal(PIECE_INDEX[op.id], tmp)) strandPenalty += 25;
+    }
+  }
+  return deliveryBonus + matchBonus + packed*0.8 - holes*1.5 - strandPenalty + Math.random()*1.5;
 }
 function botStep(){
   if(!G.running || G.ended) return;
@@ -1054,22 +1117,31 @@ function botStep(){
   }
   // if stuck, try repack
   if(P.stuck){
-    if(P.repack.charges>0){
-      // pick a packed cell that maximizes legal placements after removal
-      let best=null, bestS=-1;
+    // try Undo first if last placement is still rewindable — preserves repack charges
+    if(P.lastPlacement && P.undo.charges>0 && !P.trayRefilledSinceLast){
+      doUndo('foe');
+    } else if(P.repack.charges>0){
+      // pick packed cell whose removal unsticks the MOST distinct tray pieces,
+      // tiebreak by total placement count
+      let best=null, bestPieces=-1, bestCount=-1;
+      const tray=P.tray.filter(Boolean);
       for(let r=0;r<C.H;r++) for(let c=0;c<C.W;c++){
         if(!isPacked(P.board[r][c])) continue;
         const saved=P.board[r][c]; P.board[r][c]=0;
-        let count=0;
-        for(const p of P.tray.filter(Boolean)){
+        let piecesUnstuck=0, count=0;
+        for(const p of tray){
+          let pieceFits=false;
           for(const variant of PIECE_LIB[PIECE_INDEX[p.id]].variants){
             for(let rr=0;rr<C.H;rr++) for(let cc=0;cc<C.W;cc++){
-              if(canPlace(P.board, variant, rr, cc)) count++;
+              if(canPlace(P.board, variant, rr, cc)){pieceFits=true; count++}
             }
           }
+          if(pieceFits) piecesUnstuck++;
         }
         P.board[r][c]=saved;
-        if(count>bestS){bestS=count; best=[r,c]}
+        if(piecesUnstuck>bestPieces || (piecesUnstuck===bestPieces && count>bestCount)){
+          bestPieces=piecesUnstuck; bestCount=count; best=[r,c];
+        }
       }
       if(best) doRepack('foe', best[0], best[1]);
     } else if(P.lastPlacement){
@@ -1082,15 +1154,16 @@ function botStep(){
     G.botTimer=setTimeout(botStep, (lo+Math.random()*(hi-lo))*1000);
     return;
   }
-  // find best placement
+  // find best placement (with lookahead — pass other tray pieces)
   let best=null;
   for(let i=0;i<P.tray.length;i++){
     const p=P.tray[i]; if(!p) continue;
+    const others = P.tray.filter((q,j)=>q && j!==i);
     for(let v=0; v<PIECE_LIB[PIECE_INDEX[p.id]].variants.length; v++){
       const cells=PIECE_LIB[PIECE_INDEX[p.id]].variants[v];
       for(let r=0;r<C.H;r++) for(let c=0;c<C.W;c++){
         if(!canPlace(P.board, cells, r, c)) continue;
-        const s=botScore(P.board, cells, r, c, p.color);
+        const s=botScore(P.board, cells, r, c, p.color, others);
         if(!best||s>best.s){best={s,i,v,r,c}}
       }
     }
@@ -1128,8 +1201,6 @@ function showCelebration(text){
 // ============================================================
 function startMatch(diff){
   G.diff=diff;
-  G.queueMe=makeQueue();
-  G.queueFoe=makeQueue(); // independent
   G.me=newSideState(); G.foe=newSideState();
   refillTrayIfEmpty('me'); refillTrayIfEmpty('foe');
   G.ended=false; G.running=false;

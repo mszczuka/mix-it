@@ -88,9 +88,15 @@ Total: ~25 unique placement options across rotations.
 
 ### Tray & Queue
 - **4 items visible** at a time.
-- **Independent random queue per player.** Each player rolls their own sequence — including their own Fragile rate and colors. There is no shared seed. This means luck does matter on a given match, but variance over multiple matches evens out.
-- **7-bag distribution** for variety within each player's stream.
+- **Smart proposal per player.** At every tray refill, the game inspects the player's current board state and selects 4 items as follows:
+  - **At least 2 of the 4 items are guaranteed to have a legal placement** on the current board (in at least one rotation). The fit check is per-piece, not joint — a piece "fits" if it has any legal slot on the board *as it is at draw time* (other tray pieces' eventual placement is not considered).
+  - **The remaining 1–2 slots may be challenge pieces** — selected without the fit guarantee. They may require Repack/Undo, or clever ordering of placements within the tray, to be placed.
+  - **Selection pool is the standard polyomino set** (§3 item table). The smart algorithm only filters by "fits or not"; it does not bias toward winning faster or against the player.
+- **Fragile coloring is independent** of shape selection: ~25% of items in the tray are flagged Fragile after shape selection, with color uniform over Red / Yellow / Blue. The smart algorithm does NOT bias toward fragile-matchable colors — that strategic layer stays in the player's hands (you build clusters to exploit incoming Fragiles).
+- **Independent per player.** Each player's smart tray is computed against their own board state.
 - New tray draws when all 4 items in the current tray are placed.
+
+**Why smart tray:** removes the "I lost because RNG gave me garbage shapes" complaint without removing difficulty. The 2-of-4 fit guarantee is a fairness floor; the 1–2 challenge slots keep tension. Variance moves from "shapes you got" (now controlled) to "how you packed + how your fragile colors landed" (still RNG, still skill-expressive).
 
 ---
 
@@ -195,14 +201,14 @@ Three boosters. Slot is hidden when 0 charges, appears when ≥1 charge.
 
 ---
 
-## 8. Stuck State (Top-Out Replacement)
+## 8. Stuck State (Safety Net)
 
-There is **no instant top-out** in this design. Instead, when no item in your tray has a legal placement on your board, you enter the **Stuck State**.
+With **Smart Tray** (§3) the player is guaranteed at least 2 fitting items at every tray refill, so true stuck moments are rare — but not impossible. After placing the first 2–3 tray items, the board state changes; the remaining items in the current tray (especially the 1–2 "challenge" slots) may no longer fit. **Stuck State exists as a safety net for that mid-tray case** and is expected to fire in a small minority of matches.
 
 ### How it works
-1. Engine detects: every item in your tray, in every rotation, has no legal placement on your board. **Blocked cells from opponent are ignored** for this check (they expire on their own — they cannot single-handedly cause Stuck State).
+1. Engine detects: every item still in your tray, in every rotation, has no legal placement on your board. **Blocked cells from opponent are ignored** for this check (they expire on their own — they cannot single-handedly cause Stuck State).
 2. **Tray locks** — you cannot drag items until the state is cleared. UI shows a warning glow on your box: "STUCK — use Repack or Undo."
-3. **The match clock keeps running.** Sitting in Stuck State costs you race time — a hard incentive not to dawdle.
+3. **The match clock keeps running.** Sitting in Stuck State costs you race time.
 4. **You must use Repack or Undo** to escape:
    - **Repack** unpacks one of your cells, creating empty space.
    - **Undo** returns your last-placed item to the tray, freeing its cells.
@@ -212,10 +218,10 @@ There is **no instant top-out** in this design. Instead, when no item in your tr
 ### Real top-out (the only instant-loss path)
 If you enter Stuck State AND you have **0 Repack charges AND 0 Undo charges** at the same time → real top-out, **instant loss.**
 
-This is rare by design: Repack starts with 2 charges and recharges over time, Undo starts with 1 and recharges. Reaching 0 across both requires having spent every charge prior to the stuck moment — an earned failure, not a sudden one.
+With smart tray reducing stuck frequency, this becomes very rare — reaching 0/0 charges typically requires aggressive non-defensive booster use. An earned failure.
 
 ### Danger zone warning (preventive)
-When your board occupancy ≥ `DANGER_ZONE_OCCUPANCY` (default **0.75** — i.e., ≥27/36 packed), the box edge gets a pulsing warning glow. No mechanical effect — just signals "you're close to Stuck State." Cosmetic.
+When your board occupancy ≥ `DANGER_ZONE_OCCUPANCY` (default **0.75** — i.e., ≥27/36 packed), the box edge gets a pulsing warning glow. No mechanical effect — signals "you're close to filling the box, smart tray's challenge slots may no longer fit." Cosmetic.
 
 ---
 
@@ -239,7 +245,9 @@ BOARD_HEIGHT                     = 6
 PIECE_TRAY_SIZE                  = 4
 PIECE_MAX_CELLS                  = 4
 MATCH_DURATION_SECONDS           = 90
-QUEUE_MODE                       = independent_per_player
+QUEUE_MODE                       = smart_per_player   // smart-shape, random-fragile
+SMART_TRAY_GUARANTEED_FITS       = 2       // min items per tray with a legal placement
+                                           // remaining 4-2=2 are challenge picks (no fit guarantee)
 
 // Fragile / colors
 COLOR_PALETTE_SIZE               = 3       // Red, Yellow, Blue
@@ -328,7 +336,7 @@ If 6 of 8 are met → variant validates.
 
 For the HTML prototype:
 
-1. **Board, tray, independent queue** — base 6×6 renderer, tray with rotation, per-player random sequence with 7-bag.
+1. **Board, tray, smart queue** — base 6×6 renderer, tray with rotation, per-player smart proposal algorithm (at every refill: filter polyomino pool by "has legal placement on current board" → pick 2 from fitting subset + 1–2 from full pool). Fragile flag (25%) applied after shape selection.
 2. **Polyomino placement & rotation** — drag/drop, snap validation, illegal-placement feedback.
 3. **Delivery** — full-board detection, +1 score, reset animation, Benny cheer.
 4. **Fragile tagging** — 25% of items tagged Red/Yellow/Blue, colored overlay on item sprites both in tray and on board.
@@ -351,11 +359,11 @@ Honest concerns with the simplified design.
 - **Block is on-tone:** "reserve a corner of their box with a divider" fits cozy delivery framing. No grief, no rage.
 - **Color persistence creates strategy:** building color clusters → repeated blocks off the same cluster → a real reason to think before placing fragiles.
 - **Stuck State is teachable:** clear cause ("you over-packed"), clear fix ("Repack or Undo"). Boosters get a forced learning moment instead of being optional.
-- **Independent queues = honest scoreboard:** when you win, it's yours. No "rigged" complaints from mirrored RNG.
+- **Smart tray solves the worst RNG complaint:** "I got garbage shapes" stops being a valid excuse, because the game always proposes a workable hand. Without removing all variance — fragile colors and the 1–2 challenge slots still differ between players.
 
 ### Real risks
 
-1. **Independent RNG = unfair feeling in single matches.** Across N matches it evens out, but in a single playtest one player might get 6 fragiles vs the other's 2. Player will say "I lost because of bad pieces." Mitigation: track fragile count in match-end screen, show "Fragile draws: 4 vs 6" so the variance is visible / contextualized. Long-term: if variance feels too punishing, switch to seeded mirrored queue and accept the "we got the same pieces" framing.
+1. **Smart tray may feel too soft.** Guaranteeing 2 of 4 fits removes the most-punishing RNG, but also removes the "hold your nerve under bad pieces" mini-skill. If playtest shows matches feel trivial → raise the challenge ratio (e.g., 1 guaranteed fit / 3 challenge), or downgrade the "fit guarantee" to "best-effort" (try to pick fitting shapes, but no hard rule). If matches still feel too random → the fit check needs to consider rotations more carefully.
 
 2. **Block targeting is still random within "empty cells".** A block landing on a cell deep in the opponent's empty area is a near-non-event; one landing in their tightest corner is a real obstacle. Same variance problem as the original snatch design — but smaller magnitude (a block only takes 1 cell vs Mosaic-style garbage of up to 12). Playtest will reveal if it matters. Mitigation if needed: bias target selection toward cells in the bottom-right (or whichever corner the opponent is currently packing into most heavily).
 
@@ -378,6 +386,8 @@ Build it. The architecture is clean, the unknowns are tunable, and there are no 
 
 ## 16. Glossary
 
+- **Smart Tray:** the queue mechanic where the game inspects the player's board and proposes 4 items at every refill, guaranteeing at least 2 have a legal placement. Replaces pure RNG queue.
+- **Challenge slot:** one of the 1–2 tray slots NOT covered by the smart-tray fit guarantee. May not fit; may require Repack/Undo or clever placement order.
 - **Delivery / Box Complete:** filling all 36 cells. +1 point. Replaces Mosaic's "Mosaic Clear."
 - **Item / Parcel:** a polyomino piece with a Perfect-Packers theme.
 - **Fragile item:** a colored item (~25% rate). Visible in tray.

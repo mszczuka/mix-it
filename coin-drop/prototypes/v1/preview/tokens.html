@@ -1,0 +1,69 @@
+<!doctype html><meta charset="utf-8"><title>Tokens Preview — Coin Tumble Roguelite</title>
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  body { background: #1a1a1a; color: #eee; font-family: Fredoka, system-ui, sans-serif; margin: 0; padding: 24px; max-width: 760px; margin-inline: auto; }
+  h1 { font-family: 'Lilita One', sans-serif; font-size: 28px; margin: 0 0 24px; text-align:center; }
+  h2 { font-size: 13px; margin: 24px 0 10px; opacity: .7; text-transform: uppercase; letter-spacing: 1.5px; }
+  .grid { display: grid; gap: 12px; }
+  .col-3 { grid-template-columns: repeat(3, 1fr); }
+  .col-4 { grid-template-columns: repeat(4, 1fr); }
+  .swatch { background: var(--c); border-radius: 12px; padding: 12px; min-height: 96px; display: flex; flex-direction: column; justify-content: flex-end; box-shadow: 0 1px 0 #0008; }
+  .swatch .name { font-weight: 700; font-size: 13px; color: var(--label); }
+  .swatch .hex { font-size: 11px; opacity: .85; color: var(--label); font-family: ui-monospace, monospace; }
+  .type-row { display: flex; align-items: baseline; gap: 12px; padding: 8px 0; border-bottom: 1px solid #333; }
+  .type-row .label { width: 60px; font-size: 10px; opacity: .5; font-family: ui-monospace, monospace; }
+  .space-bar { display: flex; align-items: center; gap: 12px; padding: 4px 0; }
+  .space-bar .bar { background: #F4C430; height: 16px; }
+  .space-bar .label { width: 60px; font-size: 11px; font-family: ui-monospace, monospace; }
+  .radius-sample { background: #F4C430; color: #000; width: 120px; height: 60px; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; margin-right: 12px; margin-top: 8px; }
+  .shadow-card { background: #F6E9C9; color: #1B1B1B; padding: 16px; border-radius: 16px; min-width: 200px; display: inline-block; margin-right: 16px; margin-top: 8px; font-weight: 600; }
+  .cta { background: linear-gradient(180deg,#3CD389,#1F9656); color:#fff; font-weight:900; padding:14px 32px; border-radius:9999px; box-shadow: 0 4px 0 rgba(0,0,0,.35), 0 6px 12px rgba(0,0,0,.3); display:inline-block; margin-top:8px; text-shadow:0 1px 2px rgba(0,0,0,.3); letter-spacing:1px; font-family:'Lilita One'; }
+</style>
+<h1>🌈 Tokens — Coin Tumble Roguelite</h1>
+
+<h2>Color — primary palette</h2>
+<div class="grid col-4">
+  <div class="swatch" style="--c:#0E2A47; --label:#fff;"><div class="name">bg</div><div class="hex">#0E2A47</div></div>
+  <div class="swatch" style="--c:#F6E9C9; --label:#000;"><div class="name">surface</div><div class="hex">#F6E9C9</div></div>
+  <div class="swatch" style="--c:#1B3E6E; --label:#fff;"><div class="name">surface_alt</div><div class="hex">#1B3E6E</div></div>
+  <div class="swatch" style="--c:#2BB673; --label:#fff;"><div class="name">primary / success</div><div class="hex">#2BB673</div></div>
+  <div class="swatch" style="--c:#F4C430; --label:#000;"><div class="name">accent</div><div class="hex">#F4C430</div></div>
+  <div class="swatch" style="--c:#E33B3B; --label:#fff;"><div class="name">danger / offer</div><div class="hex">#E33B3B</div></div>
+  <div class="swatch" style="--c:#F39C2A; --label:#000;"><div class="name">warning</div><div class="hex">#F39C2A</div></div>
+  <div class="swatch" style="--c:#FFFFFF; --label:#000;"><div class="name">text on dark</div><div class="hex">#FFFFFF</div></div>
+  <div class="swatch" style="--c:#1B1B1B; --label:#fff;"><div class="name">text</div><div class="hex">#1B1B1B</div></div>
+  <div class="swatch" style="--c:#C9D4E3; --label:#000;"><div class="name">text muted</div><div class="hex">#C9D4E3</div></div>
+</div>
+
+<h2>Type ramp — display: Lilita One, body: Fredoka</h2>
+<div class="type-row"><span class="label">12</span><span style="font-size:12px;">Aa Bb Cc — Lucky scavenger 12345</span></div>
+<div class="type-row"><span class="label">14</span><span style="font-size:14px;">Aa Bb Cc — Lucky scavenger 12345</span></div>
+<div class="type-row"><span class="label">16</span><span style="font-size:16px;">Aa Bb Cc — Lucky scavenger 12345</span></div>
+<div class="type-row"><span class="label">18</span><span style="font-size:18px;">Aa Bb Cc — Lucky scavenger 12345</span></div>
+<div class="type-row"><span class="label">22</span><span style="font-size:22px; font-weight:700;">Aa Bb Cc — Lucky scavenger 12345</span></div>
+<div class="type-row"><span class="label">28</span><span style="font-size:28px; font-weight:700; font-family:'Lilita One';">Aa Bb Cc — TUMBLE!</span></div>
+<div class="type-row"><span class="label">36</span><span style="font-size:36px; font-family:'Lilita One';">×5 COMBO!</span></div>
+
+<h2>Spacing</h2>
+<div class="space-bar"><span class="label">4</span><span class="bar" style="width:4px;"></span></div>
+<div class="space-bar"><span class="label">8</span><span class="bar" style="width:8px;"></span></div>
+<div class="space-bar"><span class="label">12</span><span class="bar" style="width:12px;"></span></div>
+<div class="space-bar"><span class="label">16</span><span class="bar" style="width:16px;"></span></div>
+<div class="space-bar"><span class="label">24</span><span class="bar" style="width:24px;"></span></div>
+<div class="space-bar"><span class="label">32</span><span class="bar" style="width:32px;"></span></div>
+<div class="space-bar"><span class="label">48</span><span class="bar" style="width:48px;"></span></div>
+
+<h2>Radius</h2>
+<div class="radius-sample" style="border-radius:8px;">8</div>
+<div class="radius-sample" style="border-radius:12px;">12</div>
+<div class="radius-sample" style="border-radius:16px;">16</div>
+<div class="radius-sample" style="border-radius:20px;">20</div>
+<div class="radius-sample" style="border-radius:28px;">28</div>
+<div class="radius-sample" style="border-radius:9999px;">pill</div>
+
+<h2>Shadow</h2>
+<div class="shadow-card" style="box-shadow:0 2px 6px rgba(0,0,0,0.18);">card-soft</div>
+<div class="shadow-card" style="box-shadow:0 6px 14px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.35);">card-lift</div>
+<br>
+<div class="cta">▶ ROLL ×4</div>
+<span style="margin-left:16px; font-size:12px; opacity:.6;">cta shadow recipe</span>

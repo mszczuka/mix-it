@@ -1,0 +1,81 @@
+{
+  "version": 1,
+  "default": {
+    "profile": {
+      "name": "Scavenger",
+      "avatar": "raccoon"
+    },
+    "account": {
+      "level": 1,
+      "xp": 0
+    },
+    "currencies": {
+      "gold": 0,
+      "gems": 20,
+      "tickets": 5,
+      "ticketsRegenAt": 0,
+      "shards": 0
+    },
+    "characters": {
+      "raccoon": { "unlocked": true,  "stake": 1 },
+      "magpie":  { "unlocked": false, "stake": 1 },
+      "ferret":  { "unlocked": false, "stake": 1 }
+    },
+    "selectedCharacter": "raccoon",
+    "selectedBiome": "trash_alley",
+    "biomes": {
+      "trash_alley":  { "unlocked": true  },
+      "casino_floor": { "unlocked": false }
+    },
+    "modifiers": {
+      "unlockedChipIds": [
+        "extra_pouch",
+        "lucky_drop",
+        "combo_keeper",
+        "edge_magnet",
+        "double_coin",
+        "rare_finder",
+        "boss_shield",
+        "shard_bonus",
+        "gold_rush",
+        "reroll_free"
+      ]
+    },
+    "codex": {
+      "discoveredCoinIds": []
+    },
+    "album": {
+      "currentAlbumId": "raccoon_heist_s1",
+      "slots": {}
+    },
+    "pass": {
+      "seasonId": "s1",
+      "xp": 0,
+      "claimedTiers": { "free": [], "premium": [] },
+      "premiumUnlocked": false
+    },
+    "quests": {
+      "dailyDateKey": "",
+      "dailyProgress": [0, 0, 0],
+      "weeklyProgress": 0
+    },
+    "ftue": {
+      "stage": 0
+    },
+    "flags": {
+      "shopPending": false,
+      "passPending": false,
+      "albumPending": false,
+      "questsPending": true
+    },
+    "stats": {
+      "runsPlayed": 0,
+      "runsWon": 0,
+      "floorsCleared": 0,
+      "highestStakeCleared": 0,
+      "highestCombo": 0,
+      "totalGoldEarned": 0
+    },
+    "rngSeed": 0
+  }
+}
