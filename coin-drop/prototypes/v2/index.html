@@ -40,9 +40,11 @@
     background: var(--c-bg);
     overflow: hidden;
   }
-  /* During match, hide topbar (frees ~76px). JS adds .in-match to #app. */
+  /* During match, hide topbar (frees ~76px). JS adds .in-match to #app.
+     Use visibility, NOT display:none — otherwise the topbar leaves the grid
+     and main/bottomnav shift up into rows 1+2 instead of staying in 2+3. */
   #app.in-match { --topbar-h: 0px; }
-  #app.in-match .topbar { display: none; }
+  #app.in-match .topbar { visibility: hidden; }
   .topbar {
     display: grid;
     grid-template-columns: auto 1fr auto;
