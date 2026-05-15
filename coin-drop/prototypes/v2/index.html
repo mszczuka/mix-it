@@ -40,10 +40,9 @@
     background: var(--c-bg);
     overflow: hidden;
   }
-  /* During match, hide topbar + pull main content up. JS adds .in-match to #app. */
-  #app.in-match { grid-template-rows: 0 1fr var(--bottomnav-h); }
+  /* During match, hide topbar (frees ~76px). JS adds .in-match to #app. */
+  #app.in-match { --topbar-h: 0px; }
   #app.in-match .topbar { display: none; }
-  #app.in-match main#root { padding-top: calc(env(safe-area-inset-top, 0px) + 4px); padding-bottom: 4px; }
   .topbar {
     display: grid;
     grid-template-columns: auto 1fr auto;
