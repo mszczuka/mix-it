@@ -83,6 +83,9 @@
     letter-spacing: 2px;
   }
   button.cta.throw-btn:active { box-shadow: 0 2px 0 #8B6914, 0 3px 6px rgba(244,196,48,.4); transform: translateY(2px) scale(.98); }
+  button.cta.throw-btn { display: flex; flex-direction: column; align-items: center; gap: 1px; line-height: 1.05; }
+  button.cta.throw-btn .main { display: block; }
+  button.cta.throw-btn .sub { display: block; font-size: 10px; font-family: var(--f-body); font-weight: 600; letter-spacing: .5px; text-transform: lowercase; opacity: .8; color: #5C3F0A; text-shadow: none; }
   button.cta.throw-btn.cooldown { pointer-events: none; filter: grayscale(.5) brightness(.7); position: relative; overflow: hidden; }
   button.cta.throw-btn.cooldown::after {
     content: ''; position: absolute; inset: 0;
@@ -297,7 +300,10 @@
       <div style="text-align:center; margin: 4px 0; font-size:12px; opacity:.7;" id="boss-warn"></div>
       <div class="aim-slider" id="aim-slider"><div class="marker" id="aim-marker" style="left: calc(50% - 10px);"></div></div>
       <div class="match-actions" style="margin-top: var(--s-7);">
-        <button class="cta throw-btn" id="btn-drop">⬆ THROW COINS ⬆</button>
+        <button class="cta throw-btn" id="btn-drop">
+          <span class="main">⬆ THROW COINS ⬆</span>
+          <span class="sub"><span id="btn-pouch-count">0</span> left</span>
+        </button>
       </div>
     </section>
 
@@ -552,6 +558,8 @@ function setupFloor(){
 function renderMatch(){
   document.getElementById('floor-num').textContent = run.floor;
   document.getElementById('pouch-count').textContent = run.pouch;
+  const btnPouch = document.getElementById('btn-pouch-count');
+  if (btnPouch) btnPouch.textContent = run.pouch;
   document.getElementById('combo-display').textContent = '×' + run.combo.toFixed(1);
   document.getElementById('score-num').textContent = run.score;
   document.getElementById('threshold-num').textContent = run.threshold;
