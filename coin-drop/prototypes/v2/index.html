@@ -507,7 +507,7 @@ const BOSS_FLOORS = new Set([3, 7]); // mid-run boss + final boss
 // Hand-tuned difficulty curve. Index = floor - 1.
 // Early floors: gentle teaching. Boss 3: first wall. Floor 4: recovery. Floor 7: climax.
 const FLOOR_THRESHOLDS = [ 20,  38,  78,  60,  90, 125, 175 ];
-const FLOOR_POUCH      = [ 35,  33,  27,  32,  30,  30,  27 ];
+const FLOOR_POUCH      = [ 40,  38,  32,  37,  35,  35,  32 ];
 const FLOOR_PREPOP     = [ 88,  95, 102, 105, 115, 125, 135 ]; // bumped early floors a touch for smoother ramp
 function startRun(){
   const stake = state.characters[state.selectedCharacter].stake;
