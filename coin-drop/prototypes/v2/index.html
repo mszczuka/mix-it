@@ -40,6 +40,10 @@
     background: var(--c-bg);
     overflow: hidden;
   }
+  /* During match, hide topbar + pull main content up. JS adds .in-match to #app. */
+  #app.in-match { grid-template-rows: 0 1fr var(--bottomnav-h); }
+  #app.in-match .topbar { display: none; }
+  #app.in-match main#root { padding-top: calc(env(safe-area-inset-top, 0px) + 4px); padding-bottom: 4px; }
   .topbar {
     display: grid;
     grid-template-columns: auto 1fr auto;
@@ -456,6 +460,8 @@ function onPanelEnter(id){
   if (id === 'album') { state.flags.albumPending = false; renderAlbum(); saveState(); }
   if (id === 'quests') { state.flags.questsPending = false; renderQuests(); saveState(); }
   if (id !== 'match') stopPhysics();
+  // Topbar hidden during match; UI pulls up to reclaim the 76px
+  document.getElementById('app').classList.toggle('in-match', id === 'match');
 }
 
 function renderChrome(){ renderTopBar(); renderBottomNav(); }
