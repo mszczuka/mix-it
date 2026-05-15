@@ -40,6 +40,11 @@
     background: var(--c-bg);
     overflow: hidden;
   }
+  /* During match, hide topbar to free vertical space on mobile */
+  #app:has(.panel[data-panel="match"].active) {
+    grid-template-rows: 0 1fr var(--bottomnav-h);
+  }
+  #app:has(.panel[data-panel="match"].active) .topbar { display: none; }
   .topbar {
     display: grid;
     grid-template-columns: auto 1fr auto;
@@ -75,12 +80,12 @@
     background: linear-gradient(180deg, #FFE066 0%, #F4C430 50%, #C99A0A 100%);
     color: #3A2200;
     text-shadow: 0 1px 0 rgba(255,255,255,.5);
-    box-shadow: 0 4px 0 #8B6914, 0 6px 14px rgba(244,196,48,.5);
+    box-shadow: 0 3px 0 #8B6914, 0 5px 10px rgba(244,196,48,.5);
     border: 2px solid #FFF5C0;
-    font-size: 22px;
-    padding: 20px var(--s-7);
+    font-size: 17px;
+    padding: 12px var(--s-5);
     width: 100%;
-    letter-spacing: 2px;
+    letter-spacing: 1.5px;
   }
   button.cta.throw-btn:active { box-shadow: 0 2px 0 #8B6914, 0 3px 6px rgba(244,196,48,.4); transform: translateY(2px) scale(.98); }
   button.cta.throw-btn.cooldown { pointer-events: none; filter: grayscale(.5) brightness(.7); position: relative; overflow: hidden; }
@@ -104,20 +109,20 @@
   .tickets-line { color: var(--c-text-muted); font-size: 13px; }
 
   /* Match panel */
-  .match-hud { display: flex; justify-content: space-between; padding: var(--s-2) var(--s-3); background: var(--c-surface-alt); border-radius: var(--r-2); margin-bottom: var(--s-2); font-size: 13px; font-weight: 700; }
+  .match-hud { display: flex; justify-content: space-between; padding: 5px var(--s-3); background: var(--c-surface-alt); border-radius: var(--r-2); margin-bottom: 6px; font-size: 12px; font-weight: 700; }
   .match-hud .pouch { color: var(--c-accent); }
   .match-hud .combo { color: var(--c-danger); font-family: var(--f-display); }
-  .threshold-bar { background: rgba(0,0,0,.4); border-radius: var(--r-1); height: 14px; overflow: hidden; margin-bottom: var(--s-2); position:relative; }
+  .threshold-bar { background: rgba(0,0,0,.4); border-radius: var(--r-1); height: 12px; overflow: hidden; margin-bottom: 6px; position:relative; }
   .threshold-bar .fill { background: linear-gradient(90deg, var(--c-primary), var(--c-accent)); height: 100%; width: 0%; transition: width .25s, filter .25s, box-shadow .25s; }
   .threshold-bar.flash .fill { filter: brightness(1.8); box-shadow: 0 0 16px var(--c-accent); }
-  .threshold-bar .label { position:absolute; inset:0; text-align:center; font-size:10px; line-height:14px; font-weight:800; color:#fff; text-shadow:0 1px 2px #000; }
-  .aim-slider { background: var(--c-surface-alt); border-radius: var(--r-2); height: 24px; position: relative; margin-bottom: var(--s-2); cursor: pointer; }
-  .aim-slider .marker { position: absolute; top: 2px; width: 20px; height: 20px; background: var(--c-accent); border-radius: 50%; transition: left .08s; box-shadow: 0 2px 4px rgba(0,0,0,.4); }
+  .threshold-bar .label { position:absolute; inset:0; text-align:center; font-size:9px; line-height:12px; font-weight:800; color:#fff; text-shadow:0 1px 2px #000; }
+  .aim-slider { background: var(--c-surface-alt); border-radius: var(--r-2); height: 20px; position: relative; margin-bottom: 6px; cursor: pointer; }
+  .aim-slider .marker { position: absolute; top: 1px; width: 18px; height: 18px; background: var(--c-accent); border-radius: 50%; transition: left .08s; box-shadow: 0 2px 4px rgba(0,0,0,.4); }
   .ledge {
     background: linear-gradient(180deg, #0E2A47 0%, #1B3E6E 30%, #243956 100%);
     border: 2px solid var(--c-surface-alt);
     border-radius: var(--r-3);
-    height: 440px;
+    height: 380px;
     position: relative;
     overflow: hidden;
     margin-bottom: var(--s-2);
@@ -296,7 +301,7 @@
       </div>
       <div style="text-align:center; margin: 4px 0; font-size:12px; opacity:.7;" id="boss-warn"></div>
       <div class="aim-slider" id="aim-slider"><div class="marker" id="aim-marker" style="left: calc(50% - 10px);"></div></div>
-      <div class="match-actions" style="margin-top: var(--s-7);">
+      <div class="match-actions" style="margin-top: var(--s-3);">
         <button class="cta throw-btn" id="btn-drop">⬆ THROW COINS ⬆</button>
       </div>
     </section>
@@ -614,10 +619,10 @@ const PHYSICS = {
   minVelocity: 0.04,
   restitution: 0.62,       // was .35 — energy chains through pile, top coins get pushed
   wallRestitution: 0.45,
-  pusherAmpPx: 110,        // was 95 — bigger swing, more total displacement
+  pusherAmpPx: 90,         // scaled down with shorter ledge (440→380)
   pusherPeriodMs: 2100,    // was 2400 — slightly faster cadence
   pusherHeight: 16,
-  pusherRestOffset: 44,    // was 50 — pusher rests slightly higher, less idle dead space below pile
+  pusherRestOffset: 40,    // scaled down with shorter ledge
   spawnVy: -9.0,           // was -7.2 — drops hit pile harder, more energy into stack
   prePopulateBase: 90,     // balance pass: 75 was a hair too thin
   prePopulatePerFloor: 12, // floor 5 = 90 + 48 = 138 coins on start
