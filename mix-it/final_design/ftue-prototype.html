@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Mix-It FTUE Prototype</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: -apple-system, "Segoe UI", Roboto, sans-serif; background: linear-gradient(180deg,#144985 0%,#0d3460 100%); color: #fff; height: 100vh; overflow: hidden; user-select: none; }
+  #root { display: flex; flex-direction: column; height: 100vh; padding: 14px 18px; }
+
+  .topbar { display: flex; justify-content: space-between; align-items: center; }
+  .step-pill { background: rgba(0,0,0,0.3); padding: 6px 14px; border-radius: 14px; font-size: 13px; font-weight: 600; letter-spacing: 0.5px; }
+  .top-right { display: flex; gap: 8px; align-items: center; }
+  .timer { background: rgba(0,0,0,0.4); padding: 6px 14px; border-radius: 14px; font-size: 18px; font-weight: bold; min-width: 56px; text-align: center; }
+  .timer.warning { background: #c0392b; animation: pulse 0.5s infinite alternate; }
+  @keyframes pulse { from { opacity: 1; } to { opacity: 0.6; } }
+  .score-pill { background: rgba(46,204,113,0.85); padding: 6px 14px; border-radius: 14px; font-size: 15px; font-weight: 700; }
+  .opp-pill { background: rgba(52,152,219,0.85); padding: 6px 14px; border-radius: 14px; font-size: 15px; font-weight: 700; }
+  .hidden { display: none !important; }
+
+  .header-text { text-align: center; padding: 12px 8px 4px; }
+  .header-text h2 { margin: 0; font-size: 22px; color: #ffc700; text-shadow: 0 2px 0 #000; letter-spacing: 0.5px; }
+  .header-text p { margin: 6px 0 0; font-size: 13px; opacity: 0.75; }
+
+  .customer-area { display: flex; justify-content: center; padding: 8px 0 4px; min-height: 130px; gap: 12px; }
+  .customer { width: 92px; height: 120px; background: rgba(255,255,255,0.06); border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 8px 6px; position: relative; transition: all 0.3s; }
+  .customer.served { opacity: 0.25; transform: scale(0.85); }
+  .customer .face { font-size: 30px; }
+  .customer .order { width: 32px; height: 32px; border-radius: 50%; margin-top: 6px; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.4); }
+  .customer .patience-bar { width: 78%; height: 5px; background: rgba(0,0,0,0.3); border-radius: 3px; margin-top: 8px; overflow: hidden; }
+  .customer .patience-fill { height: 100%; background: #2ecc71; transition: width 0.2s linear, background 0.3s; }
+  .customer .patience-fill.low { background: #f39c12; }
+  .customer .patience-fill.critical { background: #e74c3c; }
+  .customer.no-timer .patience-bar { visibility: hidden; }
+
+  .board-section { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 12px 0; }
+  .board-label { text-align: center; font-size: 11px; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+  .board { display: flex; justify-content: center; gap: 14px; flex-wrap: wrap; }
+  .board.opp { transform: scale(0.55); transform-origin: center top; margin: -10px 0 -40px; opacity: 0.65; pointer-events: none; }
+
+  .bottle { width: 58px; height: 180px; background: rgba(255,255,255,0.04); border: 3px solid rgba(255,255,255,0.18); border-radius: 6px 6px 22px 22px; display: flex; flex-direction: column-reverse; cursor: pointer; transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s; position: relative; padding: 2px; }
+  .bottle:hover { border-color: rgba(255,255,255,0.4); transform: translateY(-2px); }
+  .bottle.selected { border-color: #ffc700; box-shadow: 0 0 18px rgba(255,199,0,0.7); transform: translateY(-6px); }
+  .bottle.servable { box-shadow: 0 0 18px rgba(46,204,113,0.7); border-color: #2ecc71; }
+  .bottle.locked-attack { opacity: 0.5; border-style: dashed; cursor: not-allowed; }
+  .layer { height: 25%; border-bottom: 1px solid rgba(0,0,0,0.25); transition: opacity 0.2s; }
+  .layer.red    { background: #e74c3c; }
+  .layer.blue   { background: #3498db; }
+  .layer.yellow { background: #f1c40f; }
+  .layer.green  { background: #27ae60; }
+  .layer.purple { background: #9b59b6; }
+  .layer.orange { background: #e67e22; }
+
+  .arrow-hint { position: absolute; z-index: 6; pointer-events: none; animation: bounce 1s ease-in-out infinite; }
+  .arrow-hint .ico { font-size: 30px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); }
+  .arrow-hint .lbl { font-size: 11px; font-weight: 700; color: #ffc700; text-shadow: 0 1px 2px rgba(0,0,0,0.7); white-space: nowrap; margin-top: -4px; }
+  @keyframes bounce { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+
+  .end-screen { position: fixed; inset: 0; background: rgba(0,0,0,0.78); display: flex; align-items: center; justify-content: center; z-index: 100; backdrop-filter: blur(4px); }
+  .end-panel { background: linear-gradient(180deg,#1a5a9e,#0d3460); border: 2px solid rgba(255,215,0,0.3); padding: 30px 36px; border-radius: 22px; text-align: center; max-width: 360px; }
+  .end-panel .emoji { font-size: 54px; margin-bottom: 8px; }
+  .end-panel h2 { margin: 0 0 10px; font-size: 28px; color: #ffc700; text-shadow: 0 2px 0 #000; }
+  .end-panel h2.loss { color: #e74c3c; }
+  .end-panel h2.draw { color: #f39c12; }
+  .end-panel .body-text { font-size: 14px; line-height: 1.5; opacity: 0.9; }
+  .end-panel .stats { margin: 16px 0; padding: 10px 14px; background: rgba(0,0,0,0.25); border-radius: 8px; font-size: 13px; line-height: 1.6; }
+  .end-panel button { background: #ffc700; color: #1a3a5a; border: none; padding: 12px 26px; border-radius: 22px; font-size: 15px; cursor: pointer; margin: 6px 4px 0; font-weight: 700; box-shadow: 0 3px 0 #b8870a; }
+  .end-panel button:hover { background: #fcd24a; }
+  .end-panel button.secondary { background: rgba(255,255,255,0.15); color: #fff; box-shadow: 0 3px 0 rgba(0,0,0,0.3); }
+  .end-panel button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .floater { position: fixed; pointer-events: none; font-size: 22px; font-weight: bold; text-shadow: 0 2px 6px rgba(0,0,0,0.8); z-index: 50; animation: floatup 1.3s ease-out forwards; }
+  @keyframes floatup { from { transform: translateY(0); opacity: 1; } to { transform: translateY(-90px); opacity: 0; } }
+
+  .toast { position: fixed; top: 60px; left: 50%; transform: translateX(-50%); background: rgba(231,76,60,0.95); color: white; padding: 12px 22px; border-radius: 8px; font-weight: 600; z-index: 60; box-shadow: 0 4px 12px rgba(0,0,0,0.4); animation: toastIn 0.3s ease-out; max-width: 320px; text-align: center; line-height: 1.4; }
+  @keyframes toastIn { from { opacity: 0; transform: translate(-50%, -20px); } to { opacity: 1; transform: translate(-50%, 0); } }
+  .toast.fading { opacity: 0; transition: opacity 0.5s; }
+
+  .spawn-btn { position: fixed; right: 24px; bottom: 90px; width: 84px; height: 84px; border-radius: 50%; background: #2980b9; border: 4px solid #ffc700; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 16px rgba(0,0,0,0.6); z-index: 200; padding: 0; transition: transform 0.15s; }
+  .spawn-btn:hover { transform: scale(1.06); }
+  .spawn-btn:active { transform: scale(0.94); }
+  .spawn-btn.cooldown { cursor: not-allowed; filter: grayscale(0.4); }
+  .spawn-btn.hidden { display: none !important; }
+  .spawn-icon { font-size: 34px; line-height: 1; pointer-events: none; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); }
+  .spawn-cd-overlay { position: absolute; inset: -2px; border-radius: 50%; pointer-events: none; background: conic-gradient(rgba(255,199,0,0.35) calc(var(--cd-pct, 0) * 1%), transparent 0); }
+  .spawn-charges-badge { position: absolute; top: -8px; right: -8px; background: #fff; color: #1a3a5a; font-size: 14px; font-weight: 700; min-width: 26px; height: 26px; padding: 0 6px; border-radius: 13px; display: flex; align-items: center; justify-content: center; border: 2px solid #1a3a5a; box-shadow: 0 2px 4px rgba(0,0,0,0.4); pointer-events: none; }
+
+  .control-bar { position: fixed; bottom: 8px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; z-index: 30; }
+  .control-bar button { background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.2); color: #ddd; padding: 5px 10px; border-radius: 4px; font-size: 11px; cursor: pointer; }
+  .control-bar button:hover { background: rgba(0,0,0,0.6); border-color: #ffc700; }
+  .control-bar button.active { background: #ffc700; color: #1a3a5a; font-weight: 700; }
+</style>
+</head>
+<body>
+
+<div id="root">
+  <div class="topbar">
+    <div class="step-pill" id="step-pill">M1</div>
+    <div class="top-right">
+      <div class="score-pill">You: <span id="score">0</span></div>
+      <div class="opp-pill hidden" id="opp-pill">Bot: <span id="opp-score">0</span></div>
+      <div class="timer hidden" id="timer">90</div>
+    </div>
+  </div>
+
+  <div class="header-text">
+    <h2 id="step-title">SORT THE COLORS!</h2>
+    <p id="step-desc">Pour colors into bottles to fill a pure drink, then it auto-serves the customer.</p>
+  </div>
+
+  <div class="board opp hidden" id="opp-board"></div>
+  <div class="board-label hidden" id="opp-label">Opponent</div>
+
+  <div class="customer-area" id="queue"></div>
+
+  <div class="board-section">
+    <div class="board-label">Your bottles</div>
+    <div class="board" id="board"></div>
+  </div>
+</div>
+
+<div class="end-screen hidden" id="end">
+  <div class="end-panel">
+    <div class="emoji" id="end-emoji">🎉</div>
+    <h2 id="end-title">GREAT JOB!</h2>
+    <div class="body-text" id="end-body"></div>
+    <div class="stats hidden" id="end-stats"></div>
+    <div>
+      <button id="replay-btn" class="secondary">Replay</button>
+      <button id="next-btn">Next step →</button>
+    </div>
+  </div>
+</div>
+
+<div class="spawn-btn hidden" id="spawn-btn">
+  <div class="spawn-icon">💧</div>
+  <div class="spawn-cd-overlay" id="spawn-cd-overlay"></div>
+  <div class="spawn-charges-badge" id="spawn-charges-badge">5</div>
+</div>
+
+<div class="control-bar">
+  <button data-step="M1">M1</button>
+  <button data-step="M2">M2</button>
+  <button data-step="M3">M3</button>
+  <button data-step="M4">M4</button>
+</div>
+
+<script>
+"use strict";
+
+const GLASS_CAPACITY = 4;
+const STEP_ORDER = ['M1','M2','M3','M4'];
+const SPAWN_RECHARGE_TIME = 1.0;   // seconds per charge (index-v7: SPAWN_RECHARGE_TIME = 1)
+const SPAWN_START_CHARGES = 5;     // index-v7: SPAWN_START_CHARGES = 5
+const SPAWN_MAX_CHARGES = 12;      // index-v7: SPAWN_MAX_CHARGES = 12
+
+// Each step is a hand-built scenario.
+const STEPS = {
+  M1: {
+    title: 'SORT THE COLORS!',
+    desc: 'Tap a bottle, then tap another to pour. Match 4 same-color layers to serve.',
+    bottles: [ ['red','red'], ['red','red'], [] ],
+    customers: [ { color: 'red', patience: 999 } ],
+    spawnPool: [],
+    showTimer: false,
+    showPatience: false,
+    needServes: 1,
+    completion: 'serves',
+    hasBot: false,
+    successPopup: { emoji: '🎉', title: 'GREAT JOB!', text: 'You sorted and served your first drink. The bottle filled with 4 reds and auto-served the customer.' }
+  },
+  M2: {
+    title: 'USE THE SPAWN',
+    desc: 'Tap the spawn button to add a colored layer to a bottle. Fill 4 same colors to auto-serve.',
+    bottles: [ ['blue'], [], [], [], [] ],
+    customers: [ { color: 'blue', patience: 999 } ],
+    spawnPool: [],
+    showTimer: false,
+    showPatience: false,
+    needServes: 1,
+    completion: 'serves',
+    hasBot: false,
+    spawn: { enabled: true, color: 'blue' },
+    successPopup: { emoji: '✨', title: 'NICE POUR!', text: 'You used the spawn to fill a bottle. In real matches, spawn keeps fresh layers coming so you never run out.' }
+  },
+  M3: {
+    title: 'BEAT THE CLOCK',
+    desc: 'Customer patience ticks down — if it hits zero, you lose 25 points. Serve every customer to finish.',
+    bottles: [
+      ['red','red','blue','red'],
+      ['blue','blue','yellow','blue'],
+      ['yellow','yellow','red','yellow'],
+      [],
+      []
+    ],
+    customers: [
+      { color: 'red',    patience: 24 },
+      { color: 'blue',   patience: 24 },
+      { color: 'yellow', patience: 24 }
+    ],
+    spawnPool: [],
+    showTimer: false,
+    showPatience: true,
+    completion: 'queue-empty',
+    hasBot: false,
+    spawn: { enabled: true, color: 'auto' },
+    successPopup: { emoji: '⏱️', title: 'GREAT!', text: 'You handled every customer (some left, some served — that\'s a real match). One more step — actual opponent.' }
+  },
+  M4: {
+    title: 'FIRST MATCH',
+    desc: 'A bot opponent races for the same customers. Score higher when the timer ends to win.',
+    bottles: [
+      ['red','red','blue','red'],
+      ['blue','blue','yellow','blue'],
+      ['yellow','yellow','red','yellow'],
+      [],
+      []
+    ],
+    oppBottles: [
+      ['red','red','blue','red'],
+      ['blue','blue','yellow','blue'],
+      ['yellow','yellow','red','yellow'],
+      [],
+      []
+    ],
+    customers: [
+      { color: 'red',    patience: 24 },
+      { color: 'blue',   patience: 24 },
+      { color: 'yellow', patience: 24 }
+    ],
+    spawnPool: ['red','blue','yellow','red','blue','yellow','red','blue','yellow','red','blue','yellow'],
+    showTimer: true,
+    showPatience: true,
+    matchSeconds: 60,
+    completion: 'timer',
+    hasBot: true,
+    spawn: { enabled: true, color: 'random' },
+    successPopup: null // computed per outcome
+  }
+};
+
+// ---- runtime state ----
+let S = null;
+
+function startStep(stepId){
+  const cfg = STEPS[stepId];
+  S = {
+    step: stepId,
+    cfg,
+    bottles: cfg.bottles.map(b => b.slice()),
+    oppBottles: (cfg.oppBottles || []).map(b => b.slice()),
+    customers: cfg.customers.map(c => ({ color: c.color, patience: c.patience, maxPatience: c.patience, served: false, walkaway: false })),
+    spawnPool: cfg.spawnPool ? cfg.spawnPool.slice() : [],
+    selected: null,
+    score: 0,
+    oppScore: 0,
+    servedCount: 0,
+    oppServedCount: 0,
+    walkawayShown: false,
+    afterFirstServeShown: false,
+    timer: cfg.matchSeconds || 0,
+    botCooldown: 1.5,
+    finished: false,
+    lastTick: performance.now(),
+    spawnCharges: SPAWN_START_CHARGES,
+    spawnRechargeT: SPAWN_RECHARGE_TIME,
+    spawnCurrentColor: null
+  };
+  if(cfg.spawn && cfg.spawn.enabled){
+    S.spawnCurrentColor = pickSpawnColor();
+  }
+
+  // UI prep
+  document.getElementById('step-pill').textContent = stepId;
+  document.getElementById('step-title').textContent = cfg.title;
+  document.getElementById('step-desc').textContent = cfg.desc;
+  document.getElementById('timer').classList.toggle('hidden', !cfg.showTimer);
+  document.getElementById('opp-pill').classList.toggle('hidden', !cfg.hasBot);
+  document.getElementById('opp-board').classList.toggle('hidden', !cfg.hasBot);
+  document.getElementById('opp-label').classList.toggle('hidden', !cfg.hasBot);
+  document.getElementById('end').classList.add('hidden');
+  document.getElementById('end-stats').classList.add('hidden');
+  document.getElementById('spawn-btn').classList.toggle('hidden', !(cfg.spawn && cfg.spawn.enabled));
+  document.getElementById('score').textContent = '0';
+  document.getElementById('opp-score').textContent = '0';
+  document.getElementById('timer').textContent = Math.ceil(S.timer);
+
+  // Active button styling
+  document.querySelectorAll('.control-bar button').forEach(b => {
+    b.classList.toggle('active', b.dataset.step === stepId);
+  });
+
+  renderAll();
+}
+
+// ---- click handlers (delegated, attached once) ----
+
+document.getElementById('board').addEventListener('click', function(e){
+  if(!S || S.finished) return;
+  const btn = e.target.closest('.bottle');
+  if(!btn) return;
+  const idx = parseInt(btn.dataset.idx, 10);
+  handleBottleClick(idx);
+});
+
+document.querySelectorAll('.control-bar button').forEach(b => {
+  b.addEventListener('click', () => startStep(b.dataset.step));
+});
+
+document.getElementById('spawn-btn').addEventListener('click', () => {
+  if(!S || S.finished) return;
+  if(!S.cfg.spawn || !S.cfg.spawn.enabled) return;
+  if(S.spawnCharges <= 0) return;
+  doSpawn();
+});
+
+function doSpawn(){
+  // Color is rolled AT TAP TIME — no preview, no advance planning. Pure RNG.
+  const color = pickSpawnColor();
+  // Target selection: prefer a non-full bottle whose top is the same color (extends a same-color stack),
+  // else first empty bottle, else first non-full bottle (any).
+  let targetIdx = -1;
+  for(let i = 0; i < S.bottles.length; i++){
+    const b = S.bottles[i];
+    if(b.length === GLASS_CAPACITY) continue;
+    if(b.length > 0 && b[b.length-1] === color){ targetIdx = i; break; }
+  }
+  if(targetIdx < 0){
+    for(let i = 0; i < S.bottles.length; i++){
+      if(S.bottles[i].length === 0){ targetIdx = i; break; }
+    }
+  }
+  if(targetIdx < 0){
+    for(let i = 0; i < S.bottles.length; i++){
+      if(S.bottles[i].length < GLASS_CAPACITY){ targetIdx = i; break; }
+    }
+  }
+  if(targetIdx < 0) return; // no space anywhere
+  S.bottles[targetIdx].push(color);
+  S.spawnCharges--;
+  tryAutoServe('player');
+  renderBoard();
+  renderSpawn();
+}
+
+function pickSpawnColor(){
+  const mode = S.cfg.spawn && S.cfg.spawn.color;
+  if(mode === 'random') return randomColorFromPalette();
+  if(mode && mode !== 'auto') return mode; // fixed color (e.g., 'blue' for M2)
+  // 'auto': pick color of lowest-patience unserved customer
+  let best = null, bestPat = Infinity;
+  for(const c of S.customers){
+    if(!c || c.served) continue;
+    if(c.patience < bestPat){ bestPat = c.patience; best = c.color; }
+  }
+  return best || randomColorFromPalette();
+}
+
+document.getElementById('next-btn').addEventListener('click', () => {
+  const i = STEP_ORDER.indexOf(S.step);
+  if(i === STEP_ORDER.length - 1){
+    document.getElementById('end').classList.add('hidden');
+    document.getElementById('step-title').textContent = 'FTUE COMPLETE';
+    document.getElementById('step-desc').textContent = 'Replay any step using the buttons at the bottom.';
+  } else {
+    startStep(STEP_ORDER[i + 1]);
+  }
+});
+
+document.getElementById('replay-btn').addEventListener('click', () => {
+  startStep(S.step);
+});
+
+function handleBottleClick(idx){
+  if(S.selected === null){
+    if(S.bottles[idx].length === 0) return; // can't select empty source
+    S.selected = idx;
+  } else if(S.selected === idx){
+    S.selected = null;
+  } else {
+    pour(S.selected, idx);
+    S.selected = null;
+  }
+  renderBoard();
+}
+
+function randomColorFromPalette(){
+  const palette = ['red','blue','yellow'];
+  return palette[Math.floor(Math.random() * palette.length)];
+}
+
+// ---- pour mechanic ----
+
+function pour(srcIdx, dstIdx){
+  const src = S.bottles[srcIdx];
+  const dst = S.bottles[dstIdx];
+  if(src.length === 0) return false;
+  if(dst.length >= GLASS_CAPACITY) return false;
+  if(dst.length > 0 && dst[dst.length-1] !== src[src.length-1]) return false;
+  const top = src[src.length-1];
+  let space = GLASS_CAPACITY - dst.length;
+  let moved = 0;
+  while(src.length > 0 && src[src.length-1] === top && moved < space){
+    dst.push(src.pop());
+    moved++;
+  }
+  if(moved > 0){
+    tryAutoServe('player');
+    return true;
+  }
+  return false;
+}
+
+// ---- auto-serve ----
+
+function tryAutoServe(side){
+  const bottles = side === 'player' ? S.bottles : S.oppBottles;
+  for(let i = 0; i < bottles.length; i++){
+    const b = bottles[i];
+    if(b.length !== GLASS_CAPACITY) continue;
+    let mono = true;
+    for(let k = 1; k < b.length; k++) if(b[k] !== b[0]) { mono = false; break; }
+    if(!mono) continue;
+    // Match against visible customers (lowest patience first)
+    const color = b[0];
+    let bestIdx = -1, bestPat = Infinity;
+    for(let s = 0; s < S.customers.length; s++){
+      const c = S.customers[s];
+      if(!c || c.served) continue;
+      if(c.color !== color) continue;
+      if(c.patience < bestPat){ bestPat = c.patience; bestIdx = s; }
+    }
+    if(bestIdx >= 0){
+      S.customers[bestIdx].served = true;
+      const pts = 200;
+      bottles[i] = [];
+      if(side === 'player'){
+        S.score += pts;
+        S.servedCount++;
+        floater('+' + pts, '#2ecc71', window.innerWidth/2, 240);
+        if(S.step === 'M1' && S.servedCount === 1 && !S.afterFirstServeShown){
+          S.afterFirstServeShown = true;
+        }
+      } else {
+        S.oppScore += pts;
+        S.oppServedCount++;
+        floater('Bot: +' + pts, '#3498db', window.innerWidth*0.75, 100);
+      }
+    }
+  }
+  // queue customer replacement and completion check happens in main loop
+  pruneAndReplaceCustomers();
+  checkCompletion();
+}
+
+function pruneAndReplaceCustomers(){
+  for(let i = 0; i < S.customers.length; i++){
+    const c = S.customers[i];
+    if(c && (c.served || c.walkaway)){
+      // Replace from spawn pool if available, else remove
+      if(S.spawnPool.length > 0){
+        const color = S.spawnPool.shift();
+        S.customers[i] = { color, patience: S.cfg.customers[0].patience, maxPatience: S.cfg.customers[0].patience, served: false, walkaway: false };
+      } else {
+        S.customers[i] = null;
+      }
+    }
+  }
+  // Compact (remove nulls)
+  S.customers = S.customers.filter(c => c !== null);
+}
+
+// ---- completion ----
+
+function checkCompletion(){
+  if(S.finished) return;
+  if(S.cfg.completion === 'serves' && S.servedCount >= S.cfg.needServes){
+    endStep();
+    return;
+  }
+  if(S.cfg.completion === 'queue-empty' && S.customers.length === 0 && S.spawnPool.length === 0){
+    endStep();
+    return;
+  }
+}
+
+function endStep(){
+  S.finished = true;
+  const cfg = S.cfg;
+  let emoji = '🎉', title = '', body = '', titleClass = '';
+  if(S.step === 'M4'){
+    if(S.score > S.oppScore){ emoji='🏆'; title='YOU WON!'; body='Your score beat the bot when the timer ended.'; }
+    else if(S.score < S.oppScore){ emoji='💔'; title='MATCH LOST'; body='The bot scored higher. Both outcomes count — you can replay or move on.'; titleClass='loss'; }
+    else { emoji='🤝'; title='MATCH TIED'; body='Exact tie on the buzzer.'; titleClass='draw'; }
+  } else if(cfg.successPopup){
+    emoji = cfg.successPopup.emoji;
+    title = cfg.successPopup.title;
+    body = cfg.successPopup.text;
+  }
+
+  document.getElementById('end-emoji').textContent = emoji;
+  const titleEl = document.getElementById('end-title');
+  titleEl.textContent = title;
+  titleEl.className = titleClass;
+  document.getElementById('end-body').textContent = body;
+
+  // Stats for M3 / M4
+  if(S.step === 'M3' || S.step === 'M4'){
+    const statsEl = document.getElementById('end-stats');
+    let html = `<strong>Served by you:</strong> ${S.servedCount}<br>`;
+    if(cfg.hasBot) html += `<strong>Served by bot:</strong> ${S.oppServedCount}<br>`;
+    html += `<strong>Your score:</strong> ${S.score}`;
+    if(cfg.hasBot) html += ` &nbsp; <strong>Bot:</strong> ${S.oppScore}`;
+    statsEl.innerHTML = html;
+    statsEl.classList.remove('hidden');
+  } else {
+    document.getElementById('end-stats').classList.add('hidden');
+  }
+
+  // Forced beat
+  const next = document.getElementById('next-btn');
+  const isLast = STEP_ORDER.indexOf(S.step) === STEP_ORDER.length - 1;
+  next.textContent = isLast ? 'Finish' : 'Next step →';
+  next.disabled = true;
+  setTimeout(() => next.disabled = false, titleClass === 'loss' ? 2000 : 1000);
+
+  document.getElementById('end').classList.remove('hidden');
+}
+
+// ---- bot AI ----
+
+function botStep(dt){
+  S.botCooldown -= dt;
+  if(S.botCooldown > 0) return;
+  // Find best pour
+  let bestScore = -1, best = null;
+  for(let i = 0; i < S.oppBottles.length; i++){
+    for(let j = 0; j < S.oppBottles.length; j++){
+      if(i === j) continue;
+      const s = scorePour(S.oppBottles[i], S.oppBottles[j]);
+      if(s > bestScore){ bestScore = s; best = [i,j]; }
+    }
+  }
+  if(best && bestScore > 0){
+    if(Math.random() < 0.03){
+      // Mistake: pick random valid pour
+      const valid = [];
+      for(let i = 0; i < S.oppBottles.length; i++){
+        for(let j = 0; j < S.oppBottles.length; j++){
+          if(i !== j && scorePour(S.oppBottles[i], S.oppBottles[j]) > 0) valid.push([i,j]);
+        }
+      }
+      if(valid.length > 0) best = valid[Math.floor(Math.random()*valid.length)];
+    }
+    const src = S.oppBottles[best[0]];
+    const dst = S.oppBottles[best[1]];
+    const top = src[src.length-1];
+    let space = GLASS_CAPACITY - dst.length;
+    let moved = 0;
+    while(src.length > 0 && src[src.length-1] === top && moved < space){
+      dst.push(src.pop());
+      moved++;
+    }
+    if(moved > 0) tryAutoServe('opponent');
+  }
+  // Cushion when bot is behind
+  const cushion = S.oppScore < S.score ? 1.55 : 1.0;
+  S.botCooldown = 1.8 * cushion + (Math.random() - 0.5) * 0.4;
+}
+
+function scorePour(src, dst){
+  if(src.length === 0) return 0;
+  if(dst.length >= GLASS_CAPACITY) return 0;
+  if(dst.length > 0 && dst[dst.length-1] !== src[src.length-1]) return 0;
+  let score = 1;
+  if(dst.length > 0 && src[src.length-1] === dst[dst.length-1]) score += 2;
+  if(src.length === 1) score += 3;
+  if(dst.length === 0) score += 4;
+  const top = src[src.length-1];
+  const dstAfter = dst.length + 1;
+  if(dstAfter === GLASS_CAPACITY){
+    let pure = true;
+    for(let i = 0; i < dst.length; i++) if(dst[i] !== top){ pure = false; break; }
+    if(pure) score += 8;
+  }
+  return score;
+}
+
+// ---- main loop ----
+
+function loop(){
+  requestAnimationFrame(loop);
+  if(!S || S.finished) return;
+  const now = performance.now();
+  let dt = (now - S.lastTick) / 1000;
+  if(dt > 0.2) dt = 0.2;
+  S.lastTick = now;
+
+  // Match timer
+  if(S.cfg.showTimer){
+    S.timer -= dt;
+    if(S.timer <= 0){
+      S.timer = 0;
+      if(S.cfg.completion === 'timer'){
+        endStep();
+        renderTopbar();
+        return;
+      }
+    }
+  }
+
+  // Customer patience
+  let anyChanged = false;
+  for(const c of S.customers){
+    if(!c || c.served) continue;
+    if(S.cfg.showPatience){
+      c.patience -= dt;
+      if(c.patience <= 0){
+        c.walkaway = true; c.served = true;
+        S.score -= 25;
+        if(S.cfg.hasBot) S.oppScore -= 25;
+        floater('Walkaway! -25', '#e74c3c', window.innerWidth/2, 160);
+        if(S.step === 'M3' && !S.walkawayShown){
+          S.walkawayShown = true;
+          toast('A customer left — you (and your opponent in real matches) lose 25 points. Keep serving!');
+        }
+        anyChanged = true;
+      }
+    }
+  }
+  if(anyChanged){ pruneAndReplaceCustomers(); checkCompletion(); }
+
+  // Bot
+  if(S.cfg.hasBot){
+    botStep(dt);
+  }
+
+  // Spawn recharge (always ticks; caps at SPAWN_MAX_CHARGES)
+  if(S.cfg.spawn && S.cfg.spawn.enabled){
+    S.spawnRechargeT -= dt;
+    if(S.spawnRechargeT <= 0){
+      if(S.spawnCharges < SPAWN_MAX_CHARGES) S.spawnCharges++;
+      S.spawnRechargeT = SPAWN_RECHARGE_TIME;
+    }
+    renderSpawn();
+  }
+
+  renderTopbar();
+  renderQueue();
+}
+
+function renderSpawn(){
+  if(!S.cfg.spawn || !S.cfg.spawn.enabled) return;
+  const btn = document.getElementById('spawn-btn');
+  const badge = document.getElementById('spawn-charges-badge');
+  btn.classList.toggle('cooldown', S.spawnCharges <= 0);
+  badge.textContent = S.spawnCharges;
+  // Cooldown overlay shows progress to NEXT charge (only relevant when charges < max)
+  const pct = S.spawnCharges < SPAWN_MAX_CHARGES
+    ? Math.min(100, (S.spawnRechargeT / SPAWN_RECHARGE_TIME) * 100)
+    : 0;
+  btn.style.setProperty('--cd-pct', pct.toFixed(1));
+}
+
+function renderTopbar(){
+  document.getElementById('score').textContent = S.score;
+  document.getElementById('opp-score').textContent = S.oppScore;
+  const tEl = document.getElementById('timer');
+  tEl.textContent = Math.ceil(S.timer);
+  tEl.classList.toggle('warning', S.cfg.showTimer && S.timer <= 15 && S.timer > 0);
+}
+
+function renderAll(){
+  renderTopbar();
+  renderQueue();
+  renderBoard();
+  if(S.cfg.hasBot) renderOppBoard();
+  if(S.cfg.spawn && S.cfg.spawn.enabled) renderSpawn();
+}
+
+function renderQueue(){
+  const q = document.getElementById('queue');
+  q.innerHTML = '';
+  for(const c of S.customers){
+    if(!c) continue;
+    const el = document.createElement('div');
+    el.className = 'customer' + (c.served ? ' served' : '') + (!S.cfg.showPatience ? ' no-timer' : '');
+    const pct = Math.max(0, Math.min(100, (c.patience / c.maxPatience) * 100));
+    const fillCls = pct < 25 ? 'critical' : pct < 50 ? 'low' : '';
+    el.innerHTML = `
+      <div class="face">${c.served ? '😋' : '🙂'}</div>
+      <div class="order" style="background: ${colorHex(c.color)}"></div>
+      <div class="patience-bar"><div class="patience-fill ${fillCls}" style="width: ${pct}%"></div></div>
+    `;
+    q.appendChild(el);
+  }
+}
+
+function renderBoard(){
+  const board = document.getElementById('board');
+  board.innerHTML = '';
+  for(let i = 0; i < S.bottles.length; i++){
+    const b = S.bottles[i];
+    const el = document.createElement('div');
+    el.className = 'bottle';
+    el.dataset.idx = i;
+    if(S.selected === i) el.classList.add('selected');
+    if(b.length === GLASS_CAPACITY){
+      let mono = true;
+      for(let k = 1; k < b.length; k++) if(b[k] !== b[0]){ mono = false; break; }
+      if(mono) el.classList.add('servable');
+    }
+    for(const layer of b){
+      const lEl = document.createElement('div');
+      lEl.className = 'layer ' + layer;
+      el.appendChild(lEl);
+    }
+    board.appendChild(el);
+  }
+}
+
+function renderOppBoard(){
+  const board = document.getElementById('opp-board');
+  board.innerHTML = '';
+  for(let i = 0; i < S.oppBottles.length; i++){
+    const b = S.oppBottles[i];
+    const el = document.createElement('div');
+    el.className = 'bottle';
+    if(b.length === GLASS_CAPACITY){
+      let mono = true;
+      for(let k = 1; k < b.length; k++) if(b[k] !== b[0]){ mono = false; break; }
+      if(mono) el.classList.add('servable');
+    }
+    for(const layer of b){
+      const lEl = document.createElement('div');
+      lEl.className = 'layer ' + layer;
+      el.appendChild(lEl);
+    }
+    board.appendChild(el);
+  }
+}
+
+function colorHex(c){
+  return { red:'#e74c3c', blue:'#3498db', yellow:'#f1c40f', green:'#27ae60', purple:'#9b59b6', orange:'#e67e22' }[c] || '#999';
+}
+
+// ---- effects ----
+
+function floater(text, color, x, y){
+  const el = document.createElement('div');
+  el.className = 'floater';
+  el.style.color = color;
+  el.style.left = (x - 30) + 'px';
+  el.style.top = y + 'px';
+  el.textContent = text;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 1300);
+}
+
+function toast(text){
+  const existing = document.querySelector('.toast');
+  if(existing) existing.remove();
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.textContent = text;
+  document.body.appendChild(el);
+  setTimeout(() => { el.classList.add('fading'); }, 3500);
+  setTimeout(() => el.remove(), 4200);
+}
+
+// ---- boot ----
+
+requestAnimationFrame(loop);
+startStep('M1');
+</script>
+</body>
+</html>
