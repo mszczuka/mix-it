@@ -257,7 +257,7 @@
 
 <script>
 "use strict";
-const VERSION='v2.9.0 · 2026-06-05';   // bump on every push — visible on Home to verify deploys
+const VERSION='v2.9.2 · 2026-06-05';   // bump on every push — visible on Home to verify deploys
 /* ===== Harvest Kingdom v2 — COURSES & ROYAL FEAST ==========
    Continuous quota cycles ("courses"): fill the King's hunger
    bar → 🎃 Boss Crop (visible escape timer) → next course.
@@ -296,7 +296,7 @@ const CONFIG = {
   // grass = INTERACTIVE BACKGROUND ONLY: fixed carpet, cuttable, regrows in place.
   // It lives OUTSIDE the crop system — no field slots, no spawn weights, no economy.
   GRASS_N: 110,          // blades on screen (× 1/zoom²)
-  GRASS_REGROW: 2.8,     // seconds for a cut blade to regrow where it stood
+  GRASS_REGROW: 1.4,     // seconds before a cut blade regrows — at a NEW random spot (carpet stays dense)
   SPAWN_PER_CLEAR: 15,   // +1 to spawn batch per 15 crops/s of clear rate (AoE builds keep a full field)
   // crown economy: spendable crowns bank sqrt-damped (tier gets the FULL pool) — exponential
   // income would otherwise buy the whole tree in ~5 sittings; sqrt keeps it "deep & expensive"
@@ -1139,7 +1139,7 @@ function cutGrass(b){
 function floatDmg(x,y,amt){ G.floats.push({x:x+(rand()*8-4),y:y-4,t:''+Math.round(amt),col:'#ff8a6a',age:0,life:.45,sm:true}); }
 function floatText(x,y,t,col){ G.floats.push({x,y,t,col:col||'#fff3c4',age:0,life:.85}); }
 function burst(x,y,col,n){ col=col||'#ffd24a'; n=n||9; for(let i=0;i<n;i++){ const a=rand()*6.28,s=40+rand()*90; G.parts.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s-30,age:0,life:.45+rand()*.25,col}); } }
-function wiltPuff(x,y){ for(let i=0;i<5;i++){ const a=rand()*6.28,s=15+rand()*30; G.parts.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s-8,age:0,life:.5+rand()*.3,col:'#7a5a36'}); } }
+function wiltPuff(x,y){ for(let i=0;i<5;i++){ const a=rand()*6.28,s=15+rand()*30; G.parts.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s-8,age:0,life:.5+rand()*.3,col:'#9aa0a6'}); } } // gray smoke, not dirt
 
 let lastTS=0;
 function frame(ts){ const dt=Math.min(0.05,(ts-lastTS)/1000||0); lastTS=ts; if(mode==='playing'&&G) update(dt); render(); requestAnimationFrame(frame); }
@@ -1162,7 +1162,7 @@ function update(dt){
       G.boss.escaped=true;
       let lost=0;
       for(const p of [G.boss,...G.bossMinis]){ if(p.dead) continue;
-        p.dead=true; lost+=p.kind.coin; burst(p.x,p.y,'#7a5a36',14); wiltPuff(p.x,p.y); }
+        p.dead=true; lost+=p.kind.coin; burst(p.x,p.y,'#9aa0a6',12); wiltPuff(p.x,p.y); }
       floatText(G.boss.x,G.boss.y-30,'ESCAPED! −'+lost.toLocaleString()+' 🪙','#e7b0a4');
       if(!G.tutorial&&G.cycle===G.feastEvery-1){ G.finaleEscaped=true; banner('🚩 STAGE FAILED — the finale boss fled!'); }
       else banner((ICON.boss)+' Boss escaped!'+(G.tutorial?' No worries — lesson learned.':''));
@@ -1206,10 +1206,11 @@ function update(dt){
     if(c.grow<1) c.grow=Math.min(1,c.grow+dt/CONFIG.GROW_TIME);
     c.sway+=dt*2; if(c.hitCd>0) c.hitCd-=dt;
   }
-  // grass carpet: sway + regrow in place
+  // grass carpet: sway + regrow at a NEW random spot (like the original — no bald patches, no stubble)
   for(const b of G.grass){ b.sway+=dt*2;
-    if(b.cut>0){ b.cut-=dt; if(b.cut<=0) b.grow=0.01; }
-    else if(b.grow<1) b.grow=Math.min(1,b.grow+dt/0.5); }
+    if(b.cut>0){ b.cut-=dt;
+      if(b.cut<=0){ b.x=20+rand()*(WW-40); b.y=100+rand()*(WH-130); b.grow=0.01; } }
+    else if(b.grow<1) b.grow=Math.min(1,b.grow+dt/0.45); }
 
   // one click = one full 360° swing; blade harvests only while a swing is in progress
   if(lv('whirl')>0){ G.autoT-=dt; if(G.autoT<=0){ // Whirlwind auto-swing — Double Swing procs here too
@@ -1404,11 +1405,7 @@ function render(){
   ctx.restore();
 }
 function drawGrass(b){
-  if(b.cut>0){ // stubble while regrowing
-    ctx.strokeStyle=curGrassCol; ctx.globalAlpha=0.35; ctx.lineWidth=2;
-    ctx.beginPath(); ctx.moveTo(b.x-3,b.y+4); ctx.lineTo(b.x-3,b.y); ctx.moveTo(b.x+3,b.y+4); ctx.lineTo(b.x+3,b.y);
-    ctx.stroke(); ctx.globalAlpha=1; return;
-  }
+  if(b.cut>0) return;   // cut = simply gone until it regrows elsewhere (no stubble marks)
   const s=b.grow, r=13*s, sw=Math.sin(b.sway)*2;
   ctx.strokeStyle=curGrassCol; ctx.lineWidth=2.5*s; ctx.lineCap='round';
   ctx.beginPath(); ctx.moveTo(b.x,b.y+r*0.4); ctx.lineTo(b.x-r*0.32+sw,b.y-r*0.5);
@@ -1454,7 +1451,6 @@ function drawCrop(c){
       if(urgent){ ctx.textAlign='center'; ctx.font='bold 20px '+getComputedStyle(document.body).getPropertyValue('--f-display');
         ctx.fillStyle='#ff8a6a'; ctx.fillText(Math.ceil(escT)+'s',x,y-r*1.6); }
     }
-    ctx.fillStyle='#4a3320'; ctx.beginPath(); ctx.ellipse(x,y+r*0.6,r*1.1,r*0.35,0,0,6.283); ctx.fill();
     if(c.btype==='carrot'){ // runner — long tapered root + frantic green top
       ctx.fillStyle='#e8702a'; ctx.beginPath();
       ctx.moveTo(x-r*0.55,y-r*0.5); ctx.quadraticCurveTo(x,y+r*1.1,x+r*0.05,y+r*0.95);
@@ -1486,8 +1482,6 @@ function drawCrop(c){
     ctx.lineWidth=1.5; ctx.beginPath(); ctx.arc(x,y-r*0.3,r*1.55,0,6.283); ctx.stroke(); ctx.globalAlpha=1;
     ctx.textAlign='center'; ctx.font='bold 12px sans-serif'; ctx.fillStyle='#fff2a8'; ctx.fillText('★',x,y-r*1.8);
   }
-  // soil mound (for planted crops)
-  ctx.fillStyle='#4a3320'; ctx.beginPath(); ctx.ellipse(x,y+r*0.5,r*0.9,r*0.4,0,0,6.283); ctx.fill();
   if(k==='wheat'){
     const sway=Math.sin(c.sway)*2, topY=y-r*0.8;
     ctx.strokeStyle='#cdae3e'; ctx.lineWidth=3*s; ctx.lineCap='round';
