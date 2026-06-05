@@ -229,7 +229,7 @@
 
   <div class="screen" id="feast">
     <div class="summary">
-      <div class="sumtitle">👑 ROYAL FEAST 👑</div>
+      <div class="sumtitle" id="sumTitle">👑 ROYAL FEAST 👑</div>
       <div class="sumtable" id="sumTable"></div>
     </div>
     <div class="sumfoot">
@@ -259,9 +259,9 @@ const CONFIG = {
   // INCREMENTAL CORE: quotas & boss HP are FIXED designed curves per world/stage. Your power
   // grows exponentially, the stage curve grows exponentially — they RACE. Old stages melt
   // (you FEEL the power), the frontier resists (wall → upgrade → breakthrough).
-  HUNGER_BASE: 70,       // stage 1 quota on Carrot
-  STAGE_GROWTH: 1.30,    // each stage +30% quota — the in-world difficulty ladder
-  WORLD_DIFF: 1.8,       // each NEXT WORLD ×1.8 difficulty — pure resistance, NOT cancelled by
+  HUNGER_BASE: 100,      // stage 1 quota on Carrot
+  STAGE_GROWTH: 1.35,    // each stage +35% quota — the in-world difficulty ladder
+  WORLD_DIFF: 2.6,       // each NEXT WORLD ×2.6 difficulty — pure resistance, NOT cancelled by
                          // loc.mult (mult raises quota AND income equally = zero net; this doesn't)
   BOSS_BASE: 25,         // boss HP base × WORLD_DIFF^world × STAGE_GROWTH^stage (NO loc.mult —
                          // coins-mult never raised your DPS, so it must not raise boss HP)
@@ -343,6 +343,9 @@ function tierInfo(fp){
 function updateKingHUD(){
   if(!G) return;
   $('#kingFill').style.width=Math.min(100,G.food/curHungerGoal*100)+'%';
+  if(G.sweep){ const left=G.crops.filter(c=>!c.dead&&c.kind.coin>0).length;
+    $('#kingLab').textContent='🧹 CLEAN SWEEP! '+left+' crop'+(left!==1?'s':'')+' left';
+    $('#kingFill').style.width='100%'; return; }
   const bossUp=bossAlive();
   const bIcon=bossUp?(BOSS_TYPES.find(t=>t.id===G.boss.btype)||{icon:'🎃'}).icon:'';
   const fin=!G.tutorial&&G.cycle===G.feastEvery-1;
@@ -384,6 +387,7 @@ const LOCATIONS=[
 // but the stage you play is your highest, and higher stages are harder AND pay more.
 function locStage(l){ return Math.min((king.stg&&king.stg[l.id])||0, l.stages-1); } // stage being PLAYED (0-based)
 function locCleared(l){ return ((king.stg&&king.stg[l.id])||0) >= l.stages; }
+function gameCleared(){ return LOCATIONS.every(locCleared); }   // 🏆 endgame: unlocks the Clean Sweep ritual
 function curLocation(){ return LOCATIONS.find(l=>l.id===(king.location||'carrot'))||LOCATIONS[0]; }
 // gate = CLEAR the previous world (all its stages) — chapter chain, no farming past it
 function locUnlocked(l){
@@ -737,7 +741,13 @@ function applyStats(){
 }
 
 function spawnCrop(instant){
-  if(G.crops.length>=curMaxField) return;
+  if(G.crops.length>=curMaxField){
+    // field full → silently wilt one old grass blade (far from the scythe) to make room.
+    // Without this the field DEADLOCKS on grass and nothing new ever grows (tutorial bug).
+    const g=G.crops.find(c=>!c.dead&&c.kind.coin<=0&&((c.x-reticle.x)**2+(c.y-reticle.y)**2)>(curBladeR+40)**2);
+    if(!g) return;
+    g.dead=true; wiltPuff(g.x,g.y);
+  }
   const m=30; let x,y,ok=false;
   for(let i=0;i<24;i++){
     x=m+rand()*(WW-2*m); y=m+80+rand()*(WH-2*m-80);
@@ -749,7 +759,7 @@ function spawnCrop(instant){
     if(ok) break;
   }
   if(!ok) return;
-  const k=pickKind();
+  const k=G&&G.sweep?CROP_KINDS[0]:pickKind();   // Clean Sweep: only grass regrows — the field CAN hit zero
   const goldenCh=lv('golden')*0.05+(G.event&&G.event.id==='golden'?0.25:0);  // 🌟 Golden Hour event
   const golden = k.coin>0 && rand()<goldenCh;
   const hp=Math.max(1,Math.round(k.hp*(golden?2:1)*(1-0.08*lv('ripen'))));  // Tender Crops lowers HP (capped −40%)
@@ -782,11 +792,11 @@ const CROP_KINDS=[
 ];
 function kindWeight(k){
   if(k.id==='grass') return 70*(G&&G.event&&G.event.id==='overgrow'?2:1); // Overgrowth event doubles grass
-  if(k.id==='wheat') return 12+6*lv('seeds');  // a bit more wheat baseline; Wheat Seeds → more
+  if(k.id==='wheat') return (G&&G.tutorial?26:12)+6*lv('seeds');  // tutorial: denser wheat (lessons need targets)
   if(G&&G.tutorial) return 0;                  // tutorial field = grass + wheat only (no frills)
   if(k.up){
     let w=(lv(k.up)>0&&king.loadout[k.id])?lv(k.up)*6*(1+0.2*lv('fertile')):0; // unlocked AND slotted
-    if(curLocation().native===k.id) w+=10;     // NATIVE crop grows here regardless — world signature + free preview
+    if(curLocation().native===k.id) w+=6;      // NATIVE crop grows here regardless — world signature + free preview
     return w;
   }
   return k.baseW;
@@ -915,10 +925,10 @@ function distToSeg(px,py,ax,ay,bx,by){
 }
 
 // ripe crops have HP — damaged by scythe / sunspots / orbiters / zappers; harvested when HP hits 0
-function damage(c,amt){
+function damage(c,amt,src){
   if(c.dead) return;
   c.hp-=amt; if(c.kind.coin>0) floatDmg(c.x,c.y,amt);   // no dmg numbers on 1-hit grass
-  if(c.hp<=0) harvestCrop(c);
+  if(c.hp<=0) harvestCrop(c,src);
 }
 function bumpCombo(c){
   G.combo++; G.comboT=0;
@@ -926,7 +936,7 @@ function bumpCombo(c){
   if(m>G.comboMult){ floatText(c.x,c.y-20,'COMBO ×'+m+'!','#ffb35c'); pop(1.5); }
   G.comboMult=m;
 }
-function harvestCrop(c){
+function harvestCrop(c,src){
   c.dead=true;
   // combo chain: valuable cuts grow it, grass keeps it ALIVE (Overgrowth event: grass BUILDS it)
   if(c.kind.coin>0){ if(!(G.tutorial&&G.cycle<1)) bumpCombo(c); }   // lesson 1: combo not introduced yet
@@ -938,7 +948,9 @@ function harvestCrop(c){
     if(c.golden){ floatText(c.x,c.y-16,'GOLDEN ×5!','#fff2a8'); burst(c.x,c.y,'#fff2a8',14); pop(1.6); }
     floatText(c.x,c.y,'+'+coin,'#ffd24a'); burst(c.x,c.y,'#ffd24a',10); pop(1);
   } else { burst(c.x,c.y,'#8fce6a',5); pop(0.4); }   // grass: quiet green puff
-  if(c.kind.fx) triggerFx(c);
+  // spore CHAIN DEPTH = 1: a mushroom killed BY a spore burst doesn't burst again
+  // (unchecked chains made income exponential — 8000 vs 600 quota on Pumpkin)
+  if(c.kind.fx && !(src==='spore'&&c.kind.fx==='mushroom')) triggerFx(c);
   if(c.boss){
     if(c.btype==='melon'&&!c.mini){ // splitter: main bursts into minis, fight continues
       floatText(c.x,c.y-30,'🍈 SPLIT!','#bfe8a0'); burst(c.x,c.y,'#bfe8a0',18); spawnMinis(c);
@@ -946,7 +958,10 @@ function harvestCrop(c){
       burst(c.x,c.y,'#ffb35c',26); burst(c.x,c.y,'#ffd24a',20); kingChomp();
       floatText(c.x,c.y-30,'👑 THE KING FEASTS!','#ffd24a');
       if(G.cycle===G.feastEvery-1) G.finaleCleared=true;   // stage clears ONLY on a finale boss KILL
-      G.endingT=0.7; log('boss_killed',{coins:G.food,type:c.btype});
+      if(!G.tutorial&&gameCleared()){ // 🏆 endgame bonus: CLEAN SWEEP — value crops stop spawning,
+        G.sweep=true; banner('🧹 CLEAN SWEEP — clear the field to ZERO!',1600); // mop the field bare
+      } else G.endingT=0.7;
+      log('boss_killed',{coins:G.food,type:c.btype});
     } else { burst(c.x,c.y,'#bfe8a0',10); } // a mini down, others remain
   }
   log('crop_harvested',{val:coin,kind:c.kind.id,combo:G.combo});
@@ -962,7 +977,7 @@ function triggerFx(c){
   } else if(c.kind.fx==='mushroom'){
     // spore burst — real AoE damage to everything in radius (can chain off other mushrooms)
     const R=70+20*lv('bloom'), dmg=8+4*lv('bloom');
-    for(const o of G.crops){ if(o.dead||o===c) continue; if((o.x-c.x)**2+(o.y-c.y)**2<R*R) damage(o,dmg); }
+    for(const o of G.crops){ if(o.dead||o===c) continue; if((o.x-c.x)**2+(o.y-c.y)**2<R*R) damage(o,dmg,'spore'); }
     G.rings.push({x:c.x,y:c.y,r:0,max:R,t:0,life:0.5});
   } else if(c.kind.fx==='tomato'){
     // splatter: nearby grass becomes wheat (turns filler into value — combo food)
@@ -1026,6 +1041,11 @@ function update(dt){
   if(G.combo>0 && G.comboT>comboDecay){
     if(G.comboMult>1){ floatText(reticle.x,reticle.y-40,'COMBO LOST','#e7b0a4'); pop(0.3); }
     G.combo=0; G.comboMult=1;
+  }
+  // 🧹 Clean Sweep: course ends when the LAST value crop falls (grass doesn't count)
+  if(G.sweep && G.endingT<0 && !G.crops.some(c=>!c.dead&&c.kind.coin>0)){
+    floatText(WW/2,WH/2,'✨ FIELD CLEAN! ✨','#fff2a8'); burst(WW/2,WH/2,'#fff2a8',24); pop(1.8);
+    G.endingT=0.9;
   }
   // tutorial lessons 1-2: NO boss — bar full = lesson complete
   if(G.tutorial && G.cycle<2 && G.endingT<0 && G.food>=curHungerGoal){
@@ -1362,7 +1382,7 @@ function completeCycle(){
   if(G.cycle>=G.feastEvery){ endRun(); return; }
   // next course — field keeps living, combo chain SURVIVES; new event each course
   const earned=G.food, doneLesson=G.tutorial?G.cycle-1:-1;
-  G.food=0; G.tally={}; G.boss=null; G.bossMinis=[]; G.time=0; G.endingT=-1; G._cycleDone=false;
+  G.food=0; G.tally={}; G.boss=null; G.bossMinis=[]; G.time=0; G.endingT=-1; G._cycleDone=false; G.sweep=false;
   rollCourse();
   applyStats(); // re-derive quota (cycle ramp + event; tier FROZEN during a sitting)
   floatText(reticle.x,reticle.y-50,'+'+earned.toLocaleString()+' 🪙','#7bc96f');
@@ -1373,15 +1393,15 @@ function completeCycle(){
 
 function endRun(){ // Royal Feast — THE banking moment: the whole sitting's pool lands at once
   const before=tierInfo(king.fp).tier;
-  // single penalty: finale escape FAILS THE STAGE (the progression pain) — bank stays intact.
-  // Long Feast opt-in still pays ×1.35.
-  let bankMul=1; if(G.longFeast) bankMul*=1.35;
+  // SUCCESS = finale boss killed. Failure has TEETH: bank only 50% of the pool and 0 Feast Points.
+  const success=G.finaleCleared || (G.tutorial&&!G.finaleEscaped);
+  let bankMul=success?1:0.5; if(G.longFeast) bankMul*=1.35;
   const banked=Math.round(G.feastFood*bankMul);
   king.fed += banked;             // lifetime coins — stats only now (tier runs on FP)
   const crownGain=Math.round(CONFIG.CROWN_K*Math.pow(banked,CONFIG.CROWN_P)); // sqrt-damped spendable
   king.crowns += crownGain;
-  // FEAST POINTS — the tier engine: base 1, +1 for a clean finale, +1 for a Long Feast
-  const fpGain=G.tutorial?1:(1+(G.finaleEscaped?0:1)+(G.longFeast?1:0));
+  // FEAST POINTS — the tier engine: success = 2 (+1 Long Feast), failure = 1 (always SOME progress)
+  const fpGain=G.tutorial?1:(success?2+(G.longFeast?1:0):1);
   king.fp += fpGain;
   if(G.tutorial) king.tut=1;   // graduated — full game from the next sitting
   king.fst[curLocation().id]=(king.fst[curLocation().id]||0)+1;   // feast tally per location (stats)
@@ -1389,14 +1409,21 @@ function endRun(){ // Royal Feast — THE banking moment: the whole sitting's po
   const loc=curLocation(), hadStg=(king.stg[loc.id]||0);
   let stageMsg='', stageCol='#7bc96f';
   if(hadStg<loc.stages){
-    if(G.finaleCleared || (G.tutorial&&!G.finaleEscaped)){   // stage = finale boss KILLED (tutorial: lenient)
+    if(success){
       king.stg[loc.id]=hadStg+1;
-      stageMsg = king.stg[loc.id]>=loc.stages ? '🌍 WORLD CLEARED — next location unlocked!'
-                                              : '🚩 Stage '+king.stg[loc.id]+'/'+loc.stages+' cleared!';
-    } else if(G.finaleEscaped){ stageMsg='🚩 Stage '+(hadStg+1)+' FAILED — the finale boss fled. Retry!'; stageCol='#e7b0a4'; }
-    else { stageMsg='🚩 Stage '+(hadStg+1)+' FAILED — quota not reached. Grow stronger! 🌳'; stageCol='#e7b0a4'; }
+      if(king.stg[loc.id]>=loc.stages){
+        const nx=LOCATIONS[LOCATIONS.indexOf(loc)+1];
+        if(nx){ king.location=nx.id; stageMsg='🌍 WORLD CLEARED → traveling to '+nx.name+'!'; } // auto-travel
+        else stageMsg='🏆 ALL WORLDS CLEARED!';
+      } else stageMsg='🚩 Stage '+king.stg[loc.id]+'/'+loc.stages+' cleared!';
+    } else if(G.finaleEscaped){ stageMsg='🚩 Stage '+(hadStg+1)+' FAILED — the finale boss fled. Retry!'; stageCol='#ff8a6a'; }
+    else { stageMsg='🚩 Stage '+(hadStg+1)+' FAILED — quota not reached. Grow stronger! 🌳'; stageCol='#ff8a6a'; }
   }
   saveKing();
+  // the feast screen must SCREAM the outcome — title flips on failure
+  const st=$('#sumTitle');
+  if(st){ st.textContent=success?'👑 ROYAL FEAST 👑':'🚩 STAGE FAILED 🚩';
+    st.style.color=success?'':'#ff8a6a'; }
   const after=tierInfo(king.fp), gained=after.tier-before;
   log('reticle_idle',{ms:Math.round(G.idleMs),pct:Math.round(G.idleMs/(G.totalTime*1000)*100)});
   log('run_completed',{banked:G.feastFood,crownGain,cycles:G.cycle,harvested:G.harvested,duration_s:Math.round(G.totalTime*10)/10,bossKills:G.bossKills,bossEscapes:G.bossEscapes,idlePct:Math.round(G.idleMs/(G.totalTime*1000)*100),kingTier:after.tier,tiersGained:gained});
@@ -1408,10 +1435,11 @@ function endRun(){ // Royal Feast — THE banking moment: the whole sitting's po
   if(G.bossEscapes>0) rows+='<div class="sumrow" style="color:#e7b0a4"><span>🎃 Bosses escaped</span><span>'+G.bossEscapes+'</span><span>bonus lost</span></div>';
   if(G.tutorial) rows+='<div class="sumrow" style="color:#7bc96f"><span>🎓 Tutorial complete — full game unlocked!</span><span></span><span>👑</span></div>';
   if(stageMsg) rows+='<div class="sumrow" style="color:'+stageCol+';font-weight:700"><span>'+stageMsg+'</span><span></span><span></span></div>';
+  if(!success&&!G.tutorial) rows+='<div class="sumrow" style="color:#ff8a6a"><span>💸 Failure — half the pool spoils</span><span></span><span>−50%</span></div>';
   if(G.longFeast) rows+='<div class="sumrow" style="color:#ffb35c"><span>🔥 Long Feast bonus</span><span></span><span>×1.35</span></div>';
   rows+='<div class="sumrow earned"><span>👑 BANKED ('+G.cycle+' courses)</span><span></span><span>'+banked.toLocaleString()+' 🪙</span></div>';
   rows+='<div class="sumrow total"><span>👑 Crowns gained (√ of pool)</span><span></span><span>+'+crownGain.toLocaleString()+' 👑</span></div>';
-  rows+='<div class="sumrow total"><span>🍽️ Feast Points'+(fpGain>1?' (clean finale'+(G.longFeast?' + long':'')+')':'')+'</span><span></span><span>+'+fpGain+'</span></div>';
+  rows+='<div class="sumrow total"><span>🍽️ Feast Points'+(G.longFeast&&fpGain>2?' (+ long feast)':'')+'</span><span></span><span>+'+fpGain+'</span></div>';
   rows+='<div class="sumrow total"><span>⭐ King</span><span></span><span>Tier '+after.tier+(gained?' (+'+gained+')! 🎉':' · '+after.into+'/'+after.need+' 🍽️')+'</span></div>';
   rows+='<div class="sumrow total"><span>👑 Balance</span><span></span><span>'+king.crowns.toLocaleString()+' 👑</span></div>';
   $('#sumTable').innerHTML=rows;
