@@ -181,6 +181,7 @@
         <div class="loccard" id="farmLoc"></div>
         <div class="level" id="farmLevel"></div>
         <div class="nextline" id="farmNext"></div>
+        <div id="verTag" style="font-size:10px;color:#0008;margin-top:14px;text-align:center;"></div>
       </div>
       <!-- BUILD — loadout, workers, sitting options -->
       <div class="panel" id="panel-build">
@@ -243,6 +244,7 @@
 
 <script>
 "use strict";
+const VERSION='v2.6.0 · 2026-06-05';   // bump on every push — visible on Home to verify deploys
 /* ===== Harvest Kingdom v2 — COURSES & ROYAL FEAST ==========
    Continuous quota cycles ("courses"): fill the King's hunger
    bar → 🎃 Boss Crop (visible escape timer) → next course.
@@ -1484,6 +1486,7 @@ $('#quitBtn').addEventListener('click',()=>{ const pool=G?G.feastFood+G.food:0;
   if(confirm('Quit? You lose the WHOLE unbanked pool from this sitting — '+pool.toLocaleString()+' 🪙. Coins bank only at the Royal Feast.')){ log('quit_midsitting',{cycle:G.cycle,pool}); persist(); G=null; setMode('meta'); } }); // abandon → Home, pool forfeited, no stale state
 
 // ---- boot ----
+const vt=$('#verTag'); if(vt) vt.textContent=VERSION;
 resize(); reticle.x=WW/2; reticle.y=WH/2;
 setTab('farm'); refreshMeta();
 requestAnimationFrame(frame);
