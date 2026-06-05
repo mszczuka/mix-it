@@ -257,7 +257,7 @@
 
 <script>
 "use strict";
-const VERSION='v2.8.0 · 2026-06-05';   // bump on every push — visible on Home to verify deploys
+const VERSION='v2.9.0 · 2026-06-05';   // bump on every push — visible on Home to verify deploys
 /* ===== Harvest Kingdom v2 — COURSES & ROYAL FEAST ==========
    Continuous quota cycles ("courses"): fill the King's hunger
    bar → 🎃 Boss Crop (visible escape timer) → next course.
@@ -293,6 +293,10 @@ const CONFIG = {
   TUT_MUL:[0.35,0.5,0.6,0.7,0.8], // tutorial: 5 lessons, gentle quotas; one system per lesson
   EVENT_CHANCE: 0.45,    // chance a course rolls a field event (course-to-course variance)
   SPAWN_BASE: 2,         // base spawn batch size
+  // grass = INTERACTIVE BACKGROUND ONLY: fixed carpet, cuttable, regrows in place.
+  // It lives OUTSIDE the crop system — no field slots, no spawn weights, no economy.
+  GRASS_N: 110,          // blades on screen (× 1/zoom²)
+  GRASS_REGROW: 2.8,     // seconds for a cut blade to regrow where it stood
   SPAWN_PER_CLEAR: 15,   // +1 to spawn batch per 15 crops/s of clear rate (AoE builds keep a full field)
   // crown economy: spendable crowns bank sqrt-damped (tier gets the FULL pool) — exponential
   // income would otherwise buy the whole tree in ~5 sittings; sqrt keeps it "deep & expensive"
@@ -480,8 +484,9 @@ function renderTree(el){
     list.forEach((u,i)=>{
       const y=TOP+i*STEP, l=lv(u.id),maxed=l>=u.max,cost=upCost(u),open=unlockOk(u),afford=open&&king.crowns>=cost&&!maxed;
       const reqN=u.req?UP.find(n=>n.id===u.req.id):null;
-      const costTxt=maxed?'MAX':(open?cost+'👑':'🔒'+(reqN?reqN.icon+u.req.lv:''));
-      const tip=u.name+': '+u.eff(maxed?l:l+1)+(open?'':' — requires '+(reqN?reqN.name:'')+' lv '+u.req.lv);
+      const tierMiss=u.tier&&tierInfo(king.fp).tier<u.tier;
+      const costTxt=maxed?'MAX':(open?cost+'👑':'🔒'+(tierMiss?'⭐'+u.tier:(reqN?reqN.icon+u.req.lv:'')));
+      const tip=u.name+': '+u.eff(maxed?l:l+1)+(open?'':' — requires '+(tierMiss?'⭐ Tier '+u.tier:(reqN?reqN.name+' lv '+u.req.lv:'')));
       nodes+='<div class="tnode '+(maxed?'maxed ':l>0?'owned ':'')+(afford?'afford ':'')+(open?'':'locked')+'" style="left:'+x+'px;top:'+y+'px" onclick="buyUpgrade(\''+u.id+'\')" title="'+tip+'">'+
         '<div class="tn-box">'+u.icon+'</div><div class="tn-name">'+u.name.split(' ')[0]+'<br>'+l+'/'+u.max+'</div>'+
         '<div class="tn-cost'+(afford?'':' lk')+'">'+costTxt+'</div></div>';
@@ -505,7 +510,7 @@ const UP=[
   // 🌾 Crop MASTERY — crops are decided by the WORLD now; mastery makes them richer wherever they grow
   {id:'seeds',  cat:'crops',  name:'Wheat Mastery',    icon:'🌾', max:8,  base:2, eff:l=>'wheat +'+(l*12)+'% value · +'+(l*4)+' spawn weight'},
   {id:'corn',   cat:'crops',  name:'Corn Mastery',     icon:'🌽', max:5,  base:2, req:{id:'seeds',lv:2},  eff:l=>'corn +'+(l*12)+'% value · clusters'},
-  {id:'density',cat:'crops',  name:'Crop Density',     icon:'🌿', max:6,  base:4, req:{id:'corn',lv:1},   eff:l=>'+'+(l*15)+' crops on field'},
+  {id:'density',cat:'crops',  name:'Crop Density',     icon:'🌿', max:6,  base:4, req:{id:'corn',lv:1},   eff:l=>'+'+(l*3)+' crops on field'},
   {id:'spud',   cat:'crops',  name:'Potato Mastery',   icon:'🥔', max:5,  base:3, req:{id:'density',lv:1}, eff:l=>'potato +'+(l*12)+'% value · faster zapper'},
   {id:'ripen',  cat:'crops',  name:'Tender Crops',     icon:'🍃', max:5,  base:3, req:{id:'spud',lv:1},   eff:l=>'crops −'+(l*8)+'% HP'},
   {id:'tomato', cat:'crops',  name:'Tomato Mastery',   icon:'🍅', max:5,  base:3, req:{id:'ripen',lv:2},  eff:l=>'tomato +'+(l*12)+'% value · splatter '+(50+10*l)+'px'},
@@ -515,15 +520,15 @@ const UP=[
   {id:'frost',  cat:'crops',  name:'Frost Mastery',    icon:'❄️', max:4,  base:4, req:{id:'golden',lv:1}, eff:l=>'frost +'+(l*12)+'% value · freeze '+(2.5+0.5*l).toFixed(1)+'s'},
   {id:'chili',  cat:'crops',  name:'Chili Mastery',    icon:'🌶️', max:4,  base:4, req:{id:'frost',lv:1},  eff:l=>'chili +'+(l*12)+'% value · sun zone '+(4+l)+'s'},
   {id:'bloom',  cat:'crops',  name:'Mushroom Mastery', icon:'🍄', max:4,  base:3, req:{id:'chili',lv:1},  eff:l=>'mushroom +'+(l*12)+'% value · spore '+(8+4*l)+' dmg/'+(70+20*l)+'px'},
-  // 🚜 ABILITIES — player-triggered active casts on cooldowns; the LATE-game verb
-  // (roster slots unlock ⭐6/8/10 — early game stays on the scythe)
-  {id:'tractor', cat:'abil', name:'Tractor',      icon:'🚜', max:5, base:6, gate:true, eff:l=>'mows a '+(60+12*l)+'px lane across the field · CD '+Math.max(4,8-0.6*l).toFixed(1)+'s'+(l>=5?' · 2 passes':'')},
-  {id:'storm',   cat:'abil', name:'Scythe Storm', icon:'🌪️', max:5, base:6, gate:true, req:{id:'tractor',lv:2}, eff:l=>'burst R'+Math.round(110*(1+0.18*l))+' · '+(10+5*l)+' dmg · CD 5s'+(l>=5?' · 3 pulses':'')},
-  {id:'drone',   cat:'abil', name:'Harvest Drone',icon:'🛸', max:6, base:7, gate:true, req:{id:'storm',lv:2},   eff:l=>'zaps '+(4+l)+' best crops · CD 6s'+(l>=4?' · hits boss':'')},
-  {id:'magnet',  cat:'abil', name:'Magnet',       icon:'🧲', max:5, base:7, gate:true, req:{id:'drone',lv:2},   eff:l=>'pulls crops from '+(260+35*l)+'px to your finger · CD 9s'+(l>=5?' · combo ×2':'')},
-  {id:'ffreeze', cat:'abil', name:'Field Freeze', icon:'🧊', max:4, base:8, gate:true, req:{id:'magnet',lv:1},  eff:l=>'freezes combo decay + boss escape for '+(3+0.6*l).toFixed(1)+'s'},
-  {id:'goldrain',cat:'abil', name:'Golden Rain',  icon:'✨', max:4, base:8, gate:true, req:{id:'ffreeze',lv:1}, eff:l=>(6+2*l)+' crops turn GOLDEN · CD 14s'},
-  {id:'summon',  cat:'abil', name:'Royal Summons',icon:'📯', max:5, base:9, gate:true, req:{id:'goldrain',lv:1},eff:l=>'boss arrives at 50% quota · +'+(40+(l>=5?20:0))+'% boss coin · CD '+Math.max(12,18-1.5*l)+'s'},
+  // 🚜 ABILITIES — player-triggered active casts on cooldowns; the LATE-game verb.
+  // HARD-GATED by account Tier (node not buyable before) + late-game prices. Slots: ⭐6/8/10.
+  {id:'tractor', cat:'abil', name:'Tractor',      icon:'🚜', max:5, base:30, tier:6, gate:true, eff:l=>'mows a '+(60+12*l)+'px lane across the field · CD '+Math.max(4,8-0.6*l).toFixed(1)+'s'+(l>=5?' · 2 passes':'')},
+  {id:'storm',   cat:'abil', name:'Scythe Storm', icon:'🌪️', max:5, base:35, tier:6, gate:true, req:{id:'tractor',lv:2}, eff:l=>'burst R'+Math.round(110*(1+0.18*l))+' · '+(10+5*l)+' dmg · CD 5s'+(l>=5?' · 3 pulses':'')},
+  {id:'drone',   cat:'abil', name:'Harvest Drone',icon:'🛸', max:6, base:45, tier:7, gate:true, req:{id:'storm',lv:2},   eff:l=>'zaps '+(4+l)+' best crops · CD 6s'+(l>=4?' · hits boss':'')},
+  {id:'magnet',  cat:'abil', name:'Magnet',       icon:'🧲', max:5, base:55, tier:8, gate:true, req:{id:'drone',lv:2},   eff:l=>'pulls crops from '+(260+35*l)+'px to your finger · CD 9s'+(l>=5?' · combo ×2':'')},
+  {id:'ffreeze', cat:'abil', name:'Field Freeze', icon:'🧊', max:4, base:70, tier:8, gate:true, req:{id:'magnet',lv:1},  eff:l=>'freezes combo decay + boss escape for '+(3+0.6*l).toFixed(1)+'s'},
+  {id:'goldrain',cat:'abil', name:'Golden Rain',  icon:'✨', max:4, base:85, tier:9, gate:true, req:{id:'ffreeze',lv:1}, eff:l=>(6+2*l)+' crops turn GOLDEN · CD 14s'},
+  {id:'summon',  cat:'abil', name:'Royal Summons',icon:'📯', max:5, base:110,tier:10,gate:true, req:{id:'goldrain',lv:1},eff:l=>'boss arrives at 50% quota · +'+(40+(l>=5?20:0))+'% boss coin · CD '+Math.max(12,18-1.5*l)+'s'},
   // 🤖 Agents & Workers — ALL automation is bought, none is free
   {id:'hands',  cat:'agents', name:'Hired Hands',      icon:'👷', max:5,  base:5, eff:l=>l+' worker'+(l>1?'s':'')+' on the field'},
   {id:'wtools', cat:'agents', name:'Sharp Tools',      icon:'🔧', max:5,  base:4, req:{id:'hands',lv:1},  eff:l=>'workers +'+(l*15)+'% damage'},
@@ -537,7 +542,7 @@ const UP=[
   {id:'power',  cat:'econ',   name:'Sharper Cuts',     icon:'⚔️', max:8,  base:3, eff:l=>'+'+(l*18)+'% coins per crop'},
   {id:'tithe',  cat:'econ',   name:"King's Tithe",     icon:'👑', max:8,  base:4, req:{id:'power',lv:3}, eff:l=>'+'+(l*12)+'% coins (all)'},
 ];
-function unlockOk(u){ return !u.req || lv(u.req.id)>=u.req.lv; }
+function unlockOk(u){ return (!u.req || lv(u.req.id)>=u.req.lv) && (!u.tier || tierInfo(king.fp).tier>=u.tier); }
 function lv(id){ return (king.up&&king.up[id])||0; }
 function totalUpLv(){ let n=0; for(const k in (king.up||{})) n+=king.up[k]; return n; }
 function upCost(u){ return Math.round(u.base*CONFIG.COST_BASECOST*Math.pow(CONFIG.COST_GROWTH, lv(u.id))); } // deep & expensive
@@ -591,6 +596,7 @@ let WW=0, WH=0;                 // world size = screen / zoom (zoom<1 → camera
 function updateWorld(){ WW=CW/curZoom; WH=CH/curZoom;
   if(G){ // resize/rotation mid-run: re-clamp field objects into the new world
     for(const c of G.crops){ c.x=Math.min(Math.max(c.x,20),WW-20); c.y=Math.min(Math.max(c.y,100),WH-20); }
+    for(const b of (G.grass||[])){ b.x=Math.min(Math.max(b.x,15),WW-15); b.y=Math.min(Math.max(b.y,95),WH-15); }
     for(const o of (G.obs||[])){ o.x=Math.min(Math.max(o.x,o.r),WW-o.r); o.y=Math.min(Math.max(o.y,o.r+80),WH-o.r); }
     for(const sp of (G.sunspots||[])){ sp.x=Math.min(Math.max(sp.x,40),WW-40); sp.y=Math.min(Math.max(sp.y,100),WH-40); }
   }
@@ -638,6 +644,12 @@ function startRun(){
     const r=od.r[0]+rand()*(od.r[1]-od.r[0]);
     G.obs.push({t:od.t, r, x:r+30+rand()*(WW-2*r-60), y:r+110+rand()*(WH-2*r-160)});
   }}
+  // grass carpet — pure interactive BACKGROUND (cut → regrows in place; zero economy)
+  G.grass=[]; const gn=Math.round(CONFIG.GRASS_N/(curZoom*curZoom));
+  for(let i=0;i<gn;i++){ let gx=20+rand()*(WW-40), gy=100+rand()*(WH-130);
+    for(let t=0;t<6;t++){ if(!G.obs.some(o=>(o.x-gx)**2+(o.y-gy)**2<o.r*o.r)) break;
+      gx=20+rand()*(WW-40); gy=100+rand()*(WH-130); }
+    G.grass.push({x:gx,y:gy,sway:rand()*6.28,cut:0,grow:1}); }
   // synergy agents from cutting crops — start empty
   G.orbiters=[]; G.zappers=[]; G.rings=[];
   // Sunburn Spots — ACTIVE FROM RUN START based on your build (verified Agrivore: "on harvest start, spawn N damage spots")
@@ -749,11 +761,10 @@ function _estCore(){
     if(k.id==='tomato'){ tw+=w*2; hpSum+=w*2*3; coinSum+=w*2*1; } // splatter ≈ 2 extra wheat per tomato
     tw+=w; hpSum+=w*k.hp; coinSum+=w*k.coin; }
   tw=tw||1;
-  const grassW=kindWeight(CROP_KINDS[0]);
   const avgHP  = (hpSum/tw)*ripenMul || 3;
   const avgCoin= coinSum/tw || 1;
-  const valFrac= tw/(tw+grassW);
-  const clearRate = (fieldDPS*valFrac + (zapDPS+wTargeted)*0.9)/Math.max(0.5,avgHP) + abilClear;
+  // grass is pure background now — no value-fraction tax
+  const clearRate = (fieldDPS + (zapDPS+wTargeted)*0.9)/Math.max(0.5,avgHP) + abilClear;
   return {avgDmg,hitsPS,clearRate,avgCoin};
 }
 function estFieldClearRate(){ return _estCore().clearRate; }
@@ -774,7 +785,8 @@ function applyStats(){
   curGrassCol = loc.grass||'#6ea24a';
   curBladeR   = CONFIG.BLADE_R + 8*lv('blade');
   // the field GROWS with the stage — more and more on it, and you can still clear it
-  curMaxField = Math.round((110 + 15*lv('density'))*(1+0.06*stg)/(curZoom*curZoom));
+  // (VALUE crops only — grass is a separate background carpet now)
+  curMaxField = Math.round((18 + 3*lv('density'))*(1+0.06*stg)/(curZoom*curZoom));
   const frenzy=G&&G.event&&G.event.id==='frenzy', wIdx=LOCATIONS.indexOf(loc);
   // FIXED designed quota curve — your power races it; no estimator, no rubber-banding.
   // loc.mult cancels against income; the REAL resistance is WORLD_DIFF^world × STAGE_GROWTH^stage
@@ -787,13 +799,9 @@ function applyStats(){
 }
 
 function spawnCrop(instant){
-  if(G.crops.length>=curMaxField){
-    // field full → silently wilt one old grass blade (far from the scythe) to make room.
-    // Without this the field DEADLOCKS on grass and nothing new ever grows (tutorial bug).
-    const g=G.crops.find(c=>!c.dead&&c.kind.coin<=0&&((c.x-reticle.x)**2+(c.y-reticle.y)**2)>(curBladeR+40)**2);
-    if(!g) return;
-    g.dead=true; wiltPuff(g.x,g.y);
-  }
+  if(G.sweep) return;                            // Clean Sweep: no new value crops — mop to zero
+  if(G.crops.length>=curMaxField) return;        // simple cap — grass lives elsewhere, no deadlocks
+  const k=pickKind();
   const m=30; let x,y,ok=false;
   for(let i=0;i<24;i++){
     x=m+rand()*(WW-2*m); y=m+80+rand()*(WH-2*m-80);
@@ -805,7 +813,6 @@ function spawnCrop(instant){
     if(ok) break;
   }
   if(!ok) return;
-  const k=G&&G.sweep?CROP_KINDS[0]:pickKind();   // Clean Sweep: only grass regrows — the field CAN hit zero
   const goldenCh=lv('golden')*0.05+(G.event&&G.event.id==='golden'?0.25:0);  // 🌟 Golden Hour event
   const golden = k.coin>0 && rand()<goldenCh;
   const hp=Math.max(1,Math.round(k.hp*(golden?2:1)*(1-0.08*lv('ripen'))));  // Tender Crops lowers HP (capped −40%)
@@ -826,7 +833,6 @@ const ICON={grass:'🌿',wheat:'🌾',garlic:'🧄',potato:'🥔',mushroom:'🍄
 // crop kinds — coin value + HP per kind; specials spawn only when their tree node is leveled
 // AND the crop is in the active loadout (slots grow with King Tier)
 const CROP_KINDS=[
-  {id:'grass',    coin:0, hp:1,  baseW:70, up:null,     fx:null},   // dense reactive filler: 0 coins, 1 hit, respawns
   {id:'wheat',    coin:1, hp:3,  baseW:0,  up:null,     fx:null},   // 3 hits, 1 coin
   {id:'corn',     coin:2, hp:4,  baseW:0,  up:'corn',   fx:null},   // spawns in CLUSTERS — combo food
   {id:'potato',   coin:3, hp:6,  baseW:0,  up:'spud',   fx:'potato'},
@@ -848,9 +854,8 @@ const LOC_CROPS={
 };
 function masteryLv(cropId){ const k=CROP_KINDS.find(x=>x.id===cropId); return k&&k.up?lv(k.up):0; }
 function kindWeight(k){
-  if(k.id==='grass') return 70*(G&&G.event&&G.event.id==='overgrow'?2:1); // Overgrowth event doubles grass
   if(k.id==='wheat') return (G&&G.tutorial?26:12)+4*lv('seeds');
-  if(G&&G.tutorial) return 0;                  // tutorial field = grass + wheat only (no frills)
+  if(G&&G.tutorial) return 0;                  // tutorial field = wheat only (no frills)
   if(k.up){
     const loc=curLocation(), set=LOC_CROPS[loc.id]||[];
     const e=set.find(x=>x[0]===k.id);
@@ -1058,9 +1063,8 @@ function bumpCombo(c){
 }
 function harvestCrop(c,src){
   c.dead=true;
-  // combo chain: valuable cuts grow it, grass keeps it ALIVE (Overgrowth event: grass BUILDS it)
-  if(c.kind.coin>0){ if(!(G.tutorial&&G.cycle<1)) bumpCombo(c); }   // lesson 1: combo not introduced yet
-  else { G.comboT=0; if(G.event&&G.event.id==='overgrow') bumpCombo(c); }
+  // combo chain: every harvested crop grows it (lesson 1: combo not introduced yet)
+  if(!(G.tutorial&&G.cycle<1)) bumpCombo(c);
   const coin=c.kind.coin>0?Math.max(1,Math.round(c.kind.coin*curFoodMult*(c.golden?5:1)*G.comboMult
     *(1+0.12*masteryLv(c.kind.id)))):0;   // Crop Mastery: +12%/lv value wherever the world grows it
   G.food+=coin; G.harvested++;
@@ -1104,11 +1108,14 @@ function triggerFx(c){
     for(const o of G.crops){ if(o.dead||o===c) continue; if((o.x-c.x)**2+(o.y-c.y)**2<R*R) damage(o,dmg,'spore'); }
     G.rings.push({x:c.x,y:c.y,r:0,max:R,t:0,life:0.5});
   } else if(c.kind.fx==='tomato'){
-    // splatter: nearby grass becomes wheat (turns filler into value — combo food)
+    // splatter: wheat SPROUTS from the splashed grass patch (background → value, capped)
     const R=50+10*lv('tomato'); let n=0;
     const wheat=CROP_KINDS.find(k=>k.id==='wheat');
-    for(const o of G.crops){ if(o.dead||o.kind.id!=='grass') continue;
-      if((o.x-c.x)**2+(o.y-c.y)**2<R*R){ o.kind=wheat; o.hp=o.hpMax=3; o.r=CONFIG.CROP_R; n++; } }
+    for(const b of G.grass){ if(b.cut>0) continue;
+      if((b.x-c.x)**2+(b.y-c.y)**2<R*R && G.crops.length<curMaxField+4){
+        b.cut=CONFIG.GRASS_REGROW;
+        G.crops.push({x:b.x,y:b.y,r:CONFIG.CROP_R,grow:0.01,sway:rand()*6.28,kind:wheat,hp:3,hpMax:3,golden:false});
+        if(++n>=2+lv('tomato')) break; } }
     if(n>0) floatText(c.x,c.y-18,'🍅 +'+n+' 🌾','#ff8a6a');
     G.rings.push({x:c.x,y:c.y,r:0,max:R,t:0,life:0.4});
   } else if(c.kind.fx==='frost'){
@@ -1120,6 +1127,14 @@ function triggerFx(c){
     G.sunspots.push({x:c.x,y:c.y,cd:0,relocate:9999,ttl:4+lv('chili'),temp:true});
     floatText(c.x,c.y-18,'🌶️ SUN ZONE!','#ff9a3c');
   }
+}
+// grass cut: visual snip + regrow timer; quietly keeps the combo chain alive (no income, no slots)
+function cutGrass(b){
+  if(b.cut>0||b.grow<0.6) return;
+  b.cut=CONFIG.GRASS_REGROW*(0.7+rand()*0.6);
+  burst(b.x,b.y,'#8fce6a',4); pop(0.35);
+  G.comboT=0;
+  if(G.event&&G.event.id==='overgrow') bumpCombo(b);   // Overgrowth: grass BUILDS combo
 }
 function floatDmg(x,y,amt){ G.floats.push({x:x+(rand()*8-4),y:y-4,t:''+Math.round(amt),col:'#ff8a6a',age:0,life:.45,sm:true}); }
 function floatText(x,y,t,col){ G.floats.push({x,y,t,col:col||'#fff3c4',age:0,life:.85}); }
@@ -1191,6 +1206,10 @@ function update(dt){
     if(c.grow<1) c.grow=Math.min(1,c.grow+dt/CONFIG.GROW_TIME);
     c.sway+=dt*2; if(c.hitCd>0) c.hitCd-=dt;
   }
+  // grass carpet: sway + regrow in place
+  for(const b of G.grass){ b.sway+=dt*2;
+    if(b.cut>0){ b.cut-=dt; if(b.cut<=0) b.grow=0.01; }
+    else if(b.grow<1) b.grow=Math.min(1,b.grow+dt/0.5); }
 
   // one click = one full 360° swing; blade harvests only while a swing is in progress
   if(lv('whirl')>0){ G.autoT-=dt; if(G.autoT<=0){ // Whirlwind auto-swing — Double Swing procs here too
@@ -1214,6 +1233,11 @@ function update(dt){
         if(isCrit){ dmg*=(2+0.5*lv('critpow')); floatText(c.x,c.y-14,'CRIT!','#ffd24a'); burst(c.x,c.y,'#fff2a8',6); }
         damage(c,dmg); c.hitCd=0.18; }
     }
+    // the swing also snips the grass carpet (pure visuals/feel)
+    for(const b of G.grass){ if(b.cut>0||b.grow<0.6) continue;
+      for(let s=0;s<=steps;s++){ const a=prevAng+(G.bladeAng-prevAng)*(s/steps);
+        const ex=reticle.x+Math.cos(a)*curBladeR, ey=reticle.y+Math.sin(a)*curBladeR;
+        if(distToSeg(b.x,b.y,reticle.x,reticle.y,ex,ey)<10+CONFIG.BLADE_CUT){ cutGrass(b); break; } } }
   } else if(blade.trail.length){ blade.trail.shift(); } // fade trail when idle
 
   // ── garlic orbiters: circle the player and damage ripe crops by CONTACT ──
@@ -1247,6 +1271,14 @@ function update(dt){
   const wDmg=(CONFIG.SCYTHE_DMG+1.5*lv('steel'))*0.5*(1+0.15*lv('wtools'));   // Heavy Steel + Sharp Tools
   for(const w of G.workers){
     if(w.swing>0) w.swing-=dt;
+    if(w.role==='mower'){ // mower works the grass CARPET (background layer)
+      if(!w.gt||w.gt.cut>0){ w.gt=null; let bd=1e9;
+        for(const b of G.grass){ if(b.cut>0) continue; const d=(b.x-w.x)**2+(b.y-w.y)**2; if(d<bd){bd=d;w.gt=b;} } }
+      if(w.gt){ const dx=w.gt.x-w.x, dy=w.gt.y-w.y, d=Math.hypot(dx,dy)||1;
+        if(d>14){ w.x+=dx/d*90*dt; w.y+=dy/d*90*dt; }
+        else { cutGrass(w.gt); w.swing=0.15; w.gt=null; } }
+      continue;
+    }
     // (re)target by role
     if(!w.tgt||w.tgt.dead){
       w.tgt=null;
@@ -1254,13 +1286,11 @@ function update(dt){
       else {
         let best=null,bd=1e9;
         for(const c of G.crops){ if(c.dead||c.boss) continue;
-          const grass=c.kind.coin<=0;
-          if(w.role==='mower'?!grass:grass) continue;
           if(w.role==='forager'&&!c.golden) continue;
           const d=(c.x-w.x)**2+(c.y-w.y)**2; if(d<bd){bd=d;best=c;}
         }
         if(!best&&w.role==='forager'){ // no golden on field → behave like a reaper
-          for(const c of G.crops){ if(c.dead||c.boss||c.kind.coin<=0) continue;
+          for(const c of G.crops){ if(c.dead||c.boss) continue;
             const d=(c.x-w.x)**2+(c.y-w.y)**2; if(d<bd){bd=d;best=c;} } }
         w.tgt=best;
       }
@@ -1294,12 +1324,14 @@ function update(dt){
   // 🚜 tractors — drive across the field, mow everything in the lane
   for(const tr of G.tractors){ tr.x+=tr.v*dt;
     for(const c of G.crops){ if(c.dead||c.boss) continue;
-      if(Math.abs(c.y-tr.y)<tr.band && c.x<tr.x && c.x>tr.x-60) damage(c,tr.dmg,'tractor'); } }
+      if(Math.abs(c.y-tr.y)<tr.band && c.x<tr.x && c.x>tr.x-60) damage(c,tr.dmg,'tractor'); }
+    for(const b of G.grass){ if(b.cut<=0&&Math.abs(b.y-tr.y)<tr.band&&b.x<tr.x&&b.x>tr.x-60) cutGrass(b); } }
   G.tractors=G.tractors.filter(tr=>tr.x<WW+80);
   // 🌪️ storm pulses
   for(const p of G.pulses){ p.t+=dt;
     if(p.t>=0&&!p.fired){ p.fired=true; G.rings.push({x:p.x,y:p.y,r:0,max:p.R,t:0,life:0.4});
-      for(const c of G.crops){ if(c.dead) continue; if((c.x-p.x)**2+(c.y-p.y)**2<p.R*p.R) damage(c,p.dmg,'storm'); } } }
+      for(const c of G.crops){ if(c.dead) continue; if((c.x-p.x)**2+(c.y-p.y)**2<p.R*p.R) damage(c,p.dmg,'storm'); }
+      for(const b of G.grass){ if(b.cut<=0&&(b.x-p.x)**2+(b.y-p.y)**2<p.R*p.R) cutGrass(b); } } }
   G.pulses=G.pulses.filter(p=>!p.fired||p.t<0.5);
   // 🧲 magnet — pulled crops fly to the finger and harvest on arrival
   for(const c of G.crops){ if(!c.pull||c.dead) continue;
@@ -1329,6 +1361,7 @@ function render(){
   for(let y=40;y<WH;y+=38){ ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(WW,y); ctx.stroke(); }
 
   if(G){
+    for(const b of G.grass) drawGrass(b);   // background carpet first
     for(const o of G.obs) drawObstacle(o);
     for(const c of G.crops) drawCrop(c);
     // particles
@@ -1369,6 +1402,18 @@ function render(){
     drawScythe();
   }
   ctx.restore();
+}
+function drawGrass(b){
+  if(b.cut>0){ // stubble while regrowing
+    ctx.strokeStyle=curGrassCol; ctx.globalAlpha=0.35; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(b.x-3,b.y+4); ctx.lineTo(b.x-3,b.y); ctx.moveTo(b.x+3,b.y+4); ctx.lineTo(b.x+3,b.y);
+    ctx.stroke(); ctx.globalAlpha=1; return;
+  }
+  const s=b.grow, r=13*s, sw=Math.sin(b.sway)*2;
+  ctx.strokeStyle=curGrassCol; ctx.lineWidth=2.5*s; ctx.lineCap='round';
+  ctx.beginPath(); ctx.moveTo(b.x,b.y+r*0.4); ctx.lineTo(b.x-r*0.32+sw,b.y-r*0.5);
+  ctx.moveTo(b.x,b.y+r*0.4); ctx.lineTo(b.x+sw,b.y-r*0.75);
+  ctx.moveTo(b.x,b.y+r*0.4); ctx.lineTo(b.x+r*0.32+sw,b.y-r*0.5); ctx.stroke();
 }
 function drawWorker(w){
   const R=WORKER_ROLES.find(r=>r.id===w.role)||WORKER_ROLES[0];
@@ -1440,15 +1485,6 @@ function drawCrop(c){
     ctx.globalAlpha=gp; ctx.strokeStyle='#fff2a8'; ctx.lineWidth=3.5; ctx.beginPath(); ctx.arc(x,y-r*0.3,r*1.3,0,6.283); ctx.stroke();
     ctx.lineWidth=1.5; ctx.beginPath(); ctx.arc(x,y-r*0.3,r*1.55,0,6.283); ctx.stroke(); ctx.globalAlpha=1;
     ctx.textAlign='center'; ctx.font='bold 12px sans-serif'; ctx.fillStyle='#fff2a8'; ctx.fillText('★',x,y-r*1.8);
-  }
-  if(k==='grass'){
-    ctx.strokeStyle=curGrassCol; ctx.lineWidth=2.5*s; ctx.lineCap='round';
-    const sw=Math.sin(c.sway)*2;
-    ctx.beginPath(); ctx.moveTo(x,y+r*0.4); ctx.lineTo(x-r*0.32+sw,y-r*0.5);
-    ctx.moveTo(x,y+r*0.4); ctx.lineTo(x+sw,y-r*0.75);
-    ctx.moveTo(x,y+r*0.4); ctx.lineTo(x+r*0.32+sw,y-r*0.5); ctx.stroke();
-    if(c.hp<c.hpMax){} // (1-hit, no bar needed)
-    return;
   }
   // soil mound (for planted crops)
   ctx.fillStyle='#4a3320'; ctx.beginPath(); ctx.ellipse(x,y+r*0.5,r*0.9,r*0.4,0,0,6.283); ctx.fill();
