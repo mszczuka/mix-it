@@ -80,6 +80,7 @@
   .wear-track{flex:1;height:12px;background:#0000001a;border-radius:var(--pill);overflow:hidden}
   .wear-fill{height:100%;width:100%;background:linear-gradient(90deg,#6aa15a,#a7c957);transition:width .15s,background .3s}
   .wear-fill.low{background:linear-gradient(90deg,#c45b43,#e08a3c)}
+  .wear-fill.overdrive{background:linear-gradient(90deg,#f4b54a,#e8643a);box-shadow:0 0 8px #f4a23a}
   #tapHint{position:absolute;left:0;right:0;top:46%;text-align:center;color:#00000033;font-size:20px;
     font-weight:800;pointer-events:none;font-family:var(--f-display);transition:opacity .4s}
 
@@ -381,8 +382,11 @@ window.addEventListener("error", function(e){
    - LANES = leveling targets only. Lane tiles (home strip + Products) LEVEL a veg
      (value + passive auto-cutter at laneAutoUnlockLevel). Auto-cutters are discrete
      timed cuts (autoCutBaseMs/cutCycleMs/autoProg) — passive coin income, no stamina.
-   - STAMINA gate: a manual slice costs staminaPerSlice; blocked at 0; regen runs always
-     (incl. boss). Stamina + Stamina Regen upgrades.
+   - STAMINA = OVERDRIVE FUEL (v3 active-tapper patch): slicing is NEVER blocked. At/above
+     staminaOverdriveThreshold, holding engages Overdrive (×value, ×speed) which drains stamina
+     (scaled by combo); at 0 it drops to Normal (no drain, no block) and regen (×emptyRegenMult)
+     re-arms it. Auto-Slicer is decoupled (idle, own tempo, ZERO stamina). Stamina/Regen upgrades
+     = bigger pool / faster re-arm. (Was: hard block at 0.)
    - GLOBAL upgrades: Income Multiplier / Slice Speed / Auto Slice Speed + Stats card.
    - GEAR (Knife/Board/Plate); coins + gems currencies.
    - CASH PRODUCT UNLOCK: unlockCost/unlockMult + one-time affordability popup.
@@ -411,6 +415,12 @@ const CONFIG = {
   staminaCostBase: 800, staminaCostGrowth: 1.4,          // [balans] growth 1.6->1.4 — stamina/regen are the only real active throttle; keep them buyable but on a steady curve so the gate is not instantly removed
   staminaRegenCostBase: 1100, staminaRegenCostGrowth: 1.4, // [balans] growth 1.6->1.4 — same reasoning; regen is the true coins/min cap for held play
   staminaRefillGems: 1,                                  // [balans] instant full refill costs GEMS (premium impatience lever + gem sink; not spammable with gold)
+  // ---- v3 [active-tapper patch]: STAMINA OVERDRIVE (no hard block — stamina is now a risk/reward fuel) ----
+  staminaOverdriveThreshold: 15,     // stamina >= this & slicing => Overdrive engages (rides down to 0, then drops to Normal — never blocks)
+  staminaOverdriveValueMult: 1.8,    // ×coin value per slice while in Overdrive
+  staminaOverdriveSpeedMult: 1.35,   // ×hold-slice speed while in Overdrive
+  staminaEmptyRegenMult: 2.0,        // regen ×2 while empty (fast re-arm so Overdrive returns quickly)
+  staminaOverdriveDrainPerSlice: 1,  // base stamina spent per slice IN Overdrive (scaled by combo); Normal slicing spends NONE
   offlineRatePct: 0.5,        // fraction of estimated active rate
   offlineCapHours: 8,
   offlineAssumedSps: 1.4,     // assumed slices/sec for offline estimate
@@ -453,7 +463,9 @@ const CONFIG = {
   autoSpeedCostBase: 600, autoSpeedCostGrowth: 1.35,    // [balans] was 400 / 1.7 — gentler growth keeps later auto-speed buys reachable but meaningful
   // ---- v2.7: AUTO-SLICER — one-time gold unlock that auto-cuts the CURRENT front veg (NOT the per-lane passive autos) ----
   autoChefCost: 4000,             // [balans: economy] one-time unlock (gated to chapter 3)
-  // autoChefBaseMs removed — Auto-Slicer now uses holdInterval() (same speed as hold, scales with Slice Speed)
+  // ---- v3 [active-tapper patch]: Auto-Slicer is IDLE — own fixed tempo, ZERO stamina (decoupled from active play) ----
+  autoChefBaseMs: 1500,           // fixed ~0.67 cuts/s (does NOT scale with Slice Speed; idle stays subordinate to active)
+  autoChefSpeedPerLevel: 0.10,    // optional separate idle upgrade (level defaults 0; no UI yet)
 };
 
 const INGREDIENTS = [
@@ -481,7 +493,7 @@ const SCHEMA_DEFAULT = {
     incomeLevel:0, sliceSpeedLevel:0, autoSpeedLevel:0,    // global stat upgrades
     staminaLevel:0, staminaRegenLevel:0,                  // STAMINA upgrades
     chapter:0, chapterEarned:0,                           // BOSS-GATED CHAPTERS — chapterEarned accrues every coin; at chapterGoal() the boss CTA appears
-    autoChef:false},                                      // v2.7: one-time Auto-Slicer unlock (auto-cuts the current front veg)
+    autoChef:false, autoChefSpeedLevel:0},                // v2.7: one-time Auto-Slicer unlock; v3: its own idle-speed level (decoupled from Slice Speed)
   lanes:INGREDIENTS.map(()=>({level:0,auto:false,autoProg:0})), // one per ingredient (autoProg = discrete auto-cut cycle 0..1) — dynamic so adding products needs no length sync
   gear:{knife:0, board:0, plate:0},                   // 0=none 1=Common 2=Rare 3=Epic
   stamina:{cur:CONFIG.staminaMaxBase},                // active-cut gate — manual slice spends staminaPerSlice; regens over time
@@ -619,6 +631,9 @@ function gearUpgradeCost(slot){ return Math.floor(CONFIG.gearUpgradeCostBase*Mat
 let combo = 0;            // count
 let lastSliceAt = 0;
 function comboMult(){ return 1 + Math.min(combo,CONFIG.comboMax)*effComboStep(); }
+// v3 [active-tapper patch]: Overdrive — true while riding the stamina fuel (engages at threshold, drops to Normal at 0). Never blocks slicing.
+let overdrive = false;
+function overdriveOn(){ return overdrive; }
 
 // ============================================================
 //  AUDIO (synth, no assets)
@@ -760,9 +775,16 @@ function spawnProduce(){ serveNext(); }
 
 function sliceOne(){
   if(!produce || produce.left<=0) return;
-  // v4: STAMINA gate — a manual slice costs staminaPerSlice. Out of stamina → blocked (auto-cutters bypass this entirely).
-  if((state.stamina.cur||0) < CONFIG.staminaPerSlice){ return; }
-  state.stamina.cur = Math.max(0, (state.stamina.cur||0) - CONFIG.staminaPerSlice);
+  // v3 [active-tapper patch]: STAMINA is now a risk/reward FUEL, not a hard gate. Slicing is NEVER blocked.
+  //   stamina >= threshold → Overdrive engages (boosted value+speed, drains stamina, scaled by combo);
+  //   stamina hits 0 → drop to Normal (base value+speed, NO drain) and regen re-arms it. (auto-cutters never touch this pool)
+  if(!overdrive && (state.stamina.cur||0) >= CONFIG.staminaOverdriveThreshold) overdrive=true;
+  if(overdrive){
+    const drain = CONFIG.staminaOverdriveDrainPerSlice * comboMult();   // higher combo burns faster = the risk side of the lever
+    state.stamina.cur = Math.max(0, (state.stamina.cur||0) - drain);
+    if((state.stamina.cur||0) <= 0) overdrive=false;                    // empty → drop to Normal (no block)
+  }
+  const odVal = overdrive ? CONFIG.staminaOverdriveValueMult : 1;
   // v4: slicing is always 1 tap → 1 slice (multi-tap wear gate removed)
   const t=nowMs();
   // combo builds once per TAP (not per slice) — multi-slice is yield/tap, orthogonal to combo
@@ -771,7 +793,7 @@ function sliceOne(){
   if(rush && combo>rush.maxCombo) rush.maxCombo=combo;
   // v2.2: ALWAYS exactly one slice per cut (multi-slice removed)
   const n=1;
-  const per=coinsPerSlice(comboMult(), produce.ing.val*laneMult(produce.idx)*(produce.valMul||1));
+  const per=coinsPerSlice(comboMult(), produce.ing.val*laneMult(produce.idx)*(produce.valMul||1)) * odVal;
   const gain=per;
   state.stats.totalSlices+=n;
   // CHANGE 4: boss is a TIMED DISH-RUSH — slices bank to the current dish exactly like the core (no per-slice score/coins).
@@ -796,13 +818,12 @@ function sliceOne(){
 }
 
 // v2.7: AUTO-SLICER — combo-NEUTRAL slice of the CURRENT front veg. Same dish-bank/advance/complete path as sliceOne,
-// minus the combo++ (so combo decays unless the player taps) and with lighter juice. Shares the stamina pool + gate.
+// minus the combo++ (so combo decays unless the player taps) and with lighter juice.
+// v3 [active-tapper patch]: decoupled from stamina — idle pool, never spends/gates on the active stamina fuel.
 function autoChefSlice(){
   if(!produce || produce.left<=0) return;
   if(rush) return;                                                  // OFF during the boss (pure manual)
-  if((state.stamina.cur||0) < CONFIG.staminaPerSlice){ return; }    // WAIT for stamina regen — do NOT slice this tick
-  state.stamina.cur = Math.max(0, (state.stamina.cur||0) - CONFIG.staminaPerSlice);
-  // uses CURRENT comboMult() but does NOT increment combo (combo-neutral)
+  // v3: NO stamina cost — Auto-Slicer is idle, runs on its own tempo; uses CURRENT comboMult() but does NOT increment combo, and gets NO Overdrive boost
   const per=coinsPerSlice(comboMult(), produce.ing.val*laneMult(produce.idx)*(produce.valMul||1));
   const gain=per;
   state.stats.totalSlices+=1;
@@ -830,10 +851,12 @@ function startAutoLoop(){
     // particles. Skip ALL loop work while hidden — no particle/flyer spawn, no accumulator growth, no resume-burst lag.
     // Away income is granted on resume via checkOffline() (the proper capped offline path).
     if(document.hidden) return;
-    // v4: STAMINA regen, 0.1s tick
+    // v4: STAMINA regen, 0.1s tick. v3 [active-tapper patch]: ×staminaEmptyRegenMult while empty so Overdrive re-arms fast.
     const sm=staminaMax();
     if((state.stamina.cur||0) < sm){
-      state.stamina.cur = Math.min(sm, (state.stamina.cur||0) + staminaRegen()*0.1);
+      const empty=(state.stamina.cur||0)<=0;
+      const reg=staminaRegen()*(empty?CONFIG.staminaEmptyRegenMult:1);
+      state.stamina.cur = Math.min(sm, (state.stamina.cur||0) + reg*0.1);
       renderStamina();
     }
     autoChefTick();                             // v2.7: drive the front-veg Auto-Slicer off this same 100ms tick (boss/own gates checked inside)
@@ -866,16 +889,15 @@ function updateAutoRings(){
 let autoChefAcc=0;
 function autoChefOwned(){ return !!state.progression.autoChef; }
 function autoChefActive(){ return autoChefOwned() && state.flags.autoChefOn && !rush && !!produce; }   // OFF in boss / not owned / toggled off / no produce
-// IDENTICAL speed to manual hold-slicing — same interval (per-veg cutFactor + Slice Speed upgrade + carry "fast")
-function autoChefMs(){ return holdInterval(); }
+// v3 [active-tapper patch]: Auto-Slicer runs on its OWN fixed idle tempo — NOT holdInterval() (so it never inherits Slice Speed or Overdrive)
+function autoChefMs(){ return CONFIG.autoChefBaseMs / (1 + (state.progression.autoChefSpeedLevel||0)*CONFIG.autoChefSpeedPerLevel); }
 function autoChefTick(){
   if(!stageReady || !autoChefActive()){ autoChefAcc=0; return; }   // stop cleanly; reset so it doesn't burst on resume
   autoChefAcc += 100;                                             // this loop ticks every 100ms
   const iv=autoChefMs();                                          // = holdInterval(): matches hold speed, scales with Slice Speed
   // fire as many slices as the interval allows this tick (matches hold throughput even when iv < 100ms at high Slice Speed)
   while(autoChefAcc >= iv){
-    if((state.stamina.cur||0) < CONFIG.staminaPerSlice) break;    // out of stamina → WAIT (keep acc); resumes on regen
-    autoChefAcc -= iv;
+    autoChefAcc -= iv;                                            // v3: no stamina gate — idle auto-slicer is decoupled from the active pool
     autoChefSlice();
   }
   if(autoChefAcc > iv*4) autoChefAcc = iv;                        // clamp runaway accumulation
@@ -1018,16 +1040,14 @@ function drawFloater(f){
   ctx.globalAlpha=1; return true;
 }
 
-// v4: out-of-stamina hint on the board (replaces the old blade-wear warnings)
+// v3 [active-tapper patch]: stamina no longer BLOCKS — show a subtle, non-alarming "recharging" cue while Overdrive re-arms (never the old red wall)
 function drawStaminaWarn(){
-  if((state.stamina.cur||0) >= CONFIG.staminaPerSlice) return;
+  if(overdriveOn() || (state.stamina.cur||0) >= CONFIG.staminaOverdriveThreshold) return;   // in Overdrive or already re-armed → nothing
   ctx.textAlign="center"; ctx.textBaseline="middle";
   const y=CH*0.40;
-  ctx.globalAlpha=0.5+0.5*Math.abs(Math.sin(performance.now()/200));
-  ctx.font="800 22px Georgia,serif"; ctx.fillStyle="#c45b43";
-  ctx.fillText("OUT OF STAMINA 💪", CW/2, y); ctx.globalAlpha=1;
-  ctx.font="600 14px system-ui"; ctx.fillStyle="#9a4a3c";
-  ctx.fillText("Regenerating…", CW/2, y+24);
+  ctx.globalAlpha=0.35;
+  ctx.font="600 13px system-ui"; ctx.fillStyle="#8c7a6b";
+  ctx.fillText("⚡ recharging Overdrive…", CW/2, y); ctx.globalAlpha=1;
 }
 function drawBoardStatus(){
   // v2: produce respawns endlessly; this is just a transient gap between veg — nothing to show
@@ -1057,8 +1077,9 @@ function loop(){
 
 // v2.1: HOLD-TO-SLICE — pointerdown slices once + starts a self-rescheduling auto-fire while held.
 let holdTimer=null;
-function holdInterval(){   // recompute each fire so per-veg cutFactor + Slice Speed upgrade take effect live
-  return Math.max(CONFIG.holdMinMs, CONFIG.holdBaseMs * (produce ? produce.ing.cutFactor : 1) / (sliceSpeedMult() * carryMult("fast")));
+function holdInterval(){   // recompute each fire so per-veg cutFactor + Slice Speed upgrade + Overdrive take effect live
+  const od = overdriveOn() ? CONFIG.staminaOverdriveSpeedMult : 1;   // v3 [active-tapper patch]: Overdrive speeds the hold fire-rate
+  return Math.max(CONFIG.holdMinMs, CONFIG.holdBaseMs * (produce ? produce.ing.cutFactor : 1) / (sliceSpeedMult() * carryMult("fast") * od));
 }
 function holdFire(){
   if(!stageReady){ stopHold(); return; }
@@ -1123,8 +1144,8 @@ function renderCombo(){
 // v4: stamina bar (replaces wear row) — always visible, including during the boss
 function renderStamina(){
   const cur=Math.floor(state.stamina.cur||0), max=staminaMax(), frac=max>0?cur/max:0;
-  const f=document.getElementById("staminaFill"); if(f){ f.style.width=Math.min(100,frac*100)+"%"; f.classList.toggle("low", frac<0.25); }
-  const t=document.getElementById("staminaTxt"); if(t) t.textContent="💪 "+cur+"/"+max;
+  const f=document.getElementById("staminaFill"); if(f){ f.style.width=Math.min(100,frac*100)+"%"; f.classList.toggle("low", frac<0.25); f.classList.toggle("overdrive", overdriveOn()); }
+  const t=document.getElementById("staminaTxt"); if(t) t.textContent=(overdriveOn()?"⚡ ":"💪 ")+cur+"/"+max;
   const b=document.getElementById("staminaBtn");
   if(b){
     const c=staminaRefillCost(), full=cur>=max, afford=!full && state.currencies.gems>=c;
@@ -1165,7 +1186,7 @@ function renderUpgrades(){
     if(show){
       const owned=!!state.progression.autoChef, acb=document.getElementById("acBuy");
       document.getElementById("acLvl").textContent=owned?"Owned ✓":"One-time unlock";
-      document.getElementById("acEff").textContent="Auto-cuts the front veg (uses stamina; toggle on Home)";
+      document.getElementById("acEff").textContent="Auto-cuts the front veg (idle — no stamina; toggle on Home)";
       if(owned){ acb.textContent="Owned ✓"; acb.disabled=true; acb.classList.remove("cta"); acb.classList.add("ghost"); }
       else { acb.innerHTML='Unlock<br><span class="cost">🪙 '+fmt(CONFIG.autoChefCost)+'</span>'; acb.disabled=state.currencies.coins<CONFIG.autoChefCost; acb.classList.add("cta"); acb.classList.remove("ghost"); }
     }
@@ -1427,7 +1448,7 @@ function startBoss(){
   const goal=chapterGoal();
   rush={ timeLeft:CONFIG.bossDuration, dishes:0, score:0, maxCombo:0, boss:true,
     need:{ bronze:Math.floor(goal*CONFIG.bossGoldFrac.bronze), silver:Math.floor(goal*CONFIG.bossGoldFrac.silver), gold:Math.floor(goal*CONFIG.bossGoldFrac.gold) } };
-  combo=0;
+  combo=0; overdrive=false;             // v3 [active-tapper patch]: reset Overdrive so the boss starts on a fresh full-fuel ride
   state.stamina.cur=staminaMax();       // v4: refill stamina at boss start so the boss is fair (still drains/regens during it)
   dish=null;                            // fresh dish for the rush
   spawnPlate(false); produce=null; serveNext();   // auto-serve the first recipe veg (same pipeline as the core)
@@ -1592,8 +1613,11 @@ const cheats=document.getElementById("cheats");
 function buildCheats(){
   const sliders=[
     ["coinsPerSliceBase",0.5,10,0.5],["comboStep",0,0.5,0.01],
-    ["comboDecayMs",800,4000,100],["staminaPerSlice",0,10,1],["staminaRegenBase",1,50,1],
-    ["autoCutBaseMs",300,4000,100],["laneValPerLevel",0.02,1,0.02],
+    ["comboDecayMs",800,4000,100],["staminaRegenBase",1,50,1],
+    // v3 [active-tapper patch]: live Overdrive knobs (replaced the now-vestigial staminaPerSlice slider)
+    ["staminaOverdriveThreshold",0,100,5],["staminaOverdriveValueMult",1,3,0.1],
+    ["staminaOverdriveSpeedMult",1,2.5,0.05],["staminaEmptyRegenMult",1,5,0.5],
+    ["autoCutBaseMs",300,4000,100],["autoChefBaseMs",300,4000,100],["laneValPerLevel",0.02,1,0.02],
     ["offlineRatePct",0,1,0.05],["offlineCapHours",1,24,1],
     ["staminaMaxBase",20,500,10],
   ];
