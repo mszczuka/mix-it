@@ -80,7 +80,6 @@
   .wear-track{flex:1;height:12px;background:#0000001a;border-radius:var(--pill);overflow:hidden}
   .wear-fill{height:100%;width:100%;background:linear-gradient(90deg,#6aa15a,#a7c957);transition:width .15s,background .3s}
   .wear-fill.low{background:linear-gradient(90deg,#c45b43,#e08a3c)}
-  .wear-fill.overdrive{background:linear-gradient(90deg,#f4b54a,#e8643a);box-shadow:0 0 8px #f4a23a}
   #tapHint{position:absolute;left:0;right:0;top:46%;text-align:center;color:#00000033;font-size:20px;
     font-weight:800;pointer-events:none;font-family:var(--f-display);transition:opacity .4s}
 
@@ -154,12 +153,7 @@
   .draft-card .dc-eff{font-size:13px;color:var(--c-muted);margin-top:2px}
   .draft-card.tradeoff{border-color:#d9803288}
 
-  /* ---- v3 [active-tapper patch]: CTAs / daily ---- */
-  #prestigeCta{position:absolute;right:10px;top:46px;z-index:8;display:none;align-items:center;gap:5px;min-height:0;
-    background:linear-gradient(135deg,#7a5cff,#b06cff);color:#fff;font-weight:800;font-size:13px;padding:7px 12px;border-radius:9999px;
-    box-shadow:0 4px 14px rgba(100,60,200,.45)}
-  #prestigeCta.on{display:inline-flex}
-  #surgeBtn{white-space:nowrap}
+  /* ---- v3 [active-tapper patch]: daily ---- */
   #dailyChip{cursor:pointer;position:relative}
   #dailyChip .dot{position:absolute;top:-3px;right:-3px;width:8px;height:8px;border-radius:50%;background:var(--c-danger);display:none}
   #dailyChip.alert .dot{display:block}
@@ -215,7 +209,6 @@
         <div id="carryBadge"></div>
         <button id="autoChefToggle"></button>
         <button id="bossCta"></button>
-        <button id="prestigeCta"></button>
         <div id="comboBar"><span class="lbl">combo</span><span id="comboVal">x1.0</span></div>
         <canvas id="sliceCanvas"></canvas>
         <div id="tapHint">TAP TO SLICE</div>
@@ -224,7 +217,6 @@
           <span class="wtxt" id="staminaTxt">💪 0/0</span>
           <div class="wear-track"><div class="wear-fill" id="staminaFill"></div></div>
           <button class="ghost" id="staminaBtn"></button>
-          <button class="ghost" id="surgeBtn"></button>
         </div>
       </div>
     </section>
@@ -372,20 +364,6 @@
     </div>
   </div>
 
-  <!-- v3: PRESTIGE confirm -->
-  <div class="modal" id="prestigeModal">
-    <div class="box">
-      <h3>⭐ Prestige</h3>
-      <div class="lvl">Reset your kitchen for a permanent boost</div>
-      <div class="amt" id="pmGain">+0 ⭐</div>
-      <div class="big" id="pmMult" style="color:#7a5cff"></div>
-      <div class="lvl" id="pmWarn" style="margin-top:8px"></div>
-      <button class="cta wide" id="pmDo" style="margin:16px 0 0">Prestige now</button>
-      <button class="ghost wide" id="pmSkip" style="margin:8px 0 0"></button>
-      <button class="ghost wide" id="pmCancel" style="margin:8px 0 0">Later</button>
-    </div>
-  </div>
-
   <!-- v3: DAILY PRESSURE SLATE -->
   <div class="modal" id="dailyModal">
     <div class="box" style="text-align:left;max-width:360px">
@@ -428,11 +406,9 @@ window.addEventListener("error", function(e){
    - LANES = leveling targets only. Lane tiles (home strip + Products) LEVEL a veg
      (value + passive auto-cutter at laneAutoUnlockLevel). Auto-cutters are discrete
      timed cuts (autoCutBaseMs/cutCycleMs/autoProg) — passive coin income, no stamina.
-   - STAMINA = OVERDRIVE FUEL (v3 active-tapper patch): slicing is NEVER blocked. At/above
-     staminaOverdriveThreshold, holding engages Overdrive (×value, ×speed) which drains stamina
-     (scaled by combo); at 0 it drops to Normal (no drain, no block) and regen (×emptyRegenMult)
-     re-arms it. Auto-Slicer is decoupled (idle, own tempo, ZERO stamina). Stamina/Regen upgrades
-     = bigger pool / faster re-arm. (Was: hard block at 0.)
+   - STAMINA gate (GOLD SINK): a manual slice costs staminaPerSlice; blocked at 0; regen runs always
+     (incl. boss). Stamina + Stamina Regen upgrades are the main active-play gold sink.
+     Auto-Slicer is decoupled (idle, own tempo, ZERO stamina) so idle never drains the active pool.
    - GLOBAL upgrades: Income Multiplier / Slice Speed / Auto Slice Speed + Stats card.
    - GEAR (Knife/Board/Plate); coins + gems currencies.
    - CASH PRODUCT UNLOCK: unlockCost/unlockMult + one-time affordability popup.
@@ -461,13 +437,6 @@ const CONFIG = {
   staminaCostBase: 800, staminaCostGrowth: 1.4,          // [balans] growth 1.6->1.4 — stamina/regen are the only real active throttle; keep them buyable but on a steady curve so the gate is not instantly removed
   staminaRegenCostBase: 1100, staminaRegenCostGrowth: 1.4, // [balans] growth 1.6->1.4 — same reasoning; regen is the true coins/min cap for held play
   staminaRefillGems: 1,                                  // [balans] instant full refill costs GEMS (premium impatience lever + gem sink; not spammable with gold)
-  // ---- v3 [active-tapper patch]: STAMINA OVERDRIVE (no hard block — stamina is now a risk/reward fuel) ----
-  staminaOverdriveComboReq: 12,      // combo needed to TRIGGER an Overdrive burst (Normal is the baseline; Overdrive is earned by chaining combo)
-  staminaOverdriveThreshold: 15,     // min stamina (fuel) required to START a burst; burst rides down to 0 then drops to Normal (never blocks)
-  staminaOverdriveValueMult: 1.8,    // ×coin value per slice while in Overdrive
-  staminaOverdriveSpeedMult: 1.35,   // ×hold-slice speed while in Overdrive
-  staminaEmptyRegenMult: 2.0,        // regen ×2 while empty (fast re-arm so Overdrive returns quickly)
-  staminaOverdriveDrainPerSlice: 1,  // base stamina spent per slice IN Overdrive (scaled by combo); Normal slicing spends NONE
   offlineRatePct: 0.5,        // fraction of estimated active rate
   offlineCapHours: 8,
   offlineAssumedSps: 1.4,     // assumed slices/sec for offline estimate
@@ -513,15 +482,11 @@ const CONFIG = {
   // ---- v3 [active-tapper patch]: Auto-Slicer is IDLE — own fixed tempo, ZERO stamina (decoupled from active play) ----
   autoChefBaseMs: 1500,           // fixed ~0.67 cuts/s (does NOT scale with Slice Speed; idle stays subordinate to active)
   autoChefSpeedPerLevel: 0.10,    // optional separate idle upgrade (level defaults 0; no UI yet)
-  // ---- v3 [active-tapper patch]: PRESTIGE (Michelin Stars — long-term meta reset) ----
-  starK: 1.0, starScale: 5000, starBonus: 0.10,  // stars = floor(starK·sqrt(totalEarned/starScale)); each star = +starBonus global coin mult
-  prestigeSkipGems: 8,            // gem sink: buy +1 extra Star at prestige (1/prestige)
   // ---- v3 [active-tapper patch]: DAILY + GEM economy + EVENT ----
   dailyGemReward: 5,              // gems from a full Daily Complete (all 3)
   loginGemBase: 2,               // gems from daily login (first open each day)
   adTipGems: 1, adTipCapPerDay: 3,// rewarded "Tip Jar": gems per ad, daily cap
   milestoneChapters: 5, milestoneGems: 3, // every N chapters → gems
-  surgeGems: 3, surgeMs: 60000,  // gem "Overdrive Surge": forced Overdrive for surgeMs
   bossRetryGems: 2,              // gem boss retry (re-arm the boss CTA instantly)
   laneInstantAutoGems: 5,        // gem: instantly unlock a lane's auto-cutter (skip to laneAutoUnlockLevel)
   rushHourTierBonus: 1.5,        // Rush Hour event: ×boss tier payout
@@ -553,8 +518,7 @@ const SCHEMA_DEFAULT = {
     incomeLevel:0, sliceSpeedLevel:0, autoSpeedLevel:0,    // global stat upgrades
     staminaLevel:0, staminaRegenLevel:0,                  // STAMINA upgrades
     chapter:0, chapterEarned:0,                           // BOSS-GATED CHAPTERS — chapterEarned accrues every coin; at chapterGoal() the boss CTA appears
-    autoChef:false, autoChefSpeedLevel:0,                 // v2.7: one-time Auto-Slicer unlock; v3: its own idle-speed level (decoupled from Slice Speed)
-    stars:0, prestiges:0},                                // v3: PRESTIGE — Michelin Stars (permanent global mult) + prestige count
+    autoChef:false, autoChefSpeedLevel:0},                // v2.7: one-time Auto-Slicer unlock; v3: its own idle-speed level (decoupled from Slice Speed)
   lanes:INGREDIENTS.map(()=>({level:0,auto:false,autoProg:0})), // one per ingredient (autoProg = discrete auto-cut cycle 0..1) — dynamic so adding products needs no length sync
   gear:{knife:0, board:0, plate:0},                   // 0=none 1=Common 2=Rare 3=Epic
   stamina:{cur:CONFIG.staminaMaxBase},                // active-cut gate — manual slice spends staminaPerSlice; regens over time
@@ -619,16 +583,10 @@ function fmt(n){
 function bladeMult(){ return 1 + gearKnifeBladeMult(); }
 function coinsPerSlice(comboMult, ingVal){
   // coinsPerSlice is the raw per-slice value; callers add incomeMult() only on the idle-coin path (boss banks raw).
-  return CONFIG.coinsPerSliceBase * bladeMult() * ingVal * comboMult * prestigeMult();   // v3: prestige multiplies every coin faucet
+  return CONFIG.coinsPerSliceBase * bladeMult() * ingVal * comboMult;
 }
 function unlockCost(){ const ni=state.progression.unlocked; return ni>=INGREDIENTS.length?Infinity:Math.floor(INGREDIENTS[ni].cost*CONFIG.unlockMult); }
 function bestVal(){ return INGREDIENTS[Math.max(0,state.progression.unlocked-1)].val; }
-
-// ---- v3 [active-tapper patch]: PRESTIGE (Michelin Stars) ----
-function prestigeMult(){ return 1 + (state.progression.stars||0)*CONFIG.starBonus; }   // permanent global coin multiplier
-function starsForTotal(total){ return Math.floor(CONFIG.starK*Math.sqrt(Math.max(0,total)/CONFIG.starScale)); }
-function prestigeGain(){ return Math.max(0, starsForTotal(state.stats.totalCoinsEarned||0) - (state.progression.stars||0)); }
-function prestigeReady(){ return prestigeGain()>=1; }
 
 // ---- v4: STAMINA (active-cut gate) ----
 function staminaMax(){ return CONFIG.staminaMaxBase + (state.progression.staminaLevel||0)*CONFIG.staminaMaxPerLevel; }
@@ -674,7 +632,7 @@ function laneMult(i){ return 1 + lane(i).level*CONFIG.laneValPerLevel; }     // 
 function laneLevelCost(i){ return Math.floor(CONFIG.laneLevelCostBase*Math.pow(CONFIG.laneLevelCostGrowth, lane(i).level)); }
 function highestUnlockedIdx(){ return Math.max(0, state.progression.unlocked-1); }
 // auto-cutter coins per slice: base × blade × (ingVal×laneMult) × income, NO combo
-function coinsPerSliceAuto(i){ return CONFIG.coinsPerSliceBase * bladeMult() * (INGREDIENTS[i].val*laneMult(i)) * incomeMult() * prestigeMult(); }
+function coinsPerSliceAuto(i){ return CONFIG.coinsPerSliceBase * bladeMult() * (INGREDIENTS[i].val*laneMult(i)) * incomeMult(); }
 // v2.3: discrete auto-cut cycle time per lane (ms). Tougher veg cut slower; Auto Slice Speed upgrade speeds all.
 function cutCycleMs(i){ return CONFIG.autoCutBaseMs * INGREDIENTS[i].cutFactor / (autoSpeedMult() * carryMult("overdrive")); }
 // v5: the player NO LONGER chooses the slicing veg — the dish auto-serves its recipe in order.
@@ -702,10 +660,6 @@ function gearUpgradeCost(slot){ return Math.floor(CONFIG.gearUpgradeCostBase*Mat
 let combo = 0;            // count
 let lastSliceAt = 0;
 function comboMult(){ return 1 + Math.min(combo,CONFIG.comboMax)*effComboStep(); }
-// v3 [active-tapper patch]: Overdrive — combo-gated burst that burns stamina fuel (engages at high combo, drops to Normal at 0). Never blocks slicing.
-let overdrive = false;
-let surgeUntil = 0;       // v3: gem "Overdrive Surge" — forced Overdrive (ignores combo/fuel) until this timestamp
-function overdriveOn(){ return overdrive || surgeUntil>nowMs(); }
 
 // ============================================================
 //  AUDIO (synth, no assets)
@@ -848,27 +802,17 @@ function spawnProduce(){ serveNext(); }
 
 function sliceOne(){
   if(!produce || produce.left<=0) return;
-  // v4: slicing is always 1 tap → 1 slice. Combo builds once per TAP (not per slice).
+  // STAMINA gate (gold-sink throttle): a manual slice costs staminaPerSlice; blocked at 0 (auto-cutters bypass this entirely).
+  if((state.stamina.cur||0) < CONFIG.staminaPerSlice){ return; }
+  state.stamina.cur = Math.max(0, (state.stamina.cur||0) - CONFIG.staminaPerSlice);
   const t=nowMs();
+  // combo builds once per TAP (not per slice)
   combo=Math.min(combo+1, CONFIG.comboMax); lastSliceAt=t;
   if(combo>state.stats.bestCombo) state.stats.bestCombo=combo;
   if(rush && combo>rush.maxCombo) rush.maxCombo=combo;
-  // v3 [active-tapper patch]: OVERDRIVE is a combo-gated, fuel-burning BURST — NOT the default state.
-  //   Engages only at high combo WITH fuel → earned payoff (×value, ×speed). Burns stamina (faster at high combo);
-  //   at 0 fuel it drops back to Normal and stamina re-arms. Slicing is NEVER blocked.
-  if(!overdrive && combo>=CONFIG.staminaOverdriveComboReq && (state.stamina.cur||0)>=CONFIG.staminaOverdriveThreshold){
-    overdrive=true; milestone("⚡ OVERDRIVE!"); ding(CONFIG.comboMax); slowmo=0.3; setTimeout(()=>slowmo=1,90);
-    dailyEvent("overdrive",1);
-  }
-  if(surgeUntil>nowMs()) overdrive=true;                                 // v3: gem "Overdrive Surge" forces it on regardless of combo/fuel
-  if(overdrive && surgeUntil<=nowMs()){
-    state.stamina.cur = Math.max(0, (state.stamina.cur||0) - CONFIG.staminaOverdriveDrainPerSlice*comboMult());
-    if((state.stamina.cur||0)<=0) overdrive=false;                       // burned out → back to Normal (no block)
-  }
-  const odVal = overdrive ? CONFIG.staminaOverdriveValueMult : 1;
   // v2.2: ALWAYS exactly one slice per cut (multi-slice removed)
   const n=1;
-  const per=coinsPerSlice(comboMult(), produce.ing.val*laneMult(produce.idx)*(produce.valMul||1)) * odVal;
+  const per=coinsPerSlice(comboMult(), produce.ing.val*laneMult(produce.idx)*(produce.valMul||1));
   const gain=per;
   // v3: daily challenge progress (active-only — manual slices + combo reached)
   dailyEvent("slices",1); dailyEvent("combo",combo);
@@ -900,7 +844,7 @@ function sliceOne(){
 function autoChefSlice(){
   if(!produce || produce.left<=0) return;
   if(rush) return;                                                  // OFF during the boss (pure manual)
-  // v3: NO stamina cost — Auto-Slicer is idle, runs on its own tempo; uses CURRENT comboMult() but does NOT increment combo, and gets NO Overdrive boost
+  // v3: NO stamina cost — Auto-Slicer is idle, runs on its own tempo; uses CURRENT comboMult() but does NOT increment combo (combo-neutral)
   const per=coinsPerSlice(comboMult(), produce.ing.val*laneMult(produce.idx)*(produce.valMul||1));
   const gain=per;
   state.stats.totalSlices+=1;
@@ -928,12 +872,10 @@ function startAutoLoop(){
     // particles. Skip ALL loop work while hidden — no particle/flyer spawn, no accumulator growth, no resume-burst lag.
     // Away income is granted on resume via checkOffline() (the proper capped offline path).
     if(document.hidden) return;
-    // v4: STAMINA regen, 0.1s tick. v3 [active-tapper patch]: ×staminaEmptyRegenMult while empty so Overdrive re-arms fast.
+    // v4: STAMINA regen, 0.1s tick
     const sm=staminaMax();
     if((state.stamina.cur||0) < sm){
-      const empty=(state.stamina.cur||0)<=0;
-      const reg=staminaRegen()*(empty?CONFIG.staminaEmptyRegenMult:1);
-      state.stamina.cur = Math.min(sm, (state.stamina.cur||0) + reg*0.1);
+      state.stamina.cur = Math.min(sm, (state.stamina.cur||0) + staminaRegen()*0.1);
       renderStamina();
     }
     autoChefTick();                             // v2.7: drive the front-veg Auto-Slicer off this same 100ms tick (boss/own gates checked inside)
@@ -966,7 +908,7 @@ function updateAutoRings(){
 let autoChefAcc=0;
 function autoChefOwned(){ return !!state.progression.autoChef; }
 function autoChefActive(){ return autoChefOwned() && state.flags.autoChefOn && !rush && !!produce; }   // OFF in boss / not owned / toggled off / no produce
-// v3 [active-tapper patch]: Auto-Slicer runs on its OWN fixed idle tempo — NOT holdInterval() (so it never inherits Slice Speed or Overdrive)
+// v3 [active-tapper patch]: Auto-Slicer runs on its OWN fixed idle tempo — NOT holdInterval() (so it never inherits Slice Speed)
 function autoChefMs(){ return CONFIG.autoChefBaseMs / (1 + (state.progression.autoChefSpeedLevel||0)*CONFIG.autoChefSpeedPerLevel); }
 function autoChefTick(){
   if(!stageReady || !autoChefActive()){ autoChefAcc=0; return; }   // stop cleanly; reset so it doesn't burst on resume
@@ -1117,14 +1059,16 @@ function drawFloater(f){
   ctx.globalAlpha=1; return true;
 }
 
-// v3 [active-tapper patch]: stamina no longer BLOCKS — show a subtle, non-alarming "recharging" cue while Overdrive re-arms (never the old red wall)
+// v4: out-of-stamina hint on the board (replaces the old blade-wear warnings)
 function drawStaminaWarn(){
-  if(overdriveOn() || (state.stamina.cur||0) >= CONFIG.staminaOverdriveThreshold) return;   // in Overdrive or already re-armed → nothing
+  if((state.stamina.cur||0) >= CONFIG.staminaPerSlice) return;
   ctx.textAlign="center"; ctx.textBaseline="middle";
   const y=CH*0.40;
-  ctx.globalAlpha=0.35;
-  ctx.font="600 13px system-ui"; ctx.fillStyle="#8c7a6b";
-  ctx.fillText("⚡ recharging Overdrive…", CW/2, y); ctx.globalAlpha=1;
+  ctx.globalAlpha=0.5+0.5*Math.abs(Math.sin(performance.now()/200));
+  ctx.font="800 22px Georgia,serif"; ctx.fillStyle="#c45b43";
+  ctx.fillText("OUT OF STAMINA 💪", CW/2, y); ctx.globalAlpha=1;
+  ctx.font="600 14px system-ui"; ctx.fillStyle="#9a4a3c";
+  ctx.fillText("Regenerating…", CW/2, y+24);
 }
 function drawBoardStatus(){
   // v2: produce respawns endlessly; this is just a transient gap between veg — nothing to show
@@ -1147,16 +1091,15 @@ function drawFrame(){
   floaters=floaters.filter(drawFloater);
 }
 function loop(){
-  if(combo>0 && nowMs()-lastSliceAt>effDecay()){ combo=0; if(surgeUntil<=nowMs()) overdrive=false; renderHud(); }
+  if(combo>0 && nowMs()-lastSliceAt>effDecay()){ combo=0; renderHud(); }
   drawFrame();
   requestAnimationFrame(loop);
 }
 
 // v2.1: HOLD-TO-SLICE — pointerdown slices once + starts a self-rescheduling auto-fire while held.
 let holdTimer=null;
-function holdInterval(){   // recompute each fire so per-veg cutFactor + Slice Speed upgrade + Overdrive take effect live
-  const od = overdriveOn() ? CONFIG.staminaOverdriveSpeedMult : 1;   // v3 [active-tapper patch]: Overdrive speeds the hold fire-rate
-  return Math.max(CONFIG.holdMinMs, CONFIG.holdBaseMs * (produce ? produce.ing.cutFactor : 1) / (sliceSpeedMult() * carryMult("fast") * od));
+function holdInterval(){   // recompute each fire so per-veg cutFactor + Slice Speed upgrade take effect live
+  return Math.max(CONFIG.holdMinMs, CONFIG.holdBaseMs * (produce ? produce.ing.cutFactor : 1) / (sliceSpeedMult() * carryMult("fast")));
 }
 function holdFire(){
   if(!stageReady){ stopHold(); return; }
@@ -1202,7 +1145,6 @@ const UI_REF = {
 function renderTopBar(){
   let html = UI_REF.topbar.currencies.map(c=>
     `<span class="chip ${c.cls}"><span class="ico">${c.icon}</span><span>${fmt(state.currencies[c.key])}</span></span>`).join("");
-  if((state.progression.stars||0)>0) html += `<span class="chip" style="color:#7a5cff"><span class="ico">⭐</span><span>${fmt(state.progression.stars)}</span></span>`;
   html += `<span class="chip" id="dailyChip"><span class="ico">📋</span><span class="dot"></span></span>`;   // v3: daily slate entry
   document.getElementById("topbar").innerHTML = html;
   const dc=document.getElementById("dailyChip"); if(dc){ dc.onclick=openDailyModal; dc.classList.toggle("alert", !!(state.daily&&state.daily.completedToday&&!state.daily.claimed)); }
@@ -1225,8 +1167,8 @@ function renderCombo(){
 // v4: stamina bar (replaces wear row) — always visible, including during the boss
 function renderStamina(){
   const cur=Math.floor(state.stamina.cur||0), max=staminaMax(), frac=max>0?cur/max:0;
-  const f=document.getElementById("staminaFill"); if(f){ f.style.width=Math.min(100,frac*100)+"%"; f.classList.toggle("low", frac<0.25); f.classList.toggle("overdrive", overdriveOn()); }
-  const t=document.getElementById("staminaTxt"); if(t) t.textContent=(overdriveOn()?"⚡ ":"💪 ")+cur+"/"+max;
+  const f=document.getElementById("staminaFill"); if(f){ f.style.width=Math.min(100,frac*100)+"%"; f.classList.toggle("low", frac<0.25); }
+  const t=document.getElementById("staminaTxt"); if(t) t.textContent="💪 "+cur+"/"+max;
   const b=document.getElementById("staminaBtn");
   if(b){
     const c=staminaRefillCost(), full=cur>=max, afford=!full && state.currencies.gems>=c;
@@ -1397,7 +1339,7 @@ function renderKitchen(){
 }
 function upgradeGear(s){ if(state.gear[s]>=3) return; const c=gearUpgradeCost(s); if(state.currencies.coins>=c){ state.currencies.coins-=c; state.gear[s]++; payout(); milestone(GEAR[s].icon+" "+GEAR[s].tiers[state.gear[s]]+"!"); renderHud(); saveState(); } }
 function renderHud(){
-  renderTopBar(); renderStage(); renderCombo(); renderStamina(); renderLaneBar(); renderCarryBadge(); renderBossCta(); renderAutoChefToggle(); renderPrestigeCta(); renderSurge();
+  renderTopBar(); renderStage(); renderCombo(); renderStamina(); renderLaneBar(); renderCarryBadge(); renderBossCta(); renderAutoChefToggle();
   const inRush=!!rush;
   // BOSS now lives IN the #stageBar slot (renderStage swaps its content) — the bar stays visible, no separate HUD, no layout shift.
   // CHANGE 1: bottom UI (lane strip + stamina bar) stays VISIBLE during the boss (not the focus, but always shown)
@@ -1532,7 +1474,7 @@ function startBoss(){
   const dur=CONFIG.bossDuration + (rushHourOn()?CONFIG.rushHourDurationBonus:0);   // v3: Rush Hour event adds boss time
   rush={ timeLeft:dur, dur:dur, dishes:0, score:0, maxCombo:0, boss:true,
     need:{ bronze:Math.floor(goal*CONFIG.bossGoldFrac.bronze), silver:Math.floor(goal*CONFIG.bossGoldFrac.silver), gold:Math.floor(goal*CONFIG.bossGoldFrac.gold) } };
-  combo=0; overdrive=false;             // v3 [active-tapper patch]: reset Overdrive so the boss starts on a fresh full-fuel ride
+  combo=0;
   state.stamina.cur=staminaMax();       // v4: refill stamina at boss start so the boss is fair (still drains/regens during it)
   dish=null;                            // fresh dish for the rush
   spawnPlate(false); produce=null; serveNext();   // auto-serve the first recipe veg (same pipeline as the core)
@@ -1641,52 +1583,6 @@ function clearChapter(perkName){
 // ============================================================
 //  v3 [active-tapper patch] — PRESTIGE / DAILY / GEM ECONOMY / EVENT
 // ============================================================
-function doPrestige(extraStar){
-  let gain = prestigeGain() + (extraStar?1:0);
-  if(gain<=0) return;
-  state.progression.stars=(state.progression.stars||0)+gain;
-  state.progression.prestiges=(state.progression.prestiges||0)+1;
-  // RESET run progress; KEEP gems, gear, stars, lifetime stats
-  state.currencies.coins=60;
-  state.progression.unlocked=1;
-  state.progression.incomeLevel=0; state.progression.sliceSpeedLevel=0; state.progression.autoSpeedLevel=0;
-  state.progression.staminaLevel=0; state.progression.staminaRegenLevel=0;
-  state.progression.chapter=0; state.progression.chapterEarned=0;
-  state.progression.autoChef=false; state.progression.autoChefSpeedLevel=0;
-  state.lanes=INGREDIENTS.map(()=>({level:0,auto:false,autoProg:0}));
-  state.flags.unlockPromptShown=INGREDIENTS.map(()=>false);
-  state.stamina.cur=staminaMax(); state.carry=null;
-  combo=0; overdrive=false; surgeUntil=0; dish=null; produce=null;
-  spawnPlate(false); serveNext();
-  milestone("⭐ PRESTIGE +"+gain+"!"); payout();
-  renderHud(); saveState();
-}
-function renderPrestigeCta(){
-  const b=document.getElementById("prestigeCta"); if(!b) return;
-  if(rush || !prestigeReady()){ b.classList.remove("on"); return; }
-  b.textContent="⭐ PRESTIGE +"+prestigeGain();
-  b.classList.add("on");
-}
-function openPrestigeModal(){
-  const g=prestigeGain(); if(g<=0) return;
-  document.getElementById("pmGain").textContent="+"+g+" ⭐";
-  const after=1+((state.progression.stars||0)+g)*CONFIG.starBonus;
-  document.getElementById("pmMult").textContent="Global coins ×"+after.toFixed(2)+"  (now ×"+prestigeMult().toFixed(2)+")";
-  document.getElementById("pmWarn").textContent="Resets products, levels, upgrades & chapter. Keeps 💎 gems, gear & ⭐ stars.";
-  const skip=document.getElementById("pmSkip");
-  skip.textContent="💎 "+CONFIG.prestigeSkipGems+" → +1 extra ⭐";
-  skip.disabled=state.currencies.gems<CONFIG.prestigeSkipGems;
-  document.getElementById("prestigeModal").classList.add("open");
-}
-// ---- gem "Overdrive Surge" ----
-function buySurge(){ if(surgeUntil>nowMs()||state.currencies.gems<CONFIG.surgeGems) return; state.currencies.gems-=CONFIG.surgeGems; surgeUntil=nowMs()+CONFIG.surgeMs; overdrive=true; milestone("⚡ OVERDRIVE SURGE!"); payout(); renderHud(); saveState(); }
-function renderSurge(){
-  const b=document.getElementById("surgeBtn"); if(!b) return;
-  if(rush){ b.style.display="none"; return; }
-  b.style.display="";
-  if(surgeUntil>nowMs()){ b.textContent="⚡ "+Math.ceil((surgeUntil-nowMs())/1000)+"s"; b.disabled=true; b.classList.remove("cta"); b.classList.add("ghost"); }
-  else { const afford=state.currencies.gems>=CONFIG.surgeGems; b.textContent="⚡ Surge 💎"+CONFIG.surgeGems; b.disabled=!afford; b.classList.toggle("cta",afford); b.classList.toggle("ghost",!afford); }
-}
 // ---- gem instant lane-auto unlock ----
 function buyLaneInstantAuto(i){ if(i>=state.progression.unlocked) return; const L=lane(i); if(L.auto) return; if(state.currencies.gems<CONFIG.laneInstantAutoGems) return; state.currencies.gems-=CONFIG.laneInstantAutoGems; if(L.level<CONFIG.laneAutoUnlockLevel) L.level=CONFIG.laneAutoUnlockLevel; L.auto=true; milestone("🪚 "+INGREDIENTS[i].name+" auto!"); payout(); renderHud(); saveState(); }
 
@@ -1696,7 +1592,6 @@ const DAILY_POOL=[
   {id:"dishes",   name:"Rush Service", desc:"Serve {t} dishes",            diff:"e", target:12,  coins:250, gems:0},
   {id:"combo",    name:"Combo Chain",  desc:"Reach combo x{t}",            diff:"m", target:15,  coins:350, gems:0},
   {id:"comboMax", name:"Max Combo",    desc:"Hit MAX combo (x{t})",        diff:"m", target:25,  coins:400, gems:0},
-  {id:"overdrive",name:"Overdrive",    desc:"Trigger Overdrive {t} times", diff:"m", target:5,   coins:350, gems:0},
   {id:"bossSilver",name:"Silver Plate",desc:"Beat a boss (Silver+)",       diff:"h", target:1,   coins:500, gems:5},
   {id:"bossGold", name:"Gold Plate",   desc:"Beat a boss on Gold",         diff:"h", target:1,   coins:700, gems:5},
 ];
@@ -1780,11 +1675,6 @@ function checkRushHour(){ const d=new Date().getUTCDay(); state.event.rushHourAc
 function rushHourOn(){ return !!(state.event && state.event.rushHourActive); }
 
 // ---- v3 wiring (DOM elements exist — script runs at end of <body>) ----
-document.getElementById("prestigeCta").onclick=openPrestigeModal;
-document.getElementById("pmDo").onclick=()=>{ document.getElementById("prestigeModal").classList.remove("open"); doPrestige(false); };
-document.getElementById("pmSkip").onclick=()=>{ if(state.currencies.gems>=CONFIG.prestigeSkipGems){ state.currencies.gems-=CONFIG.prestigeSkipGems; document.getElementById("prestigeModal").classList.remove("open"); doPrestige(true); } };
-document.getElementById("pmCancel").onclick=()=>{ document.getElementById("prestigeModal").classList.remove("open"); };
-document.getElementById("surgeBtn").onclick=buySurge;
 document.getElementById("dmClaim").onclick=()=>{ claimDaily(); renderDailyModal(); updateDailyBadge(); };
 document.getElementById("dmAd").onclick=adTipJar;
 document.getElementById("dmClose").onclick=()=>{ document.getElementById("dailyModal").classList.remove("open"); };
@@ -1801,7 +1691,7 @@ function offlinePerSec(){
   if(auto>0) return auto*CONFIG.offlineRatePct;
   // fallback: assume hand-slicing the highest unlocked product at a modest rate
   const f=highestUnlockedIdx();
-  return CONFIG.coinsPerSliceBase*bladeMult()*(INGREDIENTS[f].val*laneMult(f))*incomeMult()*prestigeMult()*CONFIG.offlineAssumedSps*CONFIG.offlineRatePct;
+  return CONFIG.coinsPerSliceBase*bladeMult()*(INGREDIENTS[f].val*laneMult(f))*incomeMult()*CONFIG.offlineAssumedSps*CONFIG.offlineRatePct;
 }
 function grantOffline(seconds){
   const cap=CONFIG.offlineCapHours*3600;
@@ -1853,10 +1743,7 @@ const cheats=document.getElementById("cheats");
 function buildCheats(){
   const sliders=[
     ["coinsPerSliceBase",0.5,10,0.5],["comboStep",0,0.5,0.01],
-    ["comboDecayMs",800,4000,100],["staminaRegenBase",1,50,1],
-    // v3 [active-tapper patch]: live Overdrive knobs (replaced the now-vestigial staminaPerSlice slider)
-    ["staminaOverdriveComboReq",1,25,1],["staminaOverdriveThreshold",0,100,5],["staminaOverdriveValueMult",1,3,0.1],
-    ["staminaOverdriveSpeedMult",1,2.5,0.05],["staminaEmptyRegenMult",1,5,0.5],
+    ["comboDecayMs",800,4000,100],["staminaPerSlice",0,10,1],["staminaRegenBase",1,50,1],
     ["autoCutBaseMs",300,4000,100],["autoChefBaseMs",300,4000,100],["laneValPerLevel",0.02,1,0.02],
     ["offlineRatePct",0,1,0.05],["offlineCapHours",1,24,1],
     ["staminaMaxBase",20,500,10],
