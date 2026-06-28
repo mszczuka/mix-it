@@ -407,8 +407,9 @@ window.addEventListener("error", function(e){
      (value + passive auto-cutter at laneAutoUnlockLevel). Auto-cutters are discrete
      timed cuts (autoCutBaseMs/cutCycleMs/autoProg) — passive coin income, no stamina.
    - STAMINA gate (GOLD SINK): a manual slice costs staminaPerSlice; blocked at 0; regen runs always
-     (incl. boss). Stamina + Stamina Regen upgrades are the main active-play gold sink.
-     Auto-Slicer is decoupled (idle, own tempo, ZERO stamina) so idle never drains the active pool.
+     (incl. boss). Stamina + Stamina Regen upgrades are the main active-play gold sink. The Auto-Slicer
+     (front-veg) ALSO spends stamina and shares the pool; per-lane auto-cutters do NOT (passive income).
+     Gem refill unlocks only when stamina is <=20% of max.
    - GLOBAL upgrades: Income Multiplier / Slice Speed / Auto Slice Speed + Stats card.
    - GEAR (Knife/Board/Plate); coins + gems currencies.
    - CASH PRODUCT UNLOCK: unlockCost/unlockMult + one-time affordability popup.
@@ -479,9 +480,7 @@ const CONFIG = {
   autoSpeedCostBase: 600, autoSpeedCostGrowth: 1.35,    // [balans] was 400 / 1.7 — gentler growth keeps later auto-speed buys reachable but meaningful
   // ---- v2.7: AUTO-SLICER — one-time gold unlock that auto-cuts the CURRENT front veg (NOT the per-lane passive autos) ----
   autoChefCost: 4000,             // [balans: economy] one-time unlock (gated to chapter 3)
-  // ---- v3 [active-tapper patch]: Auto-Slicer is IDLE — own fixed tempo, ZERO stamina (decoupled from active play) ----
-  autoChefBaseMs: 1500,           // fixed ~0.67 cuts/s (does NOT scale with Slice Speed; idle stays subordinate to active)
-  autoChefSpeedPerLevel: 0.10,    // optional separate idle upgrade (level defaults 0; no UI yet)
+  // autoChefBaseMs removed — Auto-Slicer now uses holdInterval() (same speed as hold, scales with Slice Speed)
   // ---- v3 [active-tapper patch]: DAILY + GEM economy + EVENT ----
   dailyGemReward: 5,              // gems from a full Daily Complete (all 3)
   loginGemBase: 2,               // gems from daily login (first open each day)
@@ -518,7 +517,7 @@ const SCHEMA_DEFAULT = {
     incomeLevel:0, sliceSpeedLevel:0, autoSpeedLevel:0,    // global stat upgrades
     staminaLevel:0, staminaRegenLevel:0,                  // STAMINA upgrades
     chapter:0, chapterEarned:0,                           // BOSS-GATED CHAPTERS — chapterEarned accrues every coin; at chapterGoal() the boss CTA appears
-    autoChef:false, autoChefSpeedLevel:0},                // v2.7: one-time Auto-Slicer unlock; v3: its own idle-speed level (decoupled from Slice Speed)
+    autoChef:false},                                      // v2.7: one-time Auto-Slicer unlock (auto-cuts the current front veg)
   lanes:INGREDIENTS.map(()=>({level:0,auto:false,autoProg:0})), // one per ingredient (autoProg = discrete auto-cut cycle 0..1) — dynamic so adding products needs no length sync
   gear:{knife:0, board:0, plate:0},                   // 0=none 1=Common 2=Rare 3=Epic
   stamina:{cur:CONFIG.staminaMaxBase},                // active-cut gate — manual slice spends staminaPerSlice; regens over time
@@ -839,12 +838,13 @@ function sliceOne(){
 }
 
 // v2.7: AUTO-SLICER — combo-NEUTRAL slice of the CURRENT front veg. Same dish-bank/advance/complete path as sliceOne,
-// minus the combo++ (so combo decays unless the player taps) and with lighter juice.
-// v3 [active-tapper patch]: decoupled from stamina — idle pool, never spends/gates on the active stamina fuel.
+// minus the combo++ (so combo decays unless the player taps) and with lighter juice. Shares the stamina pool + gate.
 function autoChefSlice(){
   if(!produce || produce.left<=0) return;
   if(rush) return;                                                  // OFF during the boss (pure manual)
-  // v3: NO stamina cost — Auto-Slicer is idle, runs on its own tempo; uses CURRENT comboMult() but does NOT increment combo (combo-neutral)
+  if((state.stamina.cur||0) < CONFIG.staminaPerSlice){ return; }    // WAIT for stamina regen — do NOT slice this tick
+  state.stamina.cur = Math.max(0, (state.stamina.cur||0) - CONFIG.staminaPerSlice);
+  // uses CURRENT comboMult() but does NOT increment combo (combo-neutral)
   const per=coinsPerSlice(comboMult(), produce.ing.val*laneMult(produce.idx)*(produce.valMul||1));
   const gain=per;
   state.stats.totalSlices+=1;
@@ -908,15 +908,16 @@ function updateAutoRings(){
 let autoChefAcc=0;
 function autoChefOwned(){ return !!state.progression.autoChef; }
 function autoChefActive(){ return autoChefOwned() && state.flags.autoChefOn && !rush && !!produce; }   // OFF in boss / not owned / toggled off / no produce
-// v3 [active-tapper patch]: Auto-Slicer runs on its OWN fixed idle tempo — NOT holdInterval() (so it never inherits Slice Speed)
-function autoChefMs(){ return CONFIG.autoChefBaseMs / (1 + (state.progression.autoChefSpeedLevel||0)*CONFIG.autoChefSpeedPerLevel); }
+// IDENTICAL speed to manual hold-slicing — same interval (per-veg cutFactor + Slice Speed upgrade + carry "fast")
+function autoChefMs(){ return holdInterval(); }
 function autoChefTick(){
   if(!stageReady || !autoChefActive()){ autoChefAcc=0; return; }   // stop cleanly; reset so it doesn't burst on resume
   autoChefAcc += 100;                                             // this loop ticks every 100ms
   const iv=autoChefMs();                                          // = holdInterval(): matches hold speed, scales with Slice Speed
   // fire as many slices as the interval allows this tick (matches hold throughput even when iv < 100ms at high Slice Speed)
   while(autoChefAcc >= iv){
-    autoChefAcc -= iv;                                            // v3: no stamina gate — idle auto-slicer is decoupled from the active pool
+    if((state.stamina.cur||0) < CONFIG.staminaPerSlice) break;    // out of stamina → WAIT (keep acc); resumes on regen
+    autoChefAcc -= iv;
     autoChefSlice();
   }
   if(autoChefAcc > iv*4) autoChefAcc = iv;                        // clamp runaway accumulation
@@ -1171,9 +1172,11 @@ function renderStamina(){
   const t=document.getElementById("staminaTxt"); if(t) t.textContent="💪 "+cur+"/"+max;
   const b=document.getElementById("staminaBtn");
   if(b){
-    const c=staminaRefillCost(), full=cur>=max, afford=!full && state.currencies.gems>=c;
+    const c=staminaRefillCost(), full=cur>=max;
+    const low = cur <= max*0.2;                          // gem refill unlocks only at/below 20% stamina
+    const afford = low && !full && state.currencies.gems>=c;
     b.textContent = full ? "Full ✓" : ("Refill 💎"+c);
-    b.disabled = full || !afford;
+    b.disabled = full || !low || state.currencies.gems<c;
     b.classList.toggle("cta", afford); b.classList.toggle("ghost", !afford);
   }
 }
@@ -1209,7 +1212,7 @@ function renderUpgrades(){
     if(show){
       const owned=!!state.progression.autoChef, acb=document.getElementById("acBuy");
       document.getElementById("acLvl").textContent=owned?"Owned ✓":"One-time unlock";
-      document.getElementById("acEff").textContent="Auto-cuts the front veg (idle — no stamina; toggle on Home)";
+      document.getElementById("acEff").textContent="Auto-cuts the front veg (uses stamina; toggle on Home)";
       if(owned){ acb.textContent="Owned ✓"; acb.disabled=true; acb.classList.remove("cta"); acb.classList.add("ghost"); }
       else { acb.innerHTML='Unlock<br><span class="cost">🪙 '+fmt(CONFIG.autoChefCost)+'</span>'; acb.disabled=state.currencies.coins<CONFIG.autoChefCost; acb.classList.add("cta"); acb.classList.remove("ghost"); }
     }
@@ -1380,7 +1383,7 @@ function setSub(sub){ if(sub===curSub) return; curSub=sub; renderManage(); }
 // v4: stamina upgrade buy handlers
 document.getElementById("stmBuy").onclick=()=>{ const c=staminaCost(); if(state.currencies.coins>=c){ state.currencies.coins-=c; state.progression.staminaLevel=(state.progression.staminaLevel||0)+1; payout(); renderHud(); saveState(); } };
 document.getElementById("strBuy").onclick=()=>{ const c=staminaRegenCost(); if(state.currencies.coins>=c){ state.currencies.coins-=c; state.progression.staminaRegenLevel=(state.progression.staminaRegenLevel||0)+1; payout(); renderHud(); saveState(); } };
-document.getElementById("staminaBtn").onclick=()=>{ const c=staminaRefillCost(); if(state.stamina.cur<staminaMax() && state.currencies.gems>=c){ state.currencies.gems-=c; state.stamina.cur=staminaMax(); payout(); renderHud(); saveState(); } };
+document.getElementById("staminaBtn").onclick=()=>{ const c=staminaRefillCost(); if(state.stamina.cur<=staminaMax()*0.2 && state.currencies.gems>=c){ state.currencies.gems-=c; state.stamina.cur=staminaMax(); payout(); renderHud(); saveState(); } };
 // v2.1: global stat upgrade buy handlers
 document.getElementById("incBuy").onclick=()=>{ const c=incomeCost(); if(state.currencies.coins>=c){ state.currencies.coins-=c; state.progression.incomeLevel=(state.progression.incomeLevel||0)+1; payout(); renderHud(); saveState(); } };
 document.getElementById("ssBuy").onclick=()=>{ const c=sliceSpeedCost(); if(state.currencies.coins>=c){ state.currencies.coins-=c; state.progression.sliceSpeedLevel=(state.progression.sliceSpeedLevel||0)+1; payout(); renderHud(); saveState(); } };
@@ -1744,7 +1747,7 @@ function buildCheats(){
   const sliders=[
     ["coinsPerSliceBase",0.5,10,0.5],["comboStep",0,0.5,0.01],
     ["comboDecayMs",800,4000,100],["staminaPerSlice",0,10,1],["staminaRegenBase",1,50,1],
-    ["autoCutBaseMs",300,4000,100],["autoChefBaseMs",300,4000,100],["laneValPerLevel",0.02,1,0.02],
+    ["autoCutBaseMs",300,4000,100],["laneValPerLevel",0.02,1,0.02],
     ["offlineRatePct",0,1,0.05],["offlineCapHours",1,24,1],
     ["staminaMaxBase",20,500,10],
   ];
