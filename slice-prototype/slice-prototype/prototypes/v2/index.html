@@ -14,8 +14,8 @@
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0}
   html,body{height:100dvh;background:#a8906f;color:var(--c-text);font-family:var(--f-body);user-select:none;overflow:hidden}
   body{display:flex;align-items:center;justify-content:center}
-  /* fixed 9:16 phone frame (the portrait of 16:9) — largest that fits the viewport */
-  #app{width:min(100vw, calc(100dvh * 9 / 16)); height:min(100dvh, calc(100vw * 16 / 9));
+  /* fill the full screen height (phones taller than 9:16 no longer letterbox); cap width to a phone column on wide screens */
+  #app{width:min(100vw, 480px); height:100dvh;
     position:relative;display:grid;grid-template-rows:var(--topbar-h) auto 1fr var(--nav-h);min-width:0;
     background:var(--c-bg);box-shadow:0 0 50px rgba(0,0,0,.4);overflow:hidden}
 
@@ -497,7 +497,20 @@ function loadState(){
 }
 let state = loadState();
 let _resetting=false;
-function saveState(){ if(_resetting) return; state.time.lastSeen = nowMs(); localStorage.setItem(STATE_KEY, JSON.stringify(state)); }
+function saveState(){
+  if(_resetting) return;
+  state.time.lastSeen = nowMs();
+  try{
+    localStorage.setItem(STATE_KEY, JSON.stringify(state));
+  }catch(e){
+    // localStorage may be full — this github.io origin is SHARED across all the mini-games.
+    // Drop our OWN stale save keys (older versions) and retry once; if still full, keep playing without persisting (don't crash).
+    try{
+      for(let i=localStorage.length-1;i>=0;i--){ const k=localStorage.key(i); if(k && k.indexOf("slicetycoon.save.")===0 && k!==STATE_KEY) localStorage.removeItem(k); }
+      localStorage.setItem(STATE_KEY, JSON.stringify(state));
+    }catch(e2){ /* still full (other games' data) — degrade gracefully, no crash */ }
+  }
+}
 function resetState(){ _resetting=true; localStorage.removeItem(STATE_KEY); location.reload(); }
 
 // time helper (Date.now allowed in browser runtime)
