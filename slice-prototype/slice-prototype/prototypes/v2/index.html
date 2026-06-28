@@ -154,6 +154,23 @@
   .draft-card .dc-eff{font-size:13px;color:var(--c-muted);margin-top:2px}
   .draft-card.tradeoff{border-color:#d9803288}
 
+  /* ---- v3 [active-tapper patch]: CTAs / daily ---- */
+  #prestigeCta{position:absolute;right:10px;top:46px;z-index:8;display:none;align-items:center;gap:5px;min-height:0;
+    background:linear-gradient(135deg,#7a5cff,#b06cff);color:#fff;font-weight:800;font-size:13px;padding:7px 12px;border-radius:9999px;
+    box-shadow:0 4px 14px rgba(100,60,200,.45)}
+  #prestigeCta.on{display:inline-flex}
+  #surgeBtn{white-space:nowrap}
+  #dailyChip{cursor:pointer;position:relative}
+  #dailyChip .dot{position:absolute;top:-3px;right:-3px;width:8px;height:8px;border-radius:50%;background:var(--c-danger);display:none}
+  #dailyChip.alert .dot{display:block}
+  .dm-row{background:var(--c-bg);border-radius:var(--r-2);padding:8px 10px;margin:6px 0}
+  .dm-row .dm-top{display:flex;justify-content:space-between;align-items:baseline;font-size:13px}
+  .dm-row .dm-name{font-weight:800}
+  .dm-row .dm-rew{color:var(--c-muted);font-weight:700;font-size:12px}
+  .dm-row .dm-bar{height:7px;background:#0000001a;border-radius:9999px;overflow:hidden;margin-top:5px}
+  .dm-row .dm-bar .lf{height:100%;background:linear-gradient(90deg,var(--c-primary),var(--c-accent))}
+  .dm-row.done{outline:2px solid var(--c-success)}
+
   /* ---- v2: lane (Products) rows ---- */
   .lane-icon{font-size:30px;line-height:1}
   .lane-prog{height:8px;background:#0000001a;border-radius:9999px;overflow:hidden;margin-top:5px}
@@ -198,6 +215,7 @@
         <div id="carryBadge"></div>
         <button id="autoChefToggle"></button>
         <button id="bossCta"></button>
+        <button id="prestigeCta"></button>
         <div id="comboBar"><span class="lbl">combo</span><span id="comboVal">x1.0</span></div>
         <canvas id="sliceCanvas"></canvas>
         <div id="tapHint">TAP TO SLICE</div>
@@ -206,6 +224,7 @@
           <span class="wtxt" id="staminaTxt">💪 0/0</span>
           <div class="wear-track"><div class="wear-fill" id="staminaFill"></div></div>
           <button class="ghost" id="staminaBtn"></button>
+          <button class="ghost" id="surgeBtn"></button>
         </div>
       </div>
     </section>
@@ -327,6 +346,7 @@
       <div class="lvl" id="rrSub"></div>
       <div class="big" id="rrDrop" style="color:#9a4a3c;margin-top:8px"></div>
       <button class="ghost wide" id="rrAd" style="margin-top:12px">▶ Watch ad → +50% 🪙 (stub)</button>
+      <button class="ghost wide" id="rrRetry" style="margin-top:8px"></button>
       <button class="cta wide" id="rrClose" style="margin-top:8px">Done</button>
     </div>
   </div>
@@ -349,6 +369,32 @@
       <h3>Carry-over 🔥</h3>
       <div class="lvl">Pick a boost for the NEXT level (expires soon)</div>
       <div class="draft-cards" id="carryCards"></div>
+    </div>
+  </div>
+
+  <!-- v3: PRESTIGE confirm -->
+  <div class="modal" id="prestigeModal">
+    <div class="box">
+      <h3>⭐ Prestige</h3>
+      <div class="lvl">Reset your kitchen for a permanent boost</div>
+      <div class="amt" id="pmGain">+0 ⭐</div>
+      <div class="big" id="pmMult" style="color:#7a5cff"></div>
+      <div class="lvl" id="pmWarn" style="margin-top:8px"></div>
+      <button class="cta wide" id="pmDo" style="margin:16px 0 0">Prestige now</button>
+      <button class="ghost wide" id="pmSkip" style="margin:8px 0 0"></button>
+      <button class="ghost wide" id="pmCancel" style="margin:8px 0 0">Later</button>
+    </div>
+  </div>
+
+  <!-- v3: DAILY PRESSURE SLATE -->
+  <div class="modal" id="dailyModal">
+    <div class="box" style="text-align:left;max-width:360px">
+      <h3 style="text-align:center">📋 Daily Slate</h3>
+      <div class="lvl" id="dmStreak" style="text-align:center;margin-bottom:8px"></div>
+      <div id="dmList"></div>
+      <button class="cta wide" id="dmClaim" style="margin:12px 0 0">Claim rewards</button>
+      <button class="ghost wide" id="dmAd" style="margin:8px 0 0"></button>
+      <button class="ghost wide" id="dmClose" style="margin:8px 0 0">Close</button>
     </div>
   </div>
 
@@ -416,7 +462,8 @@ const CONFIG = {
   staminaRegenCostBase: 1100, staminaRegenCostGrowth: 1.4, // [balans] growth 1.6->1.4 — same reasoning; regen is the true coins/min cap for held play
   staminaRefillGems: 1,                                  // [balans] instant full refill costs GEMS (premium impatience lever + gem sink; not spammable with gold)
   // ---- v3 [active-tapper patch]: STAMINA OVERDRIVE (no hard block — stamina is now a risk/reward fuel) ----
-  staminaOverdriveThreshold: 15,     // stamina >= this & slicing => Overdrive engages (rides down to 0, then drops to Normal — never blocks)
+  staminaOverdriveComboReq: 12,      // combo needed to TRIGGER an Overdrive burst (Normal is the baseline; Overdrive is earned by chaining combo)
+  staminaOverdriveThreshold: 15,     // min stamina (fuel) required to START a burst; burst rides down to 0 then drops to Normal (never blocks)
   staminaOverdriveValueMult: 1.8,    // ×coin value per slice while in Overdrive
   staminaOverdriveSpeedMult: 1.35,   // ×hold-slice speed while in Overdrive
   staminaEmptyRegenMult: 2.0,        // regen ×2 while empty (fast re-arm so Overdrive returns quickly)
@@ -466,6 +513,19 @@ const CONFIG = {
   // ---- v3 [active-tapper patch]: Auto-Slicer is IDLE — own fixed tempo, ZERO stamina (decoupled from active play) ----
   autoChefBaseMs: 1500,           // fixed ~0.67 cuts/s (does NOT scale with Slice Speed; idle stays subordinate to active)
   autoChefSpeedPerLevel: 0.10,    // optional separate idle upgrade (level defaults 0; no UI yet)
+  // ---- v3 [active-tapper patch]: PRESTIGE (Michelin Stars — long-term meta reset) ----
+  starK: 1.0, starScale: 5000, starBonus: 0.10,  // stars = floor(starK·sqrt(totalEarned/starScale)); each star = +starBonus global coin mult
+  prestigeSkipGems: 8,            // gem sink: buy +1 extra Star at prestige (1/prestige)
+  // ---- v3 [active-tapper patch]: DAILY + GEM economy + EVENT ----
+  dailyGemReward: 5,              // gems from a full Daily Complete (all 3)
+  loginGemBase: 2,               // gems from daily login (first open each day)
+  adTipGems: 1, adTipCapPerDay: 3,// rewarded "Tip Jar": gems per ad, daily cap
+  milestoneChapters: 5, milestoneGems: 3, // every N chapters → gems
+  surgeGems: 3, surgeMs: 60000,  // gem "Overdrive Surge": forced Overdrive for surgeMs
+  bossRetryGems: 2,              // gem boss retry (re-arm the boss CTA instantly)
+  laneInstantAutoGems: 5,        // gem: instantly unlock a lane's auto-cutter (skip to laneAutoUnlockLevel)
+  rushHourTierBonus: 1.5,        // Rush Hour event: ×boss tier payout
+  rushHourDurationBonus: 10,     // Rush Hour event: +seconds on boss timer
 };
 
 const INGREDIENTS = [
@@ -493,7 +553,8 @@ const SCHEMA_DEFAULT = {
     incomeLevel:0, sliceSpeedLevel:0, autoSpeedLevel:0,    // global stat upgrades
     staminaLevel:0, staminaRegenLevel:0,                  // STAMINA upgrades
     chapter:0, chapterEarned:0,                           // BOSS-GATED CHAPTERS — chapterEarned accrues every coin; at chapterGoal() the boss CTA appears
-    autoChef:false, autoChefSpeedLevel:0},                // v2.7: one-time Auto-Slicer unlock; v3: its own idle-speed level (decoupled from Slice Speed)
+    autoChef:false, autoChefSpeedLevel:0,                 // v2.7: one-time Auto-Slicer unlock; v3: its own idle-speed level (decoupled from Slice Speed)
+    stars:0, prestiges:0},                                // v3: PRESTIGE — Michelin Stars (permanent global mult) + prestige count
   lanes:INGREDIENTS.map(()=>({level:0,auto:false,autoProg:0})), // one per ingredient (autoProg = discrete auto-cut cycle 0..1) — dynamic so adding products needs no length sync
   gear:{knife:0, board:0, plate:0},                   // 0=none 1=Common 2=Rare 3=Epic
   stamina:{cur:CONFIG.staminaMaxBase},                // active-cut gate — manual slice spends staminaPerSlice; regens over time
@@ -501,6 +562,10 @@ const SCHEMA_DEFAULT = {
   time:{lastSeen:0},
   flags:{ftueStage:0, shopPending:false, kitchenPending:false, autoChefOn:true, unlockPromptShown:INGREDIENTS.map(()=>false)}, // CHANGE 2: per-product one-time affordability popup guard (dynamic length); autoChefOn: Auto-Slicer toggle (v2.7)
   carry:null,                                         // v2: pending carryover modifier {id,name,eff,expiresAt} or null
+  // v3 [active-tapper patch]: DAILY PRESSURE SLATE (active-only challenges) + login/ad gem faucets
+  daily:{ dateKey:"", slate:[], completedToday:false, claimed:false, streak:0, lastCompleteKey:"", loginKey:"", adsToday:0, adKey:"" },
+  // v3: live-ops event flag (Rush Hour)
+  event:{ rushHourActive:false },
 };
 
 // deep merge defaults so older saves don't crash
@@ -554,10 +619,16 @@ function fmt(n){
 function bladeMult(){ return 1 + gearKnifeBladeMult(); }
 function coinsPerSlice(comboMult, ingVal){
   // coinsPerSlice is the raw per-slice value; callers add incomeMult() only on the idle-coin path (boss banks raw).
-  return CONFIG.coinsPerSliceBase * bladeMult() * ingVal * comboMult;
+  return CONFIG.coinsPerSliceBase * bladeMult() * ingVal * comboMult * prestigeMult();   // v3: prestige multiplies every coin faucet
 }
 function unlockCost(){ const ni=state.progression.unlocked; return ni>=INGREDIENTS.length?Infinity:Math.floor(INGREDIENTS[ni].cost*CONFIG.unlockMult); }
 function bestVal(){ return INGREDIENTS[Math.max(0,state.progression.unlocked-1)].val; }
+
+// ---- v3 [active-tapper patch]: PRESTIGE (Michelin Stars) ----
+function prestigeMult(){ return 1 + (state.progression.stars||0)*CONFIG.starBonus; }   // permanent global coin multiplier
+function starsForTotal(total){ return Math.floor(CONFIG.starK*Math.sqrt(Math.max(0,total)/CONFIG.starScale)); }
+function prestigeGain(){ return Math.max(0, starsForTotal(state.stats.totalCoinsEarned||0) - (state.progression.stars||0)); }
+function prestigeReady(){ return prestigeGain()>=1; }
 
 // ---- v4: STAMINA (active-cut gate) ----
 function staminaMax(){ return CONFIG.staminaMaxBase + (state.progression.staminaLevel||0)*CONFIG.staminaMaxPerLevel; }
@@ -603,7 +674,7 @@ function laneMult(i){ return 1 + lane(i).level*CONFIG.laneValPerLevel; }     // 
 function laneLevelCost(i){ return Math.floor(CONFIG.laneLevelCostBase*Math.pow(CONFIG.laneLevelCostGrowth, lane(i).level)); }
 function highestUnlockedIdx(){ return Math.max(0, state.progression.unlocked-1); }
 // auto-cutter coins per slice: base × blade × (ingVal×laneMult) × income, NO combo
-function coinsPerSliceAuto(i){ return CONFIG.coinsPerSliceBase * bladeMult() * (INGREDIENTS[i].val*laneMult(i)) * incomeMult(); }
+function coinsPerSliceAuto(i){ return CONFIG.coinsPerSliceBase * bladeMult() * (INGREDIENTS[i].val*laneMult(i)) * incomeMult() * prestigeMult(); }
 // v2.3: discrete auto-cut cycle time per lane (ms). Tougher veg cut slower; Auto Slice Speed upgrade speeds all.
 function cutCycleMs(i){ return CONFIG.autoCutBaseMs * INGREDIENTS[i].cutFactor / (autoSpeedMult() * carryMult("overdrive")); }
 // v5: the player NO LONGER chooses the slicing veg — the dish auto-serves its recipe in order.
@@ -631,9 +702,10 @@ function gearUpgradeCost(slot){ return Math.floor(CONFIG.gearUpgradeCostBase*Mat
 let combo = 0;            // count
 let lastSliceAt = 0;
 function comboMult(){ return 1 + Math.min(combo,CONFIG.comboMax)*effComboStep(); }
-// v3 [active-tapper patch]: Overdrive — true while riding the stamina fuel (engages at threshold, drops to Normal at 0). Never blocks slicing.
+// v3 [active-tapper patch]: Overdrive — combo-gated burst that burns stamina fuel (engages at high combo, drops to Normal at 0). Never blocks slicing.
 let overdrive = false;
-function overdriveOn(){ return overdrive; }
+let surgeUntil = 0;       // v3: gem "Overdrive Surge" — forced Overdrive (ignores combo/fuel) until this timestamp
+function overdriveOn(){ return overdrive || surgeUntil>nowMs(); }
 
 // ============================================================
 //  AUDIO (synth, no assets)
@@ -752,6 +824,7 @@ function serveDish(){
     dish=null; renderHud(); return;
   }
   earnCoins(pay);                                         // v5: dish payout feeds chapterEarned
+  dailyEvent("dishes",1);                                 // v3: daily challenge (active dish served)
   // completion juice: floater, payout sound, plate slide-off
   floaters.push({x:plate?plate.x:CW/2, y:(plate?plate.y:CH*0.2)-20, txt:"+"+fmt(pay), life:1.2, perfect:true, vy:-0.6, big:true});
   payout();
@@ -775,26 +848,30 @@ function spawnProduce(){ serveNext(); }
 
 function sliceOne(){
   if(!produce || produce.left<=0) return;
-  // v3 [active-tapper patch]: STAMINA is now a risk/reward FUEL, not a hard gate. Slicing is NEVER blocked.
-  //   stamina >= threshold → Overdrive engages (boosted value+speed, drains stamina, scaled by combo);
-  //   stamina hits 0 → drop to Normal (base value+speed, NO drain) and regen re-arms it. (auto-cutters never touch this pool)
-  if(!overdrive && (state.stamina.cur||0) >= CONFIG.staminaOverdriveThreshold) overdrive=true;
-  if(overdrive){
-    const drain = CONFIG.staminaOverdriveDrainPerSlice * comboMult();   // higher combo burns faster = the risk side of the lever
-    state.stamina.cur = Math.max(0, (state.stamina.cur||0) - drain);
-    if((state.stamina.cur||0) <= 0) overdrive=false;                    // empty → drop to Normal (no block)
-  }
-  const odVal = overdrive ? CONFIG.staminaOverdriveValueMult : 1;
-  // v4: slicing is always 1 tap → 1 slice (multi-tap wear gate removed)
+  // v4: slicing is always 1 tap → 1 slice. Combo builds once per TAP (not per slice).
   const t=nowMs();
-  // combo builds once per TAP (not per slice) — multi-slice is yield/tap, orthogonal to combo
   combo=Math.min(combo+1, CONFIG.comboMax); lastSliceAt=t;
   if(combo>state.stats.bestCombo) state.stats.bestCombo=combo;
   if(rush && combo>rush.maxCombo) rush.maxCombo=combo;
+  // v3 [active-tapper patch]: OVERDRIVE is a combo-gated, fuel-burning BURST — NOT the default state.
+  //   Engages only at high combo WITH fuel → earned payoff (×value, ×speed). Burns stamina (faster at high combo);
+  //   at 0 fuel it drops back to Normal and stamina re-arms. Slicing is NEVER blocked.
+  if(!overdrive && combo>=CONFIG.staminaOverdriveComboReq && (state.stamina.cur||0)>=CONFIG.staminaOverdriveThreshold){
+    overdrive=true; milestone("⚡ OVERDRIVE!"); ding(CONFIG.comboMax); slowmo=0.3; setTimeout(()=>slowmo=1,90);
+    dailyEvent("overdrive",1);
+  }
+  if(surgeUntil>nowMs()) overdrive=true;                                 // v3: gem "Overdrive Surge" forces it on regardless of combo/fuel
+  if(overdrive && surgeUntil<=nowMs()){
+    state.stamina.cur = Math.max(0, (state.stamina.cur||0) - CONFIG.staminaOverdriveDrainPerSlice*comboMult());
+    if((state.stamina.cur||0)<=0) overdrive=false;                       // burned out → back to Normal (no block)
+  }
+  const odVal = overdrive ? CONFIG.staminaOverdriveValueMult : 1;
   // v2.2: ALWAYS exactly one slice per cut (multi-slice removed)
   const n=1;
   const per=coinsPerSlice(comboMult(), produce.ing.val*laneMult(produce.idx)*(produce.valMul||1)) * odVal;
   const gain=per;
+  // v3: daily challenge progress (active-only — manual slices + combo reached)
+  dailyEvent("slices",1); dailyEvent("combo",combo);
   state.stats.totalSlices+=n;
   // CHANGE 4: boss is a TIMED DISH-RUSH — slices bank to the current dish exactly like the core (no per-slice score/coins).
   // Dish completion adds its full gold VALUE to rush.score + increments rush.dishes (see serveDish); reward = score×tierMult at endBoss.
@@ -1070,7 +1147,7 @@ function drawFrame(){
   floaters=floaters.filter(drawFloater);
 }
 function loop(){
-  if(combo>0 && nowMs()-lastSliceAt>effDecay()){ combo=0; renderHud(); }
+  if(combo>0 && nowMs()-lastSliceAt>effDecay()){ combo=0; if(surgeUntil<=nowMs()) overdrive=false; renderHud(); }
   drawFrame();
   requestAnimationFrame(loop);
 }
@@ -1123,8 +1200,12 @@ const UI_REF = {
   ],
 };
 function renderTopBar(){
-  document.getElementById("topbar").innerHTML = UI_REF.topbar.currencies.map(c=>
+  let html = UI_REF.topbar.currencies.map(c=>
     `<span class="chip ${c.cls}"><span class="ico">${c.icon}</span><span>${fmt(state.currencies[c.key])}</span></span>`).join("");
+  if((state.progression.stars||0)>0) html += `<span class="chip" style="color:#7a5cff"><span class="ico">⭐</span><span>${fmt(state.progression.stars)}</span></span>`;
+  html += `<span class="chip" id="dailyChip"><span class="ico">📋</span><span class="dot"></span></span>`;   // v3: daily slate entry
+  document.getElementById("topbar").innerHTML = html;
+  const dc=document.getElementById("dailyChip"); if(dc){ dc.onclick=openDailyModal; dc.classList.toggle("alert", !!(state.daily&&state.daily.completedToday&&!state.daily.claimed)); }
 }
 let curPanel="home";
 function renderNav(){
@@ -1220,6 +1301,7 @@ function renderShop(){
       <div class="lvl">🪙${val.toFixed(2)}/cut${i===cur?' · <b>serving now</b>':''}</div>
       ${autoBlock}</div>
       <button class="cta" data-level="${i}" ${state.currencies.coins<cost?'disabled':''}>Level up<br><span class="cost">🪙${fmt(cost)}</span></button>
+      ${!autoOn?`<button class="ghost" data-instaauto="${i}" style="min-height:0;padding:8px 6px;font-size:11px;margin-left:6px" ${state.currencies.gems<CONFIG.laneInstantAutoGems?'disabled':''}>🪚<br>💎${CONFIG.laneInstantAutoGems}</button>`:''}
     </div></div>`;
   }
   if(state.progression.unlocked<INGREDIENTS.length){
@@ -1260,6 +1342,7 @@ function wireLaneTiles(container){
   // v5: tiles only LEVEL / UNLOCK products — no slicing-focus selection (slicing is auto-served)
   container.querySelectorAll("[data-level]").forEach(b=>b.onclick=(e)=>{ e.stopPropagation(); levelLane(+b.dataset.level); });
   container.querySelectorAll("[data-unlock]").forEach(b=>b.onclick=(e)=>{ e.stopPropagation(); unlockNext(); });
+  container.querySelectorAll("[data-instaauto]").forEach(b=>b.onclick=(e)=>{ e.stopPropagation(); buyLaneInstantAuto(+b.dataset.instaauto); });  // v3: gem instant lane-auto
 }
 // v2.2: home-screen lane manager strip (rich tiles; focus + level up + auto-ring/unlock-bar). Hidden in Rush.
 function renderLaneBar(){
@@ -1285,12 +1368,12 @@ function renderStage(){
     else cnt="🪙 "+fmt(score)+" · WON ✓ · next "+next.icon+" @"+fmt(need[next.key]);
     cnt+=" · "+(rush.dishes||0)+"🍽️";                                          // dishes count kept subtly
     document.getElementById("stageCount").textContent=cnt;
-    document.getElementById("stageFill").style.width=(rush.timeLeft/CONFIG.bossDuration*100)+"%";
+    document.getElementById("stageFill").style.width=(rush.timeLeft/(rush.dur||CONFIG.bossDuration)*100)+"%";
     return;
   }
   const ch=state.progression.chapter||0, earned=state.progression.chapterEarned||0, goal=chapterGoal();
-  document.getElementById("stageName").textContent="Chapter "+(ch+1);
-  document.getElementById("stageCount").textContent=fmt(Math.min(earned,goal))+"/"+fmt(goal)+" 🪙";
+  document.getElementById("stageName").textContent="Chapter "+(ch+1)+(rushHourOn()?" · 🔥":"");
+  document.getElementById("stageCount").textContent=fmt(Math.min(earned,goal))+"/"+fmt(goal)+" 🪙"+(rushHourOn()?" · Rush Hour":"");
   document.getElementById("stageFill").style.width=Math.min(100,earned/goal*100)+"%";
 }
 function gearStatLine(s){
@@ -1314,7 +1397,7 @@ function renderKitchen(){
 }
 function upgradeGear(s){ if(state.gear[s]>=3) return; const c=gearUpgradeCost(s); if(state.currencies.coins>=c){ state.currencies.coins-=c; state.gear[s]++; payout(); milestone(GEAR[s].icon+" "+GEAR[s].tiers[state.gear[s]]+"!"); renderHud(); saveState(); } }
 function renderHud(){
-  renderTopBar(); renderStage(); renderCombo(); renderStamina(); renderLaneBar(); renderCarryBadge(); renderBossCta(); renderAutoChefToggle();
+  renderTopBar(); renderStage(); renderCombo(); renderStamina(); renderLaneBar(); renderCarryBadge(); renderBossCta(); renderAutoChefToggle(); renderPrestigeCta(); renderSurge();
   const inRush=!!rush;
   // BOSS now lives IN the #stageBar slot (renderStage swaps its content) — the bar stays visible, no separate HUD, no layout shift.
   // CHANGE 1: bottom UI (lane strip + stamina bar) stays VISIBLE during the boss (not the focus, but always shown)
@@ -1446,7 +1529,8 @@ function startBoss(){
   // CHANGE 4: boss is a TIMED DISH-RUSH won by GOLD VALUE — rush.score accrues each dish's full payout; tiers are gold thresholds
   // fixed at boss start from chapterGoal() so a stronger build (more $/dish) clears it with fewer dishes.
   const goal=chapterGoal();
-  rush={ timeLeft:CONFIG.bossDuration, dishes:0, score:0, maxCombo:0, boss:true,
+  const dur=CONFIG.bossDuration + (rushHourOn()?CONFIG.rushHourDurationBonus:0);   // v3: Rush Hour event adds boss time
+  rush={ timeLeft:dur, dur:dur, dishes:0, score:0, maxCombo:0, boss:true,
     need:{ bronze:Math.floor(goal*CONFIG.bossGoldFrac.bronze), silver:Math.floor(goal*CONFIG.bossGoldFrac.silver), gold:Math.floor(goal*CONFIG.bossGoldFrac.gold) } };
   combo=0; overdrive=false;             // v3 [active-tapper patch]: reset Overdrive so the boss starts on a fresh full-fuel ride
   state.stamina.cur=staminaMax();       // v4: refill stamina at boss start so the boss is fair (still drains/regens during it)
@@ -1473,7 +1557,8 @@ function endBoss(){
   // CHANGE 4: tier by GOLD VALUE earned — coin reward = floor(score × tierMult) (no hard fail)
   const tier=bossTierFor(score, rush.need);
   bossPerkEarned = score >= rush.need.bronze;               // ≥ Bronze need → perk pick + chapter clear
-  const tierMult=tier?CONFIG.bossTierMult[tier.name]:CONFIG.bossTierMult.none;
+  if(tier){ if(tier.name==="Silver"||tier.name==="Gold") dailyEvent("bossSilver",1); if(tier.name==="Gold") dailyEvent("bossGold",1); }  // v3: daily boss challenges
+  const tierMult=(tier?CONFIG.bossTierMult[tier.name]:CONFIG.bossTierMult.none)*(rushHourOn()?CONFIG.rushHourTierBonus:1);  // v3: Rush Hour ×payout
   const reward=Math.floor(score*tierMult);
   state.currencies.coins+=reward; state.stats.totalCoinsEarned+=reward; state.stats.runCoinsEarned+=reward;
   pendingRushReward=reward;
@@ -1497,6 +1582,8 @@ function endBoss(){
   // CHANGE 4: state whether the perk was earned (≥ Bronze gold value) right on the result modal
   document.getElementById("rrDrop").textContent=(bossPerkEarned?"🔥 Perk earned — pick a boost next!":"Not enough gold — build up and retry")+(dropTxt?(" · "+dropTxt):"");
   const ad=document.getElementById("rrAd"); ad.disabled=false; ad.style.display=reward>0?"":"none";
+  const retry=document.getElementById("rrRetry");   // v3: gem boss retry — only when you fell short (< Bronze)
+  if(retry){ retry.textContent="🔁 Retry boss 💎"+CONFIG.bossRetryGems; retry.style.display=(!bossPerkEarned)?"":"none"; retry.disabled=state.currencies.gems<CONFIG.bossRetryGems; }
   document.getElementById("rushResult").classList.add("open");
   // back to idle veg; level advances (and the first dish of the next level starts) when the modifier is picked
   spawnPlate(false); produce=null; serveNext();
@@ -1545,10 +1632,163 @@ function pickCarry(m){
 function clearChapter(perkName){
   state.progression.chapter=(state.progression.chapter||0)+1;
   state.progression.chapterEarned=0;
+  if(state.progression.chapter % CONFIG.milestoneChapters===0){ state.currencies.gems+=CONFIG.milestoneGems; milestone("💎 +"+CONFIG.milestoneGems+" chapter milestone!"); }  // v3: gem faucet
   produce=null; dish=null; spawnPlate(false); serveNext();
   milestone((perkName?"🔥 "+perkName+"! ":"")+"Chapter "+(state.progression.chapter+1));
   renderHud(); saveState();
 }
+
+// ============================================================
+//  v3 [active-tapper patch] — PRESTIGE / DAILY / GEM ECONOMY / EVENT
+// ============================================================
+function doPrestige(extraStar){
+  let gain = prestigeGain() + (extraStar?1:0);
+  if(gain<=0) return;
+  state.progression.stars=(state.progression.stars||0)+gain;
+  state.progression.prestiges=(state.progression.prestiges||0)+1;
+  // RESET run progress; KEEP gems, gear, stars, lifetime stats
+  state.currencies.coins=60;
+  state.progression.unlocked=1;
+  state.progression.incomeLevel=0; state.progression.sliceSpeedLevel=0; state.progression.autoSpeedLevel=0;
+  state.progression.staminaLevel=0; state.progression.staminaRegenLevel=0;
+  state.progression.chapter=0; state.progression.chapterEarned=0;
+  state.progression.autoChef=false; state.progression.autoChefSpeedLevel=0;
+  state.lanes=INGREDIENTS.map(()=>({level:0,auto:false,autoProg:0}));
+  state.flags.unlockPromptShown=INGREDIENTS.map(()=>false);
+  state.stamina.cur=staminaMax(); state.carry=null;
+  combo=0; overdrive=false; surgeUntil=0; dish=null; produce=null;
+  spawnPlate(false); serveNext();
+  milestone("⭐ PRESTIGE +"+gain+"!"); payout();
+  renderHud(); saveState();
+}
+function renderPrestigeCta(){
+  const b=document.getElementById("prestigeCta"); if(!b) return;
+  if(rush || !prestigeReady()){ b.classList.remove("on"); return; }
+  b.textContent="⭐ PRESTIGE +"+prestigeGain();
+  b.classList.add("on");
+}
+function openPrestigeModal(){
+  const g=prestigeGain(); if(g<=0) return;
+  document.getElementById("pmGain").textContent="+"+g+" ⭐";
+  const after=1+((state.progression.stars||0)+g)*CONFIG.starBonus;
+  document.getElementById("pmMult").textContent="Global coins ×"+after.toFixed(2)+"  (now ×"+prestigeMult().toFixed(2)+")";
+  document.getElementById("pmWarn").textContent="Resets products, levels, upgrades & chapter. Keeps 💎 gems, gear & ⭐ stars.";
+  const skip=document.getElementById("pmSkip");
+  skip.textContent="💎 "+CONFIG.prestigeSkipGems+" → +1 extra ⭐";
+  skip.disabled=state.currencies.gems<CONFIG.prestigeSkipGems;
+  document.getElementById("prestigeModal").classList.add("open");
+}
+// ---- gem "Overdrive Surge" ----
+function buySurge(){ if(surgeUntil>nowMs()||state.currencies.gems<CONFIG.surgeGems) return; state.currencies.gems-=CONFIG.surgeGems; surgeUntil=nowMs()+CONFIG.surgeMs; overdrive=true; milestone("⚡ OVERDRIVE SURGE!"); payout(); renderHud(); saveState(); }
+function renderSurge(){
+  const b=document.getElementById("surgeBtn"); if(!b) return;
+  if(rush){ b.style.display="none"; return; }
+  b.style.display="";
+  if(surgeUntil>nowMs()){ b.textContent="⚡ "+Math.ceil((surgeUntil-nowMs())/1000)+"s"; b.disabled=true; b.classList.remove("cta"); b.classList.add("ghost"); }
+  else { const afford=state.currencies.gems>=CONFIG.surgeGems; b.textContent="⚡ Surge 💎"+CONFIG.surgeGems; b.disabled=!afford; b.classList.toggle("cta",afford); b.classList.toggle("ghost",!afford); }
+}
+// ---- gem instant lane-auto unlock ----
+function buyLaneInstantAuto(i){ if(i>=state.progression.unlocked) return; const L=lane(i); if(L.auto) return; if(state.currencies.gems<CONFIG.laneInstantAutoGems) return; state.currencies.gems-=CONFIG.laneInstantAutoGems; if(L.level<CONFIG.laneAutoUnlockLevel) L.level=CONFIG.laneAutoUnlockLevel; L.auto=true; milestone("🪚 "+INGREDIENTS[i].name+" auto!"); payout(); renderHud(); saveState(); }
+
+// ---- DAILY PRESSURE SLATE (active-only) ----
+const DAILY_POOL=[
+  {id:"slices",   name:"Speed Cuts",   desc:"Make {t} manual slices",      diff:"e", target:200, coins:300, gems:0},
+  {id:"dishes",   name:"Rush Service", desc:"Serve {t} dishes",            diff:"e", target:12,  coins:250, gems:0},
+  {id:"combo",    name:"Combo Chain",  desc:"Reach combo x{t}",            diff:"m", target:15,  coins:350, gems:0},
+  {id:"comboMax", name:"Max Combo",    desc:"Hit MAX combo (x{t})",        diff:"m", target:25,  coins:400, gems:0},
+  {id:"overdrive",name:"Overdrive",    desc:"Trigger Overdrive {t} times", diff:"m", target:5,   coins:350, gems:0},
+  {id:"bossSilver",name:"Silver Plate",desc:"Beat a boss (Silver+)",       diff:"h", target:1,   coins:500, gems:5},
+  {id:"bossGold", name:"Gold Plate",   desc:"Beat a boss on Gold",         diff:"h", target:1,   coins:700, gems:5},
+];
+function todayKey(){ const d=new Date(); return d.getUTCFullYear()+"-"+(d.getUTCMonth()+1)+"-"+d.getUTCDate(); }
+function dailyStreakMult(){ const s=state.daily.streak||0; return s>=7?1.5:s>=5?1.3:s>=3?1.15:1.0; }
+function dailyDef(id){ return DAILY_POOL.find(x=>x.id===id); }
+function genDailySlate(){
+  const byD=d=>DAILY_POOL.filter(x=>x.diff===d);
+  const pick=arr=>arr[Math.floor(rand()*arr.length)];
+  const chosen=[pick(byD("e")), pick(byD("m")), pick(byD("h"))];
+  state.daily.slate=chosen.map(c=>({id:c.id, progress:0, target:c.target, done:false}));
+  state.daily.dateKey=todayKey(); state.daily.completedToday=false; state.daily.claimed=false;
+}
+function ensureDaily(){
+  if(!state.daily) state.daily={slate:[],streak:0};
+  const key=todayKey();
+  if(state.daily.dateKey!==key){
+    if(state.daily.dateKey && !state.daily.completedToday){ state.daily.streak=Math.max(0,(state.daily.streak||0)-1); }  // streak shield: miss a day → -1, not reset
+    genDailySlate();
+  } else if(!(state.daily.slate && state.daily.slate.length)){ genDailySlate(); }
+}
+function dailyEvent(type,value){
+  if(!state.daily||!state.daily.slate) return;
+  let changed=false;
+  for(const s of state.daily.slate){
+    if(s.done) continue;
+    const isComboCard=(s.id==="combo"||s.id==="comboMax");
+    if(s.id===type || (type==="combo" && isComboCard)){
+      if(isComboCard){ if(value>s.progress){ s.progress=value; changed=true; } }  // combo cards track PEAK reached
+      else { s.progress+=value; changed=true; }
+    }
+    if(!s.done && s.progress>=s.target){ s.done=true; changed=true; }
+  }
+  if(changed){ checkDailyComplete(); updateDailyBadge(); }
+}
+function checkDailyComplete(){
+  if(state.daily.completedToday) return;
+  if(state.daily.slate.length && state.daily.slate.every(s=>s.done)){
+    state.daily.completedToday=true;
+    state.daily.streak=(state.daily.streak||0)+1;
+    state.daily.lastCompleteKey=todayKey();
+    milestone("📋 Daily Complete! 🔥");
+  }
+}
+function claimDaily(){
+  if(!state.daily.completedToday || state.daily.claimed) return;
+  const m=dailyStreakMult(); let coins=0, gems=CONFIG.dailyGemReward;
+  for(const s of state.daily.slate){ const def=dailyDef(s.id); if(def){ coins+=def.coins; gems+=def.gems; } }
+  coins=Math.floor(coins*m);
+  if((state.daily.streak||0)%7===0 && (state.daily.streak||0)>0) gems+=10;   // weekly streak chest
+  earnCoins(coins); state.currencies.gems+=gems; state.daily.claimed=true; payout();
+  milestone("🎁 +"+fmt(coins)+"🪙 +"+gems+"💎"); renderHud(); saveState();
+}
+function grantLoginGems(){ const key=todayKey(); if(state.daily.loginKey===key) return 0; state.daily.loginKey=key; state.currencies.gems+=CONFIG.loginGemBase; return CONFIG.loginGemBase; }
+function adTipJar(){ const key=todayKey(); if(state.daily.adKey!==key){ state.daily.adKey=key; state.daily.adsToday=0; } if((state.daily.adsToday||0)>=CONFIG.adTipCapPerDay) return; state.daily.adsToday=(state.daily.adsToday||0)+1; state.currencies.gems+=CONFIG.adTipGems; payout(); renderDailyModal(); renderHud(); saveState(); }
+function updateDailyBadge(){ const c=document.getElementById("dailyChip"); if(c) c.classList.toggle("alert", !!(state.daily&&state.daily.completedToday&&!state.daily.claimed)); }
+function openDailyModal(){ ensureDaily(); renderDailyModal(); document.getElementById("dailyModal").classList.add("open"); }
+function renderDailyModal(){
+  ensureDaily();
+  const m=dailyStreakMult();
+  document.getElementById("dmStreak").textContent="🔥 Streak: "+(state.daily.streak||0)+"d · ×"+m.toFixed(2)+" rewards";
+  document.getElementById("dmList").innerHTML=state.daily.slate.map(s=>{
+    const def=dailyDef(s.id)||{name:s.id,desc:"",coins:0,gems:0};
+    const desc=(def.desc||"").replace("{t}",s.target);
+    const rew=(def.coins?("🪙"+fmt(Math.floor(def.coins*m))):"")+(def.gems?(" 💎"+def.gems):"");
+    const pct=Math.min(100,(s.progress/s.target)*100);
+    return `<div class="dm-row ${s.done?'done':''}"><div class="dm-top"><span class="dm-name">${def.name}</span><span class="dm-rew">${rew}</span></div>
+      <div class="lvl">${desc} — ${Math.min(s.progress,s.target)}/${s.target}</div>
+      <div class="dm-bar"><div class="lf" style="width:${pct}%"></div></div></div>`;
+  }).join("");
+  const claim=document.getElementById("dmClaim");
+  claim.disabled=!(state.daily.completedToday&&!state.daily.claimed);
+  claim.textContent=state.daily.claimed?"Claimed ✓":(state.daily.completedToday?"Claim rewards 🎁":"Finish all 3 to claim");
+  const ad=document.getElementById("dmAd");
+  const adsLeft=CONFIG.adTipCapPerDay-((state.daily.adKey===todayKey())?(state.daily.adsToday||0):0);
+  ad.textContent="▶ Tip Jar: ad → 💎"+CONFIG.adTipGems+" ("+Math.max(0,adsLeft)+" left)";
+  ad.disabled=adsLeft<=0;
+}
+// ---- RUSH HOUR live-ops ----
+function checkRushHour(){ const d=new Date().getUTCDay(); state.event.rushHourActive=(d===6||d===0); }   // Sat/Sun UTC (cheat can force)
+function rushHourOn(){ return !!(state.event && state.event.rushHourActive); }
+
+// ---- v3 wiring (DOM elements exist — script runs at end of <body>) ----
+document.getElementById("prestigeCta").onclick=openPrestigeModal;
+document.getElementById("pmDo").onclick=()=>{ document.getElementById("prestigeModal").classList.remove("open"); doPrestige(false); };
+document.getElementById("pmSkip").onclick=()=>{ if(state.currencies.gems>=CONFIG.prestigeSkipGems){ state.currencies.gems-=CONFIG.prestigeSkipGems; document.getElementById("prestigeModal").classList.remove("open"); doPrestige(true); } };
+document.getElementById("pmCancel").onclick=()=>{ document.getElementById("prestigeModal").classList.remove("open"); };
+document.getElementById("surgeBtn").onclick=buySurge;
+document.getElementById("dmClaim").onclick=()=>{ claimDaily(); renderDailyModal(); updateDailyBadge(); };
+document.getElementById("dmAd").onclick=adTipJar;
+document.getElementById("dmClose").onclick=()=>{ document.getElementById("dailyModal").classList.remove("open"); };
+document.getElementById("rrRetry").onclick=()=>{ if(!rush && state.currencies.gems>=CONFIG.bossRetryGems){ state.currencies.gems-=CONFIG.bossRetryGems; document.getElementById("rushResult").classList.remove("open"); startBoss(); } };
 
 // ============================================================
 //  OFFLINE EARNINGS
@@ -1561,7 +1801,7 @@ function offlinePerSec(){
   if(auto>0) return auto*CONFIG.offlineRatePct;
   // fallback: assume hand-slicing the highest unlocked product at a modest rate
   const f=highestUnlockedIdx();
-  return CONFIG.coinsPerSliceBase*bladeMult()*(INGREDIENTS[f].val*laneMult(f))*incomeMult()*CONFIG.offlineAssumedSps*CONFIG.offlineRatePct;
+  return CONFIG.coinsPerSliceBase*bladeMult()*(INGREDIENTS[f].val*laneMult(f))*incomeMult()*prestigeMult()*CONFIG.offlineAssumedSps*CONFIG.offlineRatePct;
 }
 function grantOffline(seconds){
   const cap=CONFIG.offlineCapHours*3600;
@@ -1615,7 +1855,7 @@ function buildCheats(){
     ["coinsPerSliceBase",0.5,10,0.5],["comboStep",0,0.5,0.01],
     ["comboDecayMs",800,4000,100],["staminaRegenBase",1,50,1],
     // v3 [active-tapper patch]: live Overdrive knobs (replaced the now-vestigial staminaPerSlice slider)
-    ["staminaOverdriveThreshold",0,100,5],["staminaOverdriveValueMult",1,3,0.1],
+    ["staminaOverdriveComboReq",1,25,1],["staminaOverdriveThreshold",0,100,5],["staminaOverdriveValueMult",1,3,0.1],
     ["staminaOverdriveSpeedMult",1,2.5,0.05],["staminaEmptyRegenMult",1,5,0.5],
     ["autoCutBaseMs",300,4000,100],["autoChefBaseMs",300,4000,100],["laneValPerLevel",0.02,1,0.02],
     ["offlineRatePct",0,1,0.05],["offlineCapHours",1,24,1],
@@ -1633,6 +1873,8 @@ function buildCheats(){
     <button data-c="autoall">Auto all</button>
     <button data-c="drain">Drain stamina</button>
     <button data-c="unlockAll">Unlock all 🥕</button>
+    <button data-c="rushhour">🔥 Rush Hour</button>
+    <button data-c="addgems">+50 💎</button>
     <button data-c="dump">Dump state</button>
     <button data-c="reset">Reset save</button>
   </div>
@@ -1656,6 +1898,8 @@ function cheat(c){
   if(c==="autoall"){ for(let i=0;i<state.progression.unlocked;i++){ lane(i).auto=true; } }
   if(c==="drain"){ state.stamina.cur=0; }
   if(c==="unlockAll"){ state.progression.unlocked=INGREDIENTS.length; }
+  if(c==="rushhour"){ state.event.rushHourActive=!state.event.rushHourActive; milestone(state.event.rushHourActive?"🔥 Rush Hour ON":"Rush Hour off"); }
+  if(c==="addgems"){ state.currencies.gems+=50; }
   if(c==="dump"){ console.log(JSON.parse(JSON.stringify(state))); }
   if(c==="reset"){ if(confirm("Wipe ALL progress and reset the save? This cannot be undone.")) resetState(); return; }
   renderHud(); saveState();
@@ -1679,6 +1923,9 @@ window.recStop=function(){ if(!_rec)return; _rec.expected={final_panel:curPanel,
 // ============================================================
 function boot(){
   resize(); buildCheats();
+  ensureDaily();                                          // v3: today's slate (+ streak shield for missed days)
+  const lg=grantLoginGems(); if(lg>0) setTimeout(()=>milestone("📅 Daily login +"+lg+"💎"),900);
+  checkRushHour();                                        // v3: weekend Rush Hour flag (cheat can force)
   // v4: clamp loaded stamina to current max (old saves merge with cur=staminaMaxBase)
   state.stamina.cur=Math.min(staminaMax(), Math.max(0, state.stamina.cur||0));
   // v5: no slicing-focus — the dish auto-serves; go("home") builds the plate + first dish + serves its first veg
