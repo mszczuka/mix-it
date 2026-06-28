@@ -410,7 +410,7 @@ const CONFIG = {
   staminaPerSlice: 1,                                    // [balans] reverted the 2→harsh doubling; 1 = far less punishing after empty
   staminaCostBase: 800, staminaCostGrowth: 1.4,          // [balans] growth 1.6->1.4 — stamina/regen are the only real active throttle; keep them buyable but on a steady curve so the gate is not instantly removed
   staminaRegenCostBase: 1100, staminaRegenCostGrowth: 1.4, // [balans] growth 1.6->1.4 — same reasoning; regen is the true coins/min cap for held play
-  staminaRefillCostPer: 3,                               // [balans] instant full-refill cost = this × current staminaMax (gold sink for impatient players)
+  staminaRefillGems: 1,                                  // [balans] instant full refill costs GEMS (premium impatience lever + gem sink; not spammable with gold)
   offlineRatePct: 0.5,        // fraction of estimated active rate
   offlineCapHours: 8,
   offlineAssumedSps: 1.4,     // assumed slices/sec for offline estimate
@@ -464,7 +464,14 @@ const INGREDIENTS = [
   {name:"Carrot",   skin:"#e8821e", core:"#f6b870", emoji:"🥕", slices:21, val:2.8, cost:110, cutFactor:1.2},  // [balans]
   {name:"Eggplant", skin:"#6b4a8a", core:"#b79ad0", emoji:"🍆", slices:24, val:4.0, cost:220, cutFactor:1.4},  // [balans]
   {name:"Steak",    skin:"#b1402f", core:"#e08877", emoji:"🥩", slices:18, val:6,   cost:460, cutFactor:1.8},  // [balans]
-  {name:"Truffle",  skin:"#3a2c22", core:"#7a5a44", emoji:"🍄", slices:15, val:9,   cost:950, cutFactor:2.2},  // [balans]
+  {name:"Truffle",  skin:"#3a2c22", core:"#7a5a44", emoji:"🍄", slices:15, val:9,   cost:950,    cutFactor:2.2},  // [balans]
+  {name:"Cheese",   skin:"#e8b84b", core:"#f6d98a", emoji:"🧀", slices:16, val:13.5,cost:1900,   cutFactor:1.5},  // [balans] extended roster — each unlock ~1.5x val / ~2x cost
+  {name:"Bread",    skin:"#c2863c", core:"#e8c98a", emoji:"🥖", slices:20, val:20,  cost:3800,   cutFactor:1.5},  // [balans]
+  {name:"Pineapple",skin:"#d9a521", core:"#f2dd6e", emoji:"🍍", slices:26, val:30,  cost:7600,   cutFactor:2.0},  // [balans]
+  {name:"Avocado",  skin:"#5a7d3a", core:"#cfe08a", emoji:"🥑", slices:18, val:45,  cost:15000,  cutFactor:1.7},  // [balans]
+  {name:"Lobster",  skin:"#c0392b", core:"#e8826e", emoji:"🦞", slices:16, val:68,  cost:30000,  cutFactor:2.3},  // [balans]
+  {name:"Bacon",    skin:"#9a3b2f", core:"#e0a0a0", emoji:"🥓", slices:18, val:100, cost:60000,  cutFactor:2.0},  // [balans]
+  {name:"Sushi",    skin:"#2c2c3a", core:"#e85a6e", emoji:"🍣", slices:14, val:150, cost:120000, cutFactor:2.5},  // [balans]
 ];
 
 const STATE_KEY = "slicetycoon.save.v2.6";   // bumped so the cleaned schema starts fresh
@@ -475,12 +482,12 @@ const SCHEMA_DEFAULT = {
     staminaLevel:0, staminaRegenLevel:0,                  // STAMINA upgrades
     chapter:0, chapterEarned:0,                           // BOSS-GATED CHAPTERS — chapterEarned accrues every coin; at chapterGoal() the boss CTA appears
     autoChef:false},                                      // v2.7: one-time Auto-Slicer unlock (auto-cuts the current front veg)
-  lanes:[{level:0,auto:false,autoProg:0},{level:0,auto:false,autoProg:0},{level:0,auto:false,autoProg:0},{level:0,auto:false,autoProg:0},{level:0,auto:false,autoProg:0},{level:0,auto:false,autoProg:0},{level:0,auto:false,autoProg:0}], // one per ingredient (autoProg = discrete auto-cut cycle 0..1)
+  lanes:INGREDIENTS.map(()=>({level:0,auto:false,autoProg:0})), // one per ingredient (autoProg = discrete auto-cut cycle 0..1) — dynamic so adding products needs no length sync
   gear:{knife:0, board:0, plate:0},                   // 0=none 1=Common 2=Rare 3=Epic
   stamina:{cur:CONFIG.staminaMaxBase},                // active-cut gate — manual slice spends staminaPerSlice; regens over time
   stats:{totalSlices:0, totalCoinsEarned:0, bestCombo:0, runCoinsEarned:0, platesServed:0},
   time:{lastSeen:0},
-  flags:{ftueStage:0, shopPending:false, kitchenPending:false, autoChefOn:true, unlockPromptShown:[false,false,false,false,false,false,false]}, // CHANGE 2: per-product one-time affordability popup guard; autoChefOn: Auto-Slicer toggle (v2.7)
+  flags:{ftueStage:0, shopPending:false, kitchenPending:false, autoChefOn:true, unlockPromptShown:INGREDIENTS.map(()=>false)}, // CHANGE 2: per-product one-time affordability popup guard (dynamic length); autoChefOn: Auto-Slicer toggle (v2.7)
   carry:null,                                         // v2: pending carryover modifier {id,name,eff,expiresAt} or null
 };
 
@@ -545,7 +552,7 @@ function staminaMax(){ return CONFIG.staminaMaxBase + (state.progression.stamina
 function staminaRegen(){ return CONFIG.staminaRegenBase + (state.progression.staminaRegenLevel||0)*CONFIG.staminaRegenPerLevel; } // per second
 function staminaCost(){ return Math.floor(CONFIG.staminaCostBase*Math.pow(CONFIG.staminaCostGrowth, state.progression.staminaLevel||0)); }
 function staminaRegenCost(){ return Math.floor(CONFIG.staminaRegenCostBase*Math.pow(CONFIG.staminaRegenCostGrowth, state.progression.staminaRegenLevel||0)); }
-function staminaRefillCost(){ return Math.max(1, Math.floor(staminaMax()*CONFIG.staminaRefillCostPer)); }   // instant full refill for gold
+function staminaRefillCost(){ return CONFIG.staminaRefillGems; }   // instant full refill — paid in GEMS now
 
 // ---- v2.1: GLOBAL stat upgrades (Income / Slice Speed / Auto Slice Speed) ----
 function incomeMult(){ return 1 + (state.progression.incomeLevel||0)*CONFIG.incomePerLevel; }      // multiplies idle coin income (NOT Rush score)
@@ -1115,8 +1122,8 @@ function renderStamina(){
   const t=document.getElementById("staminaTxt"); if(t) t.textContent="💪 "+cur+"/"+max;
   const b=document.getElementById("staminaBtn");
   if(b){
-    const c=staminaRefillCost(), full=cur>=max, afford=!full && state.currencies.coins>=c;
-    b.textContent = full ? "Full ✓" : ("Refill 🪙"+fmt(c));
+    const c=staminaRefillCost(), full=cur>=max, afford=!full && state.currencies.gems>=c;
+    b.textContent = full ? "Full ✓" : ("Refill 💎"+c);
     b.disabled = full || !afford;
     b.classList.toggle("cta", afford); b.classList.toggle("ghost", !afford);
   }
@@ -1322,7 +1329,7 @@ function setSub(sub){ if(sub===curSub) return; curSub=sub; renderManage(); }
 // v4: stamina upgrade buy handlers
 document.getElementById("stmBuy").onclick=()=>{ const c=staminaCost(); if(state.currencies.coins>=c){ state.currencies.coins-=c; state.progression.staminaLevel=(state.progression.staminaLevel||0)+1; payout(); renderHud(); saveState(); } };
 document.getElementById("strBuy").onclick=()=>{ const c=staminaRegenCost(); if(state.currencies.coins>=c){ state.currencies.coins-=c; state.progression.staminaRegenLevel=(state.progression.staminaRegenLevel||0)+1; payout(); renderHud(); saveState(); } };
-document.getElementById("staminaBtn").onclick=()=>{ const c=staminaRefillCost(); if(state.stamina.cur<staminaMax() && state.currencies.coins>=c){ state.currencies.coins-=c; state.stamina.cur=staminaMax(); payout(); renderHud(); saveState(); } };
+document.getElementById("staminaBtn").onclick=()=>{ const c=staminaRefillCost(); if(state.stamina.cur<staminaMax() && state.currencies.gems>=c){ state.currencies.gems-=c; state.stamina.cur=staminaMax(); payout(); renderHud(); saveState(); } };
 // v2.1: global stat upgrade buy handlers
 document.getElementById("incBuy").onclick=()=>{ const c=incomeCost(); if(state.currencies.coins>=c){ state.currencies.coins-=c; state.progression.incomeLevel=(state.progression.incomeLevel||0)+1; payout(); renderHud(); saveState(); } };
 document.getElementById("ssBuy").onclick=()=>{ const c=sliceSpeedCost(); if(state.currencies.coins>=c){ state.currencies.coins-=c; state.progression.sliceSpeedLevel=(state.progression.sliceSpeedLevel||0)+1; payout(); renderHud(); saveState(); } };
