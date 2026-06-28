@@ -488,8 +488,6 @@ const CONFIG = {
   milestoneChapters: 5, milestoneGems: 3, // every N chapters → gems
   bossRetryGems: 2,              // gem boss retry (re-arm the boss CTA instantly)
   laneInstantAutoGems: 5,        // gem: instantly unlock a lane's auto-cutter (skip to laneAutoUnlockLevel)
-  rushHourTierBonus: 1.5,        // Rush Hour event: ×boss tier payout
-  rushHourDurationBonus: 10,     // Rush Hour event: +seconds on boss timer
 };
 
 const INGREDIENTS = [
@@ -527,8 +525,6 @@ const SCHEMA_DEFAULT = {
   carry:null,                                         // v2: pending carryover modifier {id,name,eff,expiresAt} or null
   // v3 [active-tapper patch]: DAILY PRESSURE SLATE (active-only challenges) + login/ad gem faucets
   daily:{ dateKey:"", slate:[], completedToday:false, claimed:false, streak:0, lastCompleteKey:"", loginKey:"", adsToday:0, adKey:"" },
-  // v3: live-ops event flag (Rush Hour)
-  event:{ rushHourActive:false },
 };
 
 // deep merge defaults so older saves don't crash
@@ -1313,12 +1309,12 @@ function renderStage(){
     else cnt="🪙 "+fmt(score)+" · WON ✓ · next "+next.icon+" @"+fmt(need[next.key]);
     cnt+=" · "+(rush.dishes||0)+"🍽️";                                          // dishes count kept subtly
     document.getElementById("stageCount").textContent=cnt;
-    document.getElementById("stageFill").style.width=(rush.timeLeft/(rush.dur||CONFIG.bossDuration)*100)+"%";
+    document.getElementById("stageFill").style.width=(rush.timeLeft/CONFIG.bossDuration*100)+"%";
     return;
   }
   const ch=state.progression.chapter||0, earned=state.progression.chapterEarned||0, goal=chapterGoal();
-  document.getElementById("stageName").textContent="Chapter "+(ch+1)+(rushHourOn()?" · 🔥":"");
-  document.getElementById("stageCount").textContent=fmt(Math.min(earned,goal))+"/"+fmt(goal)+" 🪙"+(rushHourOn()?" · Rush Hour":"");
+  document.getElementById("stageName").textContent="Chapter "+(ch+1);
+  document.getElementById("stageCount").textContent=fmt(Math.min(earned,goal))+"/"+fmt(goal)+" 🪙";
   document.getElementById("stageFill").style.width=Math.min(100,earned/goal*100)+"%";
 }
 function gearStatLine(s){
@@ -1474,8 +1470,7 @@ function startBoss(){
   // CHANGE 4: boss is a TIMED DISH-RUSH won by GOLD VALUE — rush.score accrues each dish's full payout; tiers are gold thresholds
   // fixed at boss start from chapterGoal() so a stronger build (more $/dish) clears it with fewer dishes.
   const goal=chapterGoal();
-  const dur=CONFIG.bossDuration + (rushHourOn()?CONFIG.rushHourDurationBonus:0);   // v3: Rush Hour event adds boss time
-  rush={ timeLeft:dur, dur:dur, dishes:0, score:0, maxCombo:0, boss:true,
+  rush={ timeLeft:CONFIG.bossDuration, dishes:0, score:0, maxCombo:0, boss:true,
     need:{ bronze:Math.floor(goal*CONFIG.bossGoldFrac.bronze), silver:Math.floor(goal*CONFIG.bossGoldFrac.silver), gold:Math.floor(goal*CONFIG.bossGoldFrac.gold) } };
   combo=0;
   state.stamina.cur=staminaMax();       // v4: refill stamina at boss start so the boss is fair (still drains/regens during it)
@@ -1503,7 +1498,7 @@ function endBoss(){
   const tier=bossTierFor(score, rush.need);
   bossPerkEarned = score >= rush.need.bronze;               // ≥ Bronze need → perk pick + chapter clear
   if(tier){ if(tier.name==="Silver"||tier.name==="Gold") dailyEvent("bossSilver",1); if(tier.name==="Gold") dailyEvent("bossGold",1); }  // v3: daily boss challenges
-  const tierMult=(tier?CONFIG.bossTierMult[tier.name]:CONFIG.bossTierMult.none)*(rushHourOn()?CONFIG.rushHourTierBonus:1);  // v3: Rush Hour ×payout
+  const tierMult=tier?CONFIG.bossTierMult[tier.name]:CONFIG.bossTierMult.none;
   const reward=Math.floor(score*tierMult);
   state.currencies.coins+=reward; state.stats.totalCoinsEarned+=reward; state.stats.runCoinsEarned+=reward;
   pendingRushReward=reward;
@@ -1673,10 +1668,6 @@ function renderDailyModal(){
   ad.textContent="▶ Tip Jar: ad → 💎"+CONFIG.adTipGems+" ("+Math.max(0,adsLeft)+" left)";
   ad.disabled=adsLeft<=0;
 }
-// ---- RUSH HOUR live-ops ----
-function checkRushHour(){ const d=new Date().getUTCDay(); state.event.rushHourActive=(d===6||d===0); }   // Sat/Sun UTC (cheat can force)
-function rushHourOn(){ return !!(state.event && state.event.rushHourActive); }
-
 // ---- v3 wiring (DOM elements exist — script runs at end of <body>) ----
 document.getElementById("dmClaim").onclick=()=>{ claimDaily(); renderDailyModal(); updateDailyBadge(); };
 document.getElementById("dmAd").onclick=adTipJar;
@@ -1763,7 +1754,6 @@ function buildCheats(){
     <button data-c="autoall">Auto all</button>
     <button data-c="drain">Drain stamina</button>
     <button data-c="unlockAll">Unlock all 🥕</button>
-    <button data-c="rushhour">🔥 Rush Hour</button>
     <button data-c="addgems">+50 💎</button>
     <button data-c="dump">Dump state</button>
     <button data-c="reset">Reset save</button>
@@ -1788,7 +1778,6 @@ function cheat(c){
   if(c==="autoall"){ for(let i=0;i<state.progression.unlocked;i++){ lane(i).auto=true; } }
   if(c==="drain"){ state.stamina.cur=0; }
   if(c==="unlockAll"){ state.progression.unlocked=INGREDIENTS.length; }
-  if(c==="rushhour"){ state.event.rushHourActive=!state.event.rushHourActive; milestone(state.event.rushHourActive?"🔥 Rush Hour ON":"Rush Hour off"); }
   if(c==="addgems"){ state.currencies.gems+=50; }
   if(c==="dump"){ console.log(JSON.parse(JSON.stringify(state))); }
   if(c==="reset"){ if(confirm("Wipe ALL progress and reset the save? This cannot be undone.")) resetState(); return; }
@@ -1815,7 +1804,6 @@ function boot(){
   resize(); buildCheats();
   ensureDaily();                                          // v3: today's slate (+ streak shield for missed days)
   const lg=grantLoginGems(); if(lg>0) setTimeout(()=>milestone("📅 Daily login +"+lg+"💎"),900);
-  checkRushHour();                                        // v3: weekend Rush Hour flag (cheat can force)
   // v4: clamp loaded stamina to current max (old saves merge with cur=staminaMaxBase)
   state.stamina.cur=Math.min(staminaMax(), Math.max(0, state.stamina.cur||0));
   // v5: no slicing-focus — the dish auto-serves; go("home") builds the plate + first dish + serves its first veg
