@@ -168,7 +168,7 @@
   @keyframes flashAnim{0%{opacity:0;transform:scale(.5)}20%{opacity:1;transform:scale(1.1)}80%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1)}}
 
   /* ---- cheats ---- */
-  #cheatBtn{position:absolute;right:8px;top:calc(var(--topbar-h) + 6px);z-index:30;width:30px;height:30px;border-radius:50%;
+  #cheatBtn{position:absolute;right:4px;top:4px;z-index:60;width:28px;height:28px;border-radius:50%;
     background:#0003;color:#fff;font-size:14px;display:flex;align-items:center;justify-content:center;padding:0;min-height:0;box-shadow:none}
   .cheats{position:absolute;left:0;right:0;bottom:0;background:#1e1712f2;color:#fff;padding:14px;display:none;z-index:40;
     font-family:ui-monospace,monospace;font-size:12px;max-height:80%;overflow-y:auto}
@@ -826,7 +826,11 @@ let autoInt=null;
 function startAutoLoop(){
   if(autoInt) return;
   autoInt=setInterval(()=>{
-    // v4: STAMINA regen — runs ALWAYS (including during the boss), 0.1s tick
+    // v2.8: when the tab is hidden (phone asleep / backgrounded) the rAF render loop is PAUSED, so it can't age/remove
+    // particles. Skip ALL loop work while hidden — no particle/flyer spawn, no accumulator growth, no resume-burst lag.
+    // Away income is granted on resume via checkOffline() (the proper capped offline path).
+    if(document.hidden) return;
+    // v4: STAMINA regen, 0.1s tick
     const sm=staminaMax();
     if((state.stamina.cur||0) < sm){
       state.stamina.cur = Math.min(sm, (state.stamina.cur||0) + staminaRegen()*0.1);
@@ -893,6 +897,7 @@ function produceFinished(){
 }
 
 function spawnParticles(x,y,big,scale){
+  if(particles.length>700) return;   // v2.8: hard cap — backstop so particles can never explode (e.g. if aging ever stalls)
   scale=scale||1;
   const ing=produce?produce.ing:(plate&&plate.slices[0])||INGREDIENTS[0];
   const n=Math.round((big?48:34)*scale);
@@ -1569,7 +1574,15 @@ window.closeWelcome=closeWelcome;
 // throttled save during slicing
 let saveT=0;
 function maybeSave(){ const t=nowMs(); if(t-saveT>1500){ saveT=t; saveState(); } }
-window.addEventListener("visibilitychange",()=>{ if(document.hidden){ stopHold(); saveState(); } });
+window.addEventListener("visibilitychange",()=>{
+  if(document.hidden){ stopHold(); saveState(); }
+  else {
+    // v2.8: resume — the rAF loop was paused, so transient visual arrays may be stale; clear them + reset accumulators
+    // so there's no backlog spike. Grant away income via the offline path (welcome-back), then consume the elapsed window.
+    particles.length=0; flyers.length=0; floaters.length=0; autoChefAcc=0; combo=0; lastSliceAt=nowMs();
+    checkOffline(); state.time.lastSeen=nowMs(); renderHud();
+  }
+});
 window.addEventListener("pagehide", saveState);
 
 // ============================================================
@@ -1620,7 +1633,7 @@ function cheat(c){
   if(c==="drain"){ state.stamina.cur=0; }
   if(c==="unlockAll"){ state.progression.unlocked=INGREDIENTS.length; }
   if(c==="dump"){ console.log(JSON.parse(JSON.stringify(state))); }
-  if(c==="reset"){ resetState(); return; }
+  if(c==="reset"){ if(confirm("Wipe ALL progress and reset the save? This cannot be undone.")) resetState(); return; }
   renderHud(); saveState();
 }
 document.getElementById("cheatBtn").onclick=()=>cheats.classList.toggle("open");
