@@ -1,0 +1,11 @@
+{
+  "panels": [
+    { "id": "loading", "modal": false, "entry": ["boot"], "exit": ["home"] },
+    { "id": "home", "modal": false, "entry": ["loading", "shop", "upgrades", "kitchen", "prestige"], "exit": ["shop", "upgrades", "kitchen", "prestige"] },
+    { "id": "upgrades", "modal": false, "entry": ["home"], "exit": ["home"] },
+    { "id": "prestige", "modal": false, "entry": ["home"], "exit": ["home"] },
+    { "id": "shop", "modal": false, "entry": ["home"], "exit": ["home"], "stub": true },
+    { "id": "kitchen", "modal": false, "entry": ["home"], "exit": ["home"], "stub": true },
+    { "id": "welcomeback", "modal": true, "entry": ["loading"], "exit": ["home"] }
+  ]
+}

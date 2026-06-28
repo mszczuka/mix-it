@@ -1,0 +1,25 @@
+{
+  "orientation": "portrait",
+  "donor": "Slice to Meet You / AdVenture Capitalist (idle single-screen)",
+  "topbar": {
+    "height": 56,
+    "left": { "profile": false },
+    "center": { "text": null },
+    "right": { "currencies": [
+      { "key": "coins", "icon": "🪙" },
+      { "key": "masterKnives", "icon": "🔪" },
+      { "key": "gems", "icon": "💎" }
+    ] }
+  },
+  "bottomnav": {
+    "tabs": [
+      { "panel": "shop", "label": "Shop", "icon": "🛒", "badgeFlag": "shopPending" },
+      { "panel": "upgrades", "label": "Upgrades", "icon": "⚙️" },
+      { "panel": "home", "label": "Slice", "icon": "🔪" },
+      { "panel": "kitchen", "label": "Kitchen", "icon": "🍳", "badgeFlag": "kitchenPending" },
+      { "panel": "prestige", "label": "Prestige", "icon": "⭐" }
+    ]
+  },
+  "card": { "radius": 12, "padding": 12, "shadow": "0 6px 18px rgba(80,50,20,.22)" },
+  "cta": { "shape": "pill", "height": 56, "color": "accent" }
+}

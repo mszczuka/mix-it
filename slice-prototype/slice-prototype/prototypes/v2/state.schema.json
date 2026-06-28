@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "default": {
+    "currencies": { "coins": 0, "gems": 0, "masterKnives": 0 },
+    "progression": { "bladeLevel": 0, "ingredientTier": 0 },
+    "wear": { "durability": 100 },
+    "stats": { "totalSlices": 0, "totalCoinsEarned": 0, "bestCombo": 0 },
+    "time": { "lastSeen": 0 },
+    "flags": { "ftueStage": 0, "shopPending": false, "kitchenPending": false }
+  }
+}
