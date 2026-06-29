@@ -193,6 +193,25 @@
   .cheats .slider label{flex:1;opacity:.85}
   .cheats .slider input{flex:1}
   .cheats .slider .val{width:62px;text-align:right;opacity:.9}
+
+  /* ---- TUTORIAL / FTUE (hard-gated coachmarks) ---- */
+  #tutOverlay{position:absolute;inset:0;z-index:55;pointer-events:none;display:none}
+  #tutOverlay.on{display:block}
+  .tut-mask{position:absolute;background:rgba(18,11,5,.74);pointer-events:auto;display:none}
+  #tutOverlay.hard .tut-mask{display:block}
+  .tut-ring{position:absolute;border:3px solid var(--c-accent);border-radius:14px;pointer-events:none;
+    box-shadow:0 0 0 4px rgba(244,181,74,.35), 0 0 18px rgba(244,181,74,.55);
+    animation:tutPulse 1.15s ease-in-out infinite;z-index:58;display:none}
+  .tut-hand{position:absolute;font-size:42px;pointer-events:none;z-index:59;display:none;
+    filter:drop-shadow(0 3px 4px rgba(0,0,0,.5));animation:tutTap 1s ease-in-out infinite;transform-origin:50% 0}
+  .tut-bubble{position:absolute;max-width:240px;background:var(--c-surface);color:var(--c-text);
+    padding:12px 15px;border-radius:14px;font-size:14px;font-weight:700;line-height:1.35;
+    box-shadow:var(--sh-2);pointer-events:none;z-index:59;display:none;text-align:center}
+  #tutOverlay.show-cue .tut-ring,#tutOverlay.show-cue .tut-hand,#tutOverlay.show-cue .tut-bubble{display:block}
+  .tut-bubble.clickable{pointer-events:auto;cursor:pointer;animation:tutBubblePulse 1.2s ease-in-out infinite}
+  @keyframes tutBubblePulse{0%,100%{box-shadow:var(--sh-2)}50%{box-shadow:var(--sh-2),0 0 0 4px rgba(244,181,74,.5)}}
+  @keyframes tutPulse{0%,100%{opacity:.55;transform:scale(1)}50%{opacity:1;transform:scale(1.04)}}
+  @keyframes tutTap{0%,100%{transform:translateY(0)}50%{transform:translateY(9px)}}
 </style>
 
 <div id="app">
@@ -378,6 +397,18 @@
   </div>
 
   <div id="flash"><div class="msg" id="flashMsg"></div></div>
+
+  <!-- TUTORIAL overlay: 4 dark mask rects frame a transparent hole (native clicks pass through), + ring/hand/bubble cue -->
+  <div id="tutOverlay">
+    <div class="tut-mask" id="tutMaskT"></div>
+    <div class="tut-mask" id="tutMaskB"></div>
+    <div class="tut-mask" id="tutMaskL"></div>
+    <div class="tut-mask" id="tutMaskR"></div>
+    <div class="tut-ring" id="tutRing"></div>
+    <div class="tut-hand" id="tutHand">👆</div>
+    <div class="tut-bubble" id="tutBubble"></div>
+  </div>
+
   <button id="cheatBtn" title="debug">~</button>
   <div class="cheats" id="cheats"></div>
 </div>
@@ -434,7 +465,8 @@ const CONFIG = {
   plateBonusMult: 1.0,        // plate-completion bonus = veg's slice earnings × this
   // ---- STAMINA (the active-cut gate) ----
   staminaMaxBase: 60, staminaMaxPerLevel: 20,            // [balans] reverted overdone nerf — softer pool, still drains over a sustained burst
-  staminaEmptyCooldownMs: 5000,                          // hitting 0 = TOTAL block (manual AND hero Auto-Slicer stop) this long, then stamina SNAPS to 100%. No gradual regen. (gem-refill skips it)
+  staminaRegenBase: 3, staminaRegenPerLevel: 1,          // [balans] per second — gradual regen WHILE stamina > 0 (regen 3 < Tomato drain ~3.85/s so a sustained hold still empties it)
+  staminaEmptyCooldownMs: 5000,                          // hitting 0 = TOTAL block (manual AND hero Auto-Slicer stop) this long, then stamina SNAPS to 100%. (gem-refill skips it)
   staminaCooldownPerLevel: 400, staminaCooldownMin: 2000,// each Stamina Regen ("Recharge") level shortens the lockout by this (ms), floored at staminaCooldownMin
   staminaPerSlice: 1,                                    // [balans] reverted the 2→harsh doubling; 1 = far less punishing after empty
   staminaCostBase: 800, staminaCostGrowth: 1.4,          // [balans] growth 1.6->1.4 — stamina/regen are the only real active throttle; keep them buyable but on a steady curve so the gate is not instantly removed
@@ -522,7 +554,7 @@ const SCHEMA_DEFAULT = {
   stamina:{cur:CONFIG.staminaMaxBase},                // active-cut gate — manual slice spends staminaPerSlice; regens over time
   stats:{totalSlices:0, totalCoinsEarned:0, bestCombo:0, runCoinsEarned:0, platesServed:0},
   time:{lastSeen:0},
-  flags:{ftueStage:0, shopPending:false, kitchenPending:false, autoChefOn:true, unlockPromptShown:INGREDIENTS.map(()=>false)}, // CHANGE 2: per-product one-time affordability popup guard (dynamic length); autoChefOn: Auto-Slicer toggle (v2.7)
+  flags:{ftueStage:0, tut:0, shopPending:false, kitchenPending:false, autoChefOn:true, unlockPromptShown:INGREDIENTS.map(()=>false)}, // tut: FTUE step index (0..6), "done" when finished // CHANGE 2: per-product one-time affordability popup guard (dynamic length); autoChefOn: Auto-Slicer toggle (v2.7)
   carry:null,                                         // v2: pending carryover modifier {id,name,eff,expiresAt} or null
   // v3 [active-tapper patch]: DAILY PRESSURE SLATE (active-only challenges) + login/ad gem faucets
   daily:{ dateKey:"", slate:[], completedToday:false, claimed:false, streak:0, lastCompleteKey:"", loginKey:"", adsToday:0, adKey:"" },
@@ -786,6 +818,7 @@ function serveDish(){
   payout();
   if(plate){ plate.phase="out"; plate.target=CW*1.6; }
   dish=null;
+  tutNotify("dish");   // FTUE step 2 (first full dish served)
   // CHANGE 3: chapters are coin-gated (chapterEarned) — no forced auto-boss; the CTA surfaces when the goal is hit
   renderHud(); saveState();
 }
@@ -837,6 +870,7 @@ function sliceOne(){
   if(combo>0 && combo%10===0) milestone("COMBO "+combo+"! 🔥");
   hideHint();
   if(produce.left<=0) produceFinished();
+  if(!rush) tutNotify("slice");   // FTUE step 1
   renderHud(); maybeSave();
 }
 
@@ -875,12 +909,16 @@ function startAutoLoop(){
     // particles. Skip ALL loop work while hidden — no particle/flyer spawn, no accumulator growth, no resume-burst lag.
     // Away income is granted on resume via checkOffline() (the proper capped offline path).
     if(document.hidden) return;
-    // STAMINA, 0.1s tick. NO gradual regen — stamina only falls via slicing. At 0 it TOTAL-blocks
-    // (manual + hero Auto-Slicer) for staminaCooldown() ms, then SNAPS straight to 100%.
+    // STAMINA, 0.1s tick. Gradual regen WHILE > 0. Hitting EXACTLY 0 = total block (manual + hero Auto-Slicer)
+    // for staminaCooldown() ms, then SNAP straight to 100%.
     const sm=staminaMax();
     if((state.stamina.cur||0) <= 0){
       if(!staminaCooldownUntil) staminaCooldownUntil = nowMs() + staminaCooldown();   // start lockout
       if(nowMs() >= staminaCooldownUntil){ state.stamina.cur = sm; staminaCooldownUntil = 0; }   // lockout over → full
+      renderStamina();
+    } else if((state.stamina.cur||0) < sm){
+      staminaCooldownUntil = 0;                                                        // not empty → cancel any pending lockout
+      state.stamina.cur = Math.min(sm, (state.stamina.cur||0) + (CONFIG.staminaRegenBase + (state.progression.staminaRegenLevel||0)*CONFIG.staminaRegenPerLevel)*0.1);   // gradual regen above 0
       renderStamina();
     }
     autoChefTick();                             // v2.7: drive the front-veg Auto-Slicer off this same 100ms tick (boss/own gates checked inside)
@@ -1100,6 +1138,7 @@ function drawFrame(){
 function loop(){
   if(combo>0 && nowMs()-lastSliceAt>effDecay()){ combo=0; renderHud(); }
   drawFrame();
+  if(tutActive()) tutReposition();   // keep the coachmark glued to its (possibly re-rendered/moving) target
   requestAnimationFrame(loop);
 }
 
@@ -1118,6 +1157,7 @@ function stopHold(){ if(holdTimer){ clearTimeout(holdTimer); holdTimer=null; } }
 function onStageTap(ev){
   ev.preventDefault(); audio();
   if(!stageReady) return;
+  if(tutActive() && TUTORIAL[state.flags.tut].tapContinue) return;   // info gate: play-area taps do nothing; only tapping the bubble advances
   stopHold();                       // guard against a runaway/duplicate timer
   if(window.recInput) recInput("slice",{left:produce?produce.left:0});
   sliceOne();
@@ -1415,6 +1455,7 @@ function levelLane(i){
   const c=laneLevelCost(i); if(state.currencies.coins<c) return;
   state.currencies.coins-=c; const L=lane(i); L.level++; payout();
   if(!L.auto && L.level>=CONFIG.laneAutoUnlockLevel){ L.auto=true; milestone("🪚 "+INGREDIENTS[i].name+" auto-cutter!"); }
+  tutNotify("level");   // FTUE step 3
   renderHud(); saveState();
 }
 // unlock next product (cash sink) — the affordability popup + Products panel button both call this.
@@ -1428,6 +1469,7 @@ function unlockNext(){
 
 // CHANGE 2: when coins FIRST reach unlockCost() for the next locked product, show a one-time popup highlighting the income gain.
 function checkUnlockPrompt(){
+  if(tutActive()) return;   // FTUE: don't interrupt the tutorial with the affordability popup
   if(unlockModalOpen) return;
   if(document.querySelector(".modal.open")) return;   // don't stack on welcome/result/carry modals
   const ni=state.progression.unlocked;
@@ -1495,6 +1537,8 @@ function startBoss(){
   const goal=chapterGoal();
   rush={ timeLeft:CONFIG.bossDuration, dishes:0, score:0, maxCombo:0, boss:true,
     need:{ bronze:Math.floor(goal*CONFIG.bossGoldFrac.bronze), silver:Math.floor(goal*CONFIG.bossGoldFrac.silver), gold:Math.floor(goal*CONFIG.bossGoldFrac.gold) } };
+  if(tutActive()){ rush.need={bronze:1, silver:1e9, gold:1e9}; rush.timeLeft=Math.max(rush.timeLeft,45); }   // FTUE: first boss is a guaranteed Bronze win (one dish clears it)
+  tutNotify("bossstart");   // FTUE step 5
   combo=0; staminaCooldownUntil=0;
   state.stamina.cur=staminaMax();       // v4: refill stamina at boss start so the boss is fair (still drains/regens during it)
   dish=null;                            // fresh dish for the rush
@@ -1547,6 +1591,7 @@ function endBoss(){
   const ad=document.getElementById("rrAd"); ad.disabled=false; ad.style.display=reward>0?"":"none";
   const retry=document.getElementById("rrRetry");   // v3: gem boss retry — only when you fell short (< Bronze)
   if(retry){ retry.textContent="🔁 Retry boss 💎"+CONFIG.bossRetryGems; retry.style.display=(!bossPerkEarned)?"":"none"; retry.disabled=state.currencies.gems<CONFIG.bossRetryGems; }
+  if(bossPerkEarned) tutNotify("bosswin");   // FTUE step 6 → advances to perk step (soft, no mask) so the result modal reads clean
   document.getElementById("rushResult").classList.add("open");
   // back to idle veg; level advances (and the first dish of the next level starts) when the modifier is picked
   spawnPlate(false); produce=null; serveNext();
@@ -1589,6 +1634,7 @@ function openCarryModal(){
 function pickCarry(m){
   state.carry={ id:m.id, name:m.name, expiresAt:nowMs()+CONFIG.carryDurationMs };
   document.getElementById("carryModal").classList.remove("open");
+  tutNotify("perk");   // FTUE step 7 → tutorial complete
   clearChapter(m.name);
 }
 // v5: CLEAR the chapter — advance chapter, reset chapterEarned, unlock the next product, resume cozy serving (perkName=null → no carry picked)
@@ -1819,6 +1865,92 @@ window.recStop=function(){ if(!_rec)return; _rec.expected={final_panel:curPanel,
   const a=document.createElement("a"); a.href=u; a.download=_rec.name+".json"; a.click(); URL.revokeObjectURL(u); console.log("💾",_rec.name); _rec=null; };
 
 // ============================================================
+//  TUTORIAL / FTUE — hard-gated coachmarks (slice → level → boss)
+// ============================================================
+// Each step: {on} = the game event that completes it; {soft} = no dark mask / UI stays free;
+// {sel} = CSS selector of the highlighted element; {text} = bubble copy (PL).
+// slice:true → hand+bubble anchor to the vegetable (hand ON it, bubble BELOW it), not on the target rect.
+// tapContinue:true → an info coachmark; the next tap on the play area dismisses it (no slice) and advances.
+const TUTORIAL = [
+  { on:"slice",     sel:"#sliceCanvas",   text:"Stukaj w warzywo, żeby je pokroić! 🔪", slice:true },
+  { on:"dish",      sel:"#sliceCanvas",   text:"Przytrzymaj, żeby kroić bez przerwy — albo stukaj dalej. Dokończ całe danie!", slice:true },
+  { on:"continue",  sel:"#stageBar",      text:"To twój pasek rozdziału — rośnie z każdym cięciem. Wypełnij go, a staniesz do walki z bossem! (stuknij, aby przejść dalej)", soft:true, tapContinue:true },
+  { on:"level",     sel:"#laneBar .llvup",text:"Ulepsz warzywo — gotowe danie będzie warte więcej monet! 💰" },
+  { on:"bossstart", sel:"#bossCta",       text:"Boss gotowy! Stuknij, żeby ruszyć do walki. 👹" },
+  { on:"bosswin",   sel:"#sliceCanvas",   text:"Tnij ile sił — zgarnij jak najwięcej, zanim skończy się czas! ⏱️", slice:true },
+  { on:"perk",      sel:"#carryCards",    text:"Świetna robota! Wybierz swoją nagrodę za pokonanie bossa. 🎁", soft:true },
+];
+function tutActive(){ return typeof state.flags.tut === "number" && state.flags.tut < TUTORIAL.length; }
+function tutEl(){ const id="tutOverlay"; return document.getElementById(id); }
+function tutStep(){
+  const ov=tutEl(); if(!ov) return;
+  if(!tutActive()){ ov.classList.remove("on","hard","show-cue"); return; }
+  const step=TUTORIAL[state.flags.tut];
+  const bubEl=document.getElementById("tutBubble");
+  bubEl.textContent = step.text;
+  bubEl.classList.toggle("clickable", !!step.tapContinue);   // info gate: only a tap on the bubble dismisses it
+  ov.classList.add("on");
+  ov.classList.toggle("hard", !step.soft);   // hard = dark mask frame blocks everything but the hole
+  tutReposition();
+}
+function _tutSetRect(el,x,y,w,h){ el.style.left=Math.round(x)+"px"; el.style.top=Math.round(y)+"px"; el.style.width=Math.max(0,Math.round(w))+"px"; el.style.height=Math.max(0,Math.round(h))+"px"; }
+function tutReposition(){
+  const ov=tutEl(); if(!ov || !tutActive()){ return; }
+  const step=TUTORIAL[state.flags.tut];
+  const app=document.getElementById("app").getBoundingClientRect();
+  const el=step.sel ? document.querySelector(step.sel) : null;
+  const r=el ? el.getBoundingClientRect() : null;
+  if(!r || r.width<2 || r.height<2){   // target not visible yet (e.g. BOSS CTA before the bar is full) → hide cue + collapse ALL masks so nothing blocks play
+    ov.classList.remove("show-cue");
+    ["tutMaskT","tutMaskB","tutMaskL","tutMaskR"].forEach(id=>_tutSetRect(document.getElementById(id),0,0,0,0));
+    return;
+  }
+  const W=app.width, H=app.height, pad=8;
+  let hx=Math.max(0, r.left-app.left-pad), hy=Math.max(0, r.top-app.top-pad);
+  let hw=Math.min(r.width+pad*2, W-hx), hh=Math.min(r.height+pad*2, H-hy);
+  _tutSetRect(document.getElementById("tutMaskT"), 0, 0, W, hy);
+  _tutSetRect(document.getElementById("tutMaskB"), 0, hy+hh, W, H-(hy+hh));
+  _tutSetRect(document.getElementById("tutMaskL"), 0, hy, hx, hh);
+  _tutSetRect(document.getElementById("tutMaskR"), hx+hw, hy, W-(hx+hw), hh);
+  const ring=document.getElementById("tutRing"); _tutSetRect(ring, hx, hy, hw, hh);
+  const hand=document.getElementById("tutHand");
+  const bub=document.getElementById("tutBubble");
+  // slice steps: anchor to the REAL vegetable geometry — hand ON the veg, bubble BELOW it (never covering it)
+  const cr=(step.slice && canvas) ? canvas.getBoundingClientRect() : null;
+  if(cr && cr.height>2){
+    const g=vegGeom();                          // cx/cy/h in canvas CSS px (CW/CH === canvas client size)
+    const vcx=(cr.left-app.left)+g.cx, vcy=(cr.top-app.top)+g.cy, vhh=g.h/2;
+    hand.style.left=(vcx-20)+"px";
+    hand.style.top =(vcy-20)+"px";              // ON the vegetable
+    bub.style.left =Math.max(8, Math.min(W-248, vcx-120))+"px";
+    bub.style.top  =Math.min(H-92, vcy+vhh+16)+"px";   // BELOW the vegetable
+  } else {
+    const tall=hh>200;
+    hand.style.left=(hx+hw/2-20)+"px";
+    hand.style.top =(tall ? hy+hh*0.42 : hy+hh+2)+"px";
+    bub.style.left=Math.max(8, Math.min(W-248, hx+hw/2-120))+"px";
+    if(tall){ bub.style.top=(hy+16)+"px"; }
+    else if(hy > H*0.5){ bub.style.top=Math.max(8, hy-84)+"px"; }
+    else { bub.style.top=Math.min(H-92, hy+hh+46)+"px"; }
+  }
+  ov.classList.add("show-cue");
+}
+function tutNotify(ev){
+  if(!tutActive()) return;
+  if(TUTORIAL[state.flags.tut].on !== ev) return;
+  state.flags.tut++;
+  if(!tutActive()){ tutFinish(); return; }
+  tutStep(); saveState();
+}
+function tutFinish(){
+  state.flags.tut="done";
+  const ov=tutEl(); if(ov) ov.classList.remove("on","hard","show-cue");
+  saveState();
+}
+// info-gate steps (tapContinue): the bubble itself is the only thing that advances them
+document.getElementById("tutBubble").onclick=()=>{ if(tutActive() && TUTORIAL[state.flags.tut].tapContinue) tutNotify("continue"); };
+
+// ============================================================
 //  BOOT
 // ============================================================
 function boot(){
@@ -1827,9 +1959,17 @@ function boot(){
   const lg=grantLoginGems(); if(lg>0) setTimeout(()=>milestone("📅 Daily login +"+lg+"💎"),900);
   // v4: clamp loaded stamina to current max (old saves merge with cur=staminaMaxBase)
   state.stamina.cur=Math.min(staminaMax(), Math.max(0, state.stamina.cur||0));
+  // FTUE: only run the tutorial on a genuinely fresh save; any prior progress skips straight to "done"
+  if(typeof state.flags.tut==="number"){
+    const progressed = (state.stats.platesServed||0)>0 || (state.progression.chapter||0)>0 ||
+                       (state.progression.chapterEarned||0)>0 || state.lanes.some(l=>(l.level||0)>0);
+    if(progressed) state.flags.tut="done";
+  }
   // v5: no slicing-focus — the dish auto-serves; go("home") builds the plate + first dish + serves its first veg
   go("home");           // sets stageReady, creates plate + serves first produce
   renderHud();
+  if(tutActive()) tutStep();   // show the first coachmark on a fresh save
+
   checkOffline();
   if(!rafOn){ rafOn=true; requestAnimationFrame(loop); }
   startAutoLoop();
