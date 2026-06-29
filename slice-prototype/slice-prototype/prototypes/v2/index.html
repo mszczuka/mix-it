@@ -698,6 +698,10 @@ const canvas=document.getElementById("sliceCanvas"), ctx=canvas.getContext("2d")
 let CW=0, CH=0, DPR=Math.min(window.devicePixelRatio||1,2.5);
 function resize(){
   const r=canvas.getBoundingClientRect();
+  // When the Home panel is display:none (player on Manage/Kitchen) the canvas box collapses to 0.
+  // DON'T resize to 0 — that corrupts plate geometry (target/x computed from CW=0 during phase changes),
+  // so the plate slides in from the wrong spot on return. Keep the last good size while hidden.
+  if(r.width<1 || r.height<1) return;
   // TASK 2 fix (white flash): only resize when the box ACTUALLY changed. The ResizeObserver fires on
   // unrelated reflows (e.g. a transient horizontal scrollbar from the lane strip); re-sizing the canvas
   // clears it → a blank frame shows through = the "white flash". Guard sub-pixel noise too.
@@ -1356,7 +1360,9 @@ function go(id){
   curPanel=id;
   document.querySelectorAll(".panel").forEach(p=>p.classList.toggle("active", p.dataset.panel===id));
   if(id==="manage")renderManage();   // v6: renders the active sub-tab (Products / Upgrades)
-  if(id==="home"){ if(!stageReady){ stageReady=true; resize(); } if(!plate)spawnPlate(false); if(!produce) serveNext(); }
+  if(id==="home"){ if(!stageReady){ stageReady=true; resize(); } if(!plate)spawnPlate(false); if(!produce) serveNext();
+    if(plate && plate.phase==="serving") plate.x=plate.target;   // snap plate to center on return so it doesn't visibly slide
+  }
   if(id==="kitchen"){ state.flags.kitchenPending=false; renderKitchen(); }
   renderNav(); renderTopBar();
 }
