@@ -440,7 +440,6 @@ const CONFIG = {
   staminaRefillGems: 1,                                  // [balans] instant full refill costs GEMS (premium impatience lever + gem sink; not spammable with gold)
   offlineRatePct: 0.5,        // fraction of estimated active rate
   offlineCapHours: 8,
-  offlineAssumedSps: 1.4,     // assumed slices/sec for offline estimate
   unlockMult: 18,             // [balans] was 12 — keeps each new-product unlock a real saving decision vs. a few dishes of income
   maxPlateIngredients: 3,     // cap of distinct WHOLE vegetables a recipe can need
   // ---- BOSS-GATED CHAPTERS (coin goal → opt-in boss CTA) ----
@@ -1677,15 +1676,13 @@ document.getElementById("rrRetry").onclick=()=>{ if(!rush && state.currencies.ge
 // ============================================================
 //  OFFLINE EARNINGS
 // ============================================================
-// v2: offline = sum of unlocked AUTO-cutter income/sec (× offline rate). No autos → small manual estimate.
+// offline = sum of unlocked AUTO-cutter income/sec (× offline rate) ONLY. No auto-cutters → ZERO offline
+// income → no welcome-back. (Manual slicing earns nothing while away — you must own a lane auto-cutter.)
 function offlinePerSec(){
   let auto=0;
   // v2.3: average discrete-auto rate = coins/slice × (1000/cutCycleMs) cuts/sec (cutCycleMs already folds autoSpeed)
   for(let i=0;i<state.progression.unlocked;i++){ if(lane(i).auto) auto+=coinsPerSliceAuto(i)*(1000/cutCycleMs(i)); }
-  if(auto>0) return auto*CONFIG.offlineRatePct;
-  // fallback: assume hand-slicing the highest unlocked product at a modest rate
-  const f=highestUnlockedIdx();
-  return CONFIG.coinsPerSliceBase*bladeMult()*(INGREDIENTS[f].val*laneMult(f))*incomeMult()*CONFIG.offlineAssumedSps*CONFIG.offlineRatePct;
+  return auto*CONFIG.offlineRatePct;
 }
 function grantOffline(seconds){
   const cap=CONFIG.offlineCapHours*3600;
