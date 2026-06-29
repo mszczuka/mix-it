@@ -918,16 +918,19 @@ function startAutoLoop(){
     // particles. Skip ALL loop work while hidden — no particle/flyer spawn, no accumulator growth, no resume-burst lag.
     // Away income is granted on resume via checkOffline() (the proper capped offline path).
     if(document.hidden) return;
-    // STAMINA, 0.1s tick. Gradual regen WHILE > 0. Hitting EXACTLY 0 = total block (manual + hero Auto-Slicer)
-    // for staminaCooldown() ms, then SNAP straight to 100%.
+    // STAMINA, 0.1s tick. Gradual regen WHILE usable. Dropping below one slice's worth = "empty" → total block
+    // (manual + hero Auto-Slicer) for staminaCooldown() ms, then SNAP straight to 100%.
+    // NOTE: lockout triggers at < staminaPerSlice (not exactly 0) — otherwise regen keeps nudging it just above 0
+    //       and the empty-block never fires (see commit e147c46).
     const sm=staminaMax();
-    if((state.stamina.cur||0) <= 0){
-      if(!staminaCooldownUntil) staminaCooldownUntil = nowMs() + staminaCooldown();   // start lockout
-      if(nowMs() >= staminaCooldownUntil){ state.stamina.cur = sm; staminaCooldownUntil = 0; }   // lockout over → full
+    if(staminaCooldownUntil){                                       // in lockout: wait it out, then snap to full
+      if(nowMs() >= staminaCooldownUntil){ state.stamina.cur = sm; staminaCooldownUntil = 0; }
       renderStamina();
-    } else if((state.stamina.cur||0) < sm){
-      staminaCooldownUntil = 0;                                                        // not empty → cancel any pending lockout
-      state.stamina.cur = Math.min(sm, (state.stamina.cur||0) + (CONFIG.staminaRegenBase + (state.progression.staminaRegenLevel||0)*CONFIG.staminaRegenPerLevel)*0.1);   // gradual regen above 0
+    } else if((state.stamina.cur||0) < CONFIG.staminaPerSlice){     // depleted (can't slice) → start the empty-block
+      state.stamina.cur = 0; staminaCooldownUntil = nowMs() + staminaCooldown();
+      renderStamina();
+    } else if((state.stamina.cur||0) < sm){                         // gradual regen while still usable (> 0)
+      state.stamina.cur = Math.min(sm, (state.stamina.cur||0) + (CONFIG.staminaRegenBase + (state.progression.staminaRegenLevel||0)*CONFIG.staminaRegenPerLevel)*0.1);
       renderStamina();
     }
     autoChefTick();                             // v2.7: drive the front-veg Auto-Slicer off this same 100ms tick (boss/own gates checked inside)
