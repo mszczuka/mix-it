@@ -1642,7 +1642,7 @@ function claimDaily(){
   earnCoins(coins); state.currencies.gems+=gems; state.daily.claimed=true; payout();
   milestone("🎁 +"+fmt(coins)+"🪙 +"+gems+"💎"); renderHud(); saveState();
 }
-function grantLoginGems(){ const key=todayKey(); if(state.daily.loginKey===key) return 0; state.daily.loginKey=key; state.currencies.gems+=CONFIG.loginGemBase; return CONFIG.loginGemBase; }
+function grantLoginGems(){ const key=todayKey(); if(state.daily.loginKey===key) return 0; const firstEver=!(state.time.lastSeen>0); state.daily.loginKey=key; if(firstEver) return 0; /* brand-new/reset save: no day-1 login gems */ state.currencies.gems+=CONFIG.loginGemBase; return CONFIG.loginGemBase; }
 function adTipJar(){ const key=todayKey(); if(state.daily.adKey!==key){ state.daily.adKey=key; state.daily.adsToday=0; } if((state.daily.adsToday||0)>=CONFIG.adTipCapPerDay) return; state.daily.adsToday=(state.daily.adsToday||0)+1; state.currencies.gems+=CONFIG.adTipGems; payout(); renderDailyModal(); renderHud(); saveState(); }
 function updateDailyBadge(){ const c=document.getElementById("dailyChip"); if(c) c.classList.toggle("alert", !!(state.daily&&state.daily.completedToday&&!state.daily.claimed)); }
 function openDailyModal(){ ensureDaily(); renderDailyModal(); document.getElementById("dailyModal").classList.add("open"); }
