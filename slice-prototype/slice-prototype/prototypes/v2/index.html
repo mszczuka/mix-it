@@ -1183,7 +1183,7 @@ function renderStamina(){
     const c=staminaRefillCost(), full=cur>=max;
     const low = cur <= max*0.2;                          // gem refill unlocks only at/below 20% stamina
     const afford = low && !full && state.currencies.gems>=c;
-    b.textContent = full ? "Full ✓" : ("Refill 💎"+c);
+    b.textContent = "Refill 💎"+c;
     b.disabled = full || !low || state.currencies.gems<c;
     b.classList.toggle("cta", afford); b.classList.toggle("ghost", !afford);
   }
