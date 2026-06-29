@@ -1189,10 +1189,11 @@ function renderStamina(){
   const b=document.getElementById("staminaBtn");
   if(b){
     const c=staminaRefillCost(), full=cur>=max;
-    const low = cur <= max*0.2;                          // gem refill unlocks only at/below 20% stamina
-    const afford = low && !full && state.currencies.gems>=c;
+    // refill is available during the empty-lockout (pay gems to skip the wait) OR at/below 20% stamina
+    const canRefill = !full && (cooling || cur <= max*0.2);
+    const afford = canRefill && state.currencies.gems>=c;
     b.textContent = "Refill 💎"+c;
-    b.disabled = full || !low || state.currencies.gems<c;
+    b.disabled = !afford;
     b.classList.toggle("cta", afford); b.classList.toggle("ghost", !afford);
   }
 }
