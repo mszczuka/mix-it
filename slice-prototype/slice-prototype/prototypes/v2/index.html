@@ -80,6 +80,7 @@
   .wear-track{flex:1;height:12px;background:#0000001a;border-radius:var(--pill);overflow:hidden}
   .wear-fill{height:100%;width:100%;background:linear-gradient(90deg,#6aa15a,#a7c957);transition:width .15s,background .3s}
   .wear-fill.low{background:linear-gradient(90deg,#c45b43,#e08a3c)}
+  .wear-fill.cooling{background:linear-gradient(90deg,#9a9a9a,#cacaca);transition:width .12s linear}
   #tapHint{position:absolute;left:0;right:0;top:46%;text-align:center;color:#00000033;font-size:20px;
     font-weight:800;pointer-events:none;font-family:var(--f-display);transition:opacity .4s}
 
@@ -1172,9 +1173,19 @@ function renderCombo(){
 }
 // v4: stamina bar (replaces wear row) — always visible, including during the boss
 function renderStamina(){
-  const cur=Math.floor(state.stamina.cur||0), max=staminaMax(), frac=max>0?cur/max:0;
-  const f=document.getElementById("staminaFill"); if(f){ f.style.width=Math.min(100,frac*100)+"%"; f.classList.toggle("low", frac<0.25); }
-  const t=document.getElementById("staminaTxt"); if(t) t.textContent="💪 "+cur+"/"+max;
+  const cur=Math.floor(state.stamina.cur||0), max=staminaMax();
+  const f=document.getElementById("staminaFill"), t=document.getElementById("staminaTxt");
+  const cooling = staminaCooldownUntil>0 && (state.stamina.cur||0)<=0;   // empty-lockout: bar refills GRAY over the wait, with a countdown
+  if(cooling){
+    const dur=staminaCooldown(), remain=Math.max(0,(staminaCooldownUntil-nowMs())/1000);
+    const frac=Math.min(1, Math.max(0, 1 - (remain*1000)/dur));          // 0 -> 1 across the lockout
+    if(f){ f.style.width=(frac*100)+"%"; f.classList.remove("low"); f.classList.add("cooling"); }
+    if(t) t.textContent="💪 0/"+max+" · "+remain.toFixed(1)+"s";
+  } else {
+    const frac=max>0?cur/max:0;
+    if(f){ f.style.width=Math.min(100,frac*100)+"%"; f.classList.toggle("low", frac<0.25); f.classList.remove("cooling"); }
+    if(t) t.textContent="💪 "+cur+"/"+max;
+  }
   const b=document.getElementById("staminaBtn");
   if(b){
     const c=staminaRefillCost(), full=cur>=max;
