@@ -600,11 +600,11 @@ function autoSpeedCost(){ return Math.floor(CONFIG.autoSpeedCostBase*Math.pow(CO
 // ---- v5: BOSS-GATED CHAPTERS + time-limited carry modifiers ----
 function chapterGoal(){ return Math.floor(CONFIG.chapterGoalBase * Math.pow(CONFIG.chapterGoalGrowth, state.progression.chapter||0)); }
 function chapterReady(){ return (state.progression.chapterEarned||0) >= chapterGoal(); }
-// every coin earned (dish payout + auto income) advances the chapter toward its boss
+// earnCoins adds wallet + lifetime/run stats. Chapter progress is advanced SEPARATELY and ONLY by
+// hero-dish payouts (see serveDish) — passive auto-cutter income, offline, and daily rewards do NOT count.
 function earnCoins(amt){
   if(amt<=0) return;
   state.currencies.coins+=amt; state.stats.totalCoinsEarned+=amt; state.stats.runCoinsEarned+=amt;
-  state.progression.chapterEarned=(state.progression.chapterEarned||0)+amt;
 }
 // true while a carry mod is active+unexpired; auto-clears on expiry
 function carryActive(){ if(state.carry && nowMs()<state.carry.expiresAt) return true; if(state.carry){ state.carry=null; } return false; }
@@ -771,7 +771,8 @@ function serveDish(){
     if(plate){ plate.phase="out"; plate.target=CW*1.6; }
     dish=null; renderHud(); return;
   }
-  earnCoins(pay);                                         // v5: dish payout feeds chapterEarned
+  earnCoins(pay);
+  state.progression.chapterEarned=(state.progression.chapterEarned||0)+pay;   // ONLY hero-dish gold advances the chapter (auto-cutter/offline/daily do NOT)
   dailyEvent("dishes",1);                                 // v3: daily challenge (active dish served)
   // completion juice: floater, payout sound, plate slide-off
   floaters.push({x:plate?plate.x:CW/2, y:(plate?plate.y:CH*0.2)-20, txt:"+"+fmt(pay), life:1.2, perfect:true, vy:-0.6, big:true});
@@ -882,7 +883,7 @@ function startAutoLoop(){
       while(L.autoProg>=1){                      // each completed cycle pays PASSIVE coins (independent of the dish loop; NO stamina cost)
         L.autoProg-=1;
         const pay=coinsPerSliceAuto(i);          // v3: auto = pure passive coin income (NEVER touches dishes/recipes)
-        earnCoins(pay);                          // v5: auto income also advances the chapter (CHANGE 3)
+        earnCoins(pay);                          // passive lane auto income — wallet only, does NOT advance the chapter
         cut=true;
       }
       ringChanged=true;
@@ -1689,7 +1690,7 @@ function grantOffline(seconds){
   const eff=Math.min(seconds,cap);
   const amt=Math.floor(offlinePerSec()*eff);
   if(amt<=0) return 0;
-  earnCoins(amt);   // v5: offline income also advances the chapter
+  earnCoins(amt);   // offline income — wallet only, does NOT advance the chapter
   return amt;
 }
 let pendingWb=0;
@@ -1765,7 +1766,7 @@ function buildCheats(){
   cheats.querySelectorAll("button[data-c]").forEach(b=>b.onclick=()=>cheat(b.dataset.c));
 }
 function cheat(c){
-  if(c==="coins1k"){ earnCoins(1000); }    // v5: routed through earnCoins so it also advances the chapter (handy for CTA testing)
+  if(c==="coins1k"){ earnCoins(1000); }    // cheat: wallet only (no longer advances chapter — use Force Boss to test the boss)
   if(c==="coins1m"){ earnCoins(1e6); }
   if(c==="t1h"){ const a=grantOffline(3600); milestone("+"+fmt(a)+" 🪙"); }
   if(c==="t8h"){ const a=grantOffline(8*3600); milestone("+"+fmt(a)+" 🪙"); }
