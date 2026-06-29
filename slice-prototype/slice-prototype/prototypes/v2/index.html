@@ -194,6 +194,12 @@
   .cheats .slider input{flex:1}
   .cheats .slider .val{width:62px;text-align:right;opacity:.9}
 
+  /* ---- SPLASH (shown on every entry, auto-closes after 2s) ---- */
+  #splash{position:absolute;inset:0;z-index:100;background:#2b2438;display:flex;align-items:center;justify-content:center;
+    transition:opacity .45s ease}
+  #splash img{width:100%;height:100%;object-fit:cover;display:block}
+  #splash.hide{opacity:0;pointer-events:none}
+
   /* ---- TUTORIAL / FTUE (hard-gated coachmarks) ---- */
   #tutOverlay{position:absolute;inset:0;z-index:55;pointer-events:none;display:none}
   #tutOverlay.on{display:block}
@@ -215,6 +221,9 @@
 </style>
 
 <div id="app">
+  <!-- SPLASH: shown on every entry, JS fades it out after 2s -->
+  <div id="splash"><img src="splash.png" alt="Slice Tycoon"></div>
+
   <header class="topbar" id="topbar"></header>
 
   <div id="stageBar">
@@ -1974,6 +1983,9 @@ function boot(){
   if(!rafOn){ rafOn=true; requestAnimationFrame(loop); }
   startAutoLoop();
   saveState();
+  // SPLASH: visible from page load; fade it out after 2s, then drop it from the DOM
+  const sp=document.getElementById("splash");
+  if(sp){ setTimeout(()=>{ sp.classList.add("hide"); setTimeout(()=>sp.remove(), 500); }, 2000); }
 }
 boot();
 </script>
