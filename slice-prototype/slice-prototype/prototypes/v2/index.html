@@ -433,7 +433,8 @@ const CONFIG = {
   plateBonusMult: 1.0,        // plate-completion bonus = veg's slice earnings × this
   // ---- STAMINA (the active-cut gate) ----
   staminaMaxBase: 60, staminaMaxPerLevel: 20,            // [balans] reverted overdone nerf — softer pool, still drains over a sustained burst
-  staminaRegenBase: 3, staminaRegenPerLevel: 1,          // [balans] per second — regen (3) < Tomato drain (~3.85/s) so it still depletes, just gently
+  staminaRegenBase: 3, staminaRegenPerLevel: 1,          // [balans] per second — gradual regen WHILE stamina > 0 (regen 3 < Tomato drain ~3.85/s so a sustained hold still empties it)
+  staminaEmptyCooldownMs: 5000,                          // hitting 0 = hard lockout (manual AND hero Auto-Slicer stop) this long, then stamina SNAPS to 100% (or gem-refill to skip)
   staminaPerSlice: 1,                                    // [balans] reverted the 2→harsh doubling; 1 = far less punishing after empty
   staminaCostBase: 800, staminaCostGrowth: 1.4,          // [balans] growth 1.6->1.4 — stamina/regen are the only real active throttle; keep them buyable but on a steady curve so the gate is not instantly removed
   staminaRegenCostBase: 1100, staminaRegenCostGrowth: 1.4, // [balans] growth 1.6->1.4 — same reasoning; regen is the true coins/min cap for held play
@@ -653,6 +654,7 @@ function gearUpgradeCost(slot){ return Math.floor(CONFIG.gearUpgradeCostBase*Mat
 // ---- combo runtime ----
 let combo = 0;            // count
 let lastSliceAt = 0;
+let staminaCooldownUntil = 0;   // when stamina hits 0: timestamp (ms) when it snaps back to full; 0 = not in lockout
 function comboMult(){ return 1 + Math.min(combo,CONFIG.comboMax)*effComboStep(); }
 
 // ============================================================
@@ -872,10 +874,15 @@ function startAutoLoop(){
     // particles. Skip ALL loop work while hidden — no particle/flyer spawn, no accumulator growth, no resume-burst lag.
     // Away income is granted on resume via checkOffline() (the proper capped offline path).
     if(document.hidden) return;
-    // v4: STAMINA regen, 0.1s tick
+    // STAMINA, 0.1s tick. Gradual regen WHILE > 0. Hitting 0 = hard lockout for staminaEmptyCooldownMs, then SNAP to full.
     const sm=staminaMax();
-    if((state.stamina.cur||0) < sm){
-      state.stamina.cur = Math.min(sm, (state.stamina.cur||0) + staminaRegen()*0.1);
+    if((state.stamina.cur||0) <= 0){
+      if(!staminaCooldownUntil) staminaCooldownUntil = nowMs() + CONFIG.staminaEmptyCooldownMs;   // start lockout
+      if(nowMs() >= staminaCooldownUntil){ state.stamina.cur = sm; staminaCooldownUntil = 0; }     // lockout over → full
+      renderStamina();
+    } else if((state.stamina.cur||0) < sm){
+      staminaCooldownUntil = 0;                                                                    // not empty → cancel any pending lockout
+      state.stamina.cur = Math.min(sm, (state.stamina.cur||0) + staminaRegen()*0.1);               // gradual regen above 0
       renderStamina();
     }
     autoChefTick();                             // v2.7: drive the front-veg Auto-Slicer off this same 100ms tick (boss/own gates checked inside)
@@ -1068,8 +1075,9 @@ function drawStaminaWarn(){
   ctx.globalAlpha=0.5+0.5*Math.abs(Math.sin(performance.now()/200));
   ctx.font="800 22px Georgia,serif"; ctx.fillStyle="#c45b43";
   ctx.fillText("OUT OF STAMINA 💪", CW/2, y); ctx.globalAlpha=1;
+  const remain = staminaCooldownUntil ? Math.max(0,(staminaCooldownUntil-nowMs())/1000) : CONFIG.staminaEmptyCooldownMs/1000;
   ctx.font="600 14px system-ui"; ctx.fillStyle="#9a4a3c";
-  ctx.fillText("Regenerating…", CW/2, y+24);
+  ctx.fillText("Full in "+remain.toFixed(1)+"s  ·  or 💎 refill", CW/2, y+24);
 }
 function drawBoardStatus(){
   // v2: produce respawns endlessly; this is just a transient gap between veg — nothing to show
@@ -1385,7 +1393,7 @@ function setSub(sub){ if(sub===curSub) return; curSub=sub; renderManage(); }
 // v4: stamina upgrade buy handlers
 document.getElementById("stmBuy").onclick=()=>{ const c=staminaCost(); if(state.currencies.coins>=c){ state.currencies.coins-=c; state.progression.staminaLevel=(state.progression.staminaLevel||0)+1; payout(); renderHud(); saveState(); } };
 document.getElementById("strBuy").onclick=()=>{ const c=staminaRegenCost(); if(state.currencies.coins>=c){ state.currencies.coins-=c; state.progression.staminaRegenLevel=(state.progression.staminaRegenLevel||0)+1; payout(); renderHud(); saveState(); } };
-document.getElementById("staminaBtn").onclick=()=>{ const c=staminaRefillCost(); if(state.stamina.cur<=staminaMax()*0.2 && state.currencies.gems>=c){ state.currencies.gems-=c; state.stamina.cur=staminaMax(); payout(); renderHud(); saveState(); } };
+document.getElementById("staminaBtn").onclick=()=>{ const c=staminaRefillCost(); if(state.stamina.cur<=staminaMax()*0.2 && state.currencies.gems>=c){ state.currencies.gems-=c; state.stamina.cur=staminaMax(); staminaCooldownUntil=0; payout(); renderHud(); saveState(); } };
 // v2.1: global stat upgrade buy handlers
 document.getElementById("incBuy").onclick=()=>{ const c=incomeCost(); if(state.currencies.coins>=c){ state.currencies.coins-=c; state.progression.incomeLevel=(state.progression.incomeLevel||0)+1; payout(); renderHud(); saveState(); } };
 document.getElementById("ssBuy").onclick=()=>{ const c=sliceSpeedCost(); if(state.currencies.coins>=c){ state.currencies.coins-=c; state.progression.sliceSpeedLevel=(state.progression.sliceSpeedLevel||0)+1; payout(); renderHud(); saveState(); } };
@@ -1478,7 +1486,7 @@ function startBoss(){
   const goal=chapterGoal();
   rush={ timeLeft:CONFIG.bossDuration, dishes:0, score:0, maxCombo:0, boss:true,
     need:{ bronze:Math.floor(goal*CONFIG.bossGoldFrac.bronze), silver:Math.floor(goal*CONFIG.bossGoldFrac.silver), gold:Math.floor(goal*CONFIG.bossGoldFrac.gold) } };
-  combo=0;
+  combo=0; staminaCooldownUntil=0;
   state.stamina.cur=staminaMax();       // v4: refill stamina at boss start so the boss is fair (still drains/regens during it)
   dish=null;                            // fresh dish for the rush
   spawnPlate(false); produce=null; serveNext();   // auto-serve the first recipe veg (same pipeline as the core)
