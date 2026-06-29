@@ -238,7 +238,7 @@
       <!-- UPGRADES (global stat upgrades, mirrors "Slice to Meet You") -->
       <div class="subbody" data-sub="upgrades">
       <h2 class="title">Upgrades</h2>
-      <p class="sub">Global boosts. Stamina + Stamina Regen power your manual slicing.</p>
+      <p class="sub">Global boosts. Stamina = how long you can cut; Recharge Speed = shorter wait after you hit empty.</p>
       <div class="card">
         <div class="row">
           <div class="grow">
@@ -282,7 +282,7 @@
       <div class="card">
         <div class="row">
           <div class="grow">
-            <div class="big">🔋 Stamina Regen</div>
+            <div class="big">🔋 Recharge Speed</div>
             <div class="lvl" id="strLvl"></div>
             <div class="eff" id="strEff"></div>
           </div>
@@ -433,8 +433,8 @@ const CONFIG = {
   plateBonusMult: 1.0,        // plate-completion bonus = veg's slice earnings × this
   // ---- STAMINA (the active-cut gate) ----
   staminaMaxBase: 60, staminaMaxPerLevel: 20,            // [balans] reverted overdone nerf — softer pool, still drains over a sustained burst
-  staminaRegenBase: 3, staminaRegenPerLevel: 1,          // [balans] per second — gradual regen WHILE stamina > 0 (regen 3 < Tomato drain ~3.85/s so a sustained hold still empties it)
-  staminaEmptyCooldownMs: 5000,                          // hitting 0 = hard lockout (manual AND hero Auto-Slicer stop) this long, then stamina SNAPS to 100% (or gem-refill to skip)
+  staminaEmptyCooldownMs: 5000,                          // hitting 0 = TOTAL block (manual AND hero Auto-Slicer stop) this long, then stamina SNAPS to 100%. No gradual regen. (gem-refill skips it)
+  staminaCooldownPerLevel: 400, staminaCooldownMin: 2000,// each Stamina Regen ("Recharge") level shortens the lockout by this (ms), floored at staminaCooldownMin
   staminaPerSlice: 1,                                    // [balans] reverted the 2→harsh doubling; 1 = far less punishing after empty
   staminaCostBase: 800, staminaCostGrowth: 1.4,          // [balans] growth 1.6->1.4 — stamina/regen are the only real active throttle; keep them buyable but on a steady curve so the gate is not instantly removed
   staminaRegenCostBase: 1100, staminaRegenCostGrowth: 1.4, // [balans] growth 1.6->1.4 — same reasoning; regen is the true coins/min cap for held play
@@ -585,7 +585,7 @@ function bestVal(){ return INGREDIENTS[Math.max(0,state.progression.unlocked-1)]
 
 // ---- v4: STAMINA (active-cut gate) ----
 function staminaMax(){ return CONFIG.staminaMaxBase + (state.progression.staminaLevel||0)*CONFIG.staminaMaxPerLevel; }
-function staminaRegen(){ return CONFIG.staminaRegenBase + (state.progression.staminaRegenLevel||0)*CONFIG.staminaRegenPerLevel; } // per second
+function staminaCooldown(){ return Math.max(CONFIG.staminaCooldownMin, CONFIG.staminaEmptyCooldownMs - (state.progression.staminaRegenLevel||0)*CONFIG.staminaCooldownPerLevel); } // ms lockout when empty (shortened by the Recharge upgrade)
 function staminaCost(){ return Math.floor(CONFIG.staminaCostBase*Math.pow(CONFIG.staminaCostGrowth, state.progression.staminaLevel||0)); }
 function staminaRegenCost(){ return Math.floor(CONFIG.staminaRegenCostBase*Math.pow(CONFIG.staminaRegenCostGrowth, state.progression.staminaRegenLevel||0)); }
 function staminaRefillCost(){ return CONFIG.staminaRefillGems; }   // instant full refill — paid in GEMS now
@@ -874,15 +874,12 @@ function startAutoLoop(){
     // particles. Skip ALL loop work while hidden — no particle/flyer spawn, no accumulator growth, no resume-burst lag.
     // Away income is granted on resume via checkOffline() (the proper capped offline path).
     if(document.hidden) return;
-    // STAMINA, 0.1s tick. Gradual regen WHILE > 0. Hitting 0 = hard lockout for staminaEmptyCooldownMs, then SNAP to full.
+    // STAMINA, 0.1s tick. NO gradual regen — stamina only falls via slicing. At 0 it TOTAL-blocks
+    // (manual + hero Auto-Slicer) for staminaCooldown() ms, then SNAPS straight to 100%.
     const sm=staminaMax();
     if((state.stamina.cur||0) <= 0){
-      if(!staminaCooldownUntil) staminaCooldownUntil = nowMs() + CONFIG.staminaEmptyCooldownMs;   // start lockout
-      if(nowMs() >= staminaCooldownUntil){ state.stamina.cur = sm; staminaCooldownUntil = 0; }     // lockout over → full
-      renderStamina();
-    } else if((state.stamina.cur||0) < sm){
-      staminaCooldownUntil = 0;                                                                    // not empty → cancel any pending lockout
-      state.stamina.cur = Math.min(sm, (state.stamina.cur||0) + staminaRegen()*0.1);               // gradual regen above 0
+      if(!staminaCooldownUntil) staminaCooldownUntil = nowMs() + staminaCooldown();   // start lockout
+      if(nowMs() >= staminaCooldownUntil){ state.stamina.cur = sm; staminaCooldownUntil = 0; }   // lockout over → full
       renderStamina();
     }
     autoChefTick();                             // v2.7: drive the front-veg Auto-Slicer off this same 100ms tick (boss/own gates checked inside)
@@ -1075,7 +1072,7 @@ function drawStaminaWarn(){
   ctx.globalAlpha=0.5+0.5*Math.abs(Math.sin(performance.now()/200));
   ctx.font="800 22px Georgia,serif"; ctx.fillStyle="#c45b43";
   ctx.fillText("OUT OF STAMINA 💪", CW/2, y); ctx.globalAlpha=1;
-  const remain = staminaCooldownUntil ? Math.max(0,(staminaCooldownUntil-nowMs())/1000) : CONFIG.staminaEmptyCooldownMs/1000;
+  const remain = staminaCooldownUntil ? Math.max(0,(staminaCooldownUntil-nowMs())/1000) : staminaCooldown()/1000;
   ctx.font="600 14px system-ui"; ctx.fillStyle="#9a4a3c";
   ctx.fillText("Full in "+remain.toFixed(1)+"s  ·  or 💎 refill", CW/2, y+24);
 }
@@ -1207,10 +1204,10 @@ function renderUpgrades(){
   document.getElementById("stmLvl").textContent="Lv "+(state.progression.staminaLevel||0);
   document.getElementById("stmEff").textContent="Max stamina "+staminaMax();
   stb.innerHTML='Upgrade<br><span class="cost">🪙 '+fmt(sc)+'</span>'; stb.disabled=state.currencies.coins<sc;
-  // v4: Stamina Regen (raises regen/sec)
+  // Recharge: shortens the empty-stamina lockout
   const rc=staminaRegenCost(), strb=document.getElementById("strBuy");
   document.getElementById("strLvl").textContent="Lv "+(state.progression.staminaRegenLevel||0);
-  document.getElementById("strEff").textContent="Regen "+staminaRegen().toFixed(2)+"/s";
+  document.getElementById("strEff").textContent="Recharge "+(staminaCooldown()/1000).toFixed(1)+"s";
   strb.innerHTML='Upgrade<br><span class="cost">🪙 '+fmt(rc)+'</span>'; strb.disabled=state.currencies.coins<rc;
   // v2.7: Auto-Slicer — hidden until chapter index 2 ("Chapter 3"); one-time gold unlock, then shows owned
   const acCard=document.getElementById("autoChefCard");
@@ -1229,7 +1226,7 @@ function renderUpgrades(){
   const stats=[
     ["Slice Speed", Math.round(sliceSpeedMult()*100)+"%"],
     ["Stamina", ""+staminaMax()],
-    ["Stamina Regen", staminaRegen().toFixed(2)],
+    ["Recharge", (staminaCooldown()/1000).toFixed(1)+"s"],
     ["Income Multiplier", "x"+incomeMult().toFixed(2)],
     ["Auto Slice Speed", Math.round(autoSpeedMult()*100)+"%"],
   ];
@@ -1749,7 +1746,7 @@ const cheats=document.getElementById("cheats");
 function buildCheats(){
   const sliders=[
     ["coinsPerSliceBase",0.5,10,0.5],["comboStep",0,0.5,0.01],
-    ["comboDecayMs",800,4000,100],["staminaPerSlice",0,10,1],["staminaRegenBase",1,50,1],
+    ["comboDecayMs",800,4000,100],["staminaPerSlice",0,10,1],["staminaEmptyCooldownMs",1000,10000,500],
     ["autoCutBaseMs",300,4000,100],["laneValPerLevel",0.02,1,0.02],
     ["offlineRatePct",0,1,0.05],["offlineCapHours",1,24,1],
     ["staminaMaxBase",20,500,10],
