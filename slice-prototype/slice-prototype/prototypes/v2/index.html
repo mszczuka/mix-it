@@ -549,6 +549,26 @@ const INGREDIENTS = [
   {name:"Bacon",    skin:"#9a3b2f", core:"#e0a0a0", emoji:"🥓", slices:18, val:100, cost:60000,  cutFactor:2.0},  // [balans]
   {name:"Sushi",    skin:"#2c2c3a", core:"#e85a6e", emoji:"🍣", slices:14, val:150, cost:120000, cutFactor:2.5},  // [balans]
 ];
+// auto-assign real-veg sprites by name (veg/<name>_whole.png + _slice.png); explicit img/sliceImg still win
+INGREDIENTS.forEach(ing=>{ const k=ing.name.toLowerCase();
+  if(!ing.img)      ing.img      = "veg/"+k+"_whole.webp";
+  if(!ing.sliceImg) ing.sliceImg = "veg/"+k+"_slice.webp";
+});
+
+// ---- real-veg sprites (opt-in per ingredient via img/sliceImg) ----
+// Drawing stays procedural for veggies without images; those with images render the real
+// sprite at NATURAL aspect (no stretch) and cut by CLIPPING (reveal), never by squishing.
+const VEG_IMGCACHE = {};
+function loadVegImg(path){
+  if(!path) return null;
+  if(VEG_IMGCACHE[path] === undefined){ const im = new Image(); im.src = path; VEG_IMGCACHE[path] = im; }
+  return VEG_IMGCACHE[path];
+}
+function _readyImg(im){ return (im && im.complete && im.naturalWidth) ? im : null; }
+function vegWholeImg(ing){ return _readyImg(ing && ing.img ? loadVegImg(ing.img) : null); }
+function vegSliceImg(ing){ return _readyImg(ing && ing.sliceImg ? loadVegImg(ing.sliceImg) : null); }
+function preloadVegImages(){ INGREDIENTS.forEach(ing=>{ if(ing.img) loadVegImg(ing.img); if(ing.sliceImg) loadVegImg(ing.sliceImg); }); }
+preloadVegImages();
 
 const STATE_KEY = "slicetycoon.save.v2.6";   // bumped so the cleaned schema starts fresh
 const SCHEMA_DEFAULT = {
@@ -1019,6 +1039,14 @@ function drawProduce(p){
   if(p.scale<1) p.scale=Math.min(1,p.scale+0.14);
   if(p.shake>0) p.shake-=1;
   const sh = p.shake>0 ? (Math.random()-0.5)*p.shake : 0;
+  const wim = vegWholeImg(p.ing);
+  // one-time fit: shrink the cut-box to the sprite's NATURAL width (kills the full-width stretch),
+  // re-centering on the current center. Slice count / coins are untouched (total/left unchanged).
+  if(wim && !p._imgFit){
+    const nw = Math.min(vegGeom().w, p.h * (wim.naturalWidth/wim.naturalHeight));
+    const cx = p.leftEdge + p.fullW/2;
+    p.fullW = nw; p.leftEdge = cx - nw/2; p._imgFit = true;
+  }
   const sliceW=p.fullW/p.total;
   const bodyW=Math.max(0, p.left*sliceW)*p.scale;
   const x=p.leftEdge+sh, y=p.cy-p.h/2, h=p.h, r=Math.min(h/2, sliceW*0.7);
@@ -1026,6 +1054,25 @@ function drawProduce(p){
   ctx.save(); ctx.globalAlpha=0.13; ctx.fillStyle="#000";
   ctx.beginPath(); ctx.ellipse(x+bodyW/2, p.cy+h*0.55, Math.max(20,bodyW*0.55), h*0.16,0,0,7); ctx.fill(); ctx.restore();
   if(bodyW<=2) return;
+  // ---- real-sprite branch: draw whole veg at natural aspect, CLIP to the un-cut part (reveal, no squish) ----
+  if(wim){
+    ctx.save();
+    ctx.beginPath(); ctx.rect(x, y-3, bodyW, h+6); ctx.clip();
+    ctx.drawImage(wim, x, y, p.fullW, h);           // full natural draw; clip hides the sliced-off right side
+    ctx.restore();
+    // fresh cut face (red flesh) at the right edge, only once cutting has begun
+    const sim = vegSliceImg(p.ing);
+    if(sim && p.left < p.total){
+      const fx = x + bodyW, frx = Math.max(4, sliceW*0.55), fry = h*0.46;
+      ctx.save();
+      ctx.beginPath(); ctx.ellipse(fx, p.cy, frx, fry, 0,0,7); ctx.clip();
+      ctx.drawImage(sim, fx - h/2, p.cy - h/2, h, h);
+      ctx.restore();
+      ctx.strokeStyle="#ffffff55"; ctx.lineWidth=1.5;
+      ctx.beginPath(); ctx.ellipse(fx, p.cy, frx, fry, 0,0,7); ctx.stroke();
+    }
+    return;
+  }
   // body (skin)
   ctx.fillStyle=p.ing.skin; drawRoundedRect(x,y,bodyW,h,r); ctx.fill();
   // core stripe
@@ -1042,6 +1089,8 @@ function drawProduce(p){
 
 function drawSliceDisc(ing, x, y, w, h, rot, alpha){
   ctx.save(); ctx.globalAlpha=alpha; ctx.translate(x,y); ctx.rotate(rot);
+  const sim = vegSliceImg(ing);
+  if(sim){ const d=Math.max(w,h); ctx.drawImage(sim, -d/2, -d/2, d, d); ctx.restore(); return; }
   ctx.fillStyle=ing.skin; ctx.beginPath(); ctx.ellipse(0,0,w/2,h/2,0,0,7); ctx.fill();
   ctx.fillStyle=ing.core; ctx.beginPath(); ctx.ellipse(0,0,w/2*0.7,h/2*0.7,0,0,7); ctx.fill();
   ctx.restore();

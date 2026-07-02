@@ -1,0 +1,5 @@
+# Slice Tycoon veg-sprite pipeline: ignore heavy raw renders & scratch, keep cutout.py
+slice-prototype/slice-prototype/prototypes/v2/veg/_raw/*.jpg
+slice-prototype/slice-prototype/prototypes/v2/veg/_raw/*.png
+slice-prototype/slice-prototype/prototypes/v2/veg/_raw/*.webp
+slice-prototype/slice-prototype/prototypes/v2/veg/_raw/__pycache__/
