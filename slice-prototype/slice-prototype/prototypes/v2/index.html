@@ -505,10 +505,10 @@ const CONFIG = {
   staminaRegenBase: 3, staminaRegenPerLevel: 1,          // [balans] per second — gradual regen WHILE stamina > 0 (regen 3 < Tomato drain ~3.85/s so a sustained hold still empties it)
   staminaEmptyCooldownMs: 5000,                          // hitting 0 = TOTAL block (manual AND hero Auto-Slicer stop) this long, then stamina SNAPS to 100%. (gem-refill skips it)
   staminaCooldownPerLevel: 400, staminaCooldownMin: 2000,// each Stamina Regen ("Recharge") level shortens the lockout by this (ms), floored at staminaCooldownMin
-  staminaPerSlice: 1,                                    // [balans] reverted the 2→harsh doubling; 1 = far less punishing after empty
-  staminaCostBase: 800, staminaCostGrowth: 1.4,          // [balans] growth 1.6->1.4 — stamina/regen are the only real active throttle; keep them buyable but on a steady curve so the gate is not instantly removed
-  staminaRegenCostBase: 1100, staminaRegenCostGrowth: 1.4, // [balans] growth 1.6->1.4 — same reasoning; regen is the true coins/min cap for held play
-  staminaRefillGems: 1,                                  // [balans] instant full refill costs GEMS (premium impatience lever + gem sink; not spammable with gold)
+  staminaPerSlice: 2,                                    // [balans] 1→2: the gate must BITE. Tomato hold ~3.85 slice/s × 2 = 7.7/s drain vs 3/s regen → base pool empties in ~13s then a 5s lockout (~72% uptime at lv0). Boss/rush is EXEMPT (see sliceOne) so the climax stays a frenzy.
+  staminaCostBase: 800, staminaCostGrowth: 1.25,         // [balans] growth 1.4->1.25 — now the gate BITES (staminaPerSlice=2), so these upgrades finally matter; softer curve keeps them reachable instead of a coin wall (cum lv5 ~8k)
+  staminaRegenCostBase: 1100, staminaRegenCostGrowth: 1.25, // [balans] growth 1.4->1.25 — same: with a biting gate, buying down the lockout is a real decision; keep it reachable
+  staminaRefillGems: 15,                                 // [balans] 1->15: gem economy was faucet-heavy (a 1-gem refill made premium currency worthless). Now a real impatience price + meaningful gem sink; still not gold-spammable.
   offlineRatePct: 0.5,        // fraction of estimated active rate
   offlineCapHours: 8,
   offlineLootPerHour: 0.7,    // [balans] auto-cutters "find" gear while away → ~5-6 pieces over a full 8h cap; queued to Kitchen review (loot feeds the return hook, not just coins)
@@ -516,7 +516,7 @@ const CONFIG = {
   maxPlateIngredients: 3,     // cap of distinct WHOLE vegetables a recipe can need
   // ---- BOSS-GATED CHAPTERS (coin goal → opt-in boss CTA) ----
   chapterGoalBase: 900,       // [balans] was 2000 — tuned so the FIRST boss lands at ~5 min of active slicing from a fresh save (idle.md: first signature beat must arrive early; benchmarks.md idle session 2-5 min)
-  chapterGoalGrowth: 1.6,     // [balans] was 2.4 — now tracks real per-chapter income growth (one product unlock ~1.4-1.6x val + a few levels), so every chapter stays a steady ~5-7 min gate instead of being trivially out-earned
+  chapterGoalGrowth: 2.0,     // [balans] 1.6->2.0 — audit: per-chapter income compounds MULTIPLICATIVELY (product val ~1.5x × lane mult × income mult × gear idle factor), so 1.6 let income outrun the gate → every chapter got cheaper in real time (runaway, no prestige governor). 2.0 tracks the true compounded growth so chapters stay a steady gate.
   bossDuration: 30,           // [balans] seconds of the timed boss climax
   rushDuration: 75,           // seconds of active slicing per Rush run
   rushCourses: 3,             // courses = number of drafts per run
@@ -551,10 +551,10 @@ const CONFIG = {
   // autoChefBaseMs removed — Auto-Slicer base cadence = holdInterval() (scales with loot Speed); the upgrade below divides it further
   // ---- Auto-Slicer SPEED upgrade (front-veg helper ONLY; separate axis from the Auto-Linia per-lane cutters) ----
   autoChefSpeedPerLevel: 0.15,    // [balans] +15% Auto-Slicer tempa/lvl (multiplies down holdInterval, floored at holdMinMs)
-  autoChefSpeedCostBase: 2500, autoChefSpeedCostGrowth: 1.4, // [balans] deliberately pricey — a chapter-3+ gold sink; infinite levels, floor caps real payoff
+  autoChefSpeedCostBase: 2000, autoChefSpeedCostGrowth: 1.3, // [balans] 2500/1.4 -> 2000/1.3 — was a trap sink: 1.4 growth priced later levels far above their shrinking ms payoff (holdMinMs floor), so they felt like wasted coins. Gentler curve keeps mid-levels worthwhile; still a chapter-3+ coin sink.
   // ---- v3 [active-tapper patch]: DAILY + GEM economy + EVENT ----
-  dailyGemReward: 5,              // gems from a full Daily Complete (all 3)
-  loginGemBase: 2,               // gems from daily login (first open each day)
+  dailyGemReward: 3,              // [balans] 5->3: gem faucets dwarfed sinks. Trimmed the steady daily drip so the premium currency holds value.
+  loginGemBase: 1,               // [balans] 2->1: same — cut the free daily gem drip roughly in half (daily+login 7->4/day, plus the ad Tip Jar)
   adTipGems: 1, adTipCapPerDay: 3,// rewarded "Tip Jar": gems per ad, daily cap
   milestoneChapters: 5, milestoneGems: 3, // every N chapters → gems
   bossRetryGems: 2,              // gem boss retry (re-arm the boss CTA instantly)
@@ -1108,8 +1108,11 @@ function spawnProduce(){ serveNext(); }
 function sliceOne(){
   if(!produce || produce.left<=0) return;
   // STAMINA gate (gold-sink throttle): a manual slice costs staminaPerSlice; blocked at 0 (auto-cutters bypass this entirely).
-  if((state.stamina.cur||0) < CONFIG.staminaPerSlice){ return; }
-  state.stamina.cur = Math.max(0, (state.stamina.cur||0) - CONFIG.staminaPerSlice);
+  // [balans] EXEMPT during a boss/rush — the 30s climax is the reward frenzy and must not stutter on lockouts; stamina refills to full at boss start anyway.
+  if(!rush){
+    if((state.stamina.cur||0) < CONFIG.staminaPerSlice){ return; }
+    state.stamina.cur = Math.max(0, (state.stamina.cur||0) - CONFIG.staminaPerSlice);
+  }
   const t=nowMs();
   // combo builds once per TAP (not per slice)
   combo=Math.min(combo+1, CONFIG.comboMax); lastSliceAt=t;
