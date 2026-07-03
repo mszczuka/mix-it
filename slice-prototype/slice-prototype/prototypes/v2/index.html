@@ -218,6 +218,30 @@
   @keyframes tutBubblePulse{0%,100%{box-shadow:var(--sh-2)}50%{box-shadow:var(--sh-2),0 0 0 4px rgba(244,181,74,.5)}}
   @keyframes tutPulse{0%,100%{opacity:.55;transform:scale(1)}50%{opacity:1;transform:scale(1.04)}}
   @keyframes tutTap{0%,100%{transform:translateY(0)}50%{transform:translateY(9px)}}
+
+  /* ---- LOOT reveal feed (non-blocking) + comparison card + Kitchen review ---- */
+  #lootFeed{position:absolute;left:0;right:0;top:calc(var(--topbar-h) + 6px);z-index:18;display:flex;flex-direction:column;align-items:center;gap:6px;pointer-events:none;padding:0 10px}
+  .loot-toast{background:var(--c-surface);border-radius:10px;padding:7px 12px;font-size:13px;font-weight:800;box-shadow:var(--sh-2);display:flex;align-items:center;gap:7px;max-width:100%;border-left:5px solid #9a8b7a;animation:lootIn .18s ease-out}
+  .loot-toast.out,.loot-card.out{animation:lootOut .3s ease-in forwards}
+  @keyframes lootIn{from{opacity:0;transform:translateY(-10px) scale(.92)}to{opacity:1;transform:none}}
+  @keyframes lootOut{to{opacity:0;transform:translateY(-8px)}}
+  .loot-card{background:var(--c-surface);border-radius:14px;box-shadow:var(--sh-2);width:100%;max-width:320px;overflow:hidden;animation:lootIn .2s ease-out;pointer-events:auto}
+  .lc-head{display:flex;align-items:center;gap:8px;padding:8px 12px;color:#fff;font-weight:800;font-size:15px}
+  .lc-badge{margin-left:auto;font-size:11px;font-weight:800;background:#0003;padding:3px 8px;border-radius:9999px}
+  .lc-cols{display:flex;gap:8px;padding:10px 12px 4px}
+  .lc-col{flex:1;background:#0000000a;border-radius:8px;padding:7px 8px;min-width:0}
+  .lc-col h5{font-size:10px;letter-spacing:.5px;color:var(--c-muted);margin-bottom:4px;font-weight:800}
+  .lc-col .lc-stat{font-size:11px;font-weight:700;color:var(--c-text);line-height:1.55}
+  .lc-deltas{display:flex;flex-wrap:wrap;gap:4px 10px;padding:4px 12px 8px}
+  .lc-delta{font-size:11px;font-weight:800}
+  .lc-delta.up{color:var(--c-success)} .lc-delta.down{color:var(--c-danger)} .lc-delta.same{color:var(--c-muted)}
+  .lc-pri{color:var(--c-accent)}
+  .lc-out{padding:7px 12px;font-size:12px;font-weight:800;border-top:1px solid #0001;background:#0000000a}
+  .lc-btns{display:flex;gap:8px;padding:8px 12px 12px}
+  .lc-btns button{flex:1;min-height:0;padding:11px 8px;font-size:13px}
+  .prio-row{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+  .prio-chip{font-size:11px;font-weight:800;padding:5px 9px;border-radius:9999px;background:#0000000d;color:var(--c-muted);cursor:pointer}
+  .prio-chip.on{background:var(--c-accent);color:#5a3d12}
 </style>
 
 <div id="app">
@@ -407,6 +431,9 @@
 
   <div id="flash"><div class="msg" id="flashMsg"></div></div>
 
+  <!-- LOOT reveal feed: non-blocking toasts / comparison cards, auto-dismiss -->
+  <div id="lootFeed"></div>
+
   <!-- TUTORIAL overlay: 4 dark mask rects frame a transparent hole (native clicks pass through), + ring/hand/bubble cue -->
   <div id="tutOverlay">
     <div class="tut-mask" id="tutMaskT"></div>
@@ -577,6 +604,7 @@ preloadVegImages();
 // ============================================================
 const LOOT = {
   perfectMult:2.5, perfectCap:0.75, sharpCap:0.40,   // Perfect Cut: RNG chance a slice pays ×perfectMult; Sharpness sum capped (guardrail vs curve)
+  priorityMult:2.5, maxPending:12,                   // your priority stat is weighted ×this in power-score; pending queue cap (oldest auto-dissolves)
   dishChance:0.22, comboBonus:0.10, comboThresh:1.5, // drop odds on dish completion (+bonus while combo ≥ threshold)
   bossGuaranteed:1, bossSecondChance:0.40, bossRarityMult:{2:2.0,3:3.0,4:4.0}, // boss = event drop with better rarity odds
   pityRare:25, pityEpic:120,                          // dropless streak → force ≥Rare / ≥Epic (anti RNG-fatigue)
@@ -624,7 +652,11 @@ const SCHEMA_DEFAULT = {
     autoChef:false},                                      // v2.7: one-time Auto-Slicer unlock (auto-cuts the current front veg)
   lanes:INGREDIENTS.map(()=>({level:0,auto:false,autoProg:0})), // one per ingredient (autoProg = discrete auto-cut cycle 0..1) — dynamic so adding products needs no length sync
   gear:{knife:0, board:0, plate:0},                   // legacy tier slots (kept at 0; loot below is the gear-power axis now)
-  loot:{knife:null, board:null, plate:null, pityRare:0, pityEpic:0, dropped:0}, // equipped loot per slot ({r,s}) + pity counters — flow-through, no inventory
+  loot:{knife:null, board:null, plate:null,               // equipped loot per slot ({r,s})
+    priority:{knife:"sharp", board:"grip", plate:"gold"}, // per-slot preferred stat (default = primary) → biases auto-equip toward YOUR build
+    pending:[],                                           // loot awaiting a KEEP/SELL decision (boss drops + timed-out Rare+)
+    autoMinor:false,                                      // opt-in: auto-handle Common/Uncommon silently (default OFF → decide from the start)
+    pityRare:0, pityEpic:0, dropped:0},
   stamina:{cur:CONFIG.staminaMaxBase},                // active-cut gate — manual slice spends staminaPerSlice; regens over time
   stats:{totalSlices:0, totalCoinsEarned:0, bestCombo:0, runCoinsEarned:0, platesServed:0},
   time:{lastSeen:0},
@@ -795,37 +827,129 @@ function lootMakeItem(slot,rIdx){
   for(let k=1;k<n && pool.length;k++){ const key=pool.splice(Math.floor(Math.random()*pool.length),1)[0]; s[key]=lootRollStat(key,rIdx); }
   return {r:rIdx, s};
 }
-function lootPower(it){ if(!it) return -1; let p=LOOT.rarityFloor[it.r]; for(const k in it.s) p+=it.s[k]*(LOOT.statWeight[k]||0); return p; }
+// PERSONALIZED power score: your priority stat for a slot is weighted heavier, so build direction can flip auto-equip & the keep/sell rec.
+function lootPower(it, slot){
+  if(!it) return -1;
+  let p=LOOT.rarityFloor[it.r];
+  const pri=(slot && state.loot && state.loot.priority)?state.loot.priority[slot]:null;
+  for(const k in it.s) p += it.s[k]*(LOOT.statWeight[k]||0)*(k===pri?LOOT.priorityMult:1);
+  return p;
+}
 function lootDissolve(rIdx){ return Math.floor(LOOT.dissolveBase[rIdx] * Math.max(1, Math.round(Math.pow(1.6, state.progression.chapter||0)))); }
-// a single drop: roll → auto-equip if higher power, else dissolve to coins. NO inventory (flow-through).
+function lootPendingCount(){ return (state.loot && state.loot.pending) ? state.loot.pending.length : 0; }
+function lootStatShort(k){ return {sharp:"Ostrość",speed:"Tempo",perfect:"Perfect",grip:"Combo",luck:"Luck",gold:"Golden"}[k]||k; }
+function lootDeltaTxt(k,d){
+  if(k==="sharp") return (d>=0?"+":"")+Math.round(d*100)+"%";
+  if(k==="perfect"||k==="gold") return (d>=0?"+":"")+d.toFixed(1)+"%";
+  return (d>=0?"+":"")+d.toFixed(0)+"%";
+}
+// shared comparison card markup — mode "decide" (fresh dish drop, Załóż/Sprzedaj) or "review" (Kitchen pending). Buttons wired by caller.
+function lootCardHTML(slot, nw, old, opts){
+  opts=opts||{};
+  const r=LOOT.rarities[nw.r], g=GEAR[slot], pri=(state.loot.priority||{})[slot];
+  const colStats=it=> it ? Object.keys(it.s).map(k=>`<div class="lc-stat">${LOOT.statDefs[k].icon} ${LOOT.statDefs[k].fmt(it.s[k])}</div>`).join("") : '<div class="lc-stat" style="color:var(--c-muted)">— pusto</div>';
+  const keys=[]; Object.keys(nw.s).forEach(k=>keys.push(k)); if(old) Object.keys(old.s).forEach(k=>{ if(keys.indexOf(k)<0) keys.push(k); });
+  const deltas=keys.map(k=>{ const a=nw.s[k]||0, b=(old&&old.s[k])||0, d=a-b;
+    const cls=d>0.0001?"up":d<-0.0001?"down":"same", arrow=d>0.0001?"▲":d<-0.0001?"▼":"—";
+    return `<div class="lc-delta ${cls}">${arrow} ${LOOT.statDefs[k].icon} ${lootDeltaTxt(k,d)}${k===pri?' <span class="lc-pri">★</span>':''}</div>`;
+  }).join("");
+  const fits = pri && nw.s[pri]!=null, better = lootPower(nw,slot) > lootPower(old,slot);
+  const rec = `${fits?('✓ pasuje do priorytetu '+LOOT.statDefs[pri].icon):'≠ inny stat niż priorytet'} · rekom.: ${better?'ZAŁÓŻ ▲':'sprzedaj'}`;
+  const review = opts.mode==="review";
+  const equipAttr = review ? `data-keep="${opts.idx}"` : `data-act="equip"`;
+  const sellAttr  = review ? `data-sell="${opts.idx}"` : `data-act="sell"`;
+  const btns = `<div class="lc-btns"><button class="ghost" ${sellAttr}>Sprzedaj 🪙${fmt(lootDissolve(nw.r))}</button><button class="cta" ${equipAttr}>Załóż${review?" &amp; zatrzymaj":""}</button></div>`;
+  return `<div class="lc-head" style="background:${r.color}">${g.icon} ${g.label} <span class="lc-badge">${r.key}</span></div>
+    <div class="lc-cols"><div class="lc-col"><h5>OBECNY</h5>${colStats(old)}</div><div class="lc-col"><h5>NOWY</h5>${colStats(nw)}</div></div>
+    <div class="lc-deltas">${deltas}</div>
+    <div class="lc-out" style="color:var(--c-muted)">${rec}${opts.gem?' · 💎+1':''}</div>${btns}`;
+}
+// equip an item into a slot; dissolve the replaced one; return dissolved coins
+function lootEquip(slot,item){ const cur=state.loot[slot]; let dv=0; if(cur){ dv=lootDissolve(cur.r); earnCoins(dv); } state.loot[slot]=item; return dv; }
+// visible "stats affect the game" feedback on equip
+function lootEquipFx(slot,item){
+  const g=GEAR[slot], r=LOOT.rarities[item.r];
+  if(item.r>=2) milestone("▲ "+r.key+" "+g.icon);
+  const px=(typeof plate!=="undefined"&&plate)?plate.x:CW/2, py=(typeof plate!=="undefined"&&plate)?plate.y-20:CH*0.3;
+  floaters.push({x:px,y:py,txt:g.icon+" ▲ założono · cięcie ×"+bladeMult().toFixed(2),life:1.6,perfect:true,vy:-0.5,big:item.r>=2});
+  payout();
+}
+// resolve a fresh dish-drop decision (from a card button, or the auto-dismiss timer default)
+function resolveLoot(drop, action){
+  if(drop.done) return; drop.done=true; if(drop.timer) clearTimeout(drop.timer);
+  const {slot,item}=drop, betterNow=lootPower(item,slot)>lootPower(state.loot[slot],slot);
+  if(action==="equip"){ lootEquip(slot,item); lootEquipFx(slot,item); }
+  else if(action==="sell"){ earnCoins(lootDissolve(item.r)); chop(0.3); }
+  else { // timed default: Rare+ non-upgrade → keep for Kitchen review; else equip-if-upgrade / sell trash
+    if(item.r>=2 && !betterNow){ state.loot.pending.push({slot,item}); if(state.loot.pending.length>LOOT.maxPending){ const d=state.loot.pending.shift(); earnCoins(lootDissolve(d.item.r)); } }
+    else if(betterNow){ lootEquip(slot,item); }
+    else earnCoins(lootDissolve(item.r));
+  }
+  if(drop.node){ drop.node.classList.add("out"); setTimeout(()=>{ if(drop.node) drop.node.remove(); },300); }
+  lootCardActive=false; showNextLootCard();          // dynamic: decision made → show the next queued drop
+  renderHud(); saveState();
+}
+// a single drop. Dish drops → interactive DECIDE card (agency + stat impact visible from the start).
+// Boss drops → straight to the Kitchen "to review" list (deliberate; the boss-result modal is open anyway).
 function grantLoot(source){
-  if(!state.loot) state.loot={knife:null,board:null,plate:null,pityRare:0,pityEpic:0,dropped:0};
-  const L=state.loot;
+  if(!state.loot) state.loot={knife:null,board:null,plate:null,priority:{knife:"sharp",board:"grip",plate:"gold"},pending:[],autoMinor:false,pityRare:0,pityEpic:0,dropped:0};
+  const L=state.loot; if(!L.pending) L.pending=[]; if(!L.priority) L.priority={knife:"sharp",board:"grip",plate:"gold"};
   L.pityRare=(L.pityRare||0)+1; L.pityEpic=(L.pityEpic||0)+1;
   const rIdx=lootRollRarity(source);
   if(rIdx>=2) L.pityRare=0;
   if(rIdx>=3) L.pityEpic=0;
   const slot=["knife","board","plate"][Math.floor(Math.random()*3)];
   const item=lootMakeItem(slot,rIdx);
-  if(Math.random()<lootGoldenChance()) state.currencies.gems+=1;          // Golden Find
-  const cur=L[slot]; let equipped=false;
-  if(lootPower(item)>lootPower(cur)){ if(cur) earnCoins(lootDissolve(cur.r)); L[slot]=item; equipped=true; }  // equip better; dissolve old
-  else earnCoins(lootDissolve(rIdx));                                     // keep current; dissolve the drop
+  let gem=0; if(Math.random()<lootGoldenChance()){ state.currencies.gems+=1; gem=1; }    // Golden Find
   L.dropped=(L.dropped||0)+1;
-  state.flags.kitchenPending=true;
-  showLootReveal(slot,item,equipped);
+  const rare=rIdx>=2;
+  if(source==="boss"){                                             // boss loot → queue; popped as decide cards on HOME once the result modal closes (flushBossLoot)
+    bossLootQueue.push({slot,item,gem}); if(rare) payout();
+  } else if(!rare && L.autoMinor){                                 // opt-in automation: silently handle pospolity loot
+    const better=lootPower(item,slot)>lootPower(L[slot],slot);
+    if(better) lootEquip(slot,item); else earnCoins(lootDissolve(rIdx));
+    showMinorToast(slot,item,better,gem);
+  } else {                                                         // dish drop → interactive decide card
+    presentLoot(slot,item,gem);
+  }
+  state.flags.kitchenPending = lootPendingCount()>0;
 }
-// reveal juice on the canvas — floater at the plate + (rare) milestone banner, payout chime and gold sparks
-function showLootReveal(slot,item,equipped){
-  const r=LOOT.rarities[item.r], g=GEAR[slot], rare=item.r>=2;
-  const px=(typeof plate!=="undefined"&&plate)?plate.x:CW/2, py=((typeof plate!=="undefined"&&plate)?plate.y:CH*0.3)-30;
-  floaters.push({x:px, y:py, txt:g.icon+" "+r.key+(equipped?" ▲":" →🪙"), life:1.7, perfect:rare, vy:-0.5, big:rare});
-  if(rare){
-    payout(); milestone(r.key+" "+g.icon+"!");
-    for(let i=0;i<34;i++){ const a=Math.random()*Math.PI*2, sp=2+Math.random()*6;
-      particles.push({x:px, y:py+22, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp-1.5, r:2+Math.random()*4, c:Math.random()<0.5?r.color:"#fff2c8", life:1, spark:true}); }
-  } else { chop(0.3); }
+function showMinorToast(slot,item,equipped,gem){
+  const feed=document.getElementById("lootFeed"); if(!feed) return;
+  const r=LOOT.rarities[item.r], g=GEAR[slot];
+  const node=document.createElement("div"); node.className="loot-toast"; node.style.borderLeftColor=r.color;
+  node.innerHTML=`<span>${g.icon}</span><span style="color:${r.color}">${r.key}</span><span style="color:var(--c-muted);font-weight:700">${equipped?'▲ założono':'🪙 sprzedano'}${gem?' · 💎+1':''}</span>`;
+  feed.appendChild(node); setTimeout(()=>{ node.classList.add("out"); setTimeout(()=>node.remove(),300); },1500);
+  while(feed.children.length>4) feed.firstChild.remove();
 }
+let lootQueue=[], lootCardActive=false, bossLootQueue=[];
+// dynamic per-drop flow: cut → ONE card on HOME → decide (Załóż/Sprzedaj) → next queued card → back to play.
+// The card does NOT auto-dismiss — it stays until the player decides.
+function presentLoot(slot,item,gem){
+  const feed=document.getElementById("lootFeed"); const drop={slot,item,gem,done:false,node:null};
+  if(!feed){ resolveLoot(drop,"default"); return; }
+  lootQueue.push(drop); showNextLootCard();
+}
+function showNextLootCard(){
+  if(lootCardActive) return;
+  const feed=document.getElementById("lootFeed"); if(!feed) return;
+  const drop=lootQueue.shift(); if(!drop) return;
+  lootCardActive=true;
+  if(drop.item.r>=2){ const px=(typeof plate!=="undefined"&&plate)?plate.x:CW/2, py=(typeof plate!=="undefined"&&plate)?plate.y:CH*0.3;
+    for(let i=0;i<22;i++){ const a=Math.random()*Math.PI*2, sp=2+Math.random()*6; particles.push({x:px,y:py,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-1.5,r:2+Math.random()*4,c:Math.random()<0.5?LOOT.rarities[drop.item.r].color:"#fff2c8",life:1,spark:true}); } }
+  const node=document.createElement("div"); node.className="loot-card"; node._drop=drop; drop.node=node;
+  node.innerHTML=lootCardHTML(drop.slot,drop.item,state.loot[drop.slot],{mode:"decide",gem:drop.gem});
+  const eq=node.querySelector('[data-act="equip"]'), sl=node.querySelector('[data-act="sell"]');
+  if(eq) eq.onclick=()=>resolveLoot(drop,"equip");
+  if(sl) sl.onclick=()=>resolveLoot(drop,"sell");
+  feed.appendChild(node); renderHud();
+}
+function flushBossLoot(){ if(!bossLootQueue.length) return; const q=bossLootQueue; bossLootQueue=[]; q.forEach(d=>presentLoot(d.slot,d.item,d.gem)); }
+// Kitchen KEEP/SELL + priority + automation toggle
+function lootKeep(i){ const p=state.loot.pending, e=p&&p[i]; if(!e) return; lootEquip(e.slot,e.item); lootEquipFx(e.slot,e.item); p.splice(i,1); renderHud(); saveState(); }
+function lootSell(i){ const p=state.loot.pending, e=p&&p[i]; if(!e) return; earnCoins(lootDissolve(e.item.r)); p.splice(i,1); chop(0.3); renderHud(); saveState(); }
+function lootSetPriority(slot,k){ if(!state.loot.priority) state.loot.priority={}; state.loot.priority[slot]=k; renderKitchen(); saveState(); }
+function lootToggleAuto(){ state.loot.autoMinor=!state.loot.autoMinor; renderKitchen(); saveState(); }
 
 // ---- combo runtime ----
 let combo = 0;            // count
@@ -962,8 +1086,12 @@ function serveDish(){
   if(plate){ plate.phase="out"; plate.target=CW*1.6; }
   dish=null;
   tutNotify("dish");   // FTUE step 2 (first full dish served)
-  // LOOT: a completed dish is the "lootbox" — chance to drop gear (higher while combo is hot). Not during the tutorial.
-  if(!tutActive()){ const dc=LOOT.dishChance + (comboMult()>=LOOT.comboThresh?LOOT.comboBonus:0); if(Math.random()<dc) grantLoot("dish"); }
+  // LOOT: a completed dish is the "lootbox" — but only from Chapter 2 onward (chapter index ≥ 1).
+  // Chapter 1 stays loot-free (onboarding); the FIRST loot is the reward for beating boss 1 (see endBoss).
+  {
+    const dc = LOOT.dishChance + (comboMult()>=LOOT.comboThresh?LOOT.comboBonus:0);
+    if((state.progression.chapter||0) >= 1 && Math.random()<dc) grantLoot("dish");   // loot from Chapter 2 onward; first loot is from boss 1
+  }
   // CHANGE 3: chapters are coin-gated (chapterEarned) — no forced auto-boss; the CTA surfaces when the goal is hit
   renderHud(); saveState();
 }
@@ -1379,6 +1507,7 @@ function renderTopBar(){
 }
 let curPanel="home";
 function renderNav(){
+  state.flags.kitchenPending = lootPendingCount()>0;   // Kitchen badge = you have Rare+ loot to review
   document.getElementById("nav").innerHTML = UI_REF.nav.map(t=>{
     const badge = t.badge && state.flags[t.badge];
     return `<div class="navtab ${t.center?"center":""} ${curPanel===t.panel?"active":""} ${badge?"badge-on":""}" data-go="${t.panel}">
@@ -1565,23 +1694,45 @@ function gearStatLine(s){
   return "plate bonus +"+Math.round(gearPlateBonus()*100)+"%"+(gearTip()?" · +8% tip":"");
 }
 function renderKitchen(){
-  const L=state.loot||{};
-  let h=`<p class="sub" style="padding:2px 2px 10px">Loot spada z krojenia dań i z bossów. Lepszy zakłada się <b>sam</b>, gorszy rozpuszcza w 🪙 — zero grzebania. Znalezione: <b>${L.dropped||0}</b></p>`;
+  const L=state.loot||{}; if(!L.priority) L.priority={knife:"sharp",board:"grip",plate:"gold"}; if(!L.pending) L.pending=[];
+  let h="";
+  // loot awaiting a KEEP/SELL decision (boss drops + timed-out Rare+)
+  if(L.pending.length){
+    h+=`<h2 class="title" style="padding:8px 2px 2px">🎁 Do przejrzenia (${L.pending.length})</h2>`;
+    L.pending.forEach((p,i)=>{ h+=`<div class="loot-card" style="max-width:none;margin:0 0 10px">${lootCardHTML(p.slot, p.item, L[p.slot], {mode:"review", idx:i})}</div>`; });
+  }
+  // "Twój build" — live aggregate so the player SEES stats affect the game (updates on equip)
+  const build=[
+    ["🔪 Wartość cięcia","×"+bladeMult().toFixed(2)],
+    ["⚡ Tempo krojenia","+"+Math.round((lootSpeedMul()-1)*100)+"%"],
+    ["✨ Perfect Cut",(lootPerfectChance()*100).toFixed(1)+"%"],
+    ["🔗 Okno combo",(effDecay()/1000).toFixed(1)+"s"],
+    ["🍀 Loot Luck","+"+Math.round(lootStatSum("luck"))+"%"],
+    ["💎 Golden Find",lootStatSum("gold").toFixed(1)+"%"],
+  ];
+  h+=`<div class="card"><div class="big" style="margin-bottom:4px">📊 Twój build</div>${build.map(([l,v])=>`<div class="stat-row"><span class="sl">${l}</span><span class="sv">${v}</span></div>`).join("")}</div>`;
+  h+=`<p class="sub" style="padding:2px 2px 8px">Loot spada z krojenia dań (od rozdziału 2) i z bossów. Wybierz na każdym dropie: <b>Załóż</b> lub <b>Sprzedaj</b>. Znalezione: <b>${L.dropped||0}</b></p>`;
   ["knife","board","plate"].forEach(s=>{
-    const g=GEAR[s], it=L[s];
-    if(!it){
-      h+=`<div class="card"><div class="row"><div class="grow">
-        <div class="big">${g.icon} ${g.label}</div>
-        <div class="lvl">Pusto — tnij warzywa, żeby zdobyć loot</div></div></div></div>`;
-    } else {
-      const r=LOOT.rarities[it.r];
-      const stats=Object.keys(it.s).map(k=>`<div class="eff">${LOOT.statDefs[k].icon} ${LOOT.statDefs[k].fmt(it.s[k])}</div>`).join("");
-      h+=`<div class="card" style="border-left:5px solid ${r.color}"><div class="row"><div class="grow">
-        <div class="big">${g.icon} ${g.label} <span class="lvl" style="color:${r.color};font-weight:800">${r.key}</span></div>
-        ${stats}</div></div></div>`;
-    }
+    const g=GEAR[s], it=L[s], rar=it?LOOT.rarities[it.r]:null;
+    const stats = it ? Object.keys(it.s).map(k=>`<div class="eff">${LOOT.statDefs[k].icon} ${LOOT.statDefs[k].fmt(it.s[k])}${k===L.priority[s]?' <span style="color:var(--c-accent);font-weight:800">★</span>':''}</div>`).join("")
+                     : '<div class="lvl">Pusto — tnij, żeby zdobyć loot</div>';
+    const chips = LOOT.slotPool[s].map(k=>`<span class="prio-chip ${k===L.priority[s]?'on':''}" data-prio="${s}:${k}">${LOOT.statDefs[k].icon} ${lootStatShort(k)}</span>`).join("");
+    h+=`<div class="card" ${rar?`style="border-left:5px solid ${rar.color}"`:''}>
+      <div class="big">${g.icon} ${g.label}${rar?` <span class="lvl" style="color:${rar.color};font-weight:800">${rar.key}</span>`:''}</div>
+      ${stats}
+      <div class="lvl" style="margin-top:8px">Priorytet buildu (★ faworyzowany przy auto-equip):</div>
+      <div class="prio-row">${chips}</div>
+    </div>`;
   });
-  document.getElementById("gearList").innerHTML=h;
+  // opt-in automation for pospolity loot (default OFF → decide from the start)
+  h+=`<div class="card"><div class="row"><div class="grow"><div class="big">🤖 Auto Common/Uncommon</div>
+    <div class="lvl">ON: pospolity loot rozwiązuje się sam (tylko toast). Rare+ zawsze pyta.</div></div>
+    <button class="${L.autoMinor?'cta':'ghost'}" id="lootAutoBtn">${L.autoMinor?'ON':'OFF'}</button></div></div>`;
+  const gl=document.getElementById("gearList"); gl.innerHTML=h;
+  gl.querySelectorAll("[data-keep]").forEach(b=>b.onclick=()=>lootKeep(+b.dataset.keep));
+  gl.querySelectorAll("[data-sell]").forEach(b=>b.onclick=()=>lootSell(+b.dataset.sell));
+  gl.querySelectorAll("[data-prio]").forEach(b=>b.onclick=()=>{ const a=b.dataset.prio.split(":"); lootSetPriority(a[0],a[1]); });
+  const ab=gl.querySelector("#lootAutoBtn"); if(ab) ab.onclick=lootToggleAuto;
 }
 function upgradeGear(s){ if(state.gear[s]>=3) return; const c=gearUpgradeCost(s); if(state.currencies.coins>=c){ state.currencies.coins-=c; state.gear[s]++; payout(); milestone(GEAR[s].icon+" "+GEAR[s].tiers[state.gear[s]]+"!"); renderHud(); saveState(); } }
 function renderHud(){
@@ -1758,9 +1909,8 @@ function endBoss(){
   // v2: gear drop by tier — <Bronze none; Bronze +1 random; Silver/Gold +1 on lowest slot; Gold +small gem bonus
   let dropTxt="";
   if(tier){
-    const n = tier.name==="Gold"?3 : tier.name==="Silver"?2 : 1;   // boss = event drop(s) with better rarity odds
-    for(let k=0;k<n;k++) grantLoot("boss");
-    dropTxt="🎁 "+n+" loot"+(n>1?"y":"")+" — zobacz Kitchen";
+    grantLoot("boss");                                             // boss = ONE loot drop (better rarity odds by tier); pops on Home after this modal
+    dropTxt="🎁 Loot z bossa!";
     if(tier.name==="Gold"){ const gem=2+Math.floor(rand()*3); state.currencies.gems+=gem; dropTxt+=" · +"+gem+" 💎"; }
   }
   rush=null; combo=0;
@@ -1769,7 +1919,7 @@ function endBoss(){
   document.getElementById("rrCoins").textContent="🪙 +"+fmt(reward);
   document.getElementById("rrSub").textContent="Tier: "+(tier?(tierIcons[tier.name]+" "+tier.name):"— none")+" · "+dishes+" dish"+(dishes===1?"":"es")+" · max combo x"+maxc;
   // CHANGE 4: state whether the perk was earned (≥ Bronze gold value) right on the result modal
-  document.getElementById("rrDrop").textContent=(bossPerkEarned?"🔥 Perk earned — pick a boost next!":"Not enough gold — build up and retry")+(dropTxt?(" · "+dropTxt):"");
+  document.getElementById("rrDrop").textContent=(bossPerkEarned?"✅ Chapter zaliczony!":"Za mało golda — dozbieraj i spróbuj ponownie")+(dropTxt?(" · "+dropTxt):"");
   const ad=document.getElementById("rrAd"); ad.disabled=false; ad.style.display=reward>0?"":"none";
   const retry=document.getElementById("rrRetry");   // v3: gem boss retry — only when you fell short (< Bronze)
   if(retry){ retry.textContent="🔁 Retry boss 💎"+CONFIG.bossRetryGems; retry.style.display=(!bossPerkEarned)?"":"none"; retry.disabled=state.currencies.gems<CONFIG.bossRetryGems; }
@@ -1790,8 +1940,9 @@ document.getElementById("rrAd").onclick=()=>{
 // v5: closing the result modal — ≥Bronze CLEARS the chapter (perk pick → advance); below Bronze stays retryable
 document.getElementById("rrClose").onclick=()=>{
   document.getElementById("rushResult").classList.remove("open");
-  if(bossPerkEarned){ openCarryModal(); }           // perk pick → pickCarry → clearChapter
-  else { milestone("Not enough gold — build up & retry"); renderHud(); }   // chapterEarned stays ≥ goal → CTA available for retry
+  if(bossPerkEarned){ clearChapter(); }             // no more time-limited perks — loot IS the boss reward; clear the chapter directly
+  else { milestone("Za mało golda — dozbieraj i spróbuj ponownie"); renderHud(); }   // chapterEarned stays ≥ goal → CTA available for retry
+  flushBossLoot();                                  // now back on Home → boss loot pops as a decide card
 };
 
 // ============================================================
@@ -2064,7 +2215,6 @@ const TUTORIAL = [
   { on:"level",     sel:"#laneBar .llvup",text:"Ulepsz warzywo — gotowe danie będzie warte więcej monet! 💰" },
   { on:"bossstart", sel:"#bossCta",       text:"Boss gotowy! Stuknij, żeby ruszyć do walki. 👹" },
   { on:"bosswin",   sel:"#sliceCanvas",   text:"Tnij ile sił — zgarnij jak najwięcej, zanim skończy się czas! ⏱️", slice:true },
-  { on:"perk",      sel:"#carryCards",    text:"Świetna robota! Wybierz swoją nagrodę za pokonanie bossa. 🎁", soft:true },
 ];
 function tutActive(){ return typeof state.flags.tut === "number" && state.flags.tut < TUTORIAL.length; }
 function tutEl(){ const id="tutOverlay"; return document.getElementById(id); }
