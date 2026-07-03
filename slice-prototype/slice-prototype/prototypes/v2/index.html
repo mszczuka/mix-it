@@ -305,16 +305,6 @@
       <div class="card">
         <div class="row">
           <div class="grow">
-            <div class="big">⚡ Slice Speed</div>
-            <div class="lvl" id="ssLvl"></div>
-            <div class="eff" id="ssEff"></div>
-          </div>
-          <button class="cta" id="ssBuy"></button>
-        </div>
-      </div>
-      <div class="card">
-        <div class="row">
-          <div class="grow">
             <div class="big">🪚 Auto Slice Speed</div>
             <div class="lvl" id="asLvl"></div>
             <div class="eff" id="asEff"></div>
@@ -361,8 +351,8 @@
     </section>
 
     <section class="panel" data-panel="kitchen">
-      <h2 class="title">Knife Bench</h2>
-      <p class="sub">Gear boosts idle &amp; Rush. Earn it from Rush drops, or upgrade with gold.</p>
+      <h2 class="title">Ekwipunek</h2>
+      <p class="sub">Twój sprzęt. Loot spada z krojenia dań i z bossów — załóż lepszy, słabszy sprzedaj na monety.</p>
       <div id="gearList"></div>
     </section>
   </main>
@@ -478,7 +468,7 @@ window.addEventListener("error", function(e){
      (incl. boss). Stamina + Stamina Regen upgrades are the main active-play gold sink. The Auto-Slicer
      (front-veg) ALSO spends stamina and shares the pool; per-lane auto-cutters do NOT (passive income).
      Gem refill unlocks only when stamina is <=20% of max.
-   - GLOBAL upgrades: Income Multiplier / Slice Speed / Auto Slice Speed + Stats card.
+   - GLOBAL upgrades: Income Multiplier / Auto Slice Speed / Stamina / Recharge + Stats card. (Slice Speed removed — loot Speed owns hold cadence)
    - GEAR (Knife/Board/Plate); coins + gems currencies.
    - CASH PRODUCT UNLOCK: unlockCost/unlockMult + one-time affordability popup.
    - BOSS-GATED CHAPTERS (opt-in): chapterGoal()=⌊chapterGoalBase·chapterGoalGrowth^chapter⌋;
@@ -510,6 +500,7 @@ const CONFIG = {
   staminaRefillGems: 1,                                  // [balans] instant full refill costs GEMS (premium impatience lever + gem sink; not spammable with gold)
   offlineRatePct: 0.5,        // fraction of estimated active rate
   offlineCapHours: 8,
+  offlineLootPerHour: 0.7,    // [balans] auto-cutters "find" gear while away → ~5-6 pieces over a full 8h cap; queued to Kitchen review (loot feeds the return hook, not just coins)
   unlockMult: 18,             // [balans] was 12 — keeps each new-product unlock a real saving decision vs. a few dishes of income
   maxPlateIngredients: 3,     // cap of distinct WHOLE vegetables a recipe can need
   // ---- BOSS-GATED CHAPTERS (coin goal → opt-in boss CTA) ----
@@ -523,8 +514,6 @@ const CONFIG = {
   rushActiveWindowMs: 4000,   // tapped within this window at stage finale = "active" → Rush auto-starts
   rushEveryStages: 1,         // auto-trigger frequency knob (1 = every stage)
   gearDropMinScore: 150,      // min Service Score to drop a gear piece from a Rush
-  gearUpgradeCostBase: 300,   // Kitchen coin-upgrade cost (alt path to drops)
-  gearUpgradeCostGrowth: 5,
   // ---- v2: PRODUCT LANES (the new core — gold sink = leveling) ----
   laneValPerLevel: 0.10,          // [balans] was 0.18 — lane lvl10 = x2.0 (was x2.8); slows the multiplicative climb that stacked on top of combo+income
   laneLevelCostBase: 40,          // [balans] was 25 — first lane level now costs ~one dish, a real choice vs the trivial 25
@@ -543,13 +532,12 @@ const CONFIG = {
   // ---- v2.1: GLOBAL stat upgrades (mirror "Slice to Meet You" Upgrades panel) ----
   incomePerLevel: 0.07,           // [balans] was 0.10 — gentler multiplicative faucet so combo*lane*income don't compound away
   incomeCostBase: 35, incomeCostGrowth: 1.26,           // [balans] was 18 / 1.5 — early payback ~4 min rising to ~13 min; growth pulled toward idle.md cost-curve band
-  sliceSpeedPerLevel: 0.12,       // [balans: economy] +hold fire-rate per Slice Speed level
-  sliceSpeedCostBase: 60, sliceSpeedCostGrowth: 1.30,   // [balans] was 20 / 1.6 — slice-speed mostly fights the stamina gate, so price it as a steady sink not a runaway
+  // sliceSpeed* removed — hold-slice cadence is now driven by loot Speed stat (gear owns the active-cadence axis); the Slice Speed upgrade was a 1:1 duplicate of lootSpeedMul()
   autoSpeedPerLevel: 0.15,        // [balans: economy] +auto-cutter rate per Auto Slice Speed level
   autoSpeedCostBase: 600, autoSpeedCostGrowth: 1.35,    // [balans] was 400 / 1.7 — gentler growth keeps later auto-speed buys reachable but meaningful
   // ---- v2.7: AUTO-SLICER — one-time gold unlock that auto-cuts the CURRENT front veg (NOT the per-lane passive autos) ----
   autoChefCost: 4000,             // [balans: economy] one-time unlock (gated to chapter 3)
-  // autoChefBaseMs removed — Auto-Slicer now uses holdInterval() (same speed as hold, scales with Slice Speed)
+  // autoChefBaseMs removed — Auto-Slicer now uses holdInterval() (same speed as hold, scales with loot Speed)
   // ---- v3 [active-tapper patch]: DAILY + GEM economy + EVENT ----
   dailyGemReward: 5,              // gems from a full Daily Complete (all 3)
   loginGemBase: 2,               // gems from daily login (first open each day)
@@ -633,9 +621,9 @@ const LOOT = {
   rarityFloor:[5,15,40,90,180],                       // power-score floor per rarity (rarity dominates auto-equip)
   statWeight:{sharp:400, speed:3, perfect:8, grip:2.5, luck:2, gold:10},
   statDefs:{
-    sharp:  {icon:"🔪", fmt:v=>"+"+(v*100).toFixed(0)+"% wartości cięcia"},
+    sharp:  {icon:"🔪", fmt:v=>"+"+(v*100).toFixed(0)+"% siły crita"},
     speed:  {icon:"⚡", fmt:v=>"+"+v.toFixed(0)+"% tempa krojenia"},
-    perfect:{icon:"✨", fmt:v=>v.toFixed(1)+"% szansy na ×"+LOOT.perfectMult},
+    perfect:{icon:"✨", fmt:v=>v.toFixed(1)+"% szansy na crita ✨"},
     grip:   {icon:"🔗", fmt:v=>"combo trzyma +"+v.toFixed(0)+"% dłużej"},
     luck:   {icon:"🍀", fmt:v=>"+"+v.toFixed(0)+"% na lepszy loot"},
     gold:   {icon:"💎", fmt:v=>v.toFixed(1)+"% szansy na 💎"},
@@ -646,12 +634,11 @@ const STATE_KEY = "slicetycoon.save.v2.6";   // bumped so the cleaned schema sta
 const SCHEMA_DEFAULT = {
   currencies:{coins:60, gems:0},                      // starting gold
   progression:{unlocked:1,
-    incomeLevel:0, sliceSpeedLevel:0, autoSpeedLevel:0,    // global stat upgrades
+    incomeLevel:0, autoSpeedLevel:0,    // global stat upgrades (sliceSpeedLevel removed — loot Speed owns hold cadence)
     staminaLevel:0, staminaRegenLevel:0,                  // STAMINA upgrades
     chapter:0, chapterEarned:0,                           // BOSS-GATED CHAPTERS — chapterEarned accrues every coin; at chapterGoal() the boss CTA appears
     autoChef:false},                                      // v2.7: one-time Auto-Slicer unlock (auto-cuts the current front veg)
   lanes:INGREDIENTS.map(()=>({level:0,auto:false,autoProg:0})), // one per ingredient (autoProg = discrete auto-cut cycle 0..1) — dynamic so adding products needs no length sync
-  gear:{knife:0, board:0, plate:0},                   // legacy tier slots (kept at 0; loot below is the gear-power axis now)
   loot:{knife:null, board:null, plate:null,               // equipped loot per slot ({r,s})
     priority:{knife:"sharp", board:"grip", plate:"gold"}, // per-slot preferred stat (default = primary) → biases auto-equip toward YOUR build
     pending:[],                                           // loot awaiting a KEEP/SELL decision (boss drops + timed-out Rare+)
@@ -714,10 +701,12 @@ function fmt(n){
 
 // ---- derived getters ----
 // income scales via Income Multiplier + lane levels + gear
-function bladeMult(){ return 1 + gearKnifeBladeMult() + lootSharp(); }   // loot Sharpness is the gear-power axis (gear tier stays 0)
+// loot Sharpness re-roled: it no longer flat-multiplies coin value (that duplicated the Income upgrade).
+// It now scales the CRIT payout, so the knife build is coherent: perfect = crit CHANCE, sharp = crit POWER.
+function lootCritMult(){ return LOOT.perfectMult * (1 + lootSharp()); }   // base ×2.5, up to ×2.5·1.40 = ×3.5 at sharpCap
 function coinsPerSlice(comboMult, ingVal){
   // coinsPerSlice is the raw per-slice value; callers add incomeMult() only on the idle-coin path (boss banks raw).
-  return CONFIG.coinsPerSliceBase * bladeMult() * ingVal * comboMult;
+  return CONFIG.coinsPerSliceBase * ingVal * comboMult;
 }
 function unlockCost(){ const ni=state.progression.unlocked; return ni>=INGREDIENTS.length?Infinity:Math.floor(INGREDIENTS[ni].cost*CONFIG.unlockMult); }
 function bestVal(){ return INGREDIENTS[Math.max(0,state.progression.unlocked-1)].val; }
@@ -729,12 +718,10 @@ function staminaCost(){ return Math.floor(CONFIG.staminaCostBase*Math.pow(CONFIG
 function staminaRegenCost(){ return Math.floor(CONFIG.staminaRegenCostBase*Math.pow(CONFIG.staminaRegenCostGrowth, state.progression.staminaRegenLevel||0)); }
 function staminaRefillCost(){ return CONFIG.staminaRefillGems; }   // instant full refill — paid in GEMS now
 
-// ---- v2.1: GLOBAL stat upgrades (Income / Slice Speed / Auto Slice Speed) ----
+// ---- v2.1: GLOBAL stat upgrades (Income / Auto Slice Speed) — Slice Speed removed, loot Speed owns hold cadence ----
 function incomeMult(){ return 1 + (state.progression.incomeLevel||0)*CONFIG.incomePerLevel; }      // multiplies idle coin income (NOT Rush score)
-function sliceSpeedMult(){ return 1 + (state.progression.sliceSpeedLevel||0)*CONFIG.sliceSpeedPerLevel; } // speeds hold-to-slice fire rate
 function autoSpeedMult(){ return 1 + (state.progression.autoSpeedLevel||0)*CONFIG.autoSpeedPerLevel; }    // speeds per-lane auto-cutters
 function incomeCost(){ return Math.floor(CONFIG.incomeCostBase*Math.pow(CONFIG.incomeCostGrowth, state.progression.incomeLevel||0)); }
-function sliceSpeedCost(){ return Math.floor(CONFIG.sliceSpeedCostBase*Math.pow(CONFIG.sliceSpeedCostGrowth, state.progression.sliceSpeedLevel||0)); }
 function autoSpeedCost(){ return Math.floor(CONFIG.autoSpeedCostBase*Math.pow(CONFIG.autoSpeedCostGrowth, state.progression.autoSpeedLevel||0)); }
 
 // ---- v5: BOSS-GATED CHAPTERS + time-limited carry modifiers ----
@@ -766,34 +753,30 @@ function laneMult(i){ return 1 + lane(i).level*CONFIG.laneValPerLevel; }     // 
 function laneLevelCost(i){ return Math.floor(CONFIG.laneLevelCostBase*Math.pow(CONFIG.laneLevelCostGrowth, lane(i).level)); }
 function highestUnlockedIdx(){ return Math.max(0, state.progression.unlocked-1); }
 // auto-cutter coins per slice: base × blade × (ingVal×laneMult) × income, NO combo
-function coinsPerSliceAuto(i){ return CONFIG.coinsPerSliceBase * bladeMult() * (INGREDIENTS[i].val*laneMult(i)) * incomeMult(); }
+// equipped crit gear boosts passive/auto & offline income too (expected value of crits) → loot now FEEDS idle, not just active play
+function gearIdleFactor(){ return 1 + lootPerfectChance()*(lootCritMult()-1); }
+function coinsPerSliceAuto(i){ return CONFIG.coinsPerSliceBase * (INGREDIENTS[i].val*laneMult(i)) * incomeMult() * gearIdleFactor(); }
 // v2.3: discrete auto-cut cycle time per lane (ms). Tougher veg cut slower; Auto Slice Speed upgrade speeds all.
 function cutCycleMs(i){ return CONFIG.autoCutBaseMs * INGREDIENTS[i].cutFactor / (autoSpeedMult() * carryMult("overdrive")); }
 // v5: the player NO LONGER chooses the slicing veg — the dish auto-serves its recipe in order.
 // "currentServeIdx" = the ingredient the game is currently presenting (drives the board + lane "cutting now" tag).
 function currentServeIdx(){ return (dish && dish.recipe[dish.cur]) ? dish.recipe[dish.cur].idx : highestUnlockedIdx(); }
 
-// ---- Knife Bench gear (F2) ----
+// ---- Gear slots — icon/label metadata for the loot UI. Legacy tier-upgrade path removed:
+//      loot stats (Sharp/Speed/Perfect/Grip/Plate) ARE the gear-power axis now, so the old tier bonuses (all 0) are gone. ----
 const GEAR={
-  knife:{label:"Knife", icon:"🔪", tiers:["—","Paring Knife","Cleaver","Damascus"]},
-  board:{label:"Board", icon:"🪵", tiers:["—","Pine Board","Bamboo Board","Walnut Board"]},
-  plate:{label:"Plate", icon:"🍽️", tiers:["—","Tin Plate","Ceramic Plate","Gold Plate"]},
+  knife:{label:"Knife", icon:"🔪"},
+  board:{label:"Board", icon:"🪵"},
+  plate:{label:"Plate", icon:"🍽️"},
 };
-function gearKnifeBladeMult(){ return [0,0.10,0.20,0.35][state.gear.knife]||0; }
-function gearDecay(){ return [0,400,800,1200][state.gear.board]||0; }
-function gearComboStep(){ return state.gear.board>=2?0.02:0; }
-function gearStartCombo(){ return state.gear.board>=3?8:0; }               // Walnut: start combo +8
-function gearPlateBonus(){ return [0,0.10,0.25,0.50][state.gear.plate]||0; }
-function gearTip(){ return state.gear.plate>=3?0.08:0; }                   // Gold: +8% tip coins/plate
-function effComboStep(){ return CONFIG.comboStep + gearComboStep(); }
-function effDecay(){ return (CONFIG.comboDecayMs + gearDecay()) * lootGripMul(); }   // loot Combo Grip lengthens the decay window
-function effPlateBonus(){ return CONFIG.plateBonusMult + gearPlateBonus(); }
-function gearUpgradeCost(slot){ return Math.floor(CONFIG.gearUpgradeCostBase*Math.pow(CONFIG.gearUpgradeCostGrowth, state.gear[slot])); }
+function effComboStep(){ return CONFIG.comboStep; }
+function effDecay(){ return CONFIG.comboDecayMs * lootGripMul(); }   // loot Combo Grip lengthens the decay window
+function effPlateBonus(){ return CONFIG.plateBonusMult; }            // base plate bonus (legacy per-tier bonus removed)
 
 // ---- LOOT: equipped-item stat aggregation (each item = {r:rarityIdx, s:{statKey:value}}) ----
 function equippedLoot(){ return state.loot ? [state.loot.knife, state.loot.board, state.loot.plate].filter(Boolean) : []; }
 function lootStatSum(key){ let v=0; for(const it of equippedLoot()) if(it.s[key]!=null) v+=it.s[key]; return v; }
-function lootSharp(){ return Math.min(LOOT.sharpCap, lootStatSum("sharp")); }        // decimal, added to bladeMult (capped)
+function lootSharp(){ return Math.min(LOOT.sharpCap, lootStatSum("sharp")); }        // decimal, scales crit payout via lootCritMult() (capped)
 function lootSpeedMul(){ return 1 + lootStatSum("speed")/100; }                       // % faster slicing
 function lootPerfectChance(){ return Math.min(LOOT.perfectCap, lootStatSum("perfect")/100); }
 function lootGripMul(){ return 1 + lootStatSum("grip")/100; }                          // longer combo window
@@ -871,7 +854,7 @@ function lootEquipFx(slot,item){
   const g=GEAR[slot], r=LOOT.rarities[item.r];
   if(item.r>=2) milestone("▲ "+r.key+" "+g.icon);
   const px=(typeof plate!=="undefined"&&plate)?plate.x:CW/2, py=(typeof plate!=="undefined"&&plate)?plate.y-20:CH*0.3;
-  floaters.push({x:px,y:py,txt:g.icon+" ▲ założono · cięcie ×"+bladeMult().toFixed(2),life:1.6,perfect:true,vy:-0.5,big:item.r>=2});
+  floaters.push({x:px,y:py,txt:g.icon+" ▲ założono · crit ×"+lootCritMult().toFixed(1),life:1.6,perfect:true,vy:-0.5,big:item.r>=2});
   payout();
 }
 // resolve a fresh dish-drop decision (from a card button, or the auto-dismiss timer default)
@@ -1067,7 +1050,7 @@ function serveDish(){
   state.stats.platesServed=(state.stats.platesServed||0)+1;
   // dish gold VALUE = same payout computation everywhere (banked combo-scaled value × plate bonus × tip × Sharp carry)
   let sum=0; for(const c of dish.recipe) sum+=c.banked;
-  const pay=Math.floor(sum * effPlateBonus() * (1+gearTip()) * carryMult("sharp"));
+  const pay=Math.floor(sum * effPlateBonus() * carryMult("sharp"));
   if(rush){
     // CHANGE 4: BOSS dish-rush — completing a dish adds its full gold VALUE to rush.score (NOT the wallet/chapter); rush.dishes counts for display.
     rush.score=(rush.score||0)+pay;
@@ -1102,7 +1085,6 @@ function serveNext(){
   if(!dish) startDish();
   const idx=currentServeIdx(), ing=INGREDIENTS[idx];      // the veg the recipe currently presents
   produce={ ing, idx, total:ing.slices, left:ing.slices, leftEdge:g.cx-g.w/2, fullW:g.w, h:g.h, cy:g.cy, scale:0, cutProgress:0, shake:0 };
-  if(gearStartCombo()>0) combo=Math.max(combo, gearStartCombo());
   renderHud();
 }
 // alias kept for boot/go calls
@@ -1123,7 +1105,7 @@ function sliceOne(){
   const per=coinsPerSlice(comboMult(), produce.ing.val*laneMult(produce.idx)*(produce.valMul||1));
   // LOOT Perfect Cut: RNG chance THIS slice pays ×perfectMult (loot-crit — the excitement precision was meant to give, without aiming)
   let critMul=1;
-  if(lootPerfectChance()>0 && Math.random()<lootPerfectChance()) critMul=LOOT.perfectMult;
+  if(lootPerfectChance()>0 && Math.random()<lootPerfectChance()) critMul=lootCritMult();   // sharp scales the crit payout
   const gain=per*critMul;
   // v3: daily challenge progress (active-only — manual slices + combo reached)
   dailyEvent("slices",1); dailyEvent("combo",combo);
@@ -1141,13 +1123,14 @@ function sliceOne(){
   }
   spawnParticles(produce.leftEdge+Math.max(0,produce.left)*sliceW, produce.cy, combo>=5||produce.boss, Math.min(2.5, (produce.boss?1.0:0.6)+n*0.25));
   floaters.push({x:produce.x||CW/2, y:produce.cy-produce.h*0.6, txt:"+"+fmt(rush?gain:gain*incomeMult()), life:1, perfect:combo>=5, vy:-0.5});
-  if(critMul>1){ floaters.push({x:(produce.x||CW/2)+18, y:produce.cy-produce.h*0.95, txt:"✨×"+LOOT.perfectMult, life:1, perfect:true, vy:-0.8, big:true}); spawnParticles(produce.leftEdge+Math.max(0,produce.left)*(produce.fullW/produce.total), produce.cy, true, 1.1); }
+  if(critMul>1){ floaters.push({x:(produce.x||CW/2)+18, y:produce.cy-produce.h*0.95, txt:"✨×"+critMul.toFixed(1), life:1, perfect:true, vy:-0.8, big:true}); spawnParticles(produce.leftEdge+Math.max(0,produce.left)*(produce.fullW/produce.total), produce.cy, true, 1.1); }
   chop(Math.min(1,combo/12));
   if(combo>=5){ ding(combo); slowmo=0.4; setTimeout(()=>slowmo=1,60); }
   if(combo>0 && combo%10===0) milestone("COMBO "+combo+"! 🔥");
   hideHint();
   if(produce.left<=0) produceFinished();
   if(!rush) tutNotify("slice");   // FTUE step 1
+  else tutNotify("rushslice");    // FTUE boss step: dismiss the "slice hard" coachmark after the FIRST cut in the rush
   renderHud(); maybeSave();
 }
 
@@ -1231,13 +1214,13 @@ function updateAutoRings(){
 let autoChefAcc=0;
 function autoChefOwned(){ return !!state.progression.autoChef; }
 function autoChefActive(){ return autoChefOwned() && state.flags.autoChefOn && !rush && !!produce; }   // OFF in boss / not owned / toggled off / no produce
-// IDENTICAL speed to manual hold-slicing — same interval (per-veg cutFactor + Slice Speed upgrade + carry "fast")
+// IDENTICAL speed to manual hold-slicing — same interval (per-veg cutFactor + loot Speed + carry "fast")
 function autoChefMs(){ return holdInterval(); }
 function autoChefTick(){
   if(!stageReady || !autoChefActive()){ autoChefAcc=0; return; }   // stop cleanly; reset so it doesn't burst on resume
   autoChefAcc += 100;                                             // this loop ticks every 100ms
-  const iv=autoChefMs();                                          // = holdInterval(): matches hold speed, scales with Slice Speed
-  // fire as many slices as the interval allows this tick (matches hold throughput even when iv < 100ms at high Slice Speed)
+  const iv=autoChefMs();                                          // = holdInterval(): matches hold speed, scales with loot Speed
+  // fire as many slices as the interval allows this tick (matches hold throughput even when iv < 100ms at high loot Speed)
   while(autoChefAcc >= iv){
     if((state.stamina.cur||0) < CONFIG.staminaPerSlice) break;    // out of stamina → WAIT (keep acc); resumes on regen
     autoChefAcc -= iv;
@@ -1453,8 +1436,8 @@ function loop(){
 
 // v2.1: HOLD-TO-SLICE — pointerdown slices once + starts a self-rescheduling auto-fire while held.
 let holdTimer=null;
-function holdInterval(){   // recompute each fire so per-veg cutFactor + Slice Speed upgrade take effect live
-  return Math.max(CONFIG.holdMinMs, CONFIG.holdBaseMs * (produce ? produce.ing.cutFactor : 1) / (sliceSpeedMult() * lootSpeedMul() * carryMult("fast")));
+function holdInterval(){   // recompute each fire so per-veg cutFactor + loot Speed take effect live (Slice Speed upgrade removed — loot owns cadence)
+  return Math.max(CONFIG.holdMinMs, CONFIG.holdBaseMs * (produce ? produce.ing.cutFactor : 1) / (lootSpeedMul() * carryMult("fast")));
 }
 function holdFire(){
   if(!stageReady){ stopHold(); return; }
@@ -1553,10 +1536,6 @@ function renderUpgrades(){
   document.getElementById("incLvl").textContent="Lv "+(state.progression.incomeLevel||0);
   document.getElementById("incEff").textContent="Idle coins ×"+incomeMult().toFixed(2);
   incb.innerHTML='Upgrade<br><span class="cost">🪙 '+fmt(inc)+'</span>'; incb.disabled=state.currencies.coins<inc;
-  const ss=sliceSpeedCost(), ssb=document.getElementById("ssBuy");
-  document.getElementById("ssLvl").textContent="Lv "+(state.progression.sliceSpeedLevel||0);
-  document.getElementById("ssEff").textContent="Hold-slice speed "+Math.round(sliceSpeedMult()*100)+"%";
-  ssb.innerHTML='Upgrade<br><span class="cost">🪙 '+fmt(ss)+'</span>'; ssb.disabled=state.currencies.coins<ss;
   const as=autoSpeedCost(), asb=document.getElementById("asBuy");
   document.getElementById("asLvl").textContent="Lv "+(state.progression.autoSpeedLevel||0);
   document.getElementById("asEff").textContent="Auto-cutter speed "+Math.round(autoSpeedMult()*100)+"%";
@@ -1586,7 +1565,7 @@ function renderUpgrades(){
   }
   // v4: live Stats readout (mirrors the reference's stats list)
   const stats=[
-    ["Slice Speed", Math.round(sliceSpeedMult()*100)+"%"],
+    ["Hold Speed (gear)", Math.round(lootSpeedMul()*100)+"%"],
     ["Stamina", ""+staminaMax()],
     ["Recharge", (staminaCooldown()/1000).toFixed(1)+"s"],
     ["Income Multiplier", "x"+incomeMult().toFixed(2)],
@@ -1688,11 +1667,6 @@ function renderStage(){
   document.getElementById("stageCount").textContent=fmt(Math.min(earned,goal))+"/"+fmt(goal)+" 🪙";
   document.getElementById("stageFill").style.width=Math.min(100,earned/goal*100)+"%";
 }
-function gearStatLine(s){
-  if(s==="knife") return "coins ×"+(1+gearKnifeBladeMult()).toFixed(2);
-  if(s==="board") return "decay +"+gearDecay()+"ms"+(gearComboStep()?" · combo step +0.02":"")+(gearStartCombo()?" · start combo +8":"");
-  return "plate bonus +"+Math.round(gearPlateBonus()*100)+"%"+(gearTip()?" · +8% tip":"");
-}
 function renderKitchen(){
   const L=state.loot||{}; if(!L.priority) L.priority={knife:"sharp",board:"grip",plate:"gold"}; if(!L.pending) L.pending=[];
   let h="";
@@ -1703,7 +1677,7 @@ function renderKitchen(){
   }
   // "Twój build" — live aggregate so the player SEES stats affect the game (updates on equip)
   const build=[
-    ["🔪 Wartość cięcia","×"+bladeMult().toFixed(2)],
+    ["🔪 Siła crita","×"+lootCritMult().toFixed(1)],
     ["⚡ Tempo krojenia","+"+Math.round((lootSpeedMul()-1)*100)+"%"],
     ["✨ Perfect Cut",(lootPerfectChance()*100).toFixed(1)+"%"],
     ["🔗 Okno combo",(effDecay()/1000).toFixed(1)+"s"],
@@ -1734,7 +1708,6 @@ function renderKitchen(){
   gl.querySelectorAll("[data-prio]").forEach(b=>b.onclick=()=>{ const a=b.dataset.prio.split(":"); lootSetPriority(a[0],a[1]); });
   const ab=gl.querySelector("#lootAutoBtn"); if(ab) ab.onclick=lootToggleAuto;
 }
-function upgradeGear(s){ if(state.gear[s]>=3) return; const c=gearUpgradeCost(s); if(state.currencies.coins>=c){ state.currencies.coins-=c; state.gear[s]++; payout(); milestone(GEAR[s].icon+" "+GEAR[s].tiers[state.gear[s]]+"!"); renderHud(); saveState(); } }
 function renderHud(){
   renderTopBar(); renderStage(); renderCombo(); renderStamina(); renderLaneBar(); renderCarryBadge(); renderBossCta(); renderAutoChefToggle();
   const inRush=!!rush;
@@ -1761,7 +1734,7 @@ function go(id){
   renderNav(); renderTopBar();
 }
 // v6: merged "Manage" panel — remember the active sub-tab; render its body
-let curSub="shop";   // default sub-tab = Products
+let curSub="upgrades";   // default sub-tab = Upgrades
 function renderManage(){
   const panel=document.querySelector('.panel[data-panel="manage"]'); if(!panel) return;
   panel.querySelectorAll(".subtab").forEach(t=>{
@@ -1782,7 +1755,6 @@ document.getElementById("strBuy").onclick=()=>{ const c=staminaRegenCost(); if(s
 document.getElementById("staminaBtn").onclick=()=>{ const c=staminaRefillCost(); if(state.stamina.cur<=staminaMax()*0.2 && state.currencies.gems>=c){ state.currencies.gems-=c; state.stamina.cur=staminaMax(); staminaCooldownUntil=0; payout(); renderHud(); saveState(); } };
 // v2.1: global stat upgrade buy handlers
 document.getElementById("incBuy").onclick=()=>{ const c=incomeCost(); if(state.currencies.coins>=c){ state.currencies.coins-=c; state.progression.incomeLevel=(state.progression.incomeLevel||0)+1; payout(); renderHud(); saveState(); } };
-document.getElementById("ssBuy").onclick=()=>{ const c=sliceSpeedCost(); if(state.currencies.coins>=c){ state.currencies.coins-=c; state.progression.sliceSpeedLevel=(state.progression.sliceSpeedLevel||0)+1; payout(); renderHud(); saveState(); } };
 document.getElementById("asBuy").onclick=()=>{ const c=autoSpeedCost(); if(state.currencies.coins>=c){ state.currencies.coins-=c; state.progression.autoSpeedLevel=(state.progression.autoSpeedLevel||0)+1; payout(); renderHud(); saveState(); } };
 // v2.7: Auto-Slicer one-time unlock (gated to chapter index 2 in renderUpgrades)
 document.getElementById("acBuy").onclick=()=>{ if(state.progression.autoChef) return; const c=CONFIG.autoChefCost; if(state.currencies.coins>=c){ state.currencies.coins-=c; state.progression.autoChef=true; state.flags.autoChefOn=true; payout(); milestone("🤖 Auto-Slicer unlocked!"); renderHud(); saveState(); } };
@@ -2095,21 +2067,47 @@ function grantOffline(seconds){
   earnCoins(amt);   // offline income — wallet only, does NOT advance the chapter
   return amt;
 }
+// how many gear pieces the auto-cutters "find" while away (same gate as offline income: no auto-cutter → none)
+function offlineLootCount(sec){
+  if(offlinePerSec()<=0) return 0;
+  const eff=Math.min(sec, CONFIG.offlineCapHours*3600);
+  return Math.min(LOOT.maxPending, Math.floor(eff/3600 * CONFIG.offlineLootPerHour));
+}
+// silently roll `n` drops straight into the Kitchen pending queue (no cards — player is away)
+function grantOfflineLoot(n){
+  if(n<=0 || !state.loot) return 0;
+  const L=state.loot; if(!L.pending) L.pending=[];
+  let made=0;
+  for(let k=0;k<n;k++){
+    if(L.pending.length>=LOOT.maxPending) break;
+    L.pityRare=(L.pityRare||0)+1; L.pityEpic=(L.pityEpic||0)+1;
+    const rIdx=lootRollRarity("dish");
+    if(rIdx>=2) L.pityRare=0;
+    if(rIdx>=3) L.pityEpic=0;
+    const slot=["knife","board","plate"][Math.floor(Math.random()*3)];
+    L.pending.push({slot, item:lootMakeItem(slot,rIdx)});
+    L.dropped=(L.dropped||0)+1; made++;
+  }
+  state.flags.kitchenPending = lootPendingCount()>0;
+  return made;
+}
 let pendingWb=0;
 function checkOffline(){
   if(state.time.lastSeen>0){
     const sec=(nowMs()-state.time.lastSeen)/1000;
     if(sec>30){
       const amt=grantOffline(sec);
-      if(amt>0){ pendingWb=amt; showWelcome(amt, sec); }
+      const loot=grantOfflineLoot(offlineLootCount(sec));
+      if(amt>0 || loot>0){ pendingWb=amt; showWelcome(amt, sec, loot); }
     }
   }
 }
-function showWelcome(amt, sec){
+function showWelcome(amt, sec, loot){
   document.getElementById("wbAmt").textContent="🪙 "+fmt(amt);
   const h=Math.floor(sec/3600), m=Math.floor((sec%3600)/60);
   const capped = sec> CONFIG.offlineCapHours*3600;
-  document.getElementById("wbSub").textContent=(h>0?h+"h ":"")+m+"m away"+(capped?" (capped at "+CONFIG.offlineCapHours+"h)":"");
+  const away=(h>0?h+"h ":"")+m+"m poza grą"+(capped?" (limit "+CONFIG.offlineCapHours+"h)":"");
+  document.getElementById("wbSub").innerHTML = away + ((loot>0)?`<br>🎁 <b>${loot}</b> nowy loot czeka w Ekwipunku`:"");
   document.getElementById("welcomeModal").classList.add("open"); payout();
 }
 function closeWelcome(){ document.getElementById("welcomeModal").classList.remove("open"); renderHud(); saveState(); }
@@ -2214,7 +2212,7 @@ const TUTORIAL = [
   { on:"continue",  sel:"#stageBar",      text:"To twój pasek rozdziału — rośnie z każdym cięciem. Wypełnij go, a staniesz do walki z bossem! (stuknij, aby przejść dalej)", soft:true, tapContinue:true },
   { on:"level",     sel:"#laneBar .llvup",text:"Ulepsz warzywo — gotowe danie będzie warte więcej monet! 💰" },
   { on:"bossstart", sel:"#bossCta",       text:"Boss gotowy! Stuknij, żeby ruszyć do walki. 👹" },
-  { on:"bosswin",   sel:"#sliceCanvas",   text:"Tnij ile sił — zgarnij jak najwięcej, zanim skończy się czas! ⏱️", slice:true },
+  { on:"rushslice", sel:"#sliceCanvas",   text:"Tnij ile sił — zgarnij jak najwięcej, zanim skończy się czas! ⏱️", slice:true },   // dismisses on the FIRST cut in the rush
 ];
 function tutActive(){ return typeof state.flags.tut === "number" && state.flags.tut < TUTORIAL.length; }
 function tutEl(){ const id="tutOverlay"; return document.getElementById(id); }
