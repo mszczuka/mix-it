@@ -305,7 +305,7 @@
       <div class="card">
         <div class="row">
           <div class="grow">
-            <div class="big">🪚 Auto Slice Speed</div>
+            <div class="big">🏭 Auto-Linia — Tempo</div>
             <div class="lvl" id="asLvl"></div>
             <div class="eff" id="asEff"></div>
           </div>
@@ -341,6 +341,17 @@
             <div class="eff" id="acEff"></div>
           </div>
           <button class="cta" id="acBuy"></button>
+        </div>
+      </div>
+      <!-- Auto-Slicer SPEED — only shown once the Auto-Slicer is owned; infinite levels -->
+      <div class="card" id="autoChefSpeedCard" style="display:none">
+        <div class="row">
+          <div class="grow">
+            <div class="big">🤖 Auto-Slicer — Tempo</div>
+            <div class="lvl" id="acsLvl"></div>
+            <div class="eff" id="acsEff"></div>
+          </div>
+          <button class="cta" id="acsBuy"></button>
         </div>
       </div>
       <div class="card" id="statsCard">
@@ -537,7 +548,10 @@ const CONFIG = {
   autoSpeedCostBase: 600, autoSpeedCostGrowth: 1.35,    // [balans] was 400 / 1.7 — gentler growth keeps later auto-speed buys reachable but meaningful
   // ---- v2.7: AUTO-SLICER — one-time gold unlock that auto-cuts the CURRENT front veg (NOT the per-lane passive autos) ----
   autoChefCost: 4000,             // [balans: economy] one-time unlock (gated to chapter 3)
-  // autoChefBaseMs removed — Auto-Slicer now uses holdInterval() (same speed as hold, scales with loot Speed)
+  // autoChefBaseMs removed — Auto-Slicer base cadence = holdInterval() (scales with loot Speed); the upgrade below divides it further
+  // ---- Auto-Slicer SPEED upgrade (front-veg helper ONLY; separate axis from the Auto-Linia per-lane cutters) ----
+  autoChefSpeedPerLevel: 0.15,    // [balans] +15% Auto-Slicer tempa/lvl (multiplies down holdInterval, floored at holdMinMs)
+  autoChefSpeedCostBase: 2500, autoChefSpeedCostGrowth: 1.4, // [balans] deliberately pricey — a chapter-3+ gold sink; infinite levels, floor caps real payoff
   // ---- v3 [active-tapper patch]: DAILY + GEM economy + EVENT ----
   dailyGemReward: 5,              // gems from a full Daily Complete (all 3)
   loginGemBase: 2,               // gems from daily login (first open each day)
@@ -634,7 +648,8 @@ const STATE_KEY = "slicetycoon.save.v2.6";   // bumped so the cleaned schema sta
 const SCHEMA_DEFAULT = {
   currencies:{coins:60, gems:0},                      // starting gold
   progression:{unlocked:1,
-    incomeLevel:0, autoSpeedLevel:0,    // global stat upgrades (sliceSpeedLevel removed — loot Speed owns hold cadence)
+    incomeLevel:0, autoSpeedLevel:0,    // global stat upgrades (sliceSpeedLevel removed — loot Speed owns hold cadence). autoSpeedLevel = Auto-Linia (per-lane passive cutters)
+    autoChefSpeedLevel:0,               // Auto-Slicer (front-veg helper) speed upgrade — deepDefault backfills 0 into old saves, no STATE_KEY bump needed
     staminaLevel:0, staminaRegenLevel:0,                  // STAMINA upgrades
     chapter:0, chapterEarned:0,                           // BOSS-GATED CHAPTERS — chapterEarned accrues every coin; at chapterGoal() the boss CTA appears
     autoChef:false},                                      // v2.7: one-time Auto-Slicer unlock (auto-cuts the current front veg)
@@ -1215,7 +1230,10 @@ let autoChefAcc=0;
 function autoChefOwned(){ return !!state.progression.autoChef; }
 function autoChefActive(){ return autoChefOwned() && state.flags.autoChefOn && !rush && !!produce; }   // OFF in boss / not owned / toggled off / no produce
 // IDENTICAL speed to manual hold-slicing — same interval (per-veg cutFactor + loot Speed + carry "fast")
-function autoChefMs(){ return holdInterval(); }
+function autoChefSpeedMult(){ return 1 + (state.progression.autoChefSpeedLevel||0)*CONFIG.autoChefSpeedPerLevel; }   // Auto-Slicer-only speed axis (NOT the Auto-Linia per-lane cutters)
+function autoChefSpeedCost(){ return Math.floor(CONFIG.autoChefSpeedCostBase*Math.pow(CONFIG.autoChefSpeedCostGrowth, state.progression.autoChefSpeedLevel||0)); }
+// front-veg Auto-Slicer cadence = hold cadence (loot Speed) divided by its own speed upgrade; floored at holdMinMs. Faster cuts → faster stamina drain (shared pool).
+function autoChefMs(){ return Math.max(CONFIG.holdMinMs, CONFIG.holdBaseMs * (produce ? produce.ing.cutFactor : 1) / (lootSpeedMul() * carryMult("fast") * autoChefSpeedMult())); }
 function autoChefTick(){
   if(!stageReady || !autoChefActive()){ autoChefAcc=0; return; }   // stop cleanly; reset so it doesn't burst on resume
   autoChefAcc += 100;                                             // this loop ticks every 100ms
@@ -1538,7 +1556,7 @@ function renderUpgrades(){
   incb.innerHTML='Upgrade<br><span class="cost">🪙 '+fmt(inc)+'</span>'; incb.disabled=state.currencies.coins<inc;
   const as=autoSpeedCost(), asb=document.getElementById("asBuy");
   document.getElementById("asLvl").textContent="Lv "+(state.progression.autoSpeedLevel||0);
-  document.getElementById("asEff").textContent="Auto-cutter speed "+Math.round(autoSpeedMult()*100)+"%";
+  document.getElementById("asEff").textContent="Tempo linii (auto per-produkt) "+Math.round(autoSpeedMult()*100)+"%";
   asb.innerHTML='Upgrade<br><span class="cost">🪙 '+fmt(as)+'</span>'; asb.disabled=state.currencies.coins<as;
   // v4: Stamina (raises max)
   const sc=staminaCost(), stb=document.getElementById("stmBuy");
@@ -1563,14 +1581,27 @@ function renderUpgrades(){
       else { acb.innerHTML='Unlock<br><span class="cost">🪙 '+fmt(CONFIG.autoChefCost)+'</span>'; acb.disabled=state.currencies.coins<CONFIG.autoChefCost; acb.classList.add("cta"); acb.classList.remove("ghost"); }
     }
   }
+  // Auto-Slicer SPEED — appears only once the Auto-Slicer is owned; infinite levels, pricey curve
+  const acsCard=document.getElementById("autoChefSpeedCard");
+  if(acsCard){
+    const owned=!!state.progression.autoChef;
+    acsCard.style.display=owned?"":"none";
+    if(owned){
+      const acs=autoChefSpeedCost(), acsb=document.getElementById("acsBuy");
+      document.getElementById("acsLvl").textContent="Lv "+(state.progression.autoChefSpeedLevel||0);
+      document.getElementById("acsEff").textContent="Tempo Auto-Slicera "+Math.round(autoChefSpeedMult()*100)+"% (szybciej pali staminę)";
+      acsb.innerHTML='Upgrade<br><span class="cost">🪙 '+fmt(acs)+'</span>'; acsb.disabled=state.currencies.coins<acs;
+    }
+  }
   // v4: live Stats readout (mirrors the reference's stats list)
   const stats=[
     ["Hold Speed (gear)", Math.round(lootSpeedMul()*100)+"%"],
     ["Stamina", ""+staminaMax()],
     ["Recharge", (staminaCooldown()/1000).toFixed(1)+"s"],
     ["Income Multiplier", "x"+incomeMult().toFixed(2)],
-    ["Auto Slice Speed", Math.round(autoSpeedMult()*100)+"%"],
+    ["Auto-Linia (per-produkt)", Math.round(autoSpeedMult()*100)+"%"],
   ];
+  if(state.progression.autoChef) stats.push(["Auto-Slicer (front-veg)", Math.round(autoChefSpeedMult()*100)+"%"]);
   document.getElementById("statsBody").innerHTML=stats.map(([l,v])=>
     `<div class="stat-row"><span class="sl">${l}</span><span class="sv">${v}</span></div>`).join("");
 }
@@ -1758,6 +1789,8 @@ document.getElementById("incBuy").onclick=()=>{ const c=incomeCost(); if(state.c
 document.getElementById("asBuy").onclick=()=>{ const c=autoSpeedCost(); if(state.currencies.coins>=c){ state.currencies.coins-=c; state.progression.autoSpeedLevel=(state.progression.autoSpeedLevel||0)+1; payout(); renderHud(); saveState(); } };
 // v2.7: Auto-Slicer one-time unlock (gated to chapter index 2 in renderUpgrades)
 document.getElementById("acBuy").onclick=()=>{ if(state.progression.autoChef) return; const c=CONFIG.autoChefCost; if(state.currencies.coins>=c){ state.currencies.coins-=c; state.progression.autoChef=true; state.flags.autoChefOn=true; payout(); milestone("🤖 Auto-Slicer unlocked!"); renderHud(); saveState(); } };
+// Auto-Slicer SPEED — infinite levels; only reachable once the Auto-Slicer is owned (card hidden otherwise)
+document.getElementById("acsBuy").onclick=()=>{ if(!state.progression.autoChef) return; const c=autoChefSpeedCost(); if(state.currencies.coins>=c){ state.currencies.coins-=c; state.progression.autoChefSpeedLevel=(state.progression.autoChefSpeedLevel||0)+1; payout(); renderHud(); saveState(); } };
 // v2: LEVEL a lane (main gold sink). At laneAutoUnlockLevel flip its auto-cutter on (one-time).
 function levelLane(i){
   if(i>=state.progression.unlocked) return;
