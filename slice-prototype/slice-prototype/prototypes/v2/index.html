@@ -501,9 +501,9 @@ const CONFIG = {
   comboDecayMs: 2200,         // idle time before combo resets
   plateBonusMult: 1.0,        // plate-completion bonus = veg's slice earnings × this
   // ---- STAMINA (the active-cut gate) ----
-  staminaMaxBase: 60, staminaMaxPerLevel: 20,            // [balans] reverted overdone nerf — softer pool, still drains over a sustained burst
-  staminaRegenBase: 3, staminaRegenPerLevel: 1,          // [balans] per second — gradual regen WHILE stamina > 0 (regen 3 < Tomato drain ~3.85/s so a sustained hold still empties it)
-  staminaEmptyCooldownMs: 5000,                          // hitting 0 = TOTAL block (manual AND hero Auto-Slicer stop) this long, then stamina SNAPS to 100%. (gem-refill skips it)
+  staminaMaxBase: 60, staminaMaxPerLevel: 30,            // [balans] perLevel 20->30: pool upgrades must be FELT now that lane layer-growth (laneLayersPerLevel) pushes dish size up. base stays 60 so the gate still BITES a ZERO-investment player once lanes are leveled — sim: fast 3-veg dish walls at lane L3+, fixed by one pool level (800 coins).
+  staminaRegenBase: 4, staminaRegenPerLevel: 1,          // [balans] regen 3->4: LOOSEN the early baseline (lv0 Tomato uptime 72%->80%) without widening the slice-per-burst budget enough to break the layer coupling — a leveled 3-veg dish still walls a zero-invest player. regen 4 < Tomato drain ~7.7/s so a sustained hold still empties.
+  staminaEmptyCooldownMs: 4000,                          // [balans] 5000->4000: shorter early interruptions (loosen baseline); the combo-break on lockout still stings so buying the Recharge upgrade stays worthwhile. hitting 0 = TOTAL block (manual AND hero Auto-Slicer stop), then SNAP to 100%. (gem-refill skips it)
   staminaCooldownPerLevel: 400, staminaCooldownMin: 2000,// each Stamina Regen ("Recharge") level shortens the lockout by this (ms), floored at staminaCooldownMin
   staminaPerSlice: 2,                                    // [balans] 1→2: the gate must BITE. Tomato hold ~3.85 slice/s × 2 = 7.7/s drain vs 3/s regen → base pool empties in ~13s then a 5s lockout (~72% uptime at lv0). Boss/rush is EXEMPT (see sliceOne) so the climax stays a frenzy.
   staminaCostBase: 800, staminaCostGrowth: 1.25,         // [balans] growth 1.4->1.25 — now the gate BITES (staminaPerSlice=2), so these upgrades finally matter; softer curve keeps them reachable instead of a coin wall (cum lv5 ~8k)
@@ -526,10 +526,11 @@ const CONFIG = {
   rushEveryStages: 1,         // auto-trigger frequency knob (1 = every stage)
   gearDropMinScore: 150,      // min Service Score to drop a gear piece from a Rush
   // ---- v2: PRODUCT LANES (the new core — gold sink = leveling) ----
-  laneValPerLevel: 0.10,          // [balans] was 0.18 — lane lvl10 = x2.0 (was x2.8); slows the multiplicative climb that stacked on top of combo+income
+  laneValM: 1.5, laneValDecay: 0.6,   // [balans] lane value = laneMult = 1 + M*(1 - decay^level): FRONT-LOADED decaying curve (replaces flat +10%/lvl which was imperceptible). L1 x1.60 (+60%!), L2 x1.96, L3 x2.18, asymptote x2.5. The lvl-up FINALLY feels big early; value flattens ~L5 — laneLayersPerLevel keeps L6-8 progressing so that taper is safe. NOTE: lane mult is bounded (<=2.5) and RESETS per veg, so it is NOT the multiplicative runaway (that was cross-chapter income compounding, tamed by chapterGoalGrowth 2.0).
+  laneLayersPerLevel: 1.2,        // [balans] NEW GOVERNOR: laneSlices = base + round(level*this) → leveling a lane adds LAYERS. More layers = more gold/veg BUT more slices = more player effort + more stamina drain, so it bounds gold/SECOND (not gold/veg). This (a) keeps the post-taper lane levels 6-8 visibly progressing and (b) drives stamina-pool investment (more layers per dish -> a zero-invest player hits the stamina wall).
   laneLevelCostBase: 40,          // [balans] was 25 — first lane level now costs ~one dish, a real choice vs the trivial 25
   laneLevelCostGrowth: 1.22,      // [balans] was 1.18 — near idle.md upper band (1.07-1.15 norm, slightly above by design for a meaningful gold sink)
-  laneAutoUnlockLevel: 10,        // [balans: economy] lane level that unlocks its auto-cutter
+  laneAutoUnlockLevel: 8,         // [balans] 10->8: laneMult value tapers flat by ~L5, so 6-10 was a near-dead VALUE tail; layers still grow (laneLayersPerLevel) but pulling the Auto-Linia carrot to L8 shrinks the dead zone to just L6-7. Auto-cutter now unlocks while leveling still feels alive.
   autoCutBaseMs: 2000,            // [balans] was 1200 — slows passive throughput so active out-earns pure idle ~2-5x (idle.md idle-vs-active balance)
   // boss tiers by GOLD VALUE earned during the timed dish-rush — gold thresholds computed at boss start from chapterGoal()
   bossTierList: [{name:"Bronze",key:"bronze",icon:"🥉"},{name:"Silver",key:"silver",icon:"🥈"},{name:"Gold",key:"gold",icon:"🥇"}], // ordered low→high; names/icons stay
@@ -763,7 +764,8 @@ function carryMult(kind){
 
 // ---- v2: PRODUCT LANES ----
 function lane(i){ return state.lanes[i] || (state.lanes[i]={level:0,auto:false,autoProg:0}); }
-function laneMult(i){ return 1 + lane(i).level*CONFIG.laneValPerLevel; }     // per-slice value mult from leveling
+function laneMult(i){ return 1 + CONFIG.laneValM*(1 - Math.pow(CONFIG.laneValDecay, lane(i).level)); }   // [balans] front-loaded decay: L1 +60% (was imperceptible +10%/lvl), asymptote x2.5. Big FELT jump early, taper late.
+function laneSlices(i){ return INGREDIENTS[i].slices + Math.round(lane(i).level*CONFIG.laneLayersPerLevel); }  // [balans] layer growth: higher lane level = MORE layers to cut → more gold/veg AND more stamina drain (the governor + the stamina coupling); keeps lane levels 5-8 progressing after the value taper. Wired into startDish (recipe need) + serveNext (produce total/left).
 // v2.2: multi-slice removed — exactly ONE slice per cut everywhere (manual & auto)
 function laneLevelCost(i){ return Math.floor(CONFIG.laneLevelCostBase*Math.pow(CONFIG.laneLevelCostGrowth, lane(i).level)); }
 function highestUnlockedIdx(){ return Math.max(0, state.progression.unlocked-1); }
@@ -1049,7 +1051,7 @@ function startDish(){
   const idxs=[];
   while(idxs.length<size && pool.length){ idxs.push(pool.splice(Math.floor(rand()*pool.length),1)[0]); }
   // each recipe entry = ONE WHOLE vegetable → need = that ingredient's slice count
-  const recipe=idxs.map(idx=>({idx, need:INGREDIENTS[idx].slices, done:0, banked:0}));
+  const recipe=idxs.map(idx=>({idx, need:laneSlices(idx), done:0, banked:0}));   // [balans] need = level-scaled layer count (laneSlices), not the static base
   dish={ recipe, cur:0 };
   // v3: Combo Start carry — dishes begin with combo primed to 10
   if(carryActive() && state.carry.id==="combo") combo=Math.max(combo,10);
@@ -1099,7 +1101,8 @@ function serveNext(){
   const g=vegGeom();
   if(!dish) startDish();
   const idx=currentServeIdx(), ing=INGREDIENTS[idx];      // the veg the recipe currently presents
-  produce={ ing, idx, total:ing.slices, left:ing.slices, leftEdge:g.cx-g.w/2, fullW:g.w, h:g.h, cy:g.cy, scale:0, cutProgress:0, shake:0 };
+  const nSlices=laneSlices(idx);   // [balans] layers scale with lane level (laneLayersPerLevel)
+  produce={ ing, idx, total:nSlices, left:nSlices, leftEdge:g.cx-g.w/2, fullW:g.w, h:g.h, cy:g.cy, scale:0, cutProgress:0, shake:0 };
   renderHud();
 }
 // alias kept for boot/go calls
@@ -2172,7 +2175,7 @@ function buildCheats(){
   const sliders=[
     ["coinsPerSliceBase",0.5,10,0.5],["comboStep",0,0.5,0.01],
     ["comboDecayMs",800,4000,100],["staminaPerSlice",0,10,1],["staminaEmptyCooldownMs",1000,10000,500],
-    ["autoCutBaseMs",300,4000,100],["laneValPerLevel",0.02,1,0.02],
+    ["autoCutBaseMs",300,4000,100],["laneLayersPerLevel",0,3,0.1],
     ["offlineRatePct",0,1,0.05],["offlineCapHours",1,24,1],
     ["staminaMaxBase",20,500,10],
   ];
